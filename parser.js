@@ -18,34 +18,17 @@ function unfoldLikes(id){
 	likesNode.children[idx].appendChild(span);
 }
 function genLikes(post, postNBody){
-	var likesNode = document.createElement( 'ul');
-	likesNode.className ="p-timeline-user-likes";
-
-	for (var idx = 0; idx< post.likes.lenght;idx++) {
-		var like = post.likes[idx];		
-		if(like == gMe.users.id){
-			arr.splice(idx,1);
-			arr.unshift(like);
-			break;
-		}
-	}
+	var likes = '<ul class="p-timeline-user-likes">';
+ 	var l =  post.likes.length;
+	for (var idx = 0; idx < (4<l?4:l) ; idx++)
+		likes+= '<li class="p-timeline-user-like"> '+gUsers[post.likes[idx]].link+'</li>';
 	
- 	var l = post.likes.length;
-	var likeNode = document.createElement('li');
-	likeNode.className = "p-timeline-user-like";
-	for (var idx = 0; idx < (4<l?4:l) ; idx++){
-		var cLikeNode = likeNode.cloneNode();
-		cLikeNode.innerHTML = gUsers[post.likes[idx]].link;
-		likesNode.appendChild(cLikeNode);
-	}
-	var suffix = document.createElement("span");
-	suffix.id = post.id+'-unl' 
+	likes += '</ul>';
 	if ( l > 4)
-		suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ (post.likes.length - 4) +' other people</a>' ;
-	suffix.innerHTML += ' liked this';
-	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(likesNode);
-	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
-	if(post.likes[0] == gMe.users.id)likesNode.parentNode.parentNode.myLike = likesNode.children[0];
+		likes += '<span id='+post.id+'-unl > and <a onclick="unfoldLikes(\''+post.id+'\')">'+ (post.likes.length - 4) +' other people</a>' ;
+	else likes += '<span>';
+	likes +=' liked this</span>';
+	postNBody.cNodes["post-info"].cNodes["likes"].innerHTML = likes;
 }
 function draw(content){
 	var body = document.getElementsByTagName("body")[0];
@@ -78,28 +61,23 @@ function draw(content){
 				}		
 			
 			}
-			var spDate = document.createElement("span");
-			spDate.innerHTML = "<a href='"+ gConfig.static + user.username+'/'+post.id+ "?offset=0' >"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a>";
-			postNBody.cNodes["post-info"].cNodes["controls"].appendChild(spDate);
-			var nodeControls = document.createElement("span");
-			var aLike = document.createElement('a');
+			postNBody.cNodes["post-info"].innerHTML = "<span class='post-date'><a href='"+ gConfig.static + user.username+'/'+post.id+ "?offset=0' >"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a></span>";
+			var nodeControls = gNodes[(post.id==gMe.id?"controls-self":"controls-others")].cloneAll();
 			nodeControls.postId = post.id;
-			nodeControls.className ='post-controls';
-			nodeControls.innerHTML = " <a href='javascript:' onclick=addComment(this)>Comment</a> - ";
-			if (post.createdBy == gMe.users.id)  nodeControls.innerHTML += "<a href='javascript:'='javascript:' onclick=postEdit(this)>Edit</a> - <a href='javascript:' onclick=postDestroy(this)>Destroy</a> - "; 
-			else nodeControls.appendChild(aLike);
+			nodeControls.className ='post-controls';/*
+			nodeControls.innerHTML = " <a href='javascript:' onclick=addComment(this)>Comment</a> -";
+			if (post.createdBy == gMe.users.id)  nodeControls.innerHTML += " <a href='javascript:'='javascript:' onclick=postEdit(this)>Edit</a> - <a href='javascript:' onclick=postDestroy(this)>Destroy</a> -"; 
+			else  nodeControls.innerHTML += " <a href=
+			'javascript:' onclick=postLike(this,true)>Like</a> - ";
+			*/
+
 			var aHide = document.createElement('a');
 			aHide.href = "javascript:";
 			aHide.innerHTML = 'Hide';
-			aHide.addEventListener("click",function(){
-			postHide(this,true);
-			});
+			aHide.addEventListener("click",function(){ postHide(this,true); });
 			nodeControls.appendChild(aHide);
-			nodeControls.likes = postNBody.cNodes["post-info"].cNodes["likes"];
-			 postNBody.cNodes["post-info"].cNodes["controls"].appendChild( nodeControls);
+			 postNBody.cNodes["post-info"].appendChild( nodeControls);
 			if (post.likes)	genLikes(post, postNBody );
-			var action = !!(postNBody.cNodes["post-info"].myLike);
-			aLike.innerHTML=action?'Un-like - ':'Like - ';aLike.onclick=function(){postLike(this,!action);}; 
 			if (post.comments){
 				var l = post.comments.length;
 				for (var idx = 0; idx < (2<l?2:l) ; idx++)
@@ -119,52 +97,18 @@ function postHide(e,action){
 	console.log(e);
 
 }
+function initLike(e){
+	postLike(e.target, true);
+}
 function postLike(callee, action){
 	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		if(this.status < 400){	
-			callee.innerHTML=action?'Un-like - ':'Like - ';callee.onclick=function(){postLike(callee,!action);}; 
-			if(action){
-				var idx;
-				var likesNode = callee.parentNode.likes;
-				var likesUL;
-				if (!likesNode.children.length){
-					likesUL = document.createElement( 'ul');
-					likesUL.className ="p-timeline-user-likes";
-					var suffix = document.createElement("span");
-					suffix.id = callee.parentNode.postId+'-unl';
-					suffix.innerHTML = " liked this";
-					likesNode.appendChild(likesUL);
-					likesNode.appendChild(suffix);
-
-				}else {
-
-					for(idx = 0; idx < likesNode.children.length; idx++)
-						if (likesNode.children[idx].nodeName == 'UL')break;
-					likesUL = likesNode.children[idx];
-				}
-				var likeNode = document.createElement('li');
-				likeNode.className = "p-timeline-user-like";
-				likeNode.innerHTML = gUsers[gMe.users.id].link;
-				if(likesUL.children.length)likesUL.insertBefore(likeNode, likesUL.children[idx].children[0]);
-				else likesUL.appendChild(likeNode);
-				callee.parentNode.parentNode.parentNode.myLike = likeNode;
-			}else{
-				var myLike = callee.parentNode.parentNode.parentNode.myLike;
-				likesUL = myLike.parentNode;
-				likesUL.removeChild(myLike);  	
-				if (!likesUL.children.length) likesUL.parentNode.innerHTML = '';
-			 }
-
-		};
-	}
-	oReq.open("post",gConfig.serverURL + "posts/"+ callee.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(action?"like":"unlike"), true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	oReq.send();
-
+		oReq.onload = function(){callee.innerHTML=action?'Un-like':'Like';callee.onclick=function(){postLike(callee,!action);}; };
+		oReq.open("post",gConfig.serverURL + "posts/"+ callee.parentNode.parentNode.parentNode.parentNode.id+"/"+(action?"like":"unlike"), true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.send();
 }
-function addComment(callee){
-	var postNode = document.getElementById(callee.parentNode.postId);
+function addComment(e){
+	var postNode = document.getElementById(e.target.parentNode.postId);
 	var commentNode = gNodes['comment'].cloneAll();
 	var text = document.createElement('textarea');
 	var bPost = document.createElement('button');
@@ -191,11 +135,7 @@ function processText(e) {
 }
 function sendComment(textField){
 		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			if(this.status < 400){
-			textField.postNBody.cNodes['comments'].insertBefore(genComment(JSON.parse(this.response).comments),textField.parentNode.parentNode);
-			}
-		};
+		oReq.onload = function(){textField.postNBody.cNodes['comments'].insertBefore(genComment(JSON.parse(this.response).comments),textField.parentNode.parentNode);};
 		oReq.open("post",gConfig.serverURL + "comments", true);
 		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 		oReq.setRequestHeader("Content-type","application/json");
@@ -233,23 +173,26 @@ function genCNodes(node){
 		node.cNodes[node.children[child].className] = node.children[child];
 	}
 }
-function genNodes(divs){
-	var nodes = new Object();
-	//oTemplates = JSON.parse(templates);
-	divs.forEach(function(div){
-		nodes[div.c] = document.createElement("div"); 
-		nodes[div.c].cloneAll = function(){
+function genNodes(templates){
+	var nodes = new Array();
+	templates.forEach(function(nTempl){
+		if(!nTempl.t)nTempl.t='div';
+		var cNode = document.createElement(nTempl.t); 
+		if(nTempl.txt) cNode.innerHTML = nTempl.txt;
+		cNode.cloneAll = function(){
 			var newNode = this.cloneNode(true); 
 			genCNodes(newNode);
+			if (this.e) 
+				for(action in this.e)
+					newNode.addEventListener(action, window[this.e[action]]);	
 			return newNode;
 		};
-		nodes[div.c].className = div.c; 
-		if (div.children){
-			var children = genNodes(div.children);
-			for (var node in children){
-				nodes[div.c].appendChild(children[node]);
-			};
-		};
+		cNode.className = nTempl.c; 
+		if (nTempl.children)
+			genNodes(nTempl.children).forEach(function(node){cNode.appendChild(node)});
+		
+		if (nTempl.e)cNode.e = nTempl.e; 
+		nodes.push(cNode);	
 	} );
 	return nodes;
 
@@ -291,7 +234,9 @@ function initDoc(){
 	
 	if (auth()){
 		autolinker = new Autolinker({'truncate':20,  'twitter':false} );
-		gNodes = genNodes(templates.divs);
+
+		gNodes = new Object();
+		genNodes(templates.nodes).forEach(function(node){gNodes[node.className ] = node;});
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){draw(JSON.parse(this.response))};
 		oReq.open("get",gConfig.serverURL + "timelines/home?offset=0", true);

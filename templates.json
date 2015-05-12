@@ -1,0 +1,26 @@
+var templates =  {"divs": [
+{"c":"post",
+"children":[
+	{"c":"avatar"},
+	{"c":"post-body",
+	"children":[
+		{"c":"title"},
+		{"c":"post-cont"},
+		{"c":"attachments"},
+		{"c":"post-info",
+		"children":[
+			{"c":"controls"},
+			{"c":"likes"}
+		]},
+		{"c":"comments"}
+	] }
+]
+},
+{"c":"attachment"},
+{"c":"comment",
+"children":[
+	{"c":"comment-date"},
+	{"c":"comment-body"}
+]
+}
+]};

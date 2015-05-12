@@ -103,9 +103,8 @@ display: inline;
 }
 
 .post-body .likes ul li::after {
-content: ", ";
+content: ",";
 display: inline-block;
-margin-right: .5em;
 }
 .comments {
 clear: both;

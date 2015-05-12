@@ -1,4 +1,4 @@
-var templates =  {"divs": [
+var templates =  {"nodes": [
 {"c":"post",
 "children":[
 	{"c":"avatar"},
@@ -9,11 +9,23 @@ var templates =  {"divs": [
 		{"c":"attachments"},
 		{"c":"post-info",
 		"children":[
-			{"c":"controls"},
 			{"c":"likes"}
 		]},
 		{"c":"comments"}
 	] }
+]
+},
+{"c":"controls-self","t":"span",
+"children":[
+	{"c":"post-control","t":"a","txt":"Comment","e":{"click":"addComment"}},
+	{"c":"post-control","t":"a","txt":"Edit"},
+	{"c":"post-control","t":"a","txt":"Delete"}
+]
+},
+{"c":"controls-others","t":"span",
+"children":[
+	{"c":"post-control","t":"a","txt":"Comment","e":{"click":"addComment"}},
+	{"c":"post-control","t":"a","txt":"Like","e":{"click":"initLike"}}
 ]
 },
 {"c":"attachment"},

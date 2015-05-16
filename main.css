@@ -11,7 +11,7 @@ color: #000088;
        text-decoration: none;
 }
 
-.edit-comment-area {
+.edit-txt-area{
 	-moz-border-bottom-colors: none;
 	-moz-border-left-colors: none;
 	-moz-border-right-colors: none;
@@ -85,12 +85,19 @@ overflow: hidden;
 	margin-bottom: 10px;
 color: #000;
 }
+.post-date {
+margin-right:.3em;
+}
 .post-info {
 	font-size: 13px;
 	line-height: 16px;
 }
-.post-control a::after{
+.post-control{
+display: inline-block;
+}
+.post-controls a+a::before{
 	content: " - ";
+	margin-right: 0.3em;
 }
 .likes ul {
 float: left;
@@ -102,23 +109,43 @@ padding: 0;
 display: inline;
 }
 
-.post-body .likes ul li::after {
-content: ", ";
+.post-body .likes ul li+li::before {
+content: ",";
 display: inline-block;
-margin-right: .5em;
+margin-right:.3em;
+}
+.comment-body {
+clear: both;
+       font-size: 13px;
+       line-height: 16px;
+	margin-top: 8px;
+	margin-left: 21px;
+}
+.comment-controls a+a::before {
+content: " | ";
+}
+span.comment-controls::after {
+content: ")";
+}
+span.comment-controls::before {
+content: "(";
+margin-left: 0.3em;
 }
 .comments {
 clear: both;
        font-size: 13px;
        line-height: 16px;
 }
-.comment-date{
+.comment-date { 
 float: left;
        margin-right: 4px;
        margin-top: 2px;
-content: "";
 }
-.comment-body {
+
+.edit-comment button+a{
+	margin-left:0.3em
+}
+.edit-comment {
 	margin-top: 8px;
 	margin-left: 21px;
 }

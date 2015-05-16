@@ -1,38 +1,72 @@
 var templates =  {"nodes": [
-{"c":"post",
-"children":[
-	{"c":"avatar"},
-	{"c":"post-body",
+	{"c":"post",
 	"children":[
-		{"c":"title"},
-		{"c":"post-cont"},
-		{"c":"attachments"},
-		{"c":"post-info",
+		{"c":"avatar"},
+		{"c":"post-body",
 		"children":[
-			{"c":"likes"}
+			{"c":"title"},
+			{"c":"post-cont"},
+			{"c":"attachments"},
+			{"c":"post-info",
+			"children":[
+				{"c":"post-controls",
+					"children":[
+					{"c":"post-date","t":"span"}
+				]},
+				{"c":"likes"}
+			]},
+			{"c":"comments"}
+		] }
+	]
+	},
+	{"c":"controls-self","t":"span",
+	"children":[
+		{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":"addComment"}},
+		{"c":"post-control-edit","t":"a","txt":"Edit","e":{"click":"editPost"}},
+		{"c":"post-control-delete","t":"a","txt":"Delete","e":{"click":"deletePost"}}
+	]
+	},
+	{"c":"controls-others","t":"span",
+	"children":[
+		{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":"addComment"}},
+		{"c":"post-control-like","t":"a","txt":"Like","e":{"click":"postLike"}}
+	]
+	},
+	{"c":"attachment"},
+	{"c":"comment",
+	"children":[
+		{"c":"comment-date",
+		"children":[
+			{"c":"date","t":"a",
+				"children":[
+				{"c":"fa fa-comment-o icon","t":"i" }
+			]}
 		]},
-		{"c":"comments"}
-	] }
-]
-},
-{"c":"controls-self","t":"span",
-"children":[
-	{"c":"post-control","t":"a","txt":"Comment","e":{"click":"addComment"}},
-	{"c":"post-control","t":"a","txt":"Edit"},
-	{"c":"post-control","t":"a","txt":"Delete"}
-]
-},
-{"c":"controls-others","t":"span",
-"children":[
-	{"c":"post-control","t":"a","txt":"Comment","e":{"click":"addComment"}},
-	{"c":"post-control","t":"a","txt":"Like","e":{"click":"initLike"}}
-]
-},
-{"c":"attachment"},
-{"c":"comment",
-"children":[
-	{"c":"comment-date"},
-	{"c":"comment-body"}
-]
-}
+		{"c":"comment-body"}
+	]
+	},
+	{"c":"comment-controls","t":"span",
+	"children":[
+		{"t":"a","txt":"edit","e":{"click":"editComment"}},
+		{"t":"a","txt":"delete","e":{"click":"deleteComment"}}
+	]},
+	{"c":"edit",
+	"children":[
+		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"edit-buttons",
+		"children":[
+			{"c":"edit-buttons-post","t":"button","txt":"Post"},
+			{"c":"edit-buttons-cancel","t":"a","txt":"Cancel"}
+		]}
+
+	]},
+	{"c":"new-post",
+	"children":[
+		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"post-edit-buttons",
+		"children":[
+			{"c":"edit-buttons-upload","t":"input","p":{"type":"file"}},
+			{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":"newPost"}}
+		]}
+	]}
 ]};

@@ -1,5 +1,6 @@
 var gConfig = {
   "serverURL":"http://twinspect.net:3000/v1/"
-, "static":"http://twinspect.net:3333/"
+, "front":"http://moimosk.ru/frf/"
+, "offset":"25"
 
 }

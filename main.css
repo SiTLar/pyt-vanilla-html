@@ -9,6 +9,7 @@ color: #333333;
 a {
 color: #000088;
        text-decoration: none;
+cursor: pointer;
 }
 
 .edit-txt-area{

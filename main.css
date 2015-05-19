@@ -32,7 +32,7 @@ padding: 3px;
 .control-button-post{
 margin-right:0.3em;
 }
-.authNode{
+.nodeAuth{
  margin: 10% auto 0 auto;
 padding: 20px ;
 overflow: hidden;
@@ -103,7 +103,7 @@ display: inline-block;
 .likes ul {
 float: left;
        list-style: outside none none;
-margin: 0 4px 4px 21px;
+margin: 0 4px 4px 2em;
 padding: 0;
 }
 .post-body .likes ul li {
@@ -116,7 +116,6 @@ display: inline-block;
 margin-right:.3em;
 }
 .comment-body {
-clear: both;
        font-size: 13px;
        line-height: 16px;
 	margin-top: 8px;
@@ -137,10 +136,28 @@ clear: both;
        font-size: 13px;
        line-height: 16px;
 }
+.likes-smile {
+
+float: left;
+height: auto;
+width: auto;
+font-size: 1.5em;
+position: relative;
+}
+.likes-smile .icon-bg{
+line-height: 0.9;
+color: #ffb914;
+float:left;
+
+}
+.likes-smile .icon{
+line-height: 0.9;
+color:white;
+float:left;
+}
 .comment-date { 
 float: left;
        margin-right: 4px;
-       margin-top: 2px;
 }
 
 .edit-comment button+a{

@@ -10,7 +10,7 @@ var templates =  {"nodes": [
 			{"c":"post-info",
 			"children":[
 				{"c":"post-controls",
-					"children":[
+				"children":[
 					{"c":"post-date","t":"span"}
 				]},
 				{"c":"likes"}
@@ -19,6 +19,14 @@ var templates =  {"nodes": [
 		] }
 	]
 	},
+	
+{"c":"controls-user","t":"div",
+	"children":[
+		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
+	]
+	},
+
+
 	{"c":"controls-self","t":"span",
 	"children":[
 		{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":"addComment"}},
@@ -35,7 +43,7 @@ var templates =  {"nodes": [
 	{"c":"attachment"},
 	{"c":"comment",
 	"children":[
-		{"c":"comment-date",
+		{"c":"comment-date","e":{"mouseover":"calcCmtTime"},
 		"children":[
 			{"c":"date","t":"a",
 				"children":[
@@ -68,5 +76,10 @@ var templates =  {"nodes": [
 			{"c":"edit-buttons-upload","t":"input","p":{"type":"file"}},
 			{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":"newPost"}}
 		]}
+	]},
+	{"c":"likes-smile","t":"span",
+	"children":[
+		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"},
+		{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
 	]}
 ]};

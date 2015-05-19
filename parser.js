@@ -63,7 +63,7 @@ function draw(content){
 	content.users.forEach(function(user){
 			gUsers[user.id] = user;
 			gUsers[user.id].link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+'</a>';
-			if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.front+ "img/default-userpic-48.png";
+			if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
 	});
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +document.timeline+ "</h1>"
@@ -94,6 +94,10 @@ function postHide(e,action){
 	console.log(e);
 
 }
+function updateDate(node){
+	node.innerHTML = '<a>' + relative_time(node.date) + '</a>'
+	window.setTimeout(updateDate, 5000, node );
+}
 function genPost(post){
 	var nodePost = gNodes['post'].cloneAll();
 	var postNBody = nodePost.cNodes["post-body"];
@@ -112,7 +116,8 @@ function genPost(post){
 		}		
 	}
 //	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].innerHTML = "<a href='"+ gConfig.front+ user.username+'/'+post.id+ "' >"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a>";
-	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].innerHTML = "<a>"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a>";
+	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].date = post.createdAt*1;
+	window.setTimeout(updateDate, 10, postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"]);
 
 	var nodeControls;
 	if (post.createdBy == gMe.users.id)
@@ -158,7 +163,7 @@ function newPost(e){
 	oReq.onload = function(){
 		if(this.status < 400){
 			e.target.parentNode.parentNode.cNodes['edit-txt-area'].value = '';
-			e.target.parentNode.parentNode.cNodes['edit-txt-area'].style.height  = 26;
+			e.target.parentNode.parentNode.cNodes['edit-txt-area'].style.height  = '4em';
 			var post = JSON.parse(this.response).posts;
 			document.body.posts.insertBefore(genPost(post), document.body.posts.childNodes[0]);
 		}
@@ -375,6 +380,7 @@ function sendComment(textField){
 	oReq.onload = function(){
 		if(this.status < 400){
 			textField.value = '';
+			textField.style.height = '4em';
 			var comment = JSON.parse(this.response).comments;
 			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment);
 			gComments[comment.id] = comment;
@@ -506,6 +512,11 @@ function parseGET() {
 	}
 	return get;
 }
+function frfAutolinker( autolinker,match ){
+	if (match.getType() == "twitter")
+	 return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + '</a>' ;
+	 else return true;
+}
 function initDoc(){
 
 	if (auth()){
@@ -515,7 +526,7 @@ function initDoc(){
 		if (locationPath == "")locationPath = 'home';
 		if (locationSearch == '')locationSearch = '?offset=0';
 		document.skip = locationSearch.split("=")[1]*1;
-		autolinker = new Autolinker({'truncate':20,  'twitter':false} );
+		autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
 		gNodes = new Object();
 		genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 		var oReq = new XMLHttpRequest();

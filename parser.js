@@ -18,6 +18,7 @@ function unfoldLikes(id){
 	nodeLikes.children[idx].appendChild(span);
 }
 function genLikes(post, postNBody){
+	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(gNodes['likes-smile'].cloneNode(true));
 	var nodeLikes = document.createElement( 'ul');
  	var l =  post.likes.length;
 	for (var idx = 0; idx< l;idx++) {
@@ -67,6 +68,7 @@ function draw(content){
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +document.timeline+ "</h1>"
 	body.appendChild(title);
+	 body.appendChild(gNodes['controls-user'].cloneAll());
 	if (!document.timeline||(document.timeline == 'homea')){
 		var nodeAddPost = gNodes['new-post'].cloneAll();
 		body.appendChild(nodeAddPost);
@@ -156,6 +158,7 @@ function newPost(e){
 	oReq.onload = function(){
 		if(this.status < 400){
 			e.target.parentNode.parentNode.cNodes['edit-txt-area'].value = '';
+			e.target.parentNode.parentNode.cNodes['edit-txt-area'].style.height  = 26;
 			var post = JSON.parse(this.response).posts;
 			document.body.posts.insertBefore(genPost(post), document.body.posts.childNodes[0]);
 		}
@@ -337,7 +340,8 @@ function processText(e) {
 	if (e.target.scrollHeight > e.target.clientHeight) 
 		e.target.style.height = e.target.scrollHeight + "px";
 	if (e.which == '13'){
-		e.target.value = e.target.value.slice(0, -1);
+		var text = e.target.value;
+		if(text.charAt(text.length-1) == '\n') e.target.value = text.slice(0, -1);
 		e.target.nextSibling.cNodes["edit-buttons-post"].dispatchEvent(new Event('click'));
 	}
 	
@@ -410,13 +414,17 @@ function unfoldComm(id){
 	for(var idx = post.comments.length - 3; idx > 1; idx--)
 		cNode =nodeComments.insertBefore(genComment(gComments[post.comments[idx]]), cNode); 
 }
+function calcCmtTime(e){
+	e.target.title =  relative_time((new Date(gComments[e.target.parentNode.parentNode.parentNode.id].updatedAt*1)).toUTCString());
+
+}
 function genCNodes(node, proto){
 	node.cNodes = new Object(); 
 	for(var idx = 0; idx <  node.children.length; idx++){
 		genCNodes(node.children[idx], proto.children[idx]);
 		node.cNodes[node.children[idx].className] = node.children[idx];
 	}
-	if (proto.e) 
+	if (typeof(proto.e) !== 'undefined' ) 
 		for(action in proto.e)
 			node.addEventListener(action, window[proto.e[action]]);	
 }
@@ -477,6 +485,12 @@ function getauth(oFormElement){
 	oReq.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 	oReq.send("username="+document.getElementById('a-user').value+"&password="+document.getElementById('a-pass').value);
 }
+function logout(){
+		window.localStorage.setItem("token", '');
+		location.reload();
+
+
+};
 function parseGET() {
 	var reqs = new Array();
 	var req = new Array();

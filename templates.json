@@ -71,10 +71,12 @@ var templates =  {"nodes": [
 	{"c":"new-post",
 	"children":[
 		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+
+		{"c":"attachments"},
 		{"c":"post-edit-buttons",
 		"children":[
-			{"c":"edit-buttons-upload","t":"input","p":{"type":"file"}},
-			{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":"newPost"}}
+			{"c":"edit-buttons-upload","t":"input","p":{"type":"file","accept":"image/*" }, "e":{"change":"sendAttachment" }}
+			,{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":"newPost"}}
 		]}
 	]},
 	{"c":"likes-smile","t":"span",

@@ -45,6 +45,9 @@ background: #0199d9;
 	    -webkit-box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
+.posts{
+clear: both;
+}
 .post {
 	border-bottom: 1px solid #eee;
 	line-height: 19px;
@@ -67,11 +70,11 @@ color: #666;
 .post-body a {
 color: #555599;
 }
-.post-body .attachments {
+ .attachments {
 	margin-bottom: 2px;
 overflow: hidden;
 }
-.post-body .attachments .attachment {
+.attachment {
     border: 1px solid silver;
     float: left;
     margin: 0 8px 8px 0;

@@ -89,8 +89,13 @@ overflow: hidden;
 	margin-bottom: 10px;
 color: #000;
 }
+.post-date a{
+color: #737373;
+}
+
 .post-date {
-margin-right:3em;
+margin-right:1em;
+color: #737373;
 }
 .post-info {
 	font-size: 13px;

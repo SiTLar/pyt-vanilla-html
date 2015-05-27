@@ -138,9 +138,9 @@ function genPost(post){
 	if(post.attachments){
 		var attsNode = postNBody.cNodes["attachments"];
 		for(att in post.attachments){
-			var attNode = gNodes['attachment'].cloneAll();
-			attNode.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src='+gAttachments[post.attachments[att]].thumbnailUrl+'></a>';
-			attsNode.appendChild(attNode);
+			var nodeAtt = gNodes['attachment'].cloneAll();
+			nodeAtt.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src='+gAttachments[post.attachments[att]].thumbnailUrl+'></a>';
+			attsNode.appendChild(nodeAtt);
 		}		
 	}
 //	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].innerHTML = "<a href='"+ gConfig.front+ user.username+'/'+post.id+ "' >"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a>";
@@ -180,65 +180,78 @@ function genPost(post){
 }
 function newPost(e){
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		if(this.status < 400){
-			var attNode = document.createElement('div');
-			attNode.className = 'attachments';
-			textField.parentNode.replaceChild(attNode, textField.parentNode.cNodes['attachments']);
-			textField.parentNode.cNodes['attachments'] = attNode;
-			textField.value = '';
-			textField.style.height  = '4em';
-			var res = JSON.parse(this.response);
-			if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-			document.body.posts.insertBefore(genPost(res.posts), document.body.posts.childNodes[0]);
+	textField.disabled = true;
+	e.target.disabled = true;
+	if(textField.pAtt)textField.pAtt.then(send);
+	else send();
+	function send(){
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(this.status < 400){
+				var nodeAtt = document.createElement('div');
+				nodeAtt.className = 'attachments';
+				textField.parentNode.replaceChild(nodeAtt, textField.parentNode.cNodes['attachments']);
+				textField.parentNode.cNodes['attachments'] = nodeAtt;
+				textField.value = '';
+				textField.disabled = false;
+				e.target.disabled = false;
+				textField.style.height  = '4em';
+				var res = JSON.parse(this.response);
+				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
+				document.body.posts.insertBefore(genPost(res.posts), document.body.posts.childNodes[0]);
 
-		}
-	};
+			}
+		};
 
-	oReq.open("post",gConfig.serverURL + "posts", true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	oReq.setRequestHeader("Content-type","application/json");
-	var post = new Object();
-	post.body = textField.value;
-	if(textField.attachments) post.attachments = textField.attachments;
-	/*comment.postId = nodePost.id;
-	comment.createdAt = null;
-	comment.createdBy = null;
-	comment.updatedAt = null;
-	comment.post = null;
-	*/
-	var postdata = new Object();
-	postdata.post = post;
-	postdata.meta = new Object();
-	postdata.meta.feeds = gMe.users.username;
-	oReq.send(JSON.stringify(postdata));
+		oReq.open("post",gConfig.serverURL + "posts", true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("Content-type","application/json");
+		var post = new Object();
+		post.body = textField.value;
+		if(textField.attachments) post.attachments = textField.attachments;
+		/*comment.postId = nodePost.id;
+		comment.createdAt = null;
+		comment.createdBy = null;
+		comment.updatedAt = null;
+		comment.post = null;
+		*/
+		var postdata = new Object();
+		postdata.post = post;
+		postdata.meta = new Object();
+		postdata.meta.feeds = gMe.users.username;
+		oReq.send(JSON.stringify(postdata));
+	}
 }
 function sendAttachment(e){
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		if(this.status < 400){
-			e.target.value = '';
-			var attachments = JSON.parse(this.response).attachments;
-			var attNode = gNodes['attachment'].cloneAll();
-			attNode.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src='+attachments.thumbnailUrl+'></a>';
-			e.target.parentNode.parentNode.cNodes['attachments'].appendChild(attNode);
-			var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
-			if (typeof(textField.attachments) === 'undefined' ) textField.attachments = new Array();
- textField.attachments.push(attachments.id);
+	e.target.disabled = true;
+	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
+	var nodeSpinner = gNodes['attachment'].cloneAll();
+	nodeSpinner.innerHTML = '<img src='+gConfig.static+"img/uploading.gif"+'>';
+	e.target.parentNode.parentNode.cNodes['attachments'].appendChild(nodeSpinner);
+	textField.pAtt = new Promise(function(resolve,reject){
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(this.status < 400){
+				e.target.value = '';
+				e.target.disabled = false;
+				var attachments = JSON.parse(this.response).attachments;
+				var nodeAtt = gNodes['attachment'].cloneAll();
+				nodeAtt.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src='+attachments.thumbnailUrl+'></a>';
+				nodeSpinner.parentNode.replaceChild(nodeAtt, nodeSpinner);
+				if (typeof(textField.attachments) === 'undefined' ) textField.attachments = new Array();
+				textField.attachments.push(attachments.id);
+				resolve();
 
-		}
-	};
+			}else reject(this.status);
+		};
 
-	oReq.open("post",gConfig.serverURL + "attachments", true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	var data = new FormData();
-	data.append( 'name', "attachment[file]");
-	data.append( "attachment[file]", e.target.files[0], e.target.value);
-	oReq.send(data);
-
-
-
+		oReq.open("post",gConfig.serverURL + "attachments", true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		var data = new FormData();
+		data.append( 'name', "attachment[file]");
+		data.append( "attachment[file]", e.target.files[0], e.target.value);
+		oReq.send(data);
+	});
 }
 function editPost(e) {
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'post');

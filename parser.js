@@ -27,18 +27,18 @@ function unfoldLikes(id){
 function writeAllLikes(id,nodeLikes){
 	var post = document.getElementById(id).rawData;
 	var idx;
-	for(idx = 0; idx < nodeLikes.children.length; idx++)
-		if (nodeLikes.children[idx].nodeName == 'UL')break;
+	for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
+		if (nodeLikes.childNodes[idx].nodeName == 'UL')break;
 	var nodeLike = document.createElement('li');
 	nodeLike.className = "p-timeline-user-like";
 	for(var like = 4; like < post.likes.length; like++){
 		var nodeCLike = nodeLike.cloneNode();
 		nodeCLike.innerHTML = gUsers[post.likes[like]].link;
-		nodeLikes.children[idx].appendChild(nodeCLike);
+		nodeLikes.childNodes[idx].appendChild(nodeCLike);
 	}
 	span = document.createElement('span');
 	span.innerHTML = " liked this";
-	nodeLikes.children[idx].appendChild(span);
+	nodeLikes.childNodes[idx].appendChild(span);
 }
 function genLikes(post, postNBody){
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(gNodes['likes-smile'].cloneNode(true));
@@ -68,7 +68,7 @@ function genLikes(post, postNBody){
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(nodeLikes);
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 	if(post.likes[0] == gMe.users.id){
-		postNBody.cNodes["post-info"].myLike = nodeLikes.children[0];
+		postNBody.cNodes["post-info"].myLike = nodeLikes.childNodes[0];
 		if( postNBody.cNodes["post-info"].nodeLike) {
 			postNBody.cNodes["post-info"].nodeLike.innerHTML = "Un-like";
 			postNBody.cNodes["post-info"].nodeLike.action = false;
@@ -96,34 +96,103 @@ function draw(content){
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +document.timeline+ "</h1>"
 	body.appendChild(title);
-	 body.appendChild(gNodes['controls-user'].cloneAll());
+	body.appendChild(gNodes['controls-user'].cloneAll());
 	if (!document.timeline||(document.timeline == 'home')){
 		var nodeAddPost = gNodes['new-post'].cloneAll();
 		body.appendChild(nodeAddPost);
 	}
-	var nodeMore = document.createElement("div");
-	nodeMore.className = 'more-node';
-	var htmlOffset = '<a href="' + gConfig.front+document.timeline ;
-	var backward = document.skip*1 - gConfig.offset*1;
-	var forward = document.skip*1 + gConfig.offset*1;
-	if (document.skip){
-		if (backward>0)htmlOffset += '?offset=' + backward*1;
-		htmlOffset += '"><span style="font-size: 200%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+document.timeline;
-	} 
-	htmlOffset += '?offset=' + forward*1 + '">Older items <span style="font-size: 200%">&rarr;</span></a>';
-	nodeMore.innerHTML = htmlOffset;
-	body.appendChild(nodeMore.cloneNode(true));
-	body.posts = document.createElement("div");
-	body.appendChild(body.posts);
-	content.posts.forEach(function(post){ body.posts.appendChild(genPost(post)); });
-	body.appendChild(nodeMore);
+	if(content.timelines){
+		var nodeMore = document.createElement("div");
+		nodeMore.className = 'more-node';
+		var htmlOffset = '<a href="' + gConfig.front+document.timeline ;
+		var backward = document.skip*1 - gConfig.offset*1;
+		var forward = document.skip*1 + gConfig.offset*1;
+		if (document.skip){
+			if (backward>0)htmlOffset += '?offset=' + backward*1;
+			htmlOffset += '"><span style="font-size: 200%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+document.timeline;
+		} 
+		htmlOffset += '?offset=' + forward*1 + '">Older items <span style="font-size: 200%">&rarr;</span></a>';
+		nodeMore.innerHTML = htmlOffset;
+		body.appendChild(nodeMore.cloneNode(true));
+		document.posts = document.createElement("div");
+		body.appendChild(document.posts);
+		document.hiddenPosts = new Array();
+		document.hiddenCount = 0;
+		var idx = 0;
+		content.posts.forEach(function(post){
+			post.idx = idx++;
+			if(post.isHidden){
+				document.hiddenPosts.push(post);
+				document.hiddenCount++;
+			}else{ 
+				document.hiddenPosts.push(false);
+				var nodePost = genPost(post);
+				document.posts.appendChild(genPost(post));
+			} 
+		});
+		var nodeShowHidden = gNodes['show-hidden'].cloneAll();
+		nodeShowHidden.cNodes['href'].action = true;
+		body.appendChild(nodeShowHidden);
+		if(document.hiddenCount) nodeShowHidden.cNodes['href'].innerHTML= 'Show '+ document.hiddenCount + ' hidden entries';
+		body.appendChild(nodeMore);
+	}else body.appendChild(genPost(content.posts));
 }
-function postHide(e,action){
-	console.log(e);
+function showHidden(e){
+	if(e.target.action){
+		if(!document.hiddenCount)return;	
+		var nodeHiddenPosts = document.createElement('div');
+		nodeHiddenPosts.id = 'hidden-posts'; 
+		document.hiddenPosts.forEach(function(post){if(post)nodeHiddenPosts.appendChild(genPost(post));});
+		e.target.parentNode.parentNode.insertBefore(nodeHiddenPosts , e.target.parentNode.nextSibling);
+		e.target.innerHTML =  'Collapse '+ document.hiddenCount + ' hidden entries';
+	}else{
+		var nodeHiddenPosts = document.getElementById('hidden-posts');
+		if (nodeHiddenPosts) nodeHiddenPosts.parentNode.removeChild(nodeHiddenPosts);
+		if (document.hiddenCount) e.target.innerHTML = 'Show '+ document.hiddenCount + ' hidden entries';
+		else e.target.innerHTML = '';
+	}
+	e.target.action = !e.target.action; 
+}
+function postHide(e){
+	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'post');
+	var oReq = new XMLHttpRequest();
+	var aShow = document.getElementsByClassName('show-hidden')[0].cNodes["href"];
+	oReq.onload = function(){
+		if(this.status < 400){	
+			if(e.target.action){
+				victim.rawData.isHidden = true;
+				document.hiddenPosts[victim.rawData.idx] = victim.rawData;
+				victim.parentNode.removeChild(victim);
+				document.hiddenCount++;
+				aShow.action = false;
+				aShow.dispatchEvent(new Event('click'));
+			}else{
+				var count = 0;
+				var idx = victim.rawData.idx;
+				do if(document.hiddenPosts[idx--])count++;
+				while ( idx >0 );
+				if ((victim.rawData.idx - count+1) >= document.posts.childNodes.length )document.posts.appendChild(victim);
+				else document.posts.insertBefore(victim, document.posts.childNodes[victim.rawData.idx - count+1]);
+				e.target.innerHTML = 'Hide';
+				document.hiddenPosts[victim.rawData.idx] = false;
+				document.hiddenCount--;
+				if(document.hiddenCount) aShow.innerHTML = 'Collapse '+ document.hiddenCount + ' hidden entries'; 
+				else aShow.dispatchEvent(new Event('click'));
+			}
+			e.target.action = !e.target.action; 
+		};
+	}
+	
 
+		oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"hide":"unhide"), true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.send();
+		
+
+	
 }
 function updateDate(node){
-	node.innerHTML = '<a>' + relative_time(node.date) + '</a>'
+	node.innerHTML =  relative_time(node.date) ;
 	window.setTimeout(updateDate, 5000, node );
 }
 function genPost(post){
@@ -138,14 +207,18 @@ function genPost(post){
 	if(post.attachments){
 		var attsNode = postNBody.cNodes["attachments"];
 		for(att in post.attachments){
-			var attNode = gNodes['attachment'].cloneAll();
-			attNode.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src='+gAttachments[post.attachments[att]].thumbnailUrl+'></a>';
-			attsNode.appendChild(attNode);
+			var nodeAtt = gNodes['attachment'].cloneAll();
+			nodeAtt.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src='+gAttachments[post.attachments[att]].thumbnailUrl+'></a>';
+			attsNode.appendChild(nodeAtt);
 		}		
 	}
 //	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].innerHTML = "<a href='"+ gConfig.front+ user.username+'/'+post.id+ "' >"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a>";
-	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].date = post.createdAt*1;
-	window.setTimeout(updateDate, 10, postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"]);
+	var anchorDate = document.createElement("a");
+	anchorDate.href = gConfig.front+gUsers[post.createdBy].username+'/'+post.id;
+	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
+	anchorDate.date = post.createdAt*1;
+
+	window.setTimeout(updateDate, 10,anchorDate);
 
 	var nodeControls;
 	if (post.createdBy == gMe.users.id)
@@ -156,10 +229,9 @@ function genPost(post){
 		nodeControls.cNodes['post-control-like'].action = true;
 	}
 	var aHide = document.createElement('a');
-	aHide.innerHTML = 'Hide';
-	aHide.addEventListener("click",function(){
-			postHide(this,true);
-			});
+	aHide.innerHTML = post.isHidden?'Un-hide':'Hide';
+	aHide.action = !post.isHidden;
+	aHide.addEventListener("click", postHide);
 	nodeControls.appendChild(aHide);
 	postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
 	if (post.likes)	genLikes(post, postNBody );
@@ -174,71 +246,86 @@ function genPost(post){
 		}
 		else post.comments.forEach(function(commentId){ postNBody.cNodes['comments'].appendChild(genComment(gComments[commentId]))});
 	}
-	postNBody.cNodes['comments'].cnt = postNBody.cNodes['comments'].children.length;
+	postNBody.cNodes['comments'].cnt = postNBody.cNodes['comments'].childNodes.length;
+	if (postNBody.cNodes['comments'].cnt > 4) 
+			addLastCmtButton(postNBody);
 	return nodePost;
 
 }
 function newPost(e){
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		if(this.status < 400){
-			var attNode = document.createElement('div');
-			attNode.className = 'attachments';
-			textField.parentNode.replaceChild(attNode, textField.parentNode.cNodes['attachments']);
-			textField.parentNode.cNodes['attachments'] = attNode;
-			textField.value = '';
-			textField.style.height  = '4em';
-			var res = JSON.parse(this.response);
-			if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-			document.body.posts.insertBefore(genPost(res.posts), document.body.posts.childNodes[0]);
+	textField.disabled = true;
+	e.target.disabled = true;
+	if(textField.pAtt)textField.pAtt.then(send);
+	else send();
+	function send(){
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(this.status < 400){
+				var nodeAtt = document.createElement('div');
+				nodeAtt.className = 'attachments';
+				textField.parentNode.replaceChild(nodeAtt, textField.parentNode.cNodes['attachments']);
+				textField.parentNode.cNodes['attachments'] = nodeAtt;
+				textField.value = '';
+				textField.disabled = false;
+				e.target.disabled = false;
+				textField.style.height  = '4em';
+				var res = JSON.parse(this.response);
+				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
+				document.body.posts.insertBefore(genPost(res.posts), document.body.posts.childNodes[0]);
 
-		}
-	};
+			}
+		};
 
-	oReq.open("post",gConfig.serverURL + "posts", true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	oReq.setRequestHeader("Content-type","application/json");
-	var post = new Object();
-	post.body = textField.value;
-	if(textField.attachments) post.attachments = textField.attachments;
-	/*comment.postId = nodePost.id;
-	comment.createdAt = null;
-	comment.createdBy = null;
-	comment.updatedAt = null;
-	comment.post = null;
-	*/
-	var postdata = new Object();
-	postdata.post = post;
-	postdata.meta = new Object();
-	postdata.meta.feeds = gMe.users.username;
-	oReq.send(JSON.stringify(postdata));
+		oReq.open("post",gConfig.serverURL + "posts", true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("Content-type","application/json");
+		var post = new Object();
+		post.body = textField.value;
+		if(textField.attachments) post.attachments = textField.attachments;
+		/*comment.postId = nodePost.id;
+		comment.createdAt = null;
+		comment.createdBy = null;
+		comment.updatedAt = null;
+		comment.post = null;
+		*/
+		var postdata = new Object();
+		postdata.post = post;
+		postdata.meta = new Object();
+		postdata.meta.feeds = gMe.users.username;
+		oReq.send(JSON.stringify(postdata));
+	}
 }
 function sendAttachment(e){
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		if(this.status < 400){
-			e.target.value = '';
-			var attachments = JSON.parse(this.response).attachments;
-			var attNode = gNodes['attachment'].cloneAll();
-			attNode.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src='+attachments.thumbnailUrl+'></a>';
-			e.target.parentNode.parentNode.cNodes['attachments'].appendChild(attNode);
-			var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
-			if (typeof(textField.attachments) === 'undefined' ) textField.attachments = new Array();
- textField.attachments.push(attachments.id);
+	e.target.disabled = true;
+	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
+	var nodeSpinner = gNodes['attachment'].cloneAll();
+	nodeSpinner.innerHTML = '<img src='+gConfig.static+"img/uploading.gif"+'>';
+	e.target.parentNode.parentNode.cNodes['attachments'].appendChild(nodeSpinner);
+	textField.pAtt = new Promise(function(resolve,reject){
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(this.status < 400){
+				e.target.value = '';
+				e.target.disabled = false;
+				var attachments = JSON.parse(this.response).attachments;
+				var nodeAtt = gNodes['attachment'].cloneAll();
+				nodeAtt.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src='+attachments.thumbnailUrl+'></a>';
+				nodeSpinner.parentNode.replaceChild(nodeAtt, nodeSpinner);
+				if (typeof(textField.attachments) === 'undefined' ) textField.attachments = new Array();
+				textField.attachments.push(attachments.id);
+				resolve();
 
-		}
-	};
+			}else reject(this.status);
+		};
 
-	oReq.open("post",gConfig.serverURL + "attachments", true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	var data = new FormData();
-	data.append( 'name', "attachment[file]");
-	data.append( "attachment[file]", e.target.files[0], e.target.value);
-	oReq.send(data);
-
-
-
+		oReq.open("post",gConfig.serverURL + "attachments", true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		var data = new FormData();
+		data.append( 'name', "attachment[file]");
+		data.append( "attachment[file]", e.target.files[0], e.target.value);
+		oReq.send(data);
+	});
 }
 function editPost(e) {
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'post');
@@ -305,7 +392,7 @@ function postLike(e){
 				var idx;
 				var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
 				var likesUL;
-				if (!nodeLikes.children.length){
+				if (!nodeLikes.childNodes.length){
 					likesUL = document.createElement( 'ul');
 					likesUL.className ="p-timeline-user-likes";
 					var suffix = document.createElement("span");
@@ -316,21 +403,21 @@ function postLike(e){
 
 				}else {
 
-					for(idx = 0; idx < nodeLikes.children.length; idx++)
-						if (nodeLikes.children[idx].nodeName == 'UL')break;
-					likesUL = nodeLikes.children[idx];
+					for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
+						if (nodeLikes.childNodes[idx].nodeName == 'UL')break;
+					likesUL = nodeLikes.childNodes[idx];
 				}
 				var nodeLike = document.createElement('li');
 				nodeLike.className = "p-timeline-user-like";
 				nodeLike.innerHTML = gUsers[gMe.users.id].link;
-				if(likesUL.children.length)likesUL.insertBefore(nodeLike, likesUL.children[0]);
+				if(likesUL.childNodes.length)likesUL.insertBefore(nodeLike, likesUL.childNodes[0]);
 				else likesUL.appendChild(nodeLike);
 				e.target.parentNode.parentNode.parentNode.myLike = nodeLike;
 			}else{
 				var myLike = e.target.parentNode.parentNode.parentNode.myLike;
 				likesUL = myLike.parentNode;
 				likesUL.removeChild(myLike);  	
-				if (!likesUL.children.length) likesUL.parentNode.innerHTML = '';
+				if (!likesUL.childNodes.length) likesUL.parentNode.innerHTML = '';
 			 }
 			e.target.innerHTML=e.target.action?'Un-like':'Like';
 			e.target.action = !e.target.action; 
@@ -447,7 +534,7 @@ function sendComment(textField){
 			var comment = JSON.parse(this.response).comments;
 			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment);
 			gComments[comment.id] = comment;
-			if( nodeComment.parentNode.children.length > 4 ) addLastCmtButton(nodePost.cNodes['post-body']);
+			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes['post-body']);
 		}
 	};
 
@@ -513,9 +600,9 @@ function calcCmtTime(e){
 }
 function genCNodes(node, proto){
 	node.cNodes = new Object(); 
-	for(var idx = 0; idx <  node.children.length; idx++){
-		genCNodes(node.children[idx], proto.children[idx]);
-		node.cNodes[node.children[idx].className] = node.children[idx];
+	for(var idx = 0; idx <  node.childNodes.length; idx++){
+		genCNodes(node.childNodes[idx], proto.childNodes[idx]);
+		node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
 	}
 	if (typeof(proto.e) !== 'undefined' ) 
 		for(action in proto.e)
@@ -609,10 +696,11 @@ function initDoc(){
 	if (auth()){
 		var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 		var locationSearch = document.location.search;
-		document.timeline = locationPath;
 		if (locationPath == "")locationPath = 'home';
 		if (locationSearch == '')locationSearch = '?offset=0';
 		document.skip = locationSearch.split("=")[1]*1;
+		var arrLocationPath = locationPath.split("/");
+		document.timeline = arrLocationPath[0];
 		autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
 		gNodes = new Object();
 		genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
@@ -627,7 +715,8 @@ function initDoc(){
 			}
 
 		};
-		oReq.open("get",gConfig.serverURL + "timelines/"+locationPath+locationSearch, true);
+		if(arrLocationPath.length > 1)oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);
+		else oReq.open("get",gConfig.serverURL + "timelines/"+locationPath+locationSearch, true);
 		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 		oReq.send();
 	}

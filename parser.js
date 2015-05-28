@@ -168,7 +168,9 @@ function postHide(e){
 				aShow.dispatchEvent(new Event('click'));
 			}else{
 				var count = 0;
-				for(var idx = victim.rawData.idx; idx != 0; idx-- )if(document.hiddenPosts[idx])count++;
+				var idx = victim.rawData.idx;
+				do if(document.hiddenPosts[idx--])count++;
+				while ( idx >0 );
 				if ((victim.rawData.idx - count+1) >= document.posts.childNodes.length )document.posts.appendChild(victim);
 				else document.posts.insertBefore(victim, document.posts.childNodes[victim.rawData.idx - count+1]);
 				e.target.innerHTML = 'Hide';

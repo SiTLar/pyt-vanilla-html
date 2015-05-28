@@ -84,4 +84,8 @@ var templates =  {"nodes": [
 		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"},
 		{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
 	]}
+	,{"c":"show-hidden",
+	"children":[
+		{"c":"href","e":{"click":"showHidden"},"t":"a" }
+	]}
 ]};

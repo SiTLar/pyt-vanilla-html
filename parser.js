@@ -86,7 +86,6 @@ function addUser (user){
 function draw(content){
 	var body = document.getElementsByTagName("body")[0];
 	gComments = new Object();
-	gUsers= new Object();
 	gAttachments  = new Object();
 	gTimelines = content.timelines;
 	if(content.attachments)content.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
@@ -641,7 +640,10 @@ function auth(){
 		oReq.send();
 		if(oReq.status < 400) {
 			gMe = JSON.parse(oReq.response);
-			if (gMe.users) return true;
+			if (gMe.users) {
+				addUser(gMe.users);
+				return true;
+			}
 		}
 	}
 	var nodeAuth = document.createElement("div");
@@ -693,6 +695,7 @@ function frfAutolinker( autolinker,match ){
 }
 function initDoc(){
 
+	gUsers= new Object();
 	if (auth()){
 		var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 		var locationSearch = document.location.search;

@@ -45,6 +45,9 @@ background: #0199d9;
 	    -webkit-box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
+.posts{
+clear: both;
+}
 .post {
 	border-bottom: 1px solid #eee;
 	line-height: 19px;
@@ -67,11 +70,11 @@ color: #666;
 .post-body a {
 color: #555599;
 }
-.post-body .attachments {
-	margin-bottom: 2px;
+ .attachments {
+	margin-bottom: 3px;
 overflow: hidden;
 }
-.post-body .attachments .attachment {
+.attachment {
     border: 1px solid silver;
     float: left;
     margin: 0 8px 8px 0;
@@ -83,18 +86,24 @@ overflow: hidden;
 	margin-bottom: 2px;
 }
 .post-cont {
-	margin-bottom: 10px;
+	margin-bottom: 3px;
 color: #000;
 }
+.post-date a{
+color: #737373;
+}
+
 .post-date {
-margin-right:3em;
+margin-right:1em;
+color: #737373;
 }
 .post-info {
 	font-size: 13px;
 	line-height: 16px;
 }
-.post-control{
+.post-controls{
 display: inline-block;
+	margin-bottom: 6px;
 }
 .post-controls a+a::before{
 	content: " - ";

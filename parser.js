@@ -86,7 +86,6 @@ function addUser (user){
 function draw(content){
 	var body = document.getElementsByTagName("body")[0];
 	gComments = new Object();
-	gUsers= new Object();
 	gAttachments  = new Object();
 	gTimelines = content.timelines;
 	if(content.attachments)content.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
@@ -272,7 +271,7 @@ function newPost(e){
 				textField.style.height  = '4em';
 				var res = JSON.parse(this.response);
 				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-				document.body.posts.insertBefore(genPost(res.posts), document.body.posts.childNodes[0]);
+				document.posts.insertBefore(genPost(res.posts), document.posts.childNodes[0]);
 
 			}
 		};
@@ -345,6 +344,7 @@ function cancelEditPost(e){
 function postEditedPost(e){
 	var nodePost =e.target; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
 	var oReq = new XMLHttpRequest();
+	e.target.disabled = true;
 	oReq.onload = function(){
 		if(this.status < 400){
 			var post = JSON.parse(this.response).posts;
@@ -518,9 +518,10 @@ function deleteComment(e){
 }
 function sendComment(textField){
 	var nodeComment =textField; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
+	textField.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = true;
 	var comment = new Object();
 	comment.body = textField.value;
-	var nodePost =textField; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
+	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
 	comment.postId = nodePost.id;
 	comment.createdAt = null;
 	comment.createdBy = null;
@@ -534,6 +535,7 @@ function sendComment(textField){
 			var comment = JSON.parse(this.response).comments;
 			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment);
 			gComments[comment.id] = comment;
+			textField.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes['post-body']);
 		}
 	};
@@ -565,22 +567,20 @@ function addLastCmtButton(postNBody){
 }
 function unfoldComm(id){
 	var post = document.getElementById(id).rawData;
-	var nodeUnfold  = document.getElementById(id+'-unc');
-	var nodeComments = nodeUnfold.parentNode.parentNode.parentNode;
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(oReq.status < 400){
 			var postUpd = JSON.parse(this.response);
 			postUpd.users.forEach(addUser);
 			document.getElementById(id).rawData = post;
-			var startIdx = postUpd.comments.length -nodeComments.cnt+1;
-			var cNode = genComment(postUpd.comments[startIdx]); 
-			nodeComments.replaceChild(cNode, nodeUnfold.parentNode.parentNode); 
-			for(var idx = startIdx -1 ; idx > 0; idx--)
-				cNode =nodeComments.insertBefore(genComment(postUpd.comments[idx]), cNode); 
-
-			addLastCmtButton(document.getElementById(id).cNodes['post-body']);
-			nodeComments.cnt = postUpd.comments.length;
+			var nodePB = document.getElementById(id).cNodes['post-body'];
+			nodePB.removeChild(nodePB.cNodes['comments']);
+			nodePB.cNodes['comments'] = document.createElement('div');
+			nodePB.cNodes['comments'].className = 'comments';
+			postUpd.comments.forEach(function(cmt){nodePB.cNodes['comments'].appendChild(genComment(cmt))});
+			nodePB.appendChild(nodePB.cNodes['comments']);
+			addLastCmtButton(nodePB);
+			nodePB.cNodes['comments'].cnt = postUpd.comments.length;
 
 		}else{
 			console.log(oReq.toString());
@@ -641,7 +641,10 @@ function auth(){
 		oReq.send();
 		if(oReq.status < 400) {
 			gMe = JSON.parse(oReq.response);
-			if (gMe.users) return true;
+			if (gMe.users) {
+				addUser(gMe.users);
+				return true;
+			}
 		}
 	}
 	var nodeAuth = document.createElement("div");
@@ -693,6 +696,7 @@ function frfAutolinker( autolinker,match ){
 }
 function initDoc(){
 
+	gUsers= new Object();
 	if (auth()){
 		var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 		var locationSearch = document.location.search;

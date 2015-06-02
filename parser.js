@@ -201,8 +201,10 @@ function genPost(post){
 	nodePost.rawData = post;
 	nodePost.id = post.id;
 	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body);
-	nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
-	postNBody.cNodes["title"].innerHTML =  user.link;
+	if(typeof user !== 'undefined'){
+		nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+		postNBody.cNodes["title"].innerHTML =  user.link;
+	}
 	if(post.attachments){
 		var attsNode = postNBody.cNodes["attachments"];
 		for(att in post.attachments){
@@ -213,7 +215,7 @@ function genPost(post){
 	}
 //	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].innerHTML = "<a href='"+ gConfig.front+ user.username+'/'+post.id+ "' >"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a>";
 	var anchorDate = document.createElement("a");
-	anchorDate.href = gConfig.front+gUsers[post.createdBy].username+'/'+post.id;
+	if(typeof user !== 'undefined') anchorDate.href = gConfig.front+user.username+'/'+post.id;
 	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
 	anchorDate.date = post.createdAt*1;
 

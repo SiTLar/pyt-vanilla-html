@@ -165,6 +165,9 @@ clear: both;
        font-size: 13px;
        line-height: 16px;
 }
+.fa-spinner{
+    margin-left: 0.5em
+}
 .likes-smile {
 
 float: left;

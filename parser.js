@@ -505,7 +505,7 @@ function processText(e) {
 	if (e.which == '13'){
 		var text = e.target.value;
 		if(text.charAt(text.length-1) == '\n') e.target.value = text.slice(0, -1);
-		e.target.parentNode.cNodes['post-edit-buttons'].cNodes["edit-buttons-post"].dispatchEvent(new Event('click'));
+		e.target.parentNode.cNodes['edit-buttons'].cNodes["edit-buttons-post"].dispatchEvent(new Event('click'));
 	}
 	
 }

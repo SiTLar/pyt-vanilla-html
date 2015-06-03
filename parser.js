@@ -659,7 +659,7 @@ function auth(check){
 	var token = window.localStorage.getItem("token");
 
 	gMe = window.localStorage.getItem("gMe");
-	if (gMe){
+	if (gMe & token){
 		gMe = JSON.parse(gMe);
 			if (gMe.users) {
 				addUser(gMe.users);

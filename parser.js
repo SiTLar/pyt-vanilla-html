@@ -409,6 +409,7 @@ function postLike(e){
 				var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
 				var likesUL;
 				if (!nodeLikes.childNodes.length){
+					nodeLikes.appendChild(gNodes['likes-smile'].cloneNode(true));
 					likesUL = document.createElement( 'ul');
 					likesUL.className ="p-timeline-user-likes";
 					var suffix = document.createElement("span");

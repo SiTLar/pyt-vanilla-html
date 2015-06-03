@@ -20,12 +20,24 @@ var templates =  {"nodes": [
 	]
 	},
 	
-{"c":"controls-user","t":"div",
+	{"c":"controls-user","t":"div",
 	"children":[
+		{"c":"user-home","t":"a","txt":"home","e":{"click":"home"}},
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-me","t":"a","txt":"me","e":{"click":"me"}},
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-my","t":"a","txt":"my discussions","e":{"click":"my"}},
+		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
 	]
 	},
-
+	{"c":"controls-anon","t":"div",
+	"children":[
+		{"c":"user-signup","t":"a","txt":"sign up"},
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}}
+	]
+	},
 
 	{"c":"controls-self","t":"span",
 	"children":[

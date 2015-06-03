@@ -12,6 +12,14 @@ color: #000088;
 cursor: pointer;
 }
 
+h1{
+    margin-bottom: 0.3em;
+}
+
+.controls-user{
+    margin-bottom: 0.5em;
+}
+
 .edit-txt-area{
 	-moz-border-bottom-colors: none;
 	-moz-border-left-colors: none;
@@ -23,8 +31,7 @@ cursor: pointer;
 	    border-right: 1px solid #b4b4b4;
 	    border-style: solid;
 	    border-width: 1px;
-height: 26px;
-	margin-bottom: 3px;
+	margin-bottom: 0.5em;
 	width: 100%;
 	height: 4em;
 padding: 3px;
@@ -32,6 +39,12 @@ padding: 3px;
 .control-button-post{
 margin-right:0.3em;
 }
+
+.edit-buttons-post{
+    margin-right: 3em;
+    font-size: 100%;
+}
+
 .nodeAuth{
  margin: 10% auto 0 auto;
  position: absolute;
@@ -115,7 +128,8 @@ display: inline-block;
 	content: " - ";
 	margin-right: 0.3em;
 }
-.likes ul {
+
+.likes ul{
 float: left;
        list-style: outside none none;
 margin: 0 4px 4px 2em;
@@ -159,6 +173,7 @@ width: auto;
 font-size: 1.5em;
 position: relative;
 }
+
 .likes-smile .icon-bg{
 line-height: 0.9;
 color: #ffb914;

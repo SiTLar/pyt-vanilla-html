@@ -739,7 +739,7 @@ function initDoc(){
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
-	switch(locationPath){
+	switch(gConfig.timeline){
 	case 'home':
 	case 'filter':
 		if(!auth()) return;
@@ -767,6 +767,7 @@ function initDoc(){
 	console.log(gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all");
 	if(arrLocationPath.length > 1)
 	if (locationPath == "filter/discussions") {
+		gConfig.timeline = locationPath;
 	    oReq.open("get",gConfig.serverURL + "timelines/filter/discussions"+locationSearch, true);        		
 	} else{		
 		oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);

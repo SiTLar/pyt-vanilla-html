@@ -636,6 +636,16 @@ function genNodes(templates){
 }
 function auth(){
 	var token = window.localStorage.getItem("token");
+
+	gMe = window.localStorage.getItem("gMe");
+	if (gMe){
+		gMe = JSON.parse(gMe);
+			if (gMe.users) {
+				addUser(gMe.users);
+				return true;
+			}
+		}
+
 	var oReq = new XMLHttpRequest();
 	if(token){
 		oReq.open("get", gConfig.serverURL +"users/whoami", false);
@@ -644,6 +654,7 @@ function auth(){
 		if(oReq.status < 400) {
 			gMe = JSON.parse(oReq.response);
 			if (gMe.users) {
+				window.localStorage.setItem("gMe",JSON.stringify(gMe));
 				addUser(gMe.users);
 				return true;
 			}
@@ -714,6 +725,12 @@ function initDoc(){
 		oReq.onload = function(){
 			if(oReq.status < 400) draw(JSON.parse(this.response));
 			else{
+				if (oReq.status==401)
+					{
+						localStorage.removeItem('token');
+						localStorage.removeItem('gMe');
+						location.reload();
+					}
 				var nodeError = document.createElement('div');
 				nodeError.className = 'error-node';
 				nodeError.innerHTML = oReq.statusText;
@@ -727,4 +744,3 @@ function initDoc(){
 		oReq.send();
 	}
 }
-

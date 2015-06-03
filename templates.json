@@ -26,8 +26,6 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-me","t":"a","txt":"me","e":{"click":"me"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-my","t":"a","txt":"my discussions","e":{"click":"my"}},
-		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
 	]
 	},

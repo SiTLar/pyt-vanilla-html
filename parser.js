@@ -5,7 +5,6 @@ var gNodes = new Object();
 var gMe = new Object();
 var gComments = new Object();
 var gAttachments  = new Object();
-var gTimelines = content.timelines;
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -659,7 +658,7 @@ function auth(check){
 	var token = window.localStorage.getItem("token");
 
 	gMe = window.localStorage.getItem("gMe");
-	if (gMe & token){
+	if (gMe){
 		gMe = JSON.parse(gMe);
 			if (gMe.users) {
 				addUser(gMe.users);

@@ -22,6 +22,10 @@ var templates =  {"nodes": [
 	
 {"c":"controls-user","t":"div",
 	"children":[
+		{"c":"user-home","t":"a","txt":"home","e":{"click":"home"}},
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-me","t":"a","txt":"me","e":{"click":"me"}},
+		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
 	]
 	},

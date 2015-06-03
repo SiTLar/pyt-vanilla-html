@@ -131,7 +131,7 @@ display: inline-block;
 
 .likes ul{
 float: left;
-       list-style: outside none none;
+list-style: outside none none;
 margin: 0 4px 4px 2em;
 padding: 0;
 }
@@ -144,6 +144,13 @@ content: ",";
 display: inline-block;
 margin-right:.3em;
 }
+
+.post-body .likes ul li.nocomma:before {
+content: "";
+display: inline-block;
+margin-right:.3em;
+}
+
 .comment-body {
        font-size: 13px;
        line-height: 16px;

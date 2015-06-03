@@ -409,6 +409,7 @@ function postLike(e){
 				var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
 				var likesUL;
 				if (!nodeLikes.childNodes.length){
+					nodeLikes.appendChild(gNodes['likes-smile'].cloneNode(true));
 					likesUL = document.createElement( 'ul');
 					likesUL.className ="p-timeline-user-likes";
 					var suffix = document.createElement("span");
@@ -454,6 +455,8 @@ function genEditNode(post,cancel){
 }
 function addComment(e){
 	var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != 'post-body');
+	if(postNBody.isBeenCommented === true)return;
+	postNBody.isBeenCommented = true;
 	var nodeComment = gNodes['comment'].cloneAll();
 	 nodeComment.cNodes['comment-body'].appendChild(genEditNode(postNewComment,cancelNewComment));
 	postNBody.cNodes['comments'].appendChild(nodeComment);
@@ -504,11 +507,13 @@ function processText(e) {
 	if (e.which == '13'){
 		var text = e.target.value;
 		if(text.charAt(text.length-1) == '\n') e.target.value = text.slice(0, -1);
-		e.target.parentNode.cNodes['post-edit-buttons'].cNodes["edit-buttons-post"].dispatchEvent(new Event('click'));
+		e.target.parentNode.cNodes['edit-buttons'].cNodes["edit-buttons-post"].dispatchEvent(new Event('click'));
 	}
 	
 }
 function cancelNewComment(e){ 
+	var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != 'post-body');
+	postNBody.isBeenCommented = false;
 	var nodeComment =e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
 	nodeComment.parentNode.removeChild(nodeComment);
 
@@ -738,7 +743,7 @@ function initDoc(){
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
-	switch(locationPath){
+	switch(gConfig.timeline){
 	case 'home':
 	case 'filter':
 		if(!auth()) return;
@@ -766,6 +771,7 @@ function initDoc(){
 	console.log(gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all");
 	if(arrLocationPath.length > 1)
 	if (locationPath == "filter/discussions") {
+		gConfig.timeline = locationPath;
 	    oReq.open("get",gConfig.serverURL + "timelines/filter/discussions"+locationSearch, true);        		
 	} else{		
 		oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);

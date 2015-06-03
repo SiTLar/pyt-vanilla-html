@@ -34,10 +34,16 @@ margin-right:0.3em;
 }
 .nodeAuth{
  margin: 10% auto 0 auto;
+ position: absolute;
+ top: 0;
+ right: 0;
+ left: 0;
+ 
 padding: 20px ;
 overflow: hidden;
 border: none;
 width: 300px;
+z-index: 100;
 color: rgba(40,40,40,1);
        -o-text-overflow: clip;
        text-overflow: clip;

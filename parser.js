@@ -1,3 +1,12 @@
+'use strict';
+
+var gUsers = new Object();
+var gNodes = new Object();
+var gMe = new Object();
+var gComments = new Object();
+var gAttachments  = new Object();
+var gTimelines = content.timelines;
+var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
 	var span  = document.getElementById(id+'-unl');
@@ -77,7 +86,7 @@ function genLikes(post, postNBody){
 	}
 }
 function addUser (user){
-	if (typeof this[user.id] !== 'undefined' ) return;
+	if (typeof gUsers[user.id] !== 'undefined' ) return;
 	gUsers[user.id] = user;
 	gUsers[user.id].link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+'</a>';
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
@@ -85,9 +94,6 @@ function addUser (user){
 
 function draw(content){
 	var body = document.getElementsByTagName("body")[0];
-	gComments = new Object();
-	gAttachments  = new Object();
-	gTimelines = content.timelines;
 	if(content.attachments)content.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
 	//if(content.comments)content.comments.forEach(function(comment){ if (typeof gComments[comment.id] === 'undefined') gComments[comment.id] = comment; });
 	if(content.comments)content.comments.forEach(function(comment){ gComments[comment.id] = comment; });
@@ -207,7 +213,7 @@ function genPost(post){
 	}
 	if(post.attachments){
 		var attsNode = postNBody.cNodes["attachments"];
-		for(att in post.attachments){
+		for(var att in post.attachments){
 			var nodeAtt = gNodes['attachment'].cloneAll();
 			nodeAtt.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src='+gAttachments[post.attachments[att]].thumbnailUrl+'></a>';
 			attsNode.appendChild(nodeAtt);
@@ -490,7 +496,7 @@ function processText(e) {
 	if (e.which == '13'){
 		var text = e.target.value;
 		if(text.charAt(text.length-1) == '\n') e.target.value = text.slice(0, -1);
-		e.target.nextSibling.cNodes["edit-buttons-post"].dispatchEvent(new Event('click'));
+		e.target.parentNode.cNodes['post-edit-buttons'].cNodes["edit-buttons-post"].dispatchEvent(new Event('click'));
 	}
 	
 }
@@ -570,6 +576,8 @@ function addLastCmtButton(postNBody){
 function unfoldComm(id){
 	var post = document.getElementById(id).rawData;
 	var oReq = new XMLHttpRequest();
+	var spUnfold = document.getElementById(id+'-unc').parentNode.appendChild(document.createElement('i'));
+	spUnfold.className = 'fa fa-spinner fa-pulse';
 	oReq.onload = function(){
 		if(oReq.status < 400){
 			var postUpd = JSON.parse(this.response);
@@ -585,10 +593,12 @@ function unfoldComm(id){
 			nodePB.cNodes['comments'].cnt = postUpd.comments.length;
 
 		}else{
+			spUnfold.parentNode.removeChild(spUnfold);
 			console.log(oReq.toString());
 
 		};
 	};
+
 	oReq.open("get",gConfig.serverURL + "posts/"+post.id+"?maxComments=all&maxLikes=0", true);
 	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 	oReq.send();
@@ -607,7 +617,7 @@ function genCNodes(node, proto){
 		node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
 	}
 	if (typeof(proto.e) !== 'undefined' ) 
-		for(action in proto.e)
+		for(var action in proto.e)
 			node.addEventListener(action, window[proto.e[action]]);	
 }
 function genNodes(templates){
@@ -628,7 +638,7 @@ function genNodes(templates){
 				});
 				if(template.txt) node.innerHTML = template.txt;
 				if(template.e) node.e = template.e;
-				if(template.p) for(p in template.p) node[p] =  template.p[p];
+				if(template.p) for( var p in template.p) node[p] =  template.p[p];
 				nodes.push(node);
 			} );
 	return nodes;
@@ -698,7 +708,6 @@ function frfAutolinker( autolinker,match ){
 }
 function initDoc(){
 
-	gUsers= new Object();
 	if (auth()){
 		var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 		var locationSearch = document.location.search;
@@ -707,8 +716,6 @@ function initDoc(){
 		document.skip = locationSearch.split("=")[1]*1;
 		var arrLocationPath = locationPath.split("/");
 		document.timeline = arrLocationPath[0];
-		autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
-		gNodes = new Object();
 		genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){

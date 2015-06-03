@@ -684,9 +684,16 @@ function getauth(oFormElement){
 function logout(){
 		window.localStorage.setItem("token", '');
 		location.reload();
-
-
 };
+
+function me(){
+	window.location.href = gMe['users']['username'];
+}
+
+function home(){
+	window.location.href = '';
+}
+
 function parseGET() {
 	var reqs = new Array();
 	var req = new Array();

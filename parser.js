@@ -86,6 +86,7 @@ function genLikes(post, postNBody){
 				postNBody.cNodes["post-info"].nodeLike.action = false;
 			}
 
+		}
 	}
 }
 function addUser (user){
@@ -658,7 +659,7 @@ function auth(check){
 	var token = window.localStorage.getItem("token");
 
 	gMe = window.localStorage.getItem("gMe");
-	if (gMe){
+	if (gMe & token){
 		gMe = JSON.parse(gMe);
 			if (gMe.users) {
 				addUser(gMe.users);
@@ -723,21 +724,6 @@ function my(){
     window.location.href = '/filter/discussions';
 }
 
-function parseGET() {
-	var reqs = new Array();
-	var req = new Array();
-	get = new Object();
-
-	var url = document.location.search;
-	if(url != '') {
-		reqs = (url.substr(1)).split('%26');
-		for(var i=0; i < reqs.length; i++) {
-			req = reqs[i].split('=');
-			get[req[0]] = req[1];	
-		}
-	}
-	return get;
-}
 function frfAutolinker( autolinker,match ){
 	if (match.getType() == "twitter")
 	 return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + '</a>' ;

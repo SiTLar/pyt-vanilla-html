@@ -697,11 +697,15 @@ function logout(){
 };
 
 function me(){
-	window.location.href = gMe['users']['username'];
+	window.location.href = '/'+gMe['users']['username'];
 }
 
 function home(){
-	window.location.href = '';
+	window.location.href = '/';
+}
+
+function my(){
+    window.location.href = '/filter/discussions';
 }
 
 function parseGET() {
@@ -752,8 +756,16 @@ function initDoc(){
 			}
 
 		};
-		if(arrLocationPath.length > 1)oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);
-		else oReq.open("get",gConfig.serverURL + "timelines/"+locationPath+locationSearch, true);
+		console.log(gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all");
+		if(arrLocationPath.length > 1)
+    		if (locationPath == "filter/discussions") {
+    		    oReq.open("get",gConfig.serverURL + "timelines/filter/discussions"+locationSearch, true);        		
+    		}
+    		else{		
+                oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);
+            }
+		else 
+    		    oReq.open("get",gConfig.serverURL + "timelines/"+locationPath+locationSearch, true);
 		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 		oReq.send();
 	}

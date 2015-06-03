@@ -455,6 +455,8 @@ function genEditNode(post,cancel){
 }
 function addComment(e){
 	var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != 'post-body');
+	if(postNBody.isBeenCommented === true)return;
+	postNBody.isBeenCommented = true;
 	var nodeComment = gNodes['comment'].cloneAll();
 	 nodeComment.cNodes['comment-body'].appendChild(genEditNode(postNewComment,cancelNewComment));
 	postNBody.cNodes['comments'].appendChild(nodeComment);
@@ -510,6 +512,8 @@ function processText(e) {
 	
 }
 function cancelNewComment(e){ 
+	var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != 'post-body');
+	postNBody.isBeenCommented = false;
 	var nodeComment =e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
 	nodeComment.parentNode.removeChild(nodeComment);
 

@@ -5,7 +5,6 @@ var gNodes = new Object();
 var gMe = new Object();
 var gComments = new Object();
 var gAttachments  = new Object();
-var gTimelines = content.timelines;
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -103,25 +102,25 @@ function draw(content){
 	if(content.comments)content.comments.forEach(function(comment){ gComments[comment.id] = comment; });
 	content.users.forEach(addUser);
 	var title =  document.createElement("div");
-	title.innerHTML = "<h1>" +document.timeline+ "</h1>"
+	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	body.appendChild(title);
 	if(typeof gMe !== 'undefined') 
 		body.appendChild(gNodes['controls-user'].cloneAll());
 	else 
 		body.appendChild(gNodes['controls-anon'].cloneAll());
-	if (!document.timeline||(document.timeline == 'home')){
+	if (!gConfig.timeline||(gConfig.timeline == 'home')){
 		var nodeAddPost = gNodes['new-post'].cloneAll();
 		body.appendChild(nodeAddPost);
 	}
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
 		nodeMore.className = 'more-node';
-		var htmlOffset = '<a href="' + gConfig.front+document.timeline ;
-		var backward = document.skip*1 - gConfig.offset*1;
-		var forward = document.skip*1 + gConfig.offset*1;
-		if (document.skip){
+		var htmlOffset = '<a href="' + gConfig.front+gConfig.timeline ;
+		var backward = gConfig.cSkip*1 - gConfig.offset*1;
+		var forward = gConfig.cSkip*1 + gConfig.offset*1;
+		if (gConfig.cSkip){
 			if (backward>0)htmlOffset += '?offset=' + backward*1;
-			htmlOffset += '"><span style="font-size: 200%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+document.timeline;
+			htmlOffset += '"><span style="font-size: 200%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+gConfig.timeline;
 		} 
 		htmlOffset += '?offset=' + forward*1 + '">Older items <span style="font-size: 200%">&rarr;</span></a>';
 		nodeMore.innerHTML = htmlOffset;
@@ -659,7 +658,7 @@ function auth(check){
 	var token = window.localStorage.getItem("token");
 
 	gMe = window.localStorage.getItem("gMe");
-	if (gMe & token){
+	if (gMe){
 		gMe = JSON.parse(gMe);
 			if (gMe.users) {
 				addUser(gMe.users);
@@ -721,7 +720,7 @@ function home(){
 }
 
 function my(){
-    window.location.href = '/filter/discussions';
+    window.location.href =gConfig.front+ 'filter/discussions';
 }
 
 function frfAutolinker( autolinker,match ){
@@ -735,9 +734,9 @@ function initDoc(){
 	var locationSearch = document.location.search;
 	if (locationPath == "")locationPath = 'home';
 	if (locationSearch == '')locationSearch = '?offset=0';
-	document.skip = locationSearch.split("=")[1]*1;
+	gConfig.cSkip = locationSearch.split("=")[1]*1;
 	var arrLocationPath = locationPath.split("/");
-	document.timeline = arrLocationPath[0];
+	gConfig.timeline = arrLocationPath[0];
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 	switch(locationPath){
 	case 'home':

@@ -20,7 +20,7 @@ var templates =  {"nodes": [
 	]
 	},
 	
-{"c":"controls-user","t":"div",
+	{"c":"controls-user","t":"div",
 	"children":[
 		{"c":"user-home","t":"a","txt":"home","e":{"click":"home"}},
 		{"t":"span","txt":" &#8226; "},
@@ -31,7 +31,13 @@ var templates =  {"nodes": [
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
 	]
 	},
-
+	{"c":"controls-anon","t":"div",
+	"children":[
+		{"c":"user-signup","t":"a","txt":"sign up"},
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}}
+	]
+	},
 
 	{"c":"controls-self","t":"span",
 	"children":[
@@ -79,7 +85,7 @@ var templates =  {"nodes": [
 		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
 
 		{"c":"attachments"},
-		{"c":"post-edit-buttons",
+		{"c":"edit-buttons",
 		"children":[
 			{"c":"edit-buttons-upload","t":"input","p":{"type":"file","accept":"image/*" }, "e":{"change":"sendAttachment" }}
 			,{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":"newPost"}}

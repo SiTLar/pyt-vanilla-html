@@ -465,9 +465,11 @@ function addComment(e){
 	postNBody.isBeenCommented = true;
 	var nodeComment = gNodes['comment'].cloneAll();
 	var nodeEdit = genEditNode(postNewComment,cancelNewComment);
+	var field_id = e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+'_com';
+	nodeEdit.id = field_id;
 	 nodeComment.cNodes['comment-body'].appendChild(nodeEdit);
 	postNBody.cNodes['comments'].appendChild(nodeComment);
-	document.getElementsByClassName('edit')[0].childNodes[0].focus();
+	document.getElementById(field_id).childNodes[0].focus();
 }
 function editComment(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'comment');

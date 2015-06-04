@@ -23,7 +23,7 @@ function unfoldLikes(id){
 				document.getElementById(id).rawData = post;
 				writeAllLikes(id, nodeLikes);
 			}else{
-				console.log(oReq.response);
+				console.log(oReq.toString());
 			
 			};
 		};
@@ -218,7 +218,7 @@ function genPost(post){
 	var user = gUsers[post.createdBy];
 	nodePost.rawData = post;
 	nodePost.id = post.id;
-	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body);
+	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 	if(typeof user !== 'undefined'){
 		nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 		postNBody.cNodes["title"].innerHTML =  user.link;
@@ -464,12 +464,8 @@ function addComment(e){
 	if(postNBody.isBeenCommented === true)return;
 	postNBody.isBeenCommented = true;
 	var nodeComment = gNodes['comment'].cloneAll();
-	var nodeEdit = genEditNode(postNewComment,cancelNewComment);
-	var field_id = e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+'_com';
-	nodeEdit.id = field_id;
-	 nodeComment.cNodes['comment-body'].appendChild(nodeEdit);
+	 nodeComment.cNodes['comment-body'].appendChild(genEditNode(postNewComment,cancelNewComment));
 	postNBody.cNodes['comments'].appendChild(nodeComment);
-	document.getElementById(field_id).childNodes[0].focus();
 }
 function editComment(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'comment');
@@ -581,7 +577,7 @@ function sendComment(textField){
 function genComment(comment){
 	var nodeComment = gNodes['comment'].cloneAll();
 	var cUser = gUsers[comment.createdBy];
-	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body)+ " - " + cUser.link ;
+	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body.replace(/</g, '&lt;').replace(/>/g, '&gt;'))+ " - " + cUser.link ;
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof gMe !== 'undefined') 
@@ -609,7 +605,6 @@ function unfoldComm(id){
 			postUpd.users.forEach(addUser);
 			document.getElementById(id).rawData = post;
 			var nodePB = document.getElementById(id).cNodes['post-body'];
-			nodePB .isBeenCommented = false;
 			nodePB.removeChild(nodePB.cNodes['comments']);
 			nodePB.cNodes['comments'] = document.createElement('div');
 			nodePB.cNodes['comments'].className = 'comments';
@@ -620,7 +615,7 @@ function unfoldComm(id){
 
 		}else{
 			spUnfold.parentNode.removeChild(spUnfold);
-			console.log(oReq.response);
+			console.log(oReq.toString());
 
 		};
 	};
@@ -779,6 +774,7 @@ function initDoc(){
 		}
 
 	};
+	console.log(gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all");
 	if(arrLocationPath.length > 1)
 	if (locationPath == "filter/discussions") {
 		gConfig.timeline = locationPath;

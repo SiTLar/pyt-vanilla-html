@@ -23,7 +23,7 @@ function unfoldLikes(id){
 				document.getElementById(id).rawData = post;
 				writeAllLikes(id, nodeLikes);
 			}else{
-				console.log(oReq.toString());
+				console.log(oReq.response);
 			
 			};
 		};
@@ -605,6 +605,7 @@ function unfoldComm(id){
 			postUpd.users.forEach(addUser);
 			document.getElementById(id).rawData = post;
 			var nodePB = document.getElementById(id).cNodes['post-body'];
+			nodePB .isBeenCommented = false;
 			nodePB.removeChild(nodePB.cNodes['comments']);
 			nodePB.cNodes['comments'] = document.createElement('div');
 			nodePB.cNodes['comments'].className = 'comments';
@@ -615,7 +616,7 @@ function unfoldComm(id){
 
 		}else{
 			spUnfold.parentNode.removeChild(spUnfold);
-			console.log(oReq.toString());
+			console.log(oReq.response);
 
 		};
 	};
@@ -774,7 +775,6 @@ function initDoc(){
 		}
 
 	};
-	console.log(gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all");
 	if(arrLocationPath.length > 1)
 	if (locationPath == "filter/discussions") {
 		gConfig.timeline = locationPath;

@@ -6,15 +6,17 @@ var gMe = new Object();
 var gComments = new Object();
 var gAttachments  = new Object();
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
+
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
 	var span  = document.getElementById(id+'-unl');
 	var nodeLikes = span.parentNode;
-	nodeLikes.removeChild(span);
+	
 	if (post.omittedLikes > 0){
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			if(oReq.status < 400){
+    			nodeLikes.removeChild(span);
 				var postUpd = JSON.parse(this.response);
 				post.likes = postUpd.posts.likes;
 				postUpd.users.forEach(addUser);
@@ -39,14 +41,16 @@ function writeAllLikes(id,nodeLikes){
 		if (nodeLikes.childNodes[idx].nodeName == 'UL')break;
 	var nodeLike = document.createElement('li');
 	nodeLike.className = "p-timeline-user-like";
-	for(var like = 4; like < post.likes.length; like++){
+	for(var like = gConfig.likesFold; like < post.likes.length; like++){
 		var nodeCLike = nodeLike.cloneNode();
 		nodeCLike.innerHTML = gUsers[post.likes[like]].link;
-		nodeLikes.childNodes[idx].appendChild(nodeCLike);
+		//nodeLikes.childNodes[idx].appendChild(nodeCLike);
+		nodeLikes.appendChild(nodeCLike);
 	}
-	span = document.createElement('span');
-	span.innerHTML = " liked this";
-	nodeLikes.childNodes[idx].appendChild(span);
+	var suffix = document.createElement('span');
+	suffix.innerHTML = " liked this";
+	//nodeLikes.childNodes[idx].appendChild(suffix);
+	nodeLikes.appendChild(suffix);
 }
 function genLikes(post, postNBody){
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(gNodes['likes-smile'].cloneNode(true));
@@ -64,19 +68,21 @@ function genLikes(post, postNBody){
 	}
 	var nodeLike = document.createElement('li');
 	nodeLike.className = "p-timeline-user-like";
-	for (var idx = 0; idx < (4<l?4:l) ; idx++){
+	for (var idx = 0; idx < (gConfig.likesFold<l?gConfig.likesFold:l) ; idx++){
 		var nodeCLike = nodeLike.cloneNode();
 		nodeCLike.innerHTML = gUsers[post.likes[idx]].link;
 		nodeLikes.appendChild(nodeCLike);
 	}
-	var suffix = document.createElement("span");
+	var suffix = document.createElement("li");
 	suffix.id = post.id+'-unl' 
 	if (post.omittedLikes>0) l += post.omittedLikes;
-	if ( l > 4)
-		suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ (l - 4) +' other people</a>' ;
+	if ( l > gConfig.likesFold)
+		suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ (l - gConfig.likesFold) +' other people</a>' ;
 	suffix.innerHTML += ' liked this';
+	suffix.className = 'nocomma';
+	nodeLikes.appendChild(suffix);
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(nodeLikes);
-	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
+	//postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 	if(typeof gMe !== 'undefined'){ 
 		if(post.likes[0] == gMe.users.id){
 			postNBody.cNodes["post-info"].myLike = nodeLikes.childNodes[0];

@@ -126,9 +126,9 @@ function draw(content){
 		var forward = gConfig.cSkip*1 + gConfig.offset*1;
 		if (gConfig.cSkip){
 			if (backward>0)htmlOffset += '?offset=' + backward*1;
-			htmlOffset += '"><span style="font-size: 200%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+gConfig.timeline;
+			htmlOffset += '"><span style="font-size: 120%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+gConfig.timeline;
 		} 
-		htmlOffset += '?offset=' + forward*1 + '">Older items <span style="font-size: 200%">&rarr;</span></a>';
+		htmlOffset += '?offset=' + forward*1 + '">Older items <span style="font-size: 120%">&rarr;</span></a>';
 		nodeMore.innerHTML = htmlOffset;
 		body.appendChild(nodeMore.cloneNode(true));
 		document.posts = document.createElement("div");

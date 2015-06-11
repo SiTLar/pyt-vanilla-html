@@ -144,7 +144,11 @@ content: ",";
 display: inline-block;
 margin-right:.3em;
 }
-
+.title a+a::before{
+content: ",";
+display: inline-block;
+margin-right:.3em;
+}
 .post-body .likes ul li.nocomma:before {
 content: "";
 display: inline-block;
@@ -208,3 +212,23 @@ float: left;
 	margin-left: 21px;
 }
 
+.new-post-to{
+margin: 0.3em;
+}
+.new-post-feed{
+    background-color: #f2f2f2;
+    border: 1px solid #d8d8d8;
+    margin-right:0.3em;
+    box-sizing: border-box;
+	margin-top: 5px;
+	padding: 0 5px;
+	border-radius: 4px;
+	display:inline;
+cursor: pointer;
+}
+.new-post-feeds{
+
+	display:inline;
+	margin-left:0;
+	padding:0;
+}

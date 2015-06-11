@@ -129,10 +129,14 @@ display: inline-block;
 	margin-right: 0.3em;
 }
 
+.more-node{
+    margin: 0.5em 0;
+}
+
 .likes ul{
 float: left;
 list-style: outside none none;
-margin: 0 4px 4px 2em;
+margin: 0 4px 4px 1.5em;
 padding: 0;
 }
 .post-body .likes ul li {
@@ -184,7 +188,7 @@ clear: both;
 float: left;
 height: auto;
 width: auto;
-font-size: 1.5em;
+font-size: 1.2em;
 position: relative;
 }
 

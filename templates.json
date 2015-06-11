@@ -25,7 +25,7 @@ var templates =  {"nodes": [
 	"children":[
 		{"c":"user-home","t":"a","href":"#","txt":"home","e":{"mousedown":"home"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-me","t":"a","txt":"me","e":{"mousedown":"me"}},
+		{"c":"user-me","t":"a","txt":"my feed","e":{"click":"me"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-my","t":"a","txt":"my discussions","e":{"mousedown":"my"}},
 		{"t":"span","txt":" &#8226; "},

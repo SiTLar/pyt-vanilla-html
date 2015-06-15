@@ -101,7 +101,22 @@ function addUser (user){
 	gUsers[user.id].link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+'</a>';
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
 }
+function subscribe(e){
+	var oReq = new XMLHttpRequest();
+	oReq.open("post", gConfig.serverURL +"users/"+gConfig.timeline+(e.target.subscribed?'/unsubscribe':"/subscribe"), true);
+	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.onload = function(){
+		if(oReq.status < 400) {
+			gMe = JSON.parse(oReq.response);
+			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+			e.target.subscribed = !e.target.subscribed;
+			e.target.innerHTML = e.target.subscribed?"Unsubscribe":"Subscribe";
+		}
+	}
 
+	oReq.send();
+
+}
 function draw(content){
 	var body = document.getElementsByTagName("body")[0];
 	if(content.attachments)content.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
@@ -111,16 +126,33 @@ function draw(content){
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	body.appendChild(title);
-	if(typeof gMe !== 'undefined') 
-		body.appendChild(gNodes['controls-user'].cloneAll());
-	else 
+	if(typeof gMe === 'undefined') 
 		body.appendChild(gNodes['controls-anon'].cloneAll());
-	if (!gConfig.timeline||(gConfig.timeline == 'home')){
-		var nodeAddPost = gNodes['new-post'].cloneAll();
-		body.appendChild(nodeAddPost);
-		genPostTo(nodeAddPost.cNodes["new-post-to"]);
+	else{ 
+		body.appendChild(gNodes['controls-user'].cloneAll());
+		switch (gConfig.timeline.split('/')[0]){
+		case 'home':
+		case gMe.username:
+			var nodeAddPost = gNodes['new-post'].cloneAll();
+			body.appendChild(nodeAddPost);
+			genPostTo(nodeAddPost.cNodes["new-post-to"]);
+			break;
+		default:
+			var subscribers = new Object();
+			var feeds = new Object();
+			gMe.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
+			gMe.subscriptions.forEach(function(sub){
+				if(sub.name =='Posts')feeds[subscribers[sub.user].username] = true;
+			});
+			var subscribed = feeds[gConfig.timeline]?true:false
+			var sub = document.createElement('a');
+			sub.innerHTML = subscribed?"Unsubscribe":"Subscribe";
+			sub.subscribed = subscribed;
+			sub.addEventListener("click", subscribe);
+			body.appendChild(sub);
+		}
 	}
-	if(content.subscribers){	
+	if(content.subscribers && content.subscriptions ){	
 		var subscribers = new Object();
 		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
 		content.subscriptions.forEach(function(sub){if(sub.name =='Posts')gFeeds[sub.id] = subscribers[sub.user];});
@@ -871,14 +903,18 @@ function initDoc(){
 		}
 
 	};
-	if(arrLocationPath.length > 1)
-	if (locationPath == "filter/discussions") {
-		gConfig.timeline = locationPath;
-	    oReq.open("get",gConfig.serverURL + "timelines/filter/discussions"+locationSearch, true);        		
-	} else{		
-		oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);
-	} else 
+	if(arrLocationPath.length > 1){
+		if (locationPath == "filter/discussions") {
+			gConfig.timeline = locationPath;
+			oReq.open("get",gConfig.serverURL + "timelines/filter/discussions"+locationSearch, true);        		
+		} else{		
+			oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);
+		}
+	} else{ 
 	    oReq.open("get",gConfig.serverURL + "timelines/"+locationPath+locationSearch, true);
+
+
+	}
 	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 	oReq.send();
 }

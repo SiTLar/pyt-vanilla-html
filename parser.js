@@ -132,7 +132,8 @@ function draw(content){
 		body.appendChild(gNodes['controls-user'].cloneAll());
 		switch (gConfig.timeline.split('/')[0]){
 		case 'home':
-		case gMe.username:
+		case 'filter':
+		case gMe.users.username:
 			var nodeAddPost = gNodes['new-post'].cloneAll();
 			body.appendChild(nodeAddPost);
 			genPostTo(nodeAddPost.cNodes["new-post-to"]);

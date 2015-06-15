@@ -730,7 +730,7 @@ function auth(check){
 	if (check !== true ){
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
-		nodeAuth.innerHTML = "<div id=auth-msg>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
+		nodeAuth.innerHTML = "<div id=auth-msg style='color:red;'>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
 		document.getElementsByTagName("body")[0].appendChild(nodeAuth);
 	}
 	return false;
@@ -745,7 +745,7 @@ function getauth(oFormElement){
 		//	initDoc();
 
 			location.reload();
-		}else document.getElementById('auth-msg').innerHTML = this.statusText;
+		}else document.getElementById('auth-msg').innerHTML = JSON.parse(this.response).err;
 	};
 	oReq.open("post", gConfig.serverURL +"session", true);
 	oReq.setRequestHeader("X-Authentication-Token", null);

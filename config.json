@@ -3,6 +3,6 @@ var gConfig = {
 , "front":"http://104.236.251.209/"
 , "static":"http://104.236.251.209/"
 , "offset":"30"
-, 'likesFold':4
-,
+, "likesFold":4
+
 }

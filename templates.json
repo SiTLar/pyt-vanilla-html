@@ -20,13 +20,14 @@ var templates =  {"nodes": [
 	]
 	},
 	
+
 	{"c":"controls-user","t":"div",
 	"children":[
-		{"c":"user-home","t":"a","txt":"home","e":{"click":"home"}},
+		{"c":"user-home","t":"a","href":"#","txt":"home","e":{"mousedown":"home"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-me","t":"a","txt":"me","e":{"click":"me"}},
+		{"c":"user-me","t":"a","txt":"my feed","e":{"click":"me"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-my","t":"a","txt":"my discussions","e":{"click":"my"}},
+		{"c":"user-my","t":"a","txt":"my discussions","e":{"mousedown":"my"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
 	]
@@ -82,6 +83,16 @@ var templates =  {"nodes": [
 	]},
 	{"c":"new-post",
 	"children":[
+		{"c":"new-post-to",
+		"children":[
+			{"t":"span", "txt":"Post to:"},
+			{"c":"new-post-feeds","t":"ul",
+			"children":[
+				{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":"newPostRemoveFeed"} }	
+			]},
+			{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":"newPostSelect"}  },
+			{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":"newPostAddFeed"} }
+		]},
 		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
 
 		{"c":"attachments"},

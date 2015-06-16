@@ -129,14 +129,10 @@ display: inline-block;
 	margin-right: 0.3em;
 }
 
-.more-node{
-    margin: 0.5em 0;
-}
-
 .likes ul{
 float: left;
 list-style: outside none none;
-margin: 0 4px 4px 1.5em;
+margin: 0 4px 4px 2em;
 padding: 0;
 }
 .post-body .likes ul li {
@@ -188,7 +184,7 @@ clear: both;
 float: left;
 height: auto;
 width: auto;
-font-size: 1.2em;
+font-size: 1.5em;
 position: relative;
 }
 
@@ -216,6 +212,40 @@ float: left;
 	margin-left: 21px;
 }
 
+.private-control {
+margin: auto;
+position: absolute;
+top: 3em;
+width:50%;
+background-color: #abf;
+left: 0;
+right: 0;
+padding:1em;
+}
+
+
+.private-control > * {
+display: table;
+	margin-bottom: .5em;
+	margin-left:auto;
+	margin-right:auto;
+
+left: 0;
+right: 0;
+
+}
+.priv-key-input{
+	width:100%;
+	height:10em;
+	left:0;
+	right:0;
+}
+.priv-close{
+float:right;	
+
+}
+.priv-header{font-size:x-large; clear: both; text-align: center;}
+.private-control p{text-align:center}
 .new-post-to{
 margin: 0.3em;
 }

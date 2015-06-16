@@ -7,6 +7,7 @@ var gComments = new Object();
 var gAttachments  = new Object();
 var gFeeds = new Object();
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
+var matrix = new CryptoPrivate({"keyurl":"https://moimosk.ru/cgi/secret?","authurl": gConfig.serverURL,'sk':16, 'encId':"MATRIX", "feed":"crypto-matrix" });
 document.addEventListener("DOMContentLoaded", initDoc);
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -258,7 +259,6 @@ function genPost(post){
 	var user = gUsers[post.createdBy];
 	nodePost.rawData = post;
 	nodePost.id = post.id;
-	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 	if(typeof user !== 'undefined'){
 		nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 		var title = user.link;
@@ -275,6 +275,19 @@ function genPost(post){
 					});
 			}
 		postNBody.cNodes["title"].innerHTML = title;
+	}
+	var cpost= matrix.decrypt( post.body);
+	if (typeof cpost.error !== 'undefined')
+		postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+	else{	
+		cpost = JSON.parse(cpost);
+		if(cpost.type == "post"){
+			var nodePriv = gNodes['private'].cloneAll();
+			nodePriv.cNodes['priv-body'].innerHTML = autolinker.link(cpost.data.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+			postNBody.cNodes["post-cont"].appendChild(nodePriv);
+			postNBody.cNodes["title"].innerHTML = user.link+ '<span> posted privately to '+StringView.makeFromBase64(matrix.gSymKeys[cpost.id].name)+"</span>";
+		}
+
 	}
 	if(post.attachments){
 		var attsNode = postNBody.cNodes["attachments"];
@@ -355,7 +368,6 @@ function newPost(e){
 		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 		oReq.setRequestHeader("Content-type","application/json");
 		var post = new Object();
-		post.body = textField.value;
 		if(textField.attachments) post.attachments = textField.attachments;
 		/*comment.postId = nodePost.id;
 		comment.createdAt = null;
@@ -367,8 +379,15 @@ function newPost(e){
 		postdata.post = post;
 		postdata.meta = new Object();
 		var postTo = e.target.parentNode.parentNode.cNodes["new-post-to"];
-		
-		postdata.meta.feeds = postTo.feeds ;
+		if(postTo.isPrivate){
+			post.body = matrix.encrypt(postTo.feeds, JSON.stringify({"id":postTo.feeds,"type":"post", "data":textField.value }));
+
+			postdata.meta.feeds = matrix.cfg.feed ;
+
+		}else {
+			post.body = textField.value;
+			postdata.meta.feeds = postTo.feeds ;
+		}
 		oReq.send(JSON.stringify(postdata));
 	}
 }
@@ -786,11 +805,131 @@ function getauth(oFormElement){
 	oReq.send("username="+document.getElementById('a-user').value+"&password="+document.getElementById('a-pass').value);
 }
 function logout(){
+	matrix.logout();
 	window.localStorage.removeItem("gMe");
 	window.localStorage.removeItem("token");
 	location.reload();
 }
+function ctrlPriv(){
+	if(typeof gMe === 'undefined') return;
+	var nodePCtrl = document.body.appendChild(gNodes['private-control'].cloneAll());
+	if (typeof matrix.password === 'undefined') return;
+	nodePCtrl.cNodes['priv-login'].cNodes["priv-pass"].hidden = true;
+	var bLogin = nodePCtrl.cNodes['priv-login'].cNodes["priv-pass-submit"];
+	bLogin.innerHTML = 'logout';
+	bLogin.removeEventListener('click', ctrlPrivLogin);
+	bLogin.addEventListener('click', ctrlPrivLogout);
+	loadPrivs();
+}
 
+function ctrlPrivLogin(e){
+	var inpPass = e.target.parentNode.cNodes['priv-pass'].cNodes['priv-pass-i'];
+	if (inpPass.value == ''){
+		alert('Must have a password');
+		return;
+	}
+	matrix.setPassword(inpPass.value);
+	inpPass.parentNode.hidden= true;
+	e.target.innerHTML = 'logout';
+	matrix.username = gMe.users.username;
+	e.target.removeEventListener('click', ctrlPrivLogin);
+	e.target.addEventListener('click', ctrlPrivLogout);
+	matrix.getUserPriv().then(privRegenGrps, function(){
+		matrix.register().then( privRegenGrps, function(){new Error("Failed to register on the key sever.");e.target.dispatchEvent(new Event('click'));});
+				
+	});
+}
+function ctrlPrivLogout(e){
+	matrix.logout();
+	var inpPass = e.target.parentNode.cNodes['priv-pass'].cNodes['priv-pass-i'];
+	var nodePCtrl = document.getElementsByClassName("private-control")[0];
+	nodePCtrl.login = false;
+	var nodeGrps = document.createElement('div');
+	nodeGrps.className = "priv-groups";
+	nodePCtrl.replaceChild( nodeGrps, nodePCtrl.cNodes["priv-groups"]);	
+	nodePCtrl.cNodes["priv-groups"] = nodeGrps;
+	inpPass.parentNode.hidden = false;
+	e.target.innerHTML = 'login';
+	e.target.removeEventListener('click',ctrlPrivLogout );
+	e.target.addEventListener('click', ctrlPrivLogin);
+	nodePCtrl.getElementsByClassName("priv-leave-submit")[0].disabled = true;
+	var buttons = nodePCtrl.getElementsByClassName("priv-submit");
+	for (var idx = 0; idx < buttons.length; idx++)buttons[idx].disabled = true;
+	privRegenGrps();
+}
+function loadPrivs(){
+	var nodePCtrl = document.getElementsByClassName("private-control")[0];	
+	nodePCtrl.login = true;
+	var nodeGrps = nodePCtrl.cNodes["priv-groups"];
+	if(typeof matrix.gSymKeys !== 'undefined'){
+		for(var id in matrix.gSymKeys){
+			var nodeGrp = gNodes['priv-grp'].cloneAll(true);
+			nodeGrp.cNodes["priv-grp-name"].innerHTML = StringView.makeFromBase64(matrix.gSymKeys[id].name);
+			nodeGrp.id = id;
+			nodeGrps.appendChild(nodeGrp);
+		}
+		nodePCtrl.getElementsByClassName("priv-leave-submit")[0].disabled = false;
+	}
+
+}
+function ctrlPrivLeave(){
+	var privGrps = document.getElementsByName("privGrp");	
+	var victim;
+	for (var idx = 0; idx < privGrps.length; idx++){
+		if (privGrps[idx].checked){
+			victim = privGrps[idx].parentNode;
+			break;
+		}
+	}
+	if (typeof victim.id === 'undefined') return;
+	delete matrix.gSymKeys[victim.id];
+	matrix.update();
+	victim.parentNode.removeChild(victim);
+	privRegenGrps();
+}
+function privRegenGrps(){
+	var nodePCtrl = document.getElementsByClassName("private-control")[0];
+	var nodeGrps = document.createElement('div');
+	nodeGrps.className = "priv-groups";
+	nodePCtrl.replaceChild( nodeGrps, nodePCtrl.cNodes["priv-groups"]);	
+	nodePCtrl.cNodes["priv-groups"] = nodeGrps;
+	loadPrivs();
+	gConfig.regenPostTo();
+}
+function privActivateButton(e){
+	if (!document.getElementsByClassName("private-control")[0].login)return;
+	if (e.target.value == '' ) e.target.parentNode.cNodes['priv-submit'].disabled = true;
+	else e.target.parentNode.cNodes['priv-submit'].disabled = false;
+}
+function ctrlPrivShare(e){
+	var privGrps = document.getElementsByName("privGrp");	
+	var id;
+	for (var idx = 0; idx < privGrps.length; idx++){
+		if (privGrps[idx].checked){
+			if (typeof privGrps[idx].parentNode.id === 'undefined') return;
+			id = privGrps[idx].parentNode.id; 	
+			break;
+		}
+	}
+	matrix.genMsg(e.target.parentNode.cNodes["priv-inv-name"].value, JSON.stringify(matrix.gSymKeys[id])).then(function(msg){
+		e.target.parentNode.parentNode.cNodes["priv-join"].cNodes["priv-key-input"].value = msg;
+	});
+}
+function ctrlPrivJoin(e){
+	matrix.readMsg(e.target.parentNode.cNodes["priv-key-input"].value).then(function(msg){
+		var symKeys = new Object();
+		symKeys = JSON.parse(msg);
+		if(typeof symKeys.id === "undefined")return;
+		if(typeof symKeys.aKeys === "undefined")return;
+		matrix.addKeys(symKeys);
+		privRegenGrps();
+	});
+}
+function ctrlPrivGen(e){
+	var name = e.target.parentNode.cNodes["priv-c-name"].value;
+	matrix.initPrivate(name).then( privRegenGrps);
+
+}
 function me(e){
 	e.target.href = gConfig.front+gMe['users']['username'];
 }
@@ -803,14 +942,25 @@ function my(e){
     e.target.href = gConfig.front+ 'filter/discussions';
     //window.location.href =gConfig.front+ 'filter/discussions';
 }
+function ctrlPrivClose(e){
+	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'private-control');
+	document.body.removeChild(victim);
 
+}
 function genPostTo(victim){
 	victim.feeds = new Array();
 	victim.feeds.push(gMe.users.username);
+	victim.parentNode.isPrivate  = false;
 	victim.cNodes["new-post-feeds"].firstChild.idx = 1;
 	victim.cNodes["new-post-feeds"].firstChild.oValue = gMe.users.username;
 	var option = document.createElement('option');
 	option.selected = true;
+	var select = document.createElement('select');
+	select.className = "new-post-feed-select";
+	select.hidden = victim.cNodes["new-post-feed-select"].hidden;
+	select.addEventListener("change",newPostSelect);
+	victim.replaceChild(select, victim.cNodes["new-post-feed-select"]);
+	victim.cNodes["new-post-feed-select"] = select;
 	victim.cNodes["new-post-feed-select"].appendChild(option);
 	option = document.createElement('option');
 	option.disabled = true;
@@ -831,6 +981,19 @@ function genPostTo(victim){
 	if (groups.childNodes.length > 0 )
 		victim.cNodes["new-post-feed-select"].appendChild(groups);
 	groups = document.createElement('optgroup');
+	groups.label = 'Private groups';
+	for (var id in matrix.gSymKeys){
+		option = document.createElement('option');
+		option.value = id;
+		option.privateFeed = true;
+		option.innerHTML = StringView.makeFromBase64(matrix.gSymKeys[id].name);
+		groups.appendChild(option);
+	}
+	if (groups.childNodes.length > 0 )
+		victim.cNodes["new-post-feed-select"].appendChild(groups);
+	
+	gConfig.regenPostTo = function (){return genPostTo(victim);};
+
 }
 function newPostRemoveFeed(e){
 	var nodeP = e.target.parentNode.parentNode;
@@ -853,6 +1016,17 @@ function newPostSelect(e){
 	var option = e.target[e.target.selectedIndex];
 	if (option.value == '')return;
 	var nodeP = e.target.parentNode;
+	if (option.privateFeed == true)
+		nodeP.isPrivate  = true;
+	if (nodeP.isPrivate ){
+		var ul = document.createElement('ul');
+		ul.className = 'new-post-feeds';
+		nodeP.replaceChild(ul, nodeP.cNodes['new-post-feeds']);
+		nodeP.cNodes['new-post-feeds'] = ul;
+		nodeP.feeds = new Array();
+		for(var idx = 0; idx < e.target.length; idx++)
+			e.target[idx].disabled = false;
+	}
 	option.disabled = true;
 	nodeP.feeds.push(option.value);
 	var li = document.createElement('li');

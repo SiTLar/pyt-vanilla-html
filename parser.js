@@ -603,13 +603,9 @@ function deleteNode(node,doDelete){
 	var butCancel0 = document.createElement('button');
 	butCancel0.innerHTML = 'cancel';
 	butCancel0.onclick = function (){deleteCancel(nodeConfirm)};
-	var butCancel1 = document.createElement('button');
-	butCancel1.innerHTML = 'cancel';
-	butCancel1.onclick = function (){deleteCancel(nodeConfirm)};
-	var aButtons = [butDelete,butCancel0,butCancel1] ;
+	var aButtons = [butDelete,butCancel0] ;
 	nodeConfirm.innerHTML = '<p>Sure delete?</p>';
 	aButtons.forEach(function(but){ but.className = 'confirm-button';});
-	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random() *3 ),1)[0]);
 	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random()*2 ),1)[0]);
 	nodeConfirm.appendChild(aButtons[0]);
 	node.parentNode.insertBefore(nodeConfirm,node);

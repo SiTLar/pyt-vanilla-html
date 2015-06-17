@@ -171,6 +171,7 @@ margin-right:.3em;
 }
 .comment-controls a+a::before {
 content: " | ";
+	pointer-events: none;
 }
 span.comment-controls::after {
 content: ")";

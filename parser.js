@@ -519,8 +519,9 @@ function addComment(e){
 	if(postNBody.isBeenCommented === true)return;
 	postNBody.isBeenCommented = true;
 	var nodeComment = gNodes['comment'].cloneAll();
-	 nodeComment.cNodes['comment-body'].appendChild(genEditNode(postNewComment,cancelNewComment));
+	nodeComment.cNodes['comment-body'].appendChild(genEditNode(postNewComment,cancelNewComment));
 	postNBody.cNodes['comments'].appendChild(nodeComment);
+	nodeComment.getElementsByClassName('edit-txt-area')[0].focus();
 }
 function editComment(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'comment');
@@ -531,7 +532,7 @@ function editComment(e){
 	 nodeComment.cNodes['comment-body'].appendChild(nodeEdit);
 	victim.parentNode.replaceChild( nodeComment, victim);
 	nodeComment.id = victim.id;
-
+	nodeComment.getElementsByClassName('edit-txt-area')[0].focus();
 }
 
 function postEditComment(e){

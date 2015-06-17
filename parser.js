@@ -608,12 +608,9 @@ function deleteNode(node,doDelete){
 	butCancel1.onclick = function (){deleteCancel(nodeConfirm)};
 	var aButtons = [butDelete,butCancel0,butCancel1] ;
 	nodeConfirm.innerHTML = '<p>Sure delete?</p>';
-	var spacer = document.createElement('span');
-	spacer.style='margin-right: 3em;'
+	aButtons.forEach(function(but){ but.className = 'confirm-button';});
 	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random() *3 ),1)[0]);
-	nodeConfirm.appendChild(spacer);
 	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random()*2 ),1)[0]);
-	nodeConfirm.appendChild(spacer.cloneNode());
 	nodeConfirm.appendChild(aButtons[0]);
 	node.parentNode.insertBefore(nodeConfirm,node);
 	nodeConfirm.node = node;
@@ -805,7 +802,7 @@ function auth(check){
 	if (check !== true ){
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
-		nodeAuth.innerHTML = "<div id=auth-msg style='color:red;'>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
+		nodeAuth.innerHTML = "<div id=auth-msg style='color:white; font-weight: bold;'>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
 		document.getElementsByTagName("body")[0].appendChild(nodeAuth);
 	}
 	return false;

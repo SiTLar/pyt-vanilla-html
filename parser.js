@@ -448,6 +448,11 @@ function postEditedPost(e){
 }
 function deletePost(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != 'post');
+	deleteNode(victim, doDeletePost);
+}
+function doDeletePost(but){
+	var victim = but.node;
+	but.parentNode.parentNode.removeChild(but.parentNode);
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
@@ -586,7 +591,43 @@ function postNewComment(e){
 		nodeComments.cnt++;
 }
 function deleteComment(e){
-	var nodeComment =e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
+	var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
+	deleteNode(nodeComment,doDeleteComment);
+}
+function deleteNode(node,doDelete){
+	var nodeConfirm = document.createElement('div');
+	var butDelete = document.createElement('button');
+	butDelete.innerHTML = 'delete';
+	butDelete.node = node;
+	butDelete.onclick = function(){doDelete(butDelete);};
+	var butCancel0 = document.createElement('button');
+	butCancel0.innerHTML = 'cancel';
+	butCancel0.onclick = function (){deleteCancel(nodeConfirm)};
+	var butCancel1 = document.createElement('button');
+	butCancel1.innerHTML = 'cancel';
+	butCancel1.onclick = function (){deleteCancel(nodeConfirm)};
+	var aButtons = [butDelete,butCancel0,butCancel1] ;
+	nodeConfirm.innerHTML = '<p>Sure delete?</p>';
+	var spacer = document.createElement('span');
+	spacer.style='margin-right: 3em;'
+	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random() *3 ),1)[0]);
+	nodeConfirm.appendChild(spacer);
+	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random()*2 ),1)[0]);
+	nodeConfirm.appendChild(spacer.cloneNode());
+	nodeConfirm.appendChild(aButtons[0]);
+	node.parentNode.insertBefore(nodeConfirm,node);
+	nodeConfirm.node = node;
+	node.hidden = true;	
+
+}
+function deleteCancel(nodeConfirm){
+	nodeConfirm.node.hidden = false;	
+	nodeConfirm.parentNode.removeChild(nodeConfirm);
+}
+
+function doDeleteComment(but){
+	var nodeComment = but.node;
+	but.parentNode.parentNode.removeChild(but.parentNode);
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){

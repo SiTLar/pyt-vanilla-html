@@ -258,7 +258,7 @@ function genPost(post){
 	var user = gUsers[post.createdBy];
 	nodePost.rawData = post;
 	nodePost.id = post.id;
-	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 	if(typeof user !== 'undefined'){
 		nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 		var title = user.link;
@@ -671,7 +671,7 @@ function sendComment(textField){
 function genComment(comment){
 	var nodeComment = gNodes['comment'].cloneAll();
 	var cUser = gUsers[comment.createdBy];
-	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body)+ " - " + cUser.link ;
+	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))+ " - " + cUser.link ;
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof gMe !== 'undefined') 

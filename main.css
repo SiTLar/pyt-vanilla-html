@@ -125,7 +125,8 @@ display: inline-block;
 	margin-bottom: 6px;
 }
 .post-controls a+a::before{
-	content: " - ";
+	content: " -";
+	pointer-events: none;
 	margin-right: 0.3em;
 }
 

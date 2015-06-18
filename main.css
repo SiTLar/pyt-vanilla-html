@@ -125,7 +125,8 @@ display: inline-block;
 	margin-bottom: 6px;
 }
 .post-controls a+a::before{
-	content: " - ";
+	content: " -";
+	pointer-events: none;
 	margin-right: 0.3em;
 }
 
@@ -148,6 +149,9 @@ content: ",";
 display: inline-block;
 margin-right:.3em;
 }
+.confirm-button{
+margin-right: 3em;
+}
 .title a+a::before{
 content: ",";
 display: inline-block;
@@ -167,6 +171,7 @@ margin-right:.3em;
 }
 .comment-controls a+a::before {
 content: " | ";
+	pointer-events: none;
 }
 span.comment-controls::after {
 content: ")";

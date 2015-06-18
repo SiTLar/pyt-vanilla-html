@@ -258,7 +258,7 @@ function genPost(post){
 	var user = gUsers[post.createdBy];
 	nodePost.rawData = post;
 	nodePost.id = post.id;
-	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 	if(typeof user !== 'undefined'){
 		nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 		var title = user.link;
@@ -603,17 +603,10 @@ function deleteNode(node,doDelete){
 	var butCancel0 = document.createElement('button');
 	butCancel0.innerHTML = 'cancel';
 	butCancel0.onclick = function (){deleteCancel(nodeConfirm)};
-	var butCancel1 = document.createElement('button');
-	butCancel1.innerHTML = 'cancel';
-	butCancel1.onclick = function (){deleteCancel(nodeConfirm)};
-	var aButtons = [butDelete,butCancel0,butCancel1] ;
+	var aButtons = [butDelete,butCancel0] ;
 	nodeConfirm.innerHTML = '<p>Sure delete?</p>';
-	var spacer = document.createElement('span');
-	spacer.style='margin-right: 3em;'
-	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random() *3 ),1)[0]);
-	nodeConfirm.appendChild(spacer);
+	aButtons.forEach(function(but){ but.className = 'confirm-button';});
 	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random()*2 ),1)[0]);
-	nodeConfirm.appendChild(spacer.cloneNode());
 	nodeConfirm.appendChild(aButtons[0]);
 	node.parentNode.insertBefore(nodeConfirm,node);
 	nodeConfirm.node = node;
@@ -674,7 +667,7 @@ function sendComment(textField){
 function genComment(comment){
 	var nodeComment = gNodes['comment'].cloneAll();
 	var cUser = gUsers[comment.createdBy];
-	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body)+ " - " + cUser.link ;
+	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))+ " - " + cUser.link ;
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof gMe !== 'undefined') 
@@ -805,7 +798,7 @@ function auth(check){
 	if (check !== true ){
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
-		nodeAuth.innerHTML = "<div id=auth-msg style='color:red;'>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
+		nodeAuth.innerHTML = "<div id=auth-msg style='color:white; font-weight: bold;'>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
 		document.getElementsByTagName("body")[0].appendChild(nodeAuth);
 	}
 	return false;

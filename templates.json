@@ -127,6 +127,7 @@ var templates =  {"nodes": [
 			]}
 		]}
 		,{"c":"priv-header", "txt":"THE MATRIX" }
+		,{"c":"priv-info"}
 		,{"c":"priv-login"
 		,"children":[
 			{"c":"priv-pass"

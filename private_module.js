@@ -1,6 +1,6 @@
 'use strict';
 /*
-var cfg = {"keyurl":"http://moimosk.ru/cgi/secret?","authurl": gConfig.serverURL,'sk':16 };
+var cfg = {"srvurl":"http://moimosk.ru/cgi/secret?","authurl": gConfig.serverURL,'sk':16 };
 */
 var CryptoPrivate = function(cfg){
 	this.cfg = cfg;
@@ -42,6 +42,18 @@ CryptoPrivate.prototype = {
 	setPassword: function (pass){
 		this.password = openpgp.crypto.hash.sha256(pass);
 	},
+	makeToken: function(){
+		var caller = this;
+		return new Promise(function(resolve,reject){
+			var token = window.sessionStorage.getItem("crypto_write_token");
+			if(token) return resolve( btoa(openpgp.crypto.hash.sha256(token)));
+			caller.requestToken().then(function(){
+				token = window.sessionStorage.getItem("crypto_write_token");
+				return resolve( btoa(openpgp.crypto.hash.sha256(token)));
+			}, reject);
+		} );
+
+	},
 	logout: function(){
 		sessionStorage.removeItem("key_pub");
 		sessionStorage.removeItem("key_private");
@@ -49,6 +61,8 @@ CryptoPrivate.prototype = {
 		sessionStorage.removeItem("crypto_keys");
 		this.username = undefined;
 		this.password = undefined;
+		this.decipher = new Object();
+		this.gSymKeys = new Object();
 
 	},
 	register: function(){
@@ -76,7 +90,7 @@ CryptoPrivate.prototype = {
 					if(oReq.status < 400){
 						var res = JSON.parse(oReq.response);
 						var oReqS = new XMLHttpRequest();
-						oReqS.open("POST", caller.cfg.keyurl+'register');
+						oReqS.open("POST", caller.cfg.srvurl+'?register');
 						oReqS.onload = function(){
 							if(oReqS.status < 400){ 
 								var msgEnc = openpgp.message.readArmored(oReqS.response);
@@ -143,7 +157,7 @@ CryptoPrivate.prototype = {
 		var caller = this;
 		return new Promise(function(resolve,reject){
 			var oReq = new XMLHttpRequest();
-			oReq.open('GET', caller.cfg.keyurl+'@'+victim);
+			oReq.open('GET', caller.cfg.srvurl+'?@'+victim);
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
 					resolve(oReq.response);
@@ -201,19 +215,26 @@ CryptoPrivate.prototype = {
 		var caller = this;
 		return new Promise(function(resolve,reject){
 			if((typeof caller.password === 'undefined')|| (typeof caller.username === 'undefined')){
-				reject();
+				reject(-2);
 				return;
 			}
 			var oReq = new XMLHttpRequest();
-			oReq.open('GET', caller.cfg.keyurl+'data' );
+			oReq.open('GET', caller.cfg.srvurl+'?data' );
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
-					var secret = openpgp.crypto.cfb.decrypt("aes256",caller.password , atob(oReq.response));
+					var secret 
+					try {
+						secret = openpgp.crypto.cfb.decrypt("aes256",caller.password , atob(oReq.response));
+					} catch(e){
+						console.log(e);
+						reject(-1);
+						return;
+					}
 					secret = JSON.parse(secret);
 					window.sessionStorage.setItem("key_private", secret.prkey);
 					caller.loadKeys(secret.symkeys);
 					resolve();
-				}else reject();
+				}else reject(oReq.status);
 			
 			}
 			oReq.setRequestHeader("X-Authentication-User",caller.username);
@@ -225,7 +246,7 @@ CryptoPrivate.prototype = {
 		return new Promise(function(resolve,reject){
 			var keyPrA = window.sessionStorage.getItem("key_private");
 			if(!keyPrA) {
-				getUserPriv().then(function(){caller.requestToken( resolve,reject)},reject);
+				caller.getUserPriv().then(function(){caller.requestToken( resolve,reject)},reject);
 				return;
 			}
 			if((typeof caller.password === 'undefined') || (typeof caller.username === 'undefined')){
@@ -233,7 +254,7 @@ CryptoPrivate.prototype = {
 				return;
 			}
 			var oReq = new XMLHttpRequest();
-			oReq.open('GET', caller.cfg.keyurl+'token' );
+			oReq.open('GET', caller.cfg.srvurl+'?token' );
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
 					var msgEnc = openpgp.message.readArmored(oReq.response);
@@ -242,7 +263,7 @@ CryptoPrivate.prototype = {
 						).then(function(msg){
 							window.sessionStorage.setItem("crypto_write_token",msg);
 							resolve();
-						});
+						},reject);
 				}else reject();
 			}
 			oReq.setRequestHeader("X-Authentication-User",caller.username);
@@ -259,7 +280,7 @@ CryptoPrivate.prototype = {
 			}
 			var init  = openpgp.crypto.getPrefixRandom("aes256");
 			var oReq = new XMLHttpRequest();
-			oReq.open("POST", caller.cfg.keyurl+'update' );
+			oReq.open("POST", caller.cfg.srvurl+'?update' );
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
 						resolve();

@@ -6,9 +6,9 @@ var gMe = new Object();
 var gComments = new Object();
 var gAttachments  = new Object();
 var gFeeds = new Object();
-var gPrivTimeline = {'oraphed':{count:0},'noKey':{},'noDecipher':{},nCmts:0,'posts':[] };
+var gPrivTimeline = {"done":0,'postsById':{},'oraphed':{count:0},'noKey':{},'noDecipher':{},nCmts:0,'posts':[] };
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
-var matrix = new CryptoPrivate({"srvurl":"https://moimosk.ru/cgi/secret","authurl": gConfig.serverURL,'sk':16, 'encId':"MATRIX", "feed":"crypto-matrix" });
+var matrix = new CryptoPrivate({"srvurl":"https://moimosk.ru/cgi/secret","mul":10,"authurl": gConfig.serverURL,'sk':16, 'encId':"MATRIX", "feed":"crypto-matrix" });
 document.addEventListener("DOMContentLoaded", initDoc);
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -192,126 +192,82 @@ function draw(content){
 		body.appendChild(nodeShowHidden);
 		if(document.hiddenCount) nodeShowHidden.cNodes['href'].innerHTML= 'Show '+ document.hiddenCount + ' hidden entries';
 		body.appendChild(nodeMore);
-		new Promise(function (){addPosts(0);});
+		var drop = Math.floor(gConfig.cSkip/3);
+		var toAdd = drop + Math.floor(gConfig.offset/3);
+		if((!gPrivTimeline.done)&& (gConfig.timeline == 'home')&& matrix.ready){
+			gPrivTimeline.done = true;
+			new Promise(function (){addPosts(drop,toAdd,0);});
+		};
 	}else body.appendChild(genPost(content.posts));
 }
-function addPosts(offset){
-	var limit = 100;
-	var toAdd = Math.floor(gConfig.offset/3);
-	var url = matrix.cfg.srvurl + "/posts?offset="+offset+"&limit="+limit;
+function addPosts(drop, toAdd, offset){
+	var url = matrix.cfg.srvurl + "/posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(oReq.status < 400){
-			var res = JSON.parse(this.response);
-			//res.users.forEach(addUser);
-			var idx = 0;
-			if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-			if(res.comments)res.comments.forEach(function(comment){ gComments[comment.id] = comment; });
-			if(typeof res.posts !=="undefined")
-				for( ; (idx < res.posts.length) && toAdd; idx++){
+			var res = JSON.parse(oReq.response);
+			var cRemain = toAdd + drop;
+			if(typeof res.posts !=="undefined"){
+				for(var idx = 0; idx < res.posts.length; idx++  ){		
 					var nodePost = genPost(res.posts[idx]);
-					document.posts.appendChild(nodePost);
-					if (nodePost.nodeName == 'DIV') --toAdd;
+					if (nodePost){
+						nodePost.rawData.updatedAt = nodePost.rawData.createdAt;
+						if(!(--cRemain)) break;
+					}
 				}
-			else{
-				if(gPrivTimeline.oraphed.count)handleOraphed(offset);
-				else clearRedPosts();
-
 			}
-			if ((toAdd)&&(limit==res.posts.length)) addPosts(toAdd,offset+limit );
-			else if(gPrivTimeline.oraphed.count)handleOraphed(offset);
-			else doPrivComments();
-		}
+			if(cRemain&&(res.posts.length == (toAdd*matrix.cfg.mul))) addPosts(drop, cRemain,offset+idx  );
+			else {
+				doPrivComments(drop);
+			}
+		}else gPrivTimeline.done = false;
 	}	
 	oReq.open("get",url,true);
 	oReq.send();
 }
-function handleOraphed(offset){
+function doPrivComments(drop){
 	var limit = 100;
-	var url = matrix.cfg.srvurl + "/posts?offset="+offset+"&limit="+limit;
+	var url = matrix.cfg.srvurl + "/cmts?limit="+limit;
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(oReq.status < 400){
-			var res = JSON.parse(this.response);
-			res.users.forEach(addUser);
-			var idx = 0;
-			for(;idx<res.posts.length;idx++){
-				processOraph(res.posts[idx]);
-				if (!gPrivTimeline.oraphed.count)break;
+			var res = JSON.parse(oReq.response);
+			if(typeof res.posts !=="undefined")
+				res.posts.forEach(function (post){drawPrivateComment(post);});
+			gPrivTimeline.posts.forEach(function(nodePost){
+				var nodeComments = nodePost.cNodes["post-body"].cNodes["comments"];
+				if(nodeComments.childNodes.length < 4)
+					for(var idx = 0; idx < nodeComments.childNodes.length; idx++)
+						nodeComments.childNodes[idx].hidden = false;
+				else{
+					for(var idx = 0; idx < 2; idx++)
+						nodeComments.childNodes[idx].hidden = false;
+					var nodeComment = gNodes['comment'].cloneAll();
+					nodeComment.id = nodePost.id+'-ufc';
+					nodeComment.cNodes['comment-date'].innerHTML = '';
+					nodeComment.cNodes['comment-body'].innerHTML = '<a onclick="unfoldPrivComm(\''+nodePost.id+'-ufc\')" style="font-style: italic;">'+(nodeComments.childNodes.length-3)*1 +' more comments</a>';
+					nodeComments.insertBefore( nodeComment, nodeComments.childNodes[2]);
+					nodeComments.lastChild.hidden = false;
+				}
+			});
+			gPrivTimeline.posts.sort(function (a,b){return a.rawData.updatedAt>b.rawData.updatedAt?1:-1;});
+			gPrivTimeline.posts.splice(0,drop);
+			var tmp = gPrivTimeline.posts;
+			var privPost = tmp[0];
+			if(!privPost)return; 
+			for(var idx = 0; idx< document.posts.childNodes.length; idx++){
+				var pubPost = document.posts.childNodes[idx]; 
+				if(privPost.rawData.updatedAt>pubPost.rawData.updatedAt){
+					document.posts.insertBefore(tmp.shift(),pubPost );
+					privPost = tmp[0];
+					if (typeof privPost === 'undefined')break;
+				}
 			}
-			if (gPrivTimeline.oraphed.count)handleOraphed(offset*1+limit*1);
-			else doPrivComments();
+			tmp.forEach(function(post){document.posts.appendChild(post);});
 		}
-	}
-}
-function processOraph(post){
-	var cpost = matrix.decrypt(post);
-	if (typeof cpost.error !== 'undefined') return;
-	cpost = JSON.parse(cpost);
-	if(typeof gPrivTimeline.oraphed[cpost.postid]!== 'undefined' ){
-		if (typeof cpost.feed === 'undefined') cpost.feed = cpost.id;
-		nodePost.feed = cpost.feed;
-		if(cpost.type == "post"){
-			var home = document.getElementById(post.id);
-			if (!home){
-				console.log("Lost private post #"+post.id);
-				return;
-			}
-			var nodePost = home;
-			gPrivTimeline.posts.push(nodePost);
-			postNBody = nodePost.cNodes["post-body"];
-			nodePost.homed = true;	
-			nodePost.rawData = post;
-			delete gPrivTimeline.oraphed[cpost.postid];
-			nodePost.cmt.reverse()
-			nodePost.cmt.forEach( function(cmt){ 
-				var nodeComment = genComment(cmt);
-				nodeComment.hidden = true;
-				postNBody.cNodes["comments"].appendChild( nodeComment);
-			})
-			delete nodePost.cmt;
-			postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.data.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-		}else if (cpost.type == "comment"){
-			gPrivTimeline.nCmts++;
-			var nodePriv = document.getElementById(cpost.postid);
-			if(!nodePriv) {
-				console.log("Lost private comment #"+post.id);
-				return;
-			} 
-
-			gComments[post.id] = {"body":cpost.data,
-				"createdAt":post.createdAt, 
-				"createdBy": post.createdBy, 
-				"feed":cpost.feed,
-				"id":post.id
-			};
-			if (nodePriv.homed){
-				var nodeComment = genComment(gComments[post.id]);
-				nodeComment.hidden = true;
-				nodePriv.cNodes["post-body"].cNodes["comments"].insertBefore(nodeComment,nodePriv.cNodes["post-body"].cNodes["comments"].firstChild);
-			}
-			else nodePriv.cmt.push(gComments[post.id]); 
-		}
-	}
-
-}
-function doPrivComments(){
-	gPrivTimeline.posts.forEach(function(nodePost){
-		var nodeComments = nodePost.cNodes["post-body"].cNodes["comments"];
-		if(nodeComments.childNodes.length < 4)
-			for(var idx = 0; idx < nodeComments.childNodes.length; idx++)
-				nodeComments.childNodes[idx].hidden = false;
-		else{
-			for(var idx = 0; idx < 2; idx++)
-				nodeComments.childNodes[idx].hidden = false;
-			var nodeComment = gNodes['comment'].cloneAll();
-			nodeComment.id = nodePost.id+'-ufc';
-			nodeComment.cNodes['comment-date'].innerHTML = '';
-			nodeComment.cNodes['comment-body'].innerHTML = '<a onclick="unfoldPrivComm(\''+nodePost.id+'-ufc\')" style="font-style: italic;">'+(nodeComments.childNodes.length-3)*1 +' more comments</a>';
-			nodeComments.insertBefore( nodeComment, nodeComments.childNodes[2]);
-			nodeComments.lastChild.hidden = false;
-		}
-	});
+	}	
+	oReq.open("get",url,true);
+	oReq.send();
 }
 function unfoldPrivComm(id){
 	var nodeComment = document.getElementById(id);
@@ -379,6 +335,24 @@ function updateDate(node){
 	node.innerHTML =  relative_time(node.date) ;
 	window.setTimeout(updateDate, 5000, node );
 }
+function drawPrivateComment(post) {
+	var cpost = matrix.decrypt(post.body);
+	if (typeof cpost.error !== 'undefined')return;
+	cpost = JSON.parse(cpost);
+	var nodePriv = gPrivTimeline.postsById[cpost.postid];
+	var comment = {"body":cpost.data,
+			"createdAt":Date.parse(post.createdAt), 
+			"createdBy":post.createdBy, 
+			"id":post.id
+			};
+	var nodeComment = genComment(comment);
+	gComments[post.id] = comment;
+	nodeComment.hidden = true;
+	if(nodePriv){
+		if(comment.createdAt > nodePriv.rawData.updatedAt) nodePriv.rawData.updatedAt = comment.createdAt;
+		nodePriv.cNodes["post-body"].cNodes["comments"].insertBefore(nodeComment,nodePriv.cNodes["post-body"].cNodes["comments"].firstChild);
+	}
+}
 function genPost(post){
 	var nodePost = gNodes['post'].cloneAll();
 	var postNBody = nodePost.cNodes["post-body"];
@@ -405,55 +379,14 @@ function genPost(post){
 		postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 	}else{	
 		nodePost.isPrivate = true;
+		post.createdAt = Date.parse(post.createdAt);
+		nodePost.rawData.createdAt = post.createdAt;
 		cpost = JSON.parse(cpost);
-		if (typeof cpost.feed === 'undefined') cpost.feed = cpost.id;
 		nodePost.feed = cpost.feed;
-		if(cpost.type == "post"){
-			var home = document.getElementById(post.id);
-			if (home){
-				nodePost = home;
-				postNBody = nodePost.cNodes["post-body"];
-				nodePost.homed = true;	
-				nodePost.rawData = post;
-				delete gPrivTimeline.oraphed[cpost.postid];
-				gPrivTimeline.oraphed.count--;
-				nodePost.cmt.reverse()
-				nodePost.cmt.forEach( function(cmt){ 
-					var nodeComment = genComment(cmt);
-					nodeComment.hidden = true;
-					postNBody.cNodes["comments"].appendChild( nodeComment);
-				});
-				delete nodePost.cmt;
-			}
-			gPrivTimeline.posts.push(nodePost);
-			nodePost.rawData.body = cpost.data;
-			postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.data.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-		}else if (cpost.type == "comment"){
-			gPrivTimeline.nCmts++;
-			var nodePriv = document.getElementById(cpost.postid);
-			if(!nodePriv) {
-				nodePost.id = cpost.postid;
-				postNBody.cNodes["post-cont"].innerHTML = '<span style="font-family: monospace; font-size: xx-large">THE MATRIX IS LOADING</span><i class="fa fa-spinner fa-pulse fa-2x"></i>';
-				gPrivTimeline.oraphed[cpost.postid] = nodePost;
-				gPrivTimeline.oraphed.count++;
-				nodePriv = nodePost;
-				nodePriv.cmt = new Array();
-			}
-			gComments[post.id] = {"body":cpost.data,
-				"createdAt":post.createdAt, 
-				"createdBy": post.createdBy, 
-				"feed":cpost.feed,
-				"id":post.id
-			};
-			if (nodePriv.homed){
-				var nodeComment = genComment(gComments[post.id]);
-				nodeComment.hidden = true;
-				nodePriv.cNodes["post-body"].cNodes["comments"].insertBefore(nodeComment,nodePriv.cNodes["post-body"].cNodes["comments"].firstChild);
-			}
-			else nodePriv.cmt.push(gComments[post.id]); 
-			if (nodePost.id == cpost.postid) return nodePost;
-			else return document.createElement('span');
-		}
+		gPrivTimeline.posts.push(nodePost);
+		gPrivTimeline.postsById[post.id] = nodePost;
+		nodePost.rawData.body = cpost.data;
+		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.data.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 
 	}
 
@@ -784,7 +717,7 @@ function sendEditedPrivateComment(textField, nodeComment, nodePost){
 			var res = JSON.parse(this.response);
 			var cpost = JSON.parse(matrix.decrypt(res.posts.body));
 			var comment = {"body":cpost.data,
-					"createdAt":res.posts.createdAt, 
+					"createdAt":Date.parse(res.posts.createdAt), 
 					"createdBy":res.posts.createdBy, 
 					"feed":res.posts.id
 					};
@@ -877,10 +810,21 @@ function deleteComment(e){
 			delete gComments[nodeComment.id];
 		}
 	};
-	oReq.open("delete",gConfig.serverURL + (nodePost.isPrivate?"posts/":"comments/")+nodeComment.id, true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	oReq.setRequestHeader("Content-type","application/json");
-	oReq.send();
+	if(nodePost.isPrivate){ 
+		matrix.makeToken().then(function(token){
+			oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
+			oReq.setRequestHeader('x-content-id', nodeComment.id); 
+			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.setRequestHeader('x-content-type', 'comment'); 
+			oReq.send();
+		}, function(){ console.log("can't get auth token"); });
+	}else{
+		oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("Content-type","application/json");
+		oReq.send();
+	}
 }
 function sendPrivateComment( textField, nodeComment, nodePost){
 	textField.disabled = true;
@@ -891,10 +835,9 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 			textField.disabled = false;
 			textField.style.height  = '4em';
 			var res = JSON.parse(this.response);
-			var cpost = console.log(matrix.decrypt(res.posts.body));
 			var cpost = JSON.parse(matrix.decrypt(res.posts.body));
 			var comment = {"body":cpost.data,
-					"createdAt":res.posts.createdAt, 
+					"createdAt":Date.parse(res.posts.createdAt), 
 					"createdBy":res.posts.createdBy, 
 					"id":res.posts.id
 					};
@@ -1123,6 +1066,7 @@ function getauth(oFormElement){
 	oReq.send("username="+document.getElementById('a-user').value+"&password="+document.getElementById('a-pass').value);
 }
 function logout(){
+	matrix.ready = 0;
 	matrix.logout();
 	window.localStorage.removeItem("gMe");
 	window.localStorage.removeItem("token");
@@ -1131,7 +1075,7 @@ function logout(){
 function ctrlPriv(){
 	if(typeof gMe === 'undefined') return;
 	var nodePCtrl = document.body.appendChild(gNodes['private-control'].cloneAll());
-	if (typeof matrix.password === 'undefined') return;
+	if (!matrix.ready) return;
 	nodePCtrl.cNodes['priv-login'].cNodes["priv-pass"].hidden = true;
 	var bLogin = nodePCtrl.cNodes['priv-login'].cNodes["priv-pass-submit"];
 	bLogin.innerHTML = 'logout';
@@ -1155,6 +1099,13 @@ function ctrlPrivLogin(e){
 		e.target.removeEventListener('click', ctrlPrivLogin);
 		e.target.addEventListener('click', ctrlPrivLogout);
 		privRegenGrps();
+		matrix.ready = 1;
+		var drop = Math.floor(gConfig.cSkip/3);
+		var toAdd = drop + Math.floor(gConfig.offset/3);
+		if((!gPrivTimeline.done)&& (gConfig.timeline == 'home')&& matrix.ready){
+			gPrivTimeline.done = true;
+			new Promise(function (){addPosts(drop,toAdd,0);});
+		};
 	}
 	, function(wut){
 		switch(wut){
@@ -1162,9 +1113,7 @@ function ctrlPrivLogin(e){
 			e.target.parentNode.parentNode.cNodes['priv-info'].innerHTML = "Incorrect password";
 			break;
 		case 404:
-			matrix.register().then( privRegenGrps, 
-				function(){new Error("Failed to register on the key sever.");});
-			e.target.dispatchEvent(new Event('click'));
+			ctrlPrivNewUser(e.target); 
 			break;
 		default:
 			e.target.parentNode.parentNode.cNodes['priv-info'].innerHTML = "Got error#"+wut+"<br/>Try again later";
@@ -1172,7 +1121,25 @@ function ctrlPrivLogin(e){
 		}
 	});
 }
+function ctrlPrivNewUser(nodeSubmit){
+	var node = gNodes['priv-new-user'].cloneAll();
+	node.cNodes["priv-pass-submit"].addEventListener('click',function(e){
+		if (node.cNodes['priv-pass-i'].value != nodeSubmit.parentNode.cNodes['priv-pass'].cNodes['priv-pass-i'].value){
+			alert('Passwords must match');
+			return;
+		}
+		document.getElementsByTagName('body')[0].removeChild(node);
+		matrix.register().then( privRegenGrps, 
+			function(){new Error("Failed to register on the key sever.");}
+		);
+		nodeSubmit.dispatchEvent(new Event('click'));
+	});
+	node.cNodes["priv-pass-cancel"].addEventListener('click',function(){ document.getElementsByTagName('body')[0].removeChild(node);});
+	document.getElementsByTagName('body')[0].appendChild(node);
+
+}
 function ctrlPrivLogout(e){
+	matrix.ready = 0;
 	matrix.logout();
 	var inpPass = e.target.parentNode.cNodes['priv-pass'].cNodes['priv-pass-i'];
 	inpPass.value = '';

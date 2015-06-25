@@ -8,6 +8,12 @@ var CryptoPrivate = function(cfg){
 	var sSymKeys = window.sessionStorage.getItem("crypto_keys");
 	if (sSymKeys != "undefined")if (sSymKeys) var gSymKeys = JSON.parse(window.sessionStorage.getItem("crypto_keys"));
 	if(!this.gSymKeys)this.loadKeys(gSymKeys);
+	var c_login = window.sessionStorage.getItem('crypto_login');
+	if(c_login){
+		c_login = JSON.parse(c_login);	
+		this.password = atob(c_login.password);
+		this.username =c_login.username;
+	}
 }
 CryptoPrivate.prototype = {
 	constructor: CryptoPrivate,
@@ -41,6 +47,7 @@ CryptoPrivate.prototype = {
 	},
 	setPassword: function (pass){
 		this.password = openpgp.crypto.hash.sha256(pass);
+		window.sessionStorage.setItem('crypto_login', JSON.stringify({'password':btoa(this.password), 'login':gMe.users.username}));
 	},
 	makeToken: function(){
 		var caller = this;
@@ -209,6 +216,7 @@ CryptoPrivate.prototype = {
 		for(var pid in caller.gSymKeys)
 			caller.gSymKeys[pid].aKeys.forEach(function(key){ caller.decipher[key.id] = key.key; });
 		window.sessionStorage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys));
+		caller.ready = 1;
 
 	},
 	getUserPriv: function(){
@@ -249,10 +257,6 @@ CryptoPrivate.prototype = {
 				caller.getUserPriv().then(function(){caller.requestToken( resolve,reject)},reject);
 				return;
 			}
-			if((typeof caller.password === 'undefined') || (typeof caller.username === 'undefined')){
-				reject();
-				return;
-			}
 			var oReq = new XMLHttpRequest();
 			oReq.open('GET', caller.cfg.srvurl+'?token' );
 			oReq.onload = function(){
@@ -264,7 +268,7 @@ CryptoPrivate.prototype = {
 							window.sessionStorage.setItem("crypto_write_token",msg);
 							resolve();
 						},reject);
-				}else reject();
+				}else reject(oReq.status);
 			}
 			oReq.setRequestHeader("X-Authentication-User",caller.username);
 			oReq.send();

@@ -220,14 +220,31 @@ float: left;
 margin: auto;
 position: absolute;
 top: 3em;
-width:50%;
+width:300px;
+background-color: #abf;
+left: 0;
+right: 0;
+padding:1em;
+border: thin solid black;
+}
+
+.priv-new-user{
+margin: auto;
+position: absolute;
+top: 4em;
+border: thin solid black;
+width:200px;
 background-color: #abf;
 left: 0;
 right: 0;
 padding:1em;
 }
-
-
+.priv-pass-submit{
+margin:1em;
+}
+.priv-pass-cancel{
+margin:1em;
+}
 .private-control > * {
 display: table;
 	margin-bottom: .5em;

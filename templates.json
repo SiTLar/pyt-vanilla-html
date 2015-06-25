@@ -169,4 +169,11 @@ var templates =  {"nodes": [
 		{"t":"input", "p":{"name":"privGrp","type":"radio" }}
 		,{"c":"priv-grp-name", "t":"span"}
 	]}
+	,{"c":"priv-new-user"
+	,"children":[
+		{"t":"p", "txt": "Please comfirm the password.<br>There is on way to recover it later"}
+		,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
+		,{"c":"priv-pass-submit", "t":"button", "txt":"OK"}
+		,{"c":"priv-pass-cancel", "t":"button", "txt":"Cancel" }
+	]}
 ]};

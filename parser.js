@@ -158,6 +158,8 @@ function draw(content){
 		var subscribers = new Object();
 		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
 		content.subscriptions.forEach(function(sub){if(sub.name =='Posts')gFeeds[sub.id] = subscribers[sub.user];});
+		if(typeof gMe !== 'undefined') 
+			gFeeds[gMe.users.id] = gMe.users;
 	}
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
@@ -405,7 +407,22 @@ function genPost(post){
 			oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 			oReq.send();
 		}else gotUser();
-
+	}
+	function gotUser(){
+		if(typeof user !== 'undefined'){
+			nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+			var title = user.link;
+			if(nodePost.isPrivate) title += '<span> posted privately to '+StringView.makeFromBase64(matrix.gSymKeys[cpost.feed].name)+"</span>";
+			else if(post.postedTo){
+				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
+					title += "<span> posted to: </span>";
+					post.postedTo.forEach(function(id){
+						title += "<a href=" + gConfig.front+ gFeeds[id].username+">"+ gFeeds[id].screenName;
+						if(gFeeds[id].type == 'user')
+							if(gFeeds[id].screenName.slice(-1) == 's')
+								title += "' feed";
+							else title += "'s feed";
+						title += '</a>';
 					});
 				}
 			}

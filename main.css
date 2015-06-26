@@ -125,7 +125,8 @@ display: inline-block;
 	margin-bottom: 6px;
 }
 .post-controls a+a::before{
-	content: " - ";
+	content: " -";
+	pointer-events: none;
 	margin-right: 0.3em;
 }
 
@@ -148,6 +149,9 @@ content: ",";
 display: inline-block;
 margin-right:.3em;
 }
+.confirm-button{
+margin-right: 3em;
+}
 .title a+a::before{
 content: ",";
 display: inline-block;
@@ -167,6 +171,7 @@ margin-right:.3em;
 }
 .comment-controls a+a::before {
 content: " | ";
+	pointer-events: none;
 }
 span.comment-controls::after {
 content: ")";
@@ -295,7 +300,8 @@ float:right;
 .priv-header{font-size:x-large; clear: both; text-align: center;}
 .private-control p{text-align:center}
 .new-post-to{
-margin: 0.3em;
+margin-top: 1.5em;
+margin-bottom: 0.3em;
 }
 .new-post-feed{
     background-color: #f2f2f2;

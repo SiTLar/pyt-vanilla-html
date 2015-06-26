@@ -406,23 +406,6 @@ function genPost(post){
 			oReq.send();
 		}else gotUser();
 
-	}
-
-	function gotUser(){
-		if(typeof user !== 'undefined'){
-			nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
-			var title = user.link;
-			if(nodePost.isPrivate) title += '<span> posted privately to '+StringView.makeFromBase64(matrix.gSymKeys[cpost.feed].name)+"</span>";
-			else if(post.postedTo){
-				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
-					title += "<span> posted to: </span>";
-					post.postedTo.forEach(function(id){
-						title += "<a href=" + gConfig.front+ gFeeds[id].username+">"+ gFeeds[id].screenName;
-						if(gFeeds[id].type == 'user')
-							if(gFeeds[id].screenName.slice(-1) == 's')
-								title += "' feed";
-							else title += "'s feed";
-						title += '</a>';
 					});
 				}
 			}
@@ -634,6 +617,11 @@ function postEditedPost(e){
 }
 function deletePost(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != 'post');
+	deleteNode(victim, doDeletePost);
+}
+function doDeletePost(but){
+	var victim = but.node;
+	but.parentNode.parentNode.removeChild(but.parentNode);
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
@@ -715,8 +703,9 @@ function addComment(e){
 	if(postNBody.isBeenCommented === true)return;
 	postNBody.isBeenCommented = true;
 	var nodeComment = gNodes['comment'].cloneAll();
-	 nodeComment.cNodes['comment-body'].appendChild(genEditNode(postNewComment,cancelNewComment));
+	nodeComment.cNodes['comment-body'].appendChild(genEditNode(postNewComment,cancelNewComment));
 	postNBody.cNodes['comments'].appendChild(nodeComment);
+	nodeComment.getElementsByClassName('edit-txt-area')[0].focus();
 }
 function editComment(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'comment');
@@ -727,7 +716,7 @@ function editComment(e){
 	 nodeComment.cNodes['comment-body'].appendChild(nodeEdit);
 	victim.parentNode.replaceChild( nodeComment, victim);
 	nodeComment.id = victim.id;
-
+	nodeComment.getElementsByClassName('edit-txt-area')[0].focus();
 }
 function sendEditedPrivateComment(textField, nodeComment, nodePost){
 	var oReq = new XMLHttpRequest();
@@ -821,8 +810,36 @@ function postNewComment(e){
 	nodeComments.cnt++;
 }
 function deleteComment(e){
-	var nodeComment =e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
-	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
+	var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
+	deleteNode(nodeComment,doDeleteComment);
+}
+function deleteNode(node,doDelete){
+	var nodeConfirm = document.createElement('div');
+	var butDelete = document.createElement('button');
+	butDelete.innerHTML = 'delete';
+	butDelete.node = node;
+	butDelete.onclick = function(){doDelete(butDelete);};
+	var butCancel0 = document.createElement('button');
+	butCancel0.innerHTML = 'cancel';
+	butCancel0.onclick = function (){deleteCancel(nodeConfirm)};
+	var aButtons = [butDelete,butCancel0] ;
+	nodeConfirm.innerHTML = '<p>Sure delete?</p>';
+	aButtons.forEach(function(but){ but.className = 'confirm-button';});
+	nodeConfirm.appendChild(aButtons.splice(Math.floor(Math.random()*2 ),1)[0]);
+	nodeConfirm.appendChild(aButtons[0]);
+	node.parentNode.insertBefore(nodeConfirm,node);
+	nodeConfirm.node = node;
+	node.hidden = true;	
+
+}
+function deleteCancel(nodeConfirm){
+	nodeConfirm.node.hidden = false;	
+	nodeConfirm.parentNode.removeChild(nodeConfirm);
+}
+
+function doDeleteComment(but){
+	var nodeComment = but.node;
+	but.parentNode.parentNode.removeChild(but.parentNode);
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
@@ -918,7 +935,11 @@ function sendComment(textField){
 function genPComment(cpost){
 	var nodeComment = gNodes['comment'].cloneAll();
 	var cUser = gUsers[comment.createdBy];
+<<<<<<< HEAD
 	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))+ " - " + cUser.link ;
+=======
+	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))+ " - " + cUser.link ;
+>>>>>>> master
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof gMe !== 'undefined') 
@@ -1083,7 +1104,7 @@ function auth(check){
 	if (check !== true ){
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
-		nodeAuth.innerHTML = "<div id=auth-msg style='color:red;'>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
+		nodeAuth.innerHTML = "<div id=auth-msg style='color:white; font-weight: bold;'>&nbsp;</div><form action='javascript:' onsubmit=getauth(this)><table><tr><td>Username</td><td><input name='username' id=a-user type='text'></td></tr><tr><td>Password</td><td><input name='password' id=a-pass type='password'></td></tr><tr><td><input type='submit' value='Log in'></td></tr></table></form>";
 		document.getElementsByTagName("body")[0].appendChild(nodeAuth);
 	}
 	return false;

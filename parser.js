@@ -1327,6 +1327,7 @@ function ctrlPrivJoin(e){
 		if(typeof symKeys.aKeys === "undefined")return;
 		matrix.addKeys(symKeys);
 		privRegenGrps();
+		e.target.parentNode.cNodes["priv-key-input"].value = '';
 	});
 }
 function ctrlPrivGen(e){

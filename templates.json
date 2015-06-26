@@ -134,7 +134,7 @@ var templates =  {"nodes": [
 		,{"c":"priv-info"}
 		,{"c":"priv-join"
 		,"children":[
-			{"c":"priv-key-input", "t":"input","e":{"change":"privActivateButton"}}
+			{"c":"priv-key-input", "t":"textarea","p":{"rows":1},"e":{"change":"privActivateButton"}}
 			,{"c":"priv-submit", "t":"button", "txt":"join","p":{"disabled":true}, "e":{"click":"ctrlPrivJoin"}}
 
 		]}

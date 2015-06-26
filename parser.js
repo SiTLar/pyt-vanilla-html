@@ -1,4 +1,3 @@
-'use strict';
 
 var gUsers = new Object();
 var gNodes = new Object();
@@ -334,7 +333,7 @@ function postHide(e){
 	
 }
 function updateDate(node){
-	node.innerHTML =  relative_time(node.date) ;
+	node.innerHTML =  relative_time(node.date);
 	window.setTimeout(updateDate, 5000, node );
 }
 function drawPrivateComment(post) {
@@ -439,6 +438,10 @@ function genPost(post){
 		var anchorDate = document.createElement("a");
 		if(typeof user !== 'undefined') anchorDate.href = gConfig.front+user.username+'/'+post.id;
 		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
+		var tmp = document.createElement("span");
+		tmp.innerHTML = "&nbsp;&mdash;&nbsp;"
+		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(tmp);
+		
 		anchorDate.date = post.createdAt*1;
 
 		window.setTimeout(updateDate, 10,anchorDate);
@@ -452,6 +455,9 @@ function genPost(post){
 				postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes['post-control-like'];
 				nodeControls.cNodes['post-control-like'].action = true;
 			}
+			var tmp  = document.createElement('span');
+			tmp.innerHTML = '-';
+			nodeControls.appendChild(tmp);
 			var aHide = document.createElement('a');
 			aHide.innerHTML = post.isHidden?'Un-hide':'Hide';
 			aHide.action = !post.isHidden;

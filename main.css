@@ -112,10 +112,6 @@ color: #000;
 color: #737373;
 }
 
-.post-date {
-margin-right:1em;
-color: #737373;
-}
 .post-info {
 	font-size: 13px;
 	line-height: 16px;
@@ -124,10 +120,9 @@ color: #737373;
 display: inline-block;
 	margin-bottom: 6px;
 }
-.post-controls a+a::before{
-	content: " -";
-	pointer-events: none;
+.post-controls a{
 	margin-right: 0.3em;
+	margin-left: 0.3em;
 }
 
 .more-node{
@@ -168,10 +163,6 @@ margin-right:.3em;
        line-height: 16px;
 	margin-top: 8px;
 	margin-left: 21px;
-}
-.comment-controls a+a::before {
-content: " | ";
-	pointer-events: none;
 }
 span.comment-controls::after {
 content: ")";

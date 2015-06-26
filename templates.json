@@ -49,13 +49,16 @@ var templates =  {"nodes": [
 	{"c":"controls-self","t":"span",
 	"children":[
 		{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":"addComment"}},
+		{"t":"span","txt":"-"},
 		{"c":"post-control-edit","t":"a","txt":"Edit","e":{"click":"editPost"}},
+		{"t":"span","txt":"-"},
 		{"c":"post-control-delete","t":"a","txt":"Delete","e":{"click":"deletePost"}}
 	]
 	},
 	{"c":"controls-others","t":"span",
 	"children":[
 		{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":"addComment"}},
+		{"t":"span","txt":"-"},
 		{"c":"post-control-like","t":"a","txt":"Like","e":{"click":"postLike"}}
 	]
 	},
@@ -75,6 +78,7 @@ var templates =  {"nodes": [
 	{"c":"comment-controls","t":"span",
 	"children":[
 		{"t":"a","txt":"edit","e":{"click":"editComment"}},
+		{"t":"span","txt":"|"},
 		{"t":"a","txt":"delete","e":{"click":"deleteComment"}}
 	]},
 	{"c":"edit",

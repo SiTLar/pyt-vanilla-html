@@ -397,7 +397,7 @@ function genPost(post){
 				if(this.status < 400){
 					var oRes = JSON.parse(oReq.response);
 					addUser(oRes.users);
-					user = gUsers[comment.createdBy];
+					user = gUsers[post.createdBy];
 					gotUser();
 				}
 			};

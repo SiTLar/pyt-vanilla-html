@@ -20,14 +20,20 @@ var templates =  {"nodes": [
 	]
 	},
 	
-
+	{"c":"private",
+	"children":[
+		{"c":"priv-body"}
+	]
+	},
 	{"c":"controls-user","t":"div",
 	"children":[
 		{"c":"user-home","t":"a","href":"#","txt":"home","e":{"mousedown":"home"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-me","t":"a","txt":"my feed","e":{"click":"me"}},
+		{"c":"user-me","t":"a","txt":"me","e":{"mousedown":"me"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-my","t":"a","txt":"my discussions","e":{"mousedown":"my"}},
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-priv","t":"a","txt":"privates","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
 	]
@@ -43,13 +49,16 @@ var templates =  {"nodes": [
 	{"c":"controls-self","t":"span",
 	"children":[
 		{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":"addComment"}},
+		{"t":"span","txt":"-"},
 		{"c":"post-control-edit","t":"a","txt":"Edit","e":{"click":"editPost"}},
+		{"t":"span","txt":"-"},
 		{"c":"post-control-delete","t":"a","txt":"Delete","e":{"click":"deletePost"}}
 	]
 	},
 	{"c":"controls-others","t":"span",
 	"children":[
 		{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":"addComment"}},
+		{"t":"span","txt":"-"},
 		{"c":"post-control-like","t":"a","txt":"Like","e":{"click":"postLike"}}
 	]
 	},
@@ -69,6 +78,7 @@ var templates =  {"nodes": [
 	{"c":"comment-controls","t":"span",
 	"children":[
 		{"t":"a","txt":"edit","e":{"click":"editComment"}},
+		{"t":"span","txt":"|"},
 		{"t":"a","txt":"delete","e":{"click":"deleteComment"}}
 	]},
 	{"c":"edit",
@@ -110,5 +120,92 @@ var templates =  {"nodes": [
 	,{"c":"show-hidden",
 	"children":[
 		{"c":"href","e":{"click":"showHidden"},"t":"a" }
+	]}
+	,{"c":"private-control",
+	"children":[
+		{"c":"priv-close","e":{"click":"ctrlPrivClose"}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"priv-header", "txt":"THE MATRIX" }
+		,{"c":"priv-info"}
+		,{"c":"priv-join"
+		,"children":[
+			{"c":"priv-key-input", "t":"textarea","p":{"rows":1},"e":{"change":"privActivateButton"}}
+			,{"c":"priv-submit", "t":"button", "txt":"join","p":{"disabled":true}, "e":{"click":"ctrlPrivJoin"}}
+
+		]}
+		,{"c":"priv-groups"}
+		,{"c":"priv-groups-ctrl",
+		"children":[
+			,{"c":"priv-leave-submit", "t":"button", "p":{"disabled":true}, "txt":"leave", "e":{"click":"ctrlPrivLeave"} }
+			,{"c":"priv-invite-submit", "t":"button", "p":{"disabled":true}, "txt":"invite a friend", "e":{"click":"ctrlPrivShowInvite"} }
+		]}
+		,{"c":"priv-create"
+		,"children":[
+			{"t":"p","txt":"Create a new private group"}
+			,{"c":"priv-create-ctrl"
+			,"children":[
+				{"t":"span","txt":"Name"}
+				,{"c":"priv-c-name" , "t":"input","e":{"change":"privActivateButton"}}
+				,{"c":"priv-submit", "t":"button", "txt":"go!","e":{"click":"ctrlPrivGen"}}
+			]}
+		]}
+		,{"t":"a", "txt":"logout","e":{"click":"ctrlPrivLogout"}}
+	]}
+	,{"c":"priv-grp"
+	,"children":[
+		{"t":"input", "p":{"name":"privGrp","type":"radio","e":{"change":"privGrpActivateButton"} }}
+		,{"c":"priv-grp-name", "t":"span"}
+	]}
+	,{"c":"priv-dlg-login",
+	"children":[
+		{"c":"priv-close","e":{"click":"ctrlPrivClose"}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"priv-header", "txt":"THE MATRIX" }
+		,{"t":"p", "txt":"Please log in to get access to private groups"}
+		,{"c":"priv-info"}
+		,{"c":"priv-login"
+		,"children":[
+			{"c":"priv-pass"
+			,"children":[
+				{"t":"span", "txt":"Password"}
+				,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
+			]}
+			,{"c":"priv-pass-submit", "t":"button", "txt":"login", "e":{"click":"ctrlPrivLogin"}}
+		]}
+	]}
+	,{"c":"priv-dlg-share",
+	"children":[
+		{"c":"priv-close","e":{"click":"ctrlPrivClose"}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"priv-header", "txt":"THE MATRIX" }
+		,{"c":"priv-share-feed","t":"p","txt":"Create an invitation to "}
+		,{"c":"priv-info"}
+		,{"t":"span","txt":"Username&nbsp;"}
+		,{"c":"priv-inv-name" , "t":"input","e":{"change":"privActivateButton"}}
+		,{"c":"priv-submit", "t":"button", "p":{"disabled":true}, "txt":"go!", "e":{"click":"ctrlPrivShare"}}
+		,{"c":"priv-key-input", "t":"textarea", "p":{"readonly":"true"}}
+
+	]}
+	,{"c":"priv-new-user"
+	,"children":[
+		,{"t":"p", "txt": "Please comfirm the password<br>There is on way to recover it later"}
+		,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
+		,{"c":"priv-pass-submit", "t":"button", "txt":"OK"}
+		,{"c":"priv-pass-cancel", "t":"button", "txt":"Cancel" }
 	]}
 ]};

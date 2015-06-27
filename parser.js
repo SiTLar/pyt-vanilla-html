@@ -1,4 +1,3 @@
-'use strict';
 
 var gUsers = new Object();
 var gNodes = new Object();
@@ -6,7 +5,9 @@ var gMe = new Object();
 var gComments = new Object();
 var gAttachments  = new Object();
 var gFeeds = new Object();
+var gPrivTimeline = {"done":0,'postsById':{},'oraphed':{count:0},'noKey':{},'noDecipher':{},nCmts:0,'posts':[] };
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
+var matrix = new CryptoPrivate({"srvurl":"https://moimosk.ru/cgi/secret","mul":10,"authurl": gConfig.serverURL,'sk':16, 'encId':"MATRIX", "feed":"crypto-matrix" });
 document.addEventListener("DOMContentLoaded", initDoc);
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -120,7 +121,6 @@ function subscribe(e){
 function draw(content){
 	var body = document.getElementsByTagName("body")[0];
 	if(content.attachments)content.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-	//if(content.comments)content.comments.forEach(function(comment){ if (typeof gComments[comment.id] === 'undefined') gComments[comment.id] = comment; });
 	if(content.comments)content.comments.forEach(function(comment){ gComments[comment.id] = comment; });
 	content.users.forEach(addUser);
 	var title =  document.createElement("div");
@@ -157,6 +157,8 @@ function draw(content){
 		var subscribers = new Object();
 		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
 		content.subscriptions.forEach(function(sub){if(sub.name =='Posts')gFeeds[sub.id] = subscribers[sub.user];});
+		if(typeof gMe !== 'undefined') 
+			gFeeds[gMe.users.id] = gMe.users;
 	}
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
@@ -183,7 +185,6 @@ function draw(content){
 				document.hiddenCount++;
 			}else{ 
 				document.hiddenPosts.push(false);
-				var nodePost = genPost(post);
 				document.posts.appendChild(genPost(post));
 			} 
 		});
@@ -192,7 +193,90 @@ function draw(content){
 		body.appendChild(nodeShowHidden);
 		if(document.hiddenCount) nodeShowHidden.cNodes['href'].innerHTML= 'Show '+ document.hiddenCount + ' hidden entries';
 		body.appendChild(nodeMore);
+		var drop = Math.floor(gConfig.cSkip/3);
+		var toAdd = drop + Math.floor(gConfig.offset/3);
+		if((!gPrivTimeline.done)&& (gConfig.timeline == 'home')&& matrix.ready){
+			gPrivTimeline.done = true;
+			new Promise(function (){addPosts(drop,toAdd,0);});
+		};
 	}else body.appendChild(genPost(content.posts));
+}
+function addPosts(drop, toAdd, offset){
+	var url = matrix.cfg.srvurl + "/posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		if(oReq.status < 400){
+			var res = JSON.parse(oReq.response);
+			var cRemain = toAdd + drop;
+			if(typeof res.posts !=="undefined"){
+				for(var idx = 0; idx < res.posts.length; idx++  ){		
+					var nodePost = genPost(res.posts[idx]);
+					if (nodePost){
+						nodePost.rawData.updatedAt = nodePost.rawData.createdAt;
+						if(!(--cRemain)) break;
+					}
+				}
+			}
+			if(cRemain&&(res.posts.length == (toAdd*matrix.cfg.mul))) addPosts(drop, cRemain,offset+idx  );
+			else {
+				doPrivComments(drop);
+			}
+		}else gPrivTimeline.done = false;
+	}	
+	oReq.open("get",url,true);
+	oReq.send();
+}
+function doPrivComments(drop){
+	var limit = 100;
+	var url = matrix.cfg.srvurl + "/cmts?limit="+limit;
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		if(oReq.status < 400){
+			var res = JSON.parse(oReq.response);
+			if(typeof res.posts !=="undefined")
+				res.posts.forEach(function (post){drawPrivateComment(post);});
+			gPrivTimeline.posts.forEach(function(nodePost){
+				var nodeComments = nodePost.cNodes["post-body"].cNodes["comments"];
+				if(nodeComments.childNodes.length < 4)
+					for(var idx = 0; idx < nodeComments.childNodes.length; idx++)
+						nodeComments.childNodes[idx].hidden = false;
+				else{
+					for(var idx = 0; idx < 2; idx++)
+						nodeComments.childNodes[idx].hidden = false;
+					var nodeComment = gNodes['comment'].cloneAll();
+					nodeComment.id = nodePost.id+'-ufc';
+					nodeComment.cNodes['comment-date'].innerHTML = '';
+					nodeComment.cNodes['comment-body'].innerHTML = '<a onclick="unfoldPrivComm(\''+nodePost.id+'-ufc\')" style="font-style: italic;">'+(nodeComments.childNodes.length-3)*1 +' more comments</a>';
+					nodeComments.insertBefore( nodeComment, nodeComments.childNodes[2]);
+					nodeComments.lastChild.hidden = false;
+				}
+			});
+			gPrivTimeline.posts.sort(function (a,b){return a.rawData.updatedAt<b.rawData.updatedAt?1:-1;});
+			gPrivTimeline.posts.splice(0,drop);
+			var tmp = gPrivTimeline.posts;
+			var privPost = tmp[0];
+			if(!privPost)return; 
+			for(var idx = 0; idx< document.posts.childNodes.length; idx++){
+				var pubPost = document.posts.childNodes[idx]; 
+				if(privPost.rawData.updatedAt>pubPost.rawData.updatedAt){
+					document.posts.insertBefore(tmp.shift(),pubPost );
+					privPost = tmp[0];
+					if (typeof privPost === 'undefined')break;
+				}
+			}
+			tmp.forEach(function(post){document.posts.appendChild(post);});
+		}
+	}	
+	oReq.open("get",url,true);
+	oReq.send();
+}
+function unfoldPrivComm(id){
+	var nodeComment = document.getElementById(id);
+	for(var idx = 0; idx < nodeComment.parentNode.childNodes.length; idx++)
+		nodeComment.parentNode.childNodes[idx].hidden = false;
+	nodeComment.parentNode.removeChild(nodeComment);
+	
+
 }
 function showHidden(e){
 	if(e.target.action){
@@ -249,80 +333,154 @@ function postHide(e){
 	
 }
 function updateDate(node){
-	node.innerHTML =  relative_time(node.date) ;
+	node.innerHTML =  relative_time(node.date);
 	window.setTimeout(updateDate, 5000, node );
+}
+function drawPrivateComment(post) {
+	var cpost = matrix.decrypt(post.body);
+	if (typeof cpost.error !== 'undefined')return;
+	cpost = JSON.parse(cpost);
+	var nodePriv = gPrivTimeline.postsById[cpost.postid];
+	var comment = {"body":cpost.data,
+			"createdAt":Date.parse(post.createdAt), 
+			"createdBy":post.createdBy, 
+			"id":post.id,
+			'user':post.username
+			};
+	var nodeComment = genComment(comment);
+	gComments[post.id] = comment;
+	nodeComment.hidden = true;
+	if(nodePriv){
+		if(comment.createdAt > nodePriv.rawData.updatedAt) nodePriv.rawData.updatedAt = comment.createdAt;
+		nodePriv.cNodes["post-body"].cNodes["comments"].insertBefore(nodeComment,nodePriv.cNodes["post-body"].cNodes["comments"].firstChild);
+	}
 }
 function genPost(post){
 	var nodePost = gNodes['post'].cloneAll();
 	var postNBody = nodePost.cNodes["post-body"];
 	var user = gUsers[post.createdBy];
+	nodePost.homed = false;
 	nodePost.rawData = post;
 	nodePost.id = post.id;
-	postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-	if(typeof user !== 'undefined'){
-		nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
-		var title = user.link;
-		if(post.postedTo)
-			if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
-				title += "<span> posted to: </span>";
-				post.postedTo.forEach(function(id){
-					title += "<a href=" + gConfig.front+ gFeeds[id].username+">"+ gFeeds[id].screenName;
-					if(gFeeds[id].type == 'user')
-						if(gFeeds[id].screenName.slice(-1) == 's')
-							title += "' feed";
-						else title += "'s feed";
-					title += '</a>';
+	nodePost.isPrivate = false;
+
+	var cpost = matrix.decrypt(post.body);
+	if (typeof cpost.error !== 'undefined'){
+		switch(cpost.error){
+		case '0':
+			break;
+		case '3':
+			gPrivTimeline.noKey[post.id] = post;
+			console.log(post.id+": unknown key");
+			break;
+		case '4':
+			gPrivTimeline.noDecipher[post.id] = post;
+			console.log("Private keys not loaded");
+			break;
+		}
+		postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+		gotUser();
+	}else{	
+		nodePost.isPrivate = true;
+		post.createdAt = Date.parse(post.createdAt);
+		nodePost.rawData.createdAt = post.createdAt;
+		cpost = JSON.parse(cpost);
+		nodePost.feed = cpost.feed;
+		gPrivTimeline.posts.push(nodePost);
+		gPrivTimeline.postsById[post.id] = nodePost;
+		nodePost.rawData.body = cpost.data;
+		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.data.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+
+		if(typeof user === 'undefined'){
+			var oReq = new XMLHttpRequest();
+			oReq.onload = function(){
+				if(this.status < 400){
+					var oRes = JSON.parse(oReq.response);
+					addUser(oRes.users);
+					user = gUsers[comment.createdBy];
+					gotUser();
+				}
+			};
+
+			oReq.open("get",gConfig.serverURL + "users/"+post.username, true);
+			oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+			oReq.send();
+		}else gotUser();
+	}
+	function gotUser(){
+		if(typeof user !== 'undefined'){
+			nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+			var title = user.link;
+			if(nodePost.isPrivate) title += '<span> posted privately to '+StringView.makeFromBase64(matrix.gSymKeys[cpost.feed].name)+"</span>";
+			else if(post.postedTo){
+				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
+					title += "<span> posted to: </span>";
+					post.postedTo.forEach(function(id){
+						title += "<a href=" + gConfig.front+ gFeeds[id].username+">"+ gFeeds[id].screenName;
+						if(gFeeds[id].type == 'user')
+							if(gFeeds[id].screenName.slice(-1) == 's')
+								title += "' feed";
+							else title += "'s feed";
+						title += '</a>';
 					});
+				}
 			}
-		postNBody.cNodes["title"].innerHTML = title;
-	}
-	if(post.attachments){
-		var attsNode = postNBody.cNodes["attachments"];
-		for(var att in post.attachments){
-			var nodeAtt = gNodes['attachment'].cloneAll();
-			nodeAtt.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src='+gAttachments[post.attachments[att]].thumbnailUrl+'></a>';
-			attsNode.appendChild(nodeAtt);
-		}		
-	}
-//	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].innerHTML = "<a href='"+ gConfig.front+ user.username+'/'+post.id+ "' >"+ (new Date(post.updatedAt*1)).toLocaleString()+"</a>";
-	var anchorDate = document.createElement("a");
-	if(typeof user !== 'undefined') anchorDate.href = gConfig.front+user.username+'/'+post.id;
-	postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
-	anchorDate.date = post.createdAt*1;
-
-	window.setTimeout(updateDate, 10,anchorDate);
-
-	if(typeof gMe !== 'undefined'){ 
-		var nodeControls;
-			if (post.createdBy == gMe.users.id)
-			nodeControls = gNodes['controls-self'].cloneAll();
-		else {
-			nodeControls = gNodes['controls-others'].cloneAll();
-			postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes['post-control-like'];
-			nodeControls.cNodes['post-control-like'].action = true;
+			postNBody.cNodes["title"].innerHTML = title;
 		}
-		var aHide = document.createElement('a');
-		aHide.innerHTML = post.isHidden?'Un-hide':'Hide';
-		aHide.action = !post.isHidden;
-		aHide.addEventListener("click", postHide);
-		nodeControls.appendChild(aHide);
-		postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
-	}
-	if (post.likes)	genLikes(post, postNBody );
-	if (post.comments){
-		if(post.omittedComments){
-			postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[0]]));
-			var nodeComment = gNodes['comment'].cloneAll();
-			nodeComment.cNodes['comment-date'].innerHTML = '';
-			nodeComment.cNodes['comment-body'].innerHTML = '<a id='+post.id+'-unc  onclick="unfoldComm(\''+post.id +'\')" style="font-style: italic;">'+ post.omittedComments+' more comments</a>';
-			postNBody.cNodes['comments'].appendChild(nodeComment);
-			postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[1]]));
+		if(post.attachments){
+			var attsNode = postNBody.cNodes["attachments"];
+			for(var att in post.attachments){
+				var nodeAtt = gNodes['attachment'].cloneAll();
+				nodeAtt.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src='+gAttachments[post.attachments[att]].thumbnailUrl+'></a>';
+				attsNode.appendChild(nodeAtt);
+			}		
 		}
-		else post.comments.forEach(function(commentId){ postNBody.cNodes['comments'].appendChild(genComment(gComments[commentId]))});
+		var anchorDate = document.createElement("a");
+		if(typeof user !== 'undefined') anchorDate.href = gConfig.front+user.username+'/'+post.id;
+		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
+		var tmp = document.createElement("span");
+		tmp.innerHTML = "&nbsp;&mdash;&nbsp;"
+		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(tmp);
+		
+		anchorDate.date = post.createdAt*1;
+
+		window.setTimeout(updateDate, 10,anchorDate);
+
+		if(typeof gMe !== 'undefined'){ 
+			var nodeControls;
+				if (post.createdBy == gMe.users.id)
+				nodeControls = gNodes['controls-self'].cloneAll();
+			else {
+				nodeControls = gNodes['controls-others'].cloneAll();
+				postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes['post-control-like'];
+				nodeControls.cNodes['post-control-like'].action = true;
+			}
+			var tmp  = document.createElement('span');
+			tmp.innerHTML = '-';
+			nodeControls.appendChild(tmp);
+			var aHide = document.createElement('a');
+			aHide.innerHTML = post.isHidden?'Un-hide':'Hide';
+			aHide.action = !post.isHidden;
+			aHide.addEventListener("click", postHide);
+			nodeControls.appendChild(aHide);
+			postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
+		}
+		if (post.likes)	genLikes(post, postNBody );
+		if (post.comments){
+			if(post.omittedComments){
+				postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[0]]));
+				var nodeComment = gNodes['comment'].cloneAll();
+				nodeComment.cNodes['comment-date'].innerHTML = '';
+				nodeComment.cNodes['comment-body'].innerHTML = '<a id='+post.id+'-unc  onclick="unfoldComm(\''+post.id +'\')" style="font-style: italic;">'+ post.omittedComments+' more comments</a>';
+				postNBody.cNodes['comments'].appendChild(nodeComment);
+				postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[1]]));
+			}
+			else post.comments.forEach(function(commentId){ postNBody.cNodes['comments'].appendChild(genComment(gComments[commentId]))});
+		}
+		postNBody.cNodes['comments'].cnt = postNBody.cNodes['comments'].childNodes.length;
+		if (postNBody.cNodes['comments'].cnt > 4) 
+				addLastCmtButton(postNBody);
 	}
-	postNBody.cNodes['comments'].cnt = postNBody.cNodes['comments'].childNodes.length;
-	if (postNBody.cNodes['comments'].cnt > 4) 
-			addLastCmtButton(postNBody);
 	return nodePost;
 
 }
@@ -333,12 +491,18 @@ function newPost(e){
 	if(textField.pAtt)textField.pAtt.then(send);
 	else send();
 	function send(){
+		var postdata = new Object();
+		var post = new Object();
+		var postTo = e.target.parentNode.parentNode.cNodes["new-post-to"];
+		postdata.meta = new Object();
+		postdata.meta.feeds = postTo.feeds ;
 		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
+		var onload = function(){
 			if(this.status < 400){
 				var nodeAtt = document.createElement('div');
 				nodeAtt.className = 'attachments';
-				textField.parentNode.replaceChild(nodeAtt, textField.parentNode.cNodes['attachments']);
+				textField.parentNode.replaceChild(nodeAtt, 
+					textField.parentNode.cNodes['attachments']);
 				textField.parentNode.cNodes['attachments'] = nodeAtt;
 				textField.value = '';
 				textField.disabled = false;
@@ -347,29 +511,36 @@ function newPost(e){
 				var res = JSON.parse(this.response);
 				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
 				document.posts.insertBefore(genPost(res.posts), document.posts.childNodes[0]);
-
 			}
 		};
-
-		oReq.open("post",gConfig.serverURL + "posts", true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-		oReq.setRequestHeader("Content-type","application/json");
-		var post = new Object();
-		post.body = textField.value;
 		if(textField.attachments) post.attachments = textField.attachments;
-		/*comment.postId = nodePost.id;
-		comment.createdAt = null;
-		comment.createdBy = null;
-		comment.updatedAt = null;
-		comment.post = null;
-		*/
-		var postdata = new Object();
 		postdata.post = post;
-		postdata.meta = new Object();
-		var postTo = e.target.parentNode.parentNode.cNodes["new-post-to"];
-		
-		postdata.meta.feeds = postTo.feeds ;
-		oReq.send(JSON.stringify(postdata));
+		if(postTo.isPrivate){ 
+			matrix.makeToken().then(function(token){
+				oReq.open("post",matrix.cfg.srvurl+"?post", true);
+				oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
+				oReq.setRequestHeader("X-Authentication-Token", token);
+				oReq.setRequestHeader('x-content-type', 'post'); 
+				oReq.setRequestHeader("Content-type","text/plain");
+				oReq.onload = onload;
+				post = matrix.encrypt(postTo.feeds, 
+					JSON.stringify({
+						"feed":postTo.feeds[0],
+						"type":"post", 
+						"data":textField.value
+					}));
+				oReq.send(post);
+			}, function(){ console.log("can't get auth token"); }
+			);
+		}else{
+			oReq.open("post",gConfig.serverURL + "posts", true);
+			oReq.onload = onload;
+			oReq.setRequestHeader("Content-type","application/json");
+			oReq.setRequestHeader("X-Authentication-Token", 
+				window.localStorage.getItem("token"));
+			post.body = textField.value;
+			oReq.send(JSON.stringify(postdata));
+		}
 	}
 }
 function sendAttachment(e){
@@ -410,7 +581,7 @@ function editPost(e) {
 	victim.cNodes['post-body'].replaceChild( nodeEdit, victim.cNodes['post-body'].cNodes['post-cont']);
 }
 function cancelEditPost(e){
-         var victim = e.target; do victim = victim.parentNode; while(victim.className != 'post');
+	 var victim = e.target; do victim = victim.parentNode; while(victim.className != 'post');
 	 var postCNode = document.createElement('div');
 	 postCNode.innerHTML = victim.rawData.body;
 	 postCNode.className = 'post-cont';
@@ -424,8 +595,10 @@ function postEditedPost(e){
 	e.target.disabled = true;
 	oReq.onload = function(){
 		if(this.status < 400){
-			var post = JSON.parse(this.response).posts;
+			var post = JSON.parse(oReq.response).posts;
 			var postCNode = document.createElement('div');
+			var cpost = matrix.decrypt(post.body);
+			if (typeof cpost.error === 'undefined') post.body = JSON.parse(cpost).data;
 			postCNode.innerHTML = post.body;
 			postCNode.className = 'post-cont';
 			nodePost.rawData = post;
@@ -434,17 +607,36 @@ function postEditedPost(e){
 		}
 	};
 
-	oReq.open("put",gConfig.serverURL + "posts/"+nodePost.id, true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	oReq.setRequestHeader("Content-type","application/json");
 	var post = new Object();
-	post.body = e.target.parentNode.parentNode.cNodes['edit-txt-area'].value;
 	post.createdAt = nodePost.rawData.createdAt;
-	post.createdBy = nodePost.rawData.createdAt;
+	post.createdBy = nodePost.rawData.createdBy;
 	post.updatedAt = Date.now();
 	var postdata = new Object();
 	postdata.post = post;
-	oReq.send(JSON.stringify(postdata));
+	var text = e.target.parentNode.parentNode.cNodes['edit-txt-area'].value;
+	if(nodePost.isPrivate){ 
+		matrix.makeToken().then(function(token){
+			oReq.open("put",matrix.cfg.srvurl+"?edit", true);
+			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.setRequestHeader('x-content-id', nodePost.id); 
+			oReq.setRequestHeader('x-content-type', 'post'); 
+			oReq.setRequestHeader("Content-type","text/plain");
+			post = matrix.encrypt(nodePost.feed, 
+				JSON.stringify({
+					"feed":nodePost.feed, 
+					"type":"post", 
+					"data":text
+				}));
+			oReq.send(post);
+		}, function(){ console.log("can't get auth token"); });
+	}else{
+		post.body =  text;
+		oReq.open("put",gConfig.serverURL + "posts/"+nodePost.id, true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("Content-type","application/json");
+		oReq.send(JSON.stringify(postdata));
+	}
 }
 function deletePost(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != 'post');
@@ -457,13 +649,23 @@ function doDeletePost(but){
 	oReq.onload = function(){
 		if(this.status < 400){
 			victim.parentNode.removeChild(victim);
-			//delete gPosts[victim.id];
 		}
 	};
-	oReq.open("delete",gConfig.serverURL + "posts/"+victim.id, true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	oReq.setRequestHeader("Content-type","application/json");
-	oReq.send();
+	if(victim.isPrivate){ 
+		matrix.makeToken().then(function(token){
+			oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
+			oReq.setRequestHeader('x-content-id', victim.id); 
+			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.setRequestHeader('x-content-type', 'post'); 
+			oReq.send();
+		}, function(){ console.log("can't get auth token"); });
+	}else{
+		oReq.open("delete",gConfig.serverURL + "posts/"+victim.id, true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("Content-type","application/json");
+		oReq.send();
+	}
 }
 function postLike(e){
 	var oReq = new XMLHttpRequest();
@@ -539,11 +741,51 @@ function editComment(e){
 	nodeComment.id = victim.id;
 	nodeComment.getElementsByClassName('edit-txt-area')[0].focus();
 }
+function sendEditedPrivateComment(textField, nodeComment, nodePost){
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		if(this.status < 400){
+			var res = JSON.parse(this.response);
+			var cpost = JSON.parse(matrix.decrypt(res.posts.body));
+			var comment = {"body":cpost.data,
+					"createdAt":Date.parse(res.posts.createdAt), 
+					"createdBy":res.posts.createdBy, 
+					'user':res.posts.username,
+					"feed":res.posts.id
+					};
+			gComments[res.posts.id] = comment;
 
+			nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
+		}
+	};
+
+	oReq.open("put",matrix.cfg.srvurl+"?edit&id="+nodeComment.id, true);
+	oReq.setRequestHeader("Content-type","text/plain");
+	var post = new Object();
+	post.updatedAt = Date.now();
+	var postdata = new Object();
+	postdata.post = post;
+	post.body = matrix.encrypt(nodePost.feed, JSON.stringify({"id":nodePost.feed,"type":"comment", "data":textField.value,"postid":nodePost.id }));
+	matrix.makeToken().then(function(token){
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
+			oReq.setRequestHeader('x-content-type', 'comment'); 
+			oReq.send(JSON.stringify(postdata));
+		}, function(){ console.log("can't get auth token"); }
+	);
+
+
+}
 function postEditComment(e){
 	var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
+	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
+	var textField = e.target.parentNode.parentNode.cNodes['edit-txt-area'];
+	if(nodePost.isPrivate){
+		sendEditedPrivateComment(textField, nodeComment, nodePost);
+		return;
+	}
 	var comment = gComments[nodeComment.id];
-	comment.body = e.target.parentNode.parentNode.cNodes['edit-txt-area'].value;
+	comment.body = textField.value; 
 	comment.updatedAt = Date.now();
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
@@ -586,9 +828,9 @@ function cancelNewComment(e){
 
 }
 function postNewComment(e){
-		sendComment(e.target.parentNode.previousSibling);
+	sendComment(e.target.parentNode.previousSibling);
 	var nodeComments =e.target; do nodeComments = nodeComments.parentNode; while(nodeComments.className != 'comments');
-		nodeComments.cnt++;
+	nodeComments.cnt++;
 }
 function deleteComment(e){
 	var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
@@ -628,17 +870,66 @@ function doDeleteComment(but){
 			delete gComments[nodeComment.id];
 		}
 	};
-	oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-	oReq.setRequestHeader("Content-type","application/json");
-	oReq.send();
+	if(nodePost.isPrivate){ 
+		matrix.makeToken().then(function(token){
+			oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
+			oReq.setRequestHeader('x-content-id', nodeComment.id); 
+			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.setRequestHeader('x-content-type', 'comment'); 
+			oReq.send();
+		}, function(){ console.log("can't get auth token"); });
+	}else{
+		oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("Content-type","application/json");
+		oReq.send();
+	}
+}
+function sendPrivateComment( textField, nodeComment, nodePost){
+	textField.disabled = true;
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		if(this.status < 400){
+			textField.value = '';
+			textField.disabled = false;
+			textField.style.height  = '4em';
+			var res = JSON.parse(this.response);
+			var cpost = JSON.parse(matrix.decrypt(res.posts.body));
+			var comment = {"body":cpost.data,
+					"createdAt":Date.parse(res.posts.createdAt), 
+					"createdBy":res.posts.createdBy, 
+					'user':res.posts.username,
+					"id":res.posts.id
+					};
+			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment);
+			gComments[comment.id] = comment;
+			textField.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = false;
+			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes['post-body']);
+		}
+	};
+
+	oReq.open("post",matrix.cfg.srvurl+"?post", true);
+	oReq.setRequestHeader("Content-type","text/plain");
+	var post = matrix.encrypt(nodePost.feed, JSON.stringify({"id":nodePost.feed,"type":"comment", "data":textField.value,"postid":nodePost.id }));
+	matrix.makeToken().then(function(token){
+			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
+			oReq.setRequestHeader('x-content-type', 'comment'); 
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.send(post);
+		}, function(){ console.log("can't get auth token"); }
+	);
 }
 function sendComment(textField){
 	var nodeComment =textField; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
+	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
+	if(nodePost.isPrivate){
+		sendPrivateComment(textField, nodeComment, nodePost);
+		return;
+	}
 	textField.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = true;
 	var comment = new Object();
 	comment.body = textField.value;
-	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
 	comment.postId = nodePost.id;
 	comment.createdAt = null;
 	comment.createdBy = null;
@@ -663,16 +954,52 @@ function sendComment(textField){
 	var postdata = new Object();
 	postdata.comment = comment;
 	oReq.send(JSON.stringify(postdata));
-}
-function genComment(comment){
+}/*
+function genPComment(cpost){
 	var nodeComment = gNodes['comment'].cloneAll();
 	var cUser = gUsers[comment.createdBy];
+<<<<<<< HEAD
+	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))+ " - " + cUser.link ;
+=======
 	nodeComment.cNodes['comment-body'].innerHTML = autolinker.link(comment.body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'))+ " - " + cUser.link ;
+>>>>>>> master
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof gMe !== 'undefined') 
 		if(cUser.id == gMe.users.id) 
 			nodeComment.cNodes['comment-body'].appendChild(gNodes['comment-controls'].cloneAll());
+	return nodeComment; 
+
+}
+*/
+function genComment(comment){
+	var nodeComment = gNodes['comment'].cloneAll();
+	var cUser = gUsers[comment.createdBy];
+	var nodeSpan = document.createElement('span');
+	nodeComment.cNodes['comment-body'].appendChild(nodeSpan);
+	nodeSpan.innerHTML = autolinker.link(comment.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+	if(typeof cUser !== 'undefined'){
+		nodeSpan.innerHTML += " - " + cUser.link ;
+		if(typeof gMe !== 'undefined') 
+			if(cUser.id == gMe.users.id) 
+				nodeComment.cNodes['comment-body'].appendChild(gNodes['comment-controls'].cloneAll());
+	}else if(comment.user) {
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(this.status < 400){
+				var oRes = JSON.parse(oReq.response);
+				addUser(oRes.users);
+				cUser = gUsers[comment.createdBy];
+				nodeSpan.innerHTML += " - " + cUser.link ;
+			}
+		};
+
+		oReq.open("get",gConfig.serverURL + "users/"+comment.user, true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.send();
+	}
+	nodeComment.id = comment.id;
+	nodeComment.createdAt = comment.createdAt;
 	return nodeComment; 
 }
 function addLastCmtButton(postNBody){
@@ -765,17 +1092,19 @@ function auth(check){
 			addUser(gMe.users);
 			new Promise(function(){
 				var oReq = new XMLHttpRequest();
-				oReq.open("get", gConfig.serverURL +"users/whoami", false);
+				oReq.open("get", gConfig.serverURL +"users/whoami", true);
 				oReq.setRequestHeader("X-Authentication-Token", token);
 				oReq.send();
-				if(oReq.status < 400) {
-					gMe = JSON.parse(oReq.response);
-					if (gMe.users) {
-						window.localStorage.setItem("gMe",JSON.stringify(gMe));
-						addUser(gMe.users);
-						return true;
-					}
-				}			
+				oReq.onload = function(){
+					if(oReq.status < 400) {
+						gMe = JSON.parse(oReq.response);
+						if (gMe.users) {
+							window.localStorage.setItem("gMe",JSON.stringify(gMe));
+							addUser(gMe.users);
+							return true;
+						}
+					}			
+				}
 			});
 			return true;
 		}
@@ -821,11 +1150,191 @@ function getauth(oFormElement){
 	oReq.send("username="+document.getElementById('a-user').value+"&password="+document.getElementById('a-pass').value);
 }
 function logout(){
+	matrix.ready = 0;
+	matrix.logout();
 	window.localStorage.removeItem("gMe");
 	window.localStorage.removeItem("token");
 	location.reload();
 }
+function ctrlPriv(){
+	if(typeof gMe === 'undefined') return;
+	if (!matrix.ready){ 
+		if( document.getElementsByClassName('priv-dlg-login')[0])return;
+		document.body.appendChild(gNodes['priv-dlg-login'].cloneAll());
+	}else{
+		if( document.getElementsByClassName('private-control')[0])return;
+		document.body.appendChild(gNodes['private-control'].cloneAll());
+		loadPrivs();
+	}
+	/*
+	var nodePCtrl = document.body.appendChild(gNodes['private-control'].cloneAll());
+	if (!matrix.ready) return;
+	nodePCtrl.cNodes['priv-login'].cNodes["priv-pass"].hidden = true;
+	var bLogin = nodePCtrl.cNodes['priv-login'].cNodes["priv-pass-submit"];
+	bLogin.innerHTML = 'logout';
+	bLogin.removeEventListener('click', ctrlPrivLogin);
+	bLogin.addEventListener('click', ctrlPrivLogout);
+	*/
+}
 
+function ctrlPrivLogin(e){
+	var inpPass = e.target.parentNode.cNodes['priv-pass'].cNodes['priv-pass-i'];
+	if (inpPass.value == ''){
+		alert('Must have a password');
+		return;
+	}
+	matrix.username = gMe.users.username;
+	matrix.setPassword(inpPass.value);
+	matrix.getUserPriv().then(
+	function(){
+
+		var nodeDlg =e.target; do nodeDlg = nodeDlg.parentNode; while(nodeDlg.className != 'priv-dlg-login');
+		nodeDlg.parentNode.removeChild(nodeDlg);
+		document.body.appendChild(gNodes["private-control"].cloneAll());
+		privRegenGrps();
+		matrix.ready = 1;
+		var drop = Math.floor(gConfig.cSkip/3);
+		var toAdd = drop + Math.floor(gConfig.offset/3);
+		if((!gPrivTimeline.done)&& (gConfig.timeline == 'home')&& matrix.ready){
+			gPrivTimeline.done = true;
+			new Promise(function (){addPosts(drop,toAdd,0);});
+		};
+	}
+	, function(wut){
+		switch(wut){
+		case -1:
+			e.target.parentNode.parentNode.cNodes['priv-info'].innerHTML = "Incorrect password";
+			break;
+		case 404:
+			ctrlPrivNewUser(e.target); 
+			break;
+		default:
+			e.target.parentNode.parentNode.cNodes['priv-info'].innerHTML = "Got error#"+wut+"<br/>Try again later";
+		
+		}
+	});
+}
+function ctrlPrivNewUser(nodeSubmit){
+	var node = gNodes['priv-new-user'].cloneAll();
+	node.cNodes["priv-pass-submit"].addEventListener('click',function(e){
+		if (node.cNodes['priv-pass-i'].value != nodeSubmit.parentNode.cNodes['priv-pass'].cNodes['priv-pass-i'].value){
+			alert('Passwords must match');
+			return;
+		}
+		document.getElementsByTagName('body')[0].removeChild(node);
+		matrix.register().then( privRegenGrps, 
+			function(){new Error("Failed to register on the key sever.");}
+		);
+		nodeSubmit.dispatchEvent(new Event('click'));
+	});
+	node.cNodes["priv-pass-cancel"].addEventListener('click',function(){ document.getElementsByTagName('body')[0].removeChild(node);});
+	document.getElementsByTagName('body')[0].appendChild(node);
+
+}
+function ctrlPrivLogout(e){
+	matrix.ready = 0;
+	matrix.logout();
+	document.body.removeChild( document.getElementsByClassName("private-control")[0]);
+	privRegenGrps();
+}
+function loadPrivs(){
+	var nodePCtrl = document.getElementsByClassName("private-control")[0];	
+	nodePCtrl.login = true;
+	var nodeGrps = nodePCtrl.cNodes["priv-groups"];
+	if(typeof matrix.gSymKeys !== 'undefined'){
+		for(var id in matrix.gSymKeys){
+			var nodeGrp = gNodes['priv-grp'].cloneAll(true);
+			nodeGrp.cNodes["priv-grp-name"].innerHTML = StringView.makeFromBase64(matrix.gSymKeys[id].name);
+			nodeGrp.id = id;
+			nodeGrps.appendChild(nodeGrp);
+		}
+	}
+
+}
+function ctrlPrivLeave(){
+	var privGrps = document.getElementsByName("privGrp");	
+	var victim;
+	for (var idx = 0; idx < privGrps.length; idx++){
+		if (privGrps[idx].checked){
+			victim = privGrps[idx].parentNode;
+			break;
+		}
+	}
+	if (typeof victim.id === 'undefined') return;
+	delete matrix.gSymKeys[victim.id];
+	matrix.update();
+	victim.parentNode.removeChild(victim);
+	privRegenGrps();
+}
+function privRegenGrps(){
+	var nodePCtrl = document.getElementsByClassName("private-control")[0];
+	if(nodePCtrl){
+		var nodeGrps = document.createElement('div');
+		nodeGrps.className = "priv-groups";
+		nodePCtrl.replaceChild( nodeGrps, nodePCtrl.cNodes["priv-groups"]);	
+		nodePCtrl.cNodes["priv-groups"] = nodeGrps;
+		loadPrivs();
+	}
+	gConfig.regenPostTo();
+
+}
+function ctrlPrivShowInvite(){
+	var privGrps = document.getElementsByName("privGrp");	
+	var id;
+	for (var idx = 0; idx < privGrps.length; idx++){
+		if (privGrps[idx].checked){
+			if (typeof privGrps[idx].parentNode.id === 'undefined') return;
+			id = privGrps[idx].parentNode.id; 	
+			break;
+		}
+	}
+	var nodeDlg = document.body.appendChild(gNodes["priv-dlg-share"].cloneAll());
+	nodeDlg.feedId = id;
+	nodeDlg.cNodes["priv-share-feed"].innerHTML += StringView.makeFromBase64(matrix.gSymKeys[id].name);
+}
+function privGrpActivateButton(e){
+	var nodeDlg =e.target; do nodeDlg = nodeDlg.parentNode; while(nodeDlg.className != 'private-control');
+	var buttons = nodeDlg.cNodes['priv-groups-ctrl'].getElementsByTagName('button');
+	for(var idx = 0; idx < buttons.length; idx++)
+		buttons[idx].disabled = false;
+	
+}
+function privActivateButton(e){
+	var state = false; 
+	if (e.target.value == '' ) state = true;
+	var buttons = e.target.parentNode.getElementsByTagName('button');
+	for(var idx = 0; idx < buttons.length; idx++)
+		buttons[idx].disabled = state;
+		
+}
+function ctrlPrivShare(e){
+	matrix.genMsg(e.target.parentNode.cNodes["priv-inv-name"].value, JSON.stringify(matrix.gSymKeys[e.target.parentNode.feedId ])).then(function(msg){
+		e.target.parentNode.cNodes["priv-key-input"].value = msg;
+		e.target.parentNode.cNodes["priv-info"].innerHTML = "Invite generated successfuly";
+	},function(err){
+		var msg;
+		if(err == 404) msg = "User not found";
+		else msg = "Got error#"+err;
+		e.target.parentNode.cNodes["priv-info"].innerHTML = msg;
+	
+	});
+}
+function ctrlPrivJoin(e){
+	matrix.readMsg(e.target.parentNode.cNodes["priv-key-input"].value).then(function(msg){
+		var symKeys = new Object();
+		symKeys = JSON.parse(msg);
+		if(typeof symKeys.id === "undefined")return;
+		if(typeof symKeys.aKeys === "undefined")return;
+		matrix.addKeys(symKeys);
+		privRegenGrps();
+		e.target.parentNode.cNodes["priv-key-input"].value = '';
+	});
+}
+function ctrlPrivGen(e){
+	var name = e.target.parentNode.cNodes["priv-c-name"].value;
+	matrix.initPrivate(name).then( privRegenGrps);
+
+}
 function me(e){
 	e.target.href = gConfig.front+gMe['users']['username'];
 }
@@ -838,14 +1347,24 @@ function my(e){
     e.target.href = gConfig.front+ 'filter/discussions';
     //window.location.href =gConfig.front+ 'filter/discussions';
 }
-
+function ctrlPrivClose(e){
+	var victim = e.target; while(victim.parentNode !=  document.body)victim = victim.parentNode;
+	document.body.removeChild(victim);
+}
 function genPostTo(victim){
 	victim.feeds = new Array();
 	victim.feeds.push(gMe.users.username);
+	victim.parentNode.isPrivate  = false;
 	victim.cNodes["new-post-feeds"].firstChild.idx = 1;
 	victim.cNodes["new-post-feeds"].firstChild.oValue = gMe.users.username;
 	var option = document.createElement('option');
 	option.selected = true;
+	var select = document.createElement('select');
+	select.className = "new-post-feed-select";
+	select.hidden = victim.cNodes["new-post-feed-select"].hidden;
+	select.addEventListener("change",newPostSelect);
+	victim.replaceChild(select, victim.cNodes["new-post-feed-select"]);
+	victim.cNodes["new-post-feed-select"] = select;
 	victim.cNodes["new-post-feed-select"].appendChild(option);
 	option = document.createElement('option');
 	option.disabled = true;
@@ -866,6 +1385,19 @@ function genPostTo(victim){
 	if (groups.childNodes.length > 0 )
 		victim.cNodes["new-post-feed-select"].appendChild(groups);
 	groups = document.createElement('optgroup');
+	groups.label = 'Private groups';
+	for (var id in matrix.gSymKeys){
+		option = document.createElement('option');
+		option.value = id;
+		option.privateFeed = true;
+		option.innerHTML = StringView.makeFromBase64(matrix.gSymKeys[id].name);
+		groups.appendChild(option);
+	}
+	if (groups.childNodes.length > 0 )
+		victim.cNodes["new-post-feed-select"].appendChild(groups);
+	
+	gConfig.regenPostTo = function (){return genPostTo(victim);};
+
 }
 function newPostRemoveFeed(e){
 	var nodeP = e.target.parentNode.parentNode;
@@ -888,6 +1420,16 @@ function newPostSelect(e){
 	var option = e.target[e.target.selectedIndex];
 	if (option.value == '')return;
 	var nodeP = e.target.parentNode;
+	if (option.privateFeed ){
+		nodeP.isPrivate  = true;
+		var ul = document.createElement('ul');
+		ul.className = 'new-post-feeds';
+		nodeP.replaceChild(ul, nodeP.cNodes['new-post-feeds']);
+		nodeP.cNodes['new-post-feeds'] = ul;
+		nodeP.feeds = new Array();
+		for(var idx = 0; idx < e.target.length; idx++)
+			e.target[idx].disabled = false;
+	}
 	option.disabled = true;
 	nodeP.feeds.push(option.value);
 	var li = document.createElement('li');
@@ -910,7 +1452,7 @@ function initDoc(){
 	var locationSearch = document.location.search;
 	if (locationPath == "")locationPath = 'home';
 	if (locationSearch == '')locationSearch = '?offset=0';
-	gConfig.cSkip = locationSearch.split("=")[1]*1;
+	gConfig.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
@@ -942,15 +1484,15 @@ function initDoc(){
 	if(arrLocationPath.length > 1){
 		if (locationPath == "filter/discussions") {
 			gConfig.timeline = locationPath;
-			oReq.open("get",gConfig.serverURL + "timelines/filter/discussions"+locationSearch, true);        		
+			gConfig.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
 		} else{		
-			oReq.open("get",gConfig.serverURL +"posts/"+arrLocationPath[1]+"?maxComments=all", true);
+			gConfig.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
+			locationSearch = "?maxComments=all";
 		}
-	} else{ 
-	    oReq.open("get",gConfig.serverURL + "timelines/"+locationPath+locationSearch, true);
-
-
-	}
+	} else 
+		gConfig.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
+	
+	oReq.open("get",gConfig.xhrurl+locationSearch,true);
 	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 	oReq.send();
 }

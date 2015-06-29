@@ -203,7 +203,7 @@ var templates =  {"nodes": [
 	]}
 	,{"c":"priv-new-user"
 	,"children":[
-		,{"t":"p", "txt": "Please comfirm the password<br>There is no way to recover it later"}
+		,{"t":"p", "txt": "Please confirm the password<br>There is no way to recover it later"}
 		,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
 		,{"c":"priv-pass-submit", "t":"button", "txt":"OK"}
 		,{"c":"priv-pass-cancel", "t":"button", "txt":"Cancel" }

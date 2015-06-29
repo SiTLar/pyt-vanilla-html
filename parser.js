@@ -1,4 +1,4 @@
-
+'use strict';
 var gUsers = new Object();
 var gNodes = new Object();
 var gMe = new Object();
@@ -468,12 +468,14 @@ function genPost(post){
 		if (post.likes)	genLikes(post, postNBody );
 		if (post.comments){
 			if(post.omittedComments){
-				postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[0]]));
+				if(post.comments[0])
+					postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[0]]));
 				var nodeComment = gNodes['comment'].cloneAll();
 				nodeComment.cNodes['comment-date'].innerHTML = '';
 				nodeComment.cNodes['comment-body'].innerHTML = '<a id='+post.id+'-unc  onclick="unfoldComm(\''+post.id +'\')" style="font-style: italic;">'+ post.omittedComments+' more comments</a>';
 				postNBody.cNodes['comments'].appendChild(nodeComment);
-				postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[1]]));
+				if(post.comments[1])
+					postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[1]]));
 			}
 			else post.comments.forEach(function(commentId){ postNBody.cNodes['comments'].appendChild(genComment(gComments[commentId]))});
 		}

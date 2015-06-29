@@ -284,6 +284,10 @@ left: 0;
 right: 0;
 
 }
+.priv-key-input {
+height: 1.5em;
+}
+
 .priv-close{
 float:right;
 

@@ -151,7 +151,7 @@ var templates =  {"nodes": [
 			,"children":[
 				{"t":"span","txt":"Name"}
 				,{"c":"priv-c-name" , "t":"input","e":{"change":"privActivateButton"}}
-				,{"c":"priv-submit", "t":"button", "txt":"go!","e":{"click":"ctrlPrivGen"}}
+				,{"c":"priv-submit", "t":"button", "p":{"disabled":true}, "txt":"go!","e":{"click":"ctrlPrivGen"}}
 			]}
 		]}
 		,{"t":"a", "txt":"logout","e":{"click":"ctrlPrivLogout"}}
@@ -203,7 +203,7 @@ var templates =  {"nodes": [
 	]}
 	,{"c":"priv-new-user"
 	,"children":[
-		,{"t":"p", "txt": "Please comfirm the password<br>There is on way to recover it later"}
+		,{"t":"p", "txt": "Please comfirm the password<br>There is no way to recover it later"}
 		,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
 		,{"c":"priv-pass-submit", "t":"button", "txt":"OK"}
 		,{"c":"priv-pass-cancel", "t":"button", "txt":"Cancel" }

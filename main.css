@@ -233,6 +233,7 @@ left: 0;
 right: 0;
 padding:1em;
 border: thin solid black;
+display: hidden;
 }
 .priv-inv-name{
 width:100%;

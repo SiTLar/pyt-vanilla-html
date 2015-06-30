@@ -805,11 +805,14 @@ function sendEditedPrivateComment(textField, nodeComment, nodePost){
 				"body":cpost.payload.data,
 				"createdAt":Date.parse(res.posts.createdAt), 
 				'user':cpost.payload.author,
-				"feed":cpost.payload.id
+				"feed":cpost.payload.id,
+				'id':res.posts.id
 			};
 			gComments[res.posts.id] = comment;
+			var nodeNewComment = genComment(comment);
+			nodeNewComment.sign = cpost.sign;
 
-			nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
+			nodeComment.parentNode.replaceChild(nodeNewComment,nodeComment);
 		}
 	};
 
@@ -925,6 +928,7 @@ function doDeleteComment(but){
 	var nodeComment = but.node;
 	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
 	but.parentNode.parentNode.removeChild(but.parentNode);
+	but.node.hidden = false;
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
@@ -960,7 +964,7 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 					'user':cpost.payload.author,
 					"id":res.posts.id
 					};
-			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment);
+			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment).sign = cpost.sign;
 			gComments[comment.id] = comment;
 			textField.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes['post-body']);

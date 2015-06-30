@@ -203,6 +203,15 @@ function draw(content){
 			new Promise(function (){addPosts(drop,toAdd,0);});
 		};
 	}else body.appendChild(genPost(content.posts));
+
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-0-1', 'auto');
+  ga('send', 'pageview');	
+	
 }
 function addPosts(drop, toAdd, offset){
 	var url = matrix.cfg.srvurl + "/posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
@@ -471,12 +480,14 @@ function genPost(post){
 		if (post.likes)	genLikes(post, postNBody );
 		if (post.comments){
 			if(post.omittedComments){
-				postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[0]]));
+				if(post.comments[0])
+					postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[0]]));
 				var nodeComment = gNodes['comment'].cloneAll();
 				nodeComment.cNodes['comment-date'].innerHTML = '';
 				nodeComment.cNodes['comment-body'].innerHTML = '<a id='+post.id+'-unc  onclick="unfoldComm(\''+post.id +'\')" style="font-style: italic;">'+ post.omittedComments+' more comments</a>';
 				postNBody.cNodes['comments'].appendChild(nodeComment);
-				postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[1]]));
+				if(post.comments[1])
+					postNBody.cNodes['comments'].appendChild(genComment(gComments[post.comments[1]]));
 			}
 			else post.comments.forEach(function(commentId){ postNBody.cNodes['comments'].appendChild(genComment(gComments[commentId]))});
 		}

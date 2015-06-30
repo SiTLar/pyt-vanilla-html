@@ -8,7 +8,7 @@ var CryptoPrivate = function(cfg){
 	var sSymKeys = window.sessionStorage.getItem("crypto_keys");
 	if (sSymKeys != "undefined")if (sSymKeys) var gSymKeys = JSON.parse(window.sessionStorage.getItem("crypto_keys"));
 	if(!this.gSymKeys)this.loadKeys(gSymKeys);
-	var c_login = window.sessionStorage.getItem('crypto_login');
+	var c_login = window.sessionStorage.getItem('crypto_login')
 	if(c_login){
 		c_login = JSON.parse(c_login);	
 		this.password = atob(c_login.password);
@@ -23,6 +23,8 @@ CryptoPrivate.prototype = {
 	username: undefined,
 	password: undefined,
 	constants:{'kidlength':btoa(openpgp.crypto.hash.sha256('1')).length},
+	pubCache: {},
+	pubQ: {},
 
 	decrypt: function(data){
 		var idL = this.cfg.encId.length;
@@ -47,7 +49,7 @@ CryptoPrivate.prototype = {
 	},
 	setPassword: function (pass){
 		this.password = openpgp.crypto.hash.sha256(pass);
-		window.sessionStorage.setItem('crypto_login', JSON.stringify({'password':btoa(this.password), 'login':gMe.users.username}));
+		window.sessionStorage.setItem('crypto_login', JSON.stringify({'password':btoa(this.password), 'username':gMe.users.username}));
 	},
 	makeToken: function(){
 		var caller = this;
@@ -248,7 +250,72 @@ CryptoPrivate.prototype = {
 			oReq.setRequestHeader("X-Authentication-User",caller.username);
 			oReq.send();
 		});
-	 },
+	},
+	sign: function(data){
+		var caller = this;
+		return new Promise(function(resolve,reject){
+			var keyPrA = window.sessionStorage.getItem("key_private");
+			if(!keyPrA) {
+				caller.getUserPriv().then(function(){caller.requestToken( resolve,reject)},reject);
+				return;
+			}
+			var sign = new openpgp.packet.Signature();
+			sign.signatureType = openpgp.enums.signature.text;
+			sign.hashAlgorithm = openpgp.config.prefer_hash_algorithm;
+			var pLit = new openpgp.packet.Literal();
+			pLit.setText( new StringView(data).toBase64());
+			keyPrA = openpgp.key.readArmored(keyPrA);
+			var pSignKey = keyPrA.keys[0].getSigningKeyPacket();
+			sign.publicKeyAlgorithm = pSignKey.algorithm;
+			sign.sign(pSignKey,pLit);
+			resolve(btoa(sign.write()));
+		});
+	},
+	verify: function(data, txtSign, username){
+		var caller = this;
+		return new Promise(function(resolve,reject){
+			var keyPub;
+			function gotUser(){
+				var sign = new openpgp.packet.Signature();
+				var binSign = atob(txtSign);
+				var pLit = new openpgp.packet.Literal();
+				pLit.setText( new StringView(data).toBase64());
+				sign.read(binSign,0,binSign.length);
+				var pKey = keyPub.keys[0].getKeyPacket([sign.issuerKeyId]);
+				if(!pKey)return reject();
+				if (!sign.verify(pKey, pLit))return reject();
+				resolve();
+			}
+			if (caller.pubCache[username]){
+				keyPub = caller.pubCache[username];
+				gotUser();
+			} else if(caller.pubQ[username]) caller.pubQ[username].then(
+				function(){
+					keyPub = caller.pubCache[username];
+					gotUser();
+				},reject);
+			else{
+				caller.pubQ[username] = new Promise(function(resolveP, rejectP){
+					caller.getUserPub(username).then(function(res){
+						keyPub = openpgp.key.readArmored(res);
+						caller.pubCache[username] = keyPub;
+						gotUser();
+						resolve();
+						resolveP();
+					},function(){
+						reject();
+						rejectP();
+
+					});
+				});
+			}
+		});
+		
+	},
+	mkOwnToken: function(data){
+		if (typeof this.password === "undefined") return null;
+		return btoa(openpgp.crypto.hash.sha256(this.password+data));
+	},
 	requestToken: function(){
 		var caller = this;
 		return new Promise(function(resolve,reject){

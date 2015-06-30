@@ -9,7 +9,7 @@ var gAttachments  = new Object();
 var gFeeds = new Object();
 var gPrivTimeline = {"done":0,'postsById':{},'oraphed':{count:0},'noKey':{},'noDecipher':{},nCmts:0,'posts':[] };
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
-var matrix = new CryptoPrivate({"srvurl":"https://moimosk.ru/cgi/secret","mul":10,"authurl": gConfig.serverURL,'sk':16, 'encId':"MATRIX", "feed":"crypto-matrix" });
+var matrix = new CryptoPrivate(gCyptoPrivateCfg );
 document.addEventListener("DOMContentLoaded", initDoc);
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;

@@ -40,12 +40,10 @@ function unfoldLikes(id){
 
 function writeAllLikes(id,nodeLikes){
 	var post = document.getElementById(id).rawData;
-	var idx;
-	for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
-		if (nodeLikes.childNodes[idx].nodeName == 'UL')break;
+	nodeLikes.innerHTML = '';
 	var nodeLike = document.createElement('li');
 	nodeLike.className = "p-timeline-user-like";
-	for(var like = gConfig.likesFold; like < post.likes.length; like++){
+	for(var like = 0; like < post.likes.length; like++){
 		var nodeCLike = nodeLike.cloneNode();
 		nodeCLike.innerHTML = gUsers[post.likes[like]].link;
 		//nodeLikes.childNodes[idx].appendChild(nodeCLike);

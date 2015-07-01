@@ -9,7 +9,7 @@ var gAttachments  = new Object();
 var gFeeds = new Object();
 var gPrivTimeline = {"done":0,'postsById':{},'oraphed':{count:0},'noKey':{},'noDecipher':{},nCmts:0,'posts':[] };
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
-var matrix = new CryptoPrivate(gCyptoPrivateCfg );
+var matrix = new CryptoPrivate(gCryptoPrivateCfg );
 document.addEventListener("DOMContentLoaded", initDoc);
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -450,12 +450,7 @@ function genPost(post){
 		var anchorDate = document.createElement("a");
 		if(typeof user !== 'undefined') anchorDate.href = gConfig.front+user.username+'/'+post.id;
 		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
-		var tmp = document.createElement("span");
-		tmp.innerHTML = "&nbsp;&mdash;&nbsp;"
-		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(tmp);
-		
 		anchorDate.date = post.createdAt*1;
-
 		window.setTimeout(updateDate, 10,anchorDate);
 
 		if(typeof gMe !== 'undefined'){ 
@@ -469,6 +464,7 @@ function genPost(post){
 			}
 			var tmp  = document.createElement('span');
 			tmp.innerHTML = '-';
+			tmp.className = 'spacer';
 			nodeControls.appendChild(tmp);
 			var aHide = document.createElement('a');
 			aHide.innerHTML = post.isHidden?'Un-hide':'Hide';
@@ -1533,9 +1529,22 @@ function newPostSelect(e){
 	nodeP.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = false;
 }
 function frfAutolinker( autolinker,match ){
-	if (match.getType() == "twitter")
-	 return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + '</a>' ;
-	 else return true;
+	switch (match.getType()){
+	case "twitter":
+		return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + '</a>' ;
+	case "url":
+		if( match.getUrl().indexOf("m.freefeed.net") != -1 ) return true;
+		else if( match.getUrl().indexOf("freefeed.net") != -1 ) {
+		    match.url = match.url.replace("freefeed.net","m.freefeed.net",'gm');
+                    var tag = autolinker.getTagBuilder().build( match );  
+                    return tag;
+
+                } else {
+                    return true;  
+                }		
+	default:
+		return true;
+	}
 }
 function initDoc(){
 

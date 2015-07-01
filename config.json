@@ -6,7 +6,7 @@ var gConfig = {
 , "likesFold":4
 
 };
-var gCyptoPrivateCfg = {
+var gCryptoPrivateCfg = {
   "srvurl":"https://moimosk.ru/cgi/secret"
 , "mul":10,
 , "authurl": "https://moimosk.ru/v1/",

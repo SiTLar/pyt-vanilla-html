@@ -70,16 +70,15 @@ function genLikes(post, postNBody){
 	}
 	var nodeLike = document.createElement('li');
 	nodeLike.className = "p-timeline-user-like";
-	for (var idx = 0; idx < (gConfig.likesFold<l?gConfig.likesFold:l) ; idx++){
+	post.likes.forEach(function(like){
 		var nodeCLike = nodeLike.cloneNode();
-		nodeCLike.innerHTML = gUsers[post.likes[idx]].link;
+		nodeCLike.innerHTML = gUsers[like].link;
 		nodeLikes.appendChild(nodeCLike);
-	}
+	});
 	var suffix = document.createElement("li");
 	suffix.id = post.id+'-unl' 
-	if (post.omittedLikes>0) l += post.omittedLikes;
-	if ( l > gConfig.likesFold)
-		suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ (l - gConfig.likesFold) +' other people</a>' ;
+	if (post.omittedLikes)
+		suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ post.omittedLikes +' other people</a>' ;
 	suffix.innerHTML += ' liked this';
 	suffix.className = 'nocomma';
 	nodeLikes.appendChild(suffix);

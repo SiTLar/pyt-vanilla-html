@@ -1,5 +1,7 @@
 'use strict';
 var gUsers = new Object();
+var gUsersQ = new Object();
+gUsers.byName = new Object();
 var gNodes = new Object();
 var gMe = new Object();
 var gComments = new Object();
@@ -7,7 +9,7 @@ var gAttachments  = new Object();
 var gFeeds = new Object();
 var gPrivTimeline = {"done":0,'postsById':{},'oraphed':{count:0},'noKey':{},'noDecipher':{},nCmts:0,'posts':[] };
 var autolinker = new Autolinker({'truncate':20,  'replaceFn':frfAutolinker } );
-var matrix = new CryptoPrivate({"srvurl":"https://moimosk.ru/cgi/secret","mul":10,"authurl": gConfig.serverURL,'sk':16, 'encId':"MATRIX", "feed":"crypto-matrix" });
+var matrix = new CryptoPrivate(gCryptoPrivateCfg );
 document.addEventListener("DOMContentLoaded", initDoc);
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -98,9 +100,10 @@ function genLikes(post, postNBody){
 }
 function addUser (user){
 	if (typeof gUsers[user.id] !== 'undefined' ) return;
-	gUsers[user.id] = user;
-	gUsers[user.id].link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+'</a>';
+	user.link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+'</a>';
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
+	gUsers[user.id] = user;
+	gUsers.byName[user.username] = user;
 }
 function subscribe(e){
 	var oReq = new XMLHttpRequest();
@@ -240,13 +243,17 @@ function doPrivComments(drop){
 	var url = matrix.cfg.srvurl + "/cmts?limit="+limit;
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
+		var arrComPr = new Array(); 
 		if(oReq.status < 400){
 			var res = JSON.parse(oReq.response);
-			if(typeof res.posts !=="undefined")
-				res.posts.forEach(function (post){drawPrivateComment(post);});
+			if(typeof res.posts !=="undefined"){
+				res.posts.forEach(function (post){arrComPr.push(drawPrivateComment(post));});
+			}
+		}
+		Promise.all(arrComPr).then(function(){
 			gPrivTimeline.posts.forEach(function(nodePost){
 				var nodeComments = nodePost.cNodes["post-body"].cNodes["comments"];
-				if(nodeComments.childNodes.length < 4)
+				if(nodeComments.childNodes.length < gConfig.likesFold)
 					for(var idx = 0; idx < nodeComments.childNodes.length; idx++)
 						nodeComments.childNodes[idx].hidden = false;
 				else{
@@ -262,7 +269,7 @@ function doPrivComments(drop){
 			});
 			gPrivTimeline.posts.sort(function (a,b){return a.rawData.updatedAt<b.rawData.updatedAt?1:-1;});
 			gPrivTimeline.posts.splice(0,drop);
-			var tmp = gPrivTimeline.posts;
+			var tmp = gPrivTimeline.posts.slice();
 			var privPost = tmp[0];
 			if(!privPost)return; 
 			for(var idx = 0; idx< document.posts.childNodes.length; idx++){
@@ -274,7 +281,7 @@ function doPrivComments(drop){
 				}
 			}
 			tmp.forEach(function(post){document.posts.appendChild(post);});
-		}
+		});
 	}	
 	oReq.open("get",url,true);
 	oReq.send();
@@ -346,81 +353,77 @@ function updateDate(node){
 	window.setTimeout(updateDate, 5000, node );
 }
 function drawPrivateComment(post) {
-	var cpost = matrix.decrypt(post.body);
-	if (typeof cpost.error !== 'undefined')return;
-	cpost = JSON.parse(cpost);
-	var nodePriv = gPrivTimeline.postsById[cpost.postid];
-	var comment = {"body":cpost.data,
-			"createdAt":Date.parse(post.createdAt), 
-			"createdBy":post.createdBy, 
-			"id":post.id,
-			'user':post.username
-			};
-	var nodeComment = genComment(comment);
-	gComments[post.id] = comment;
-	nodeComment.hidden = true;
-	if(nodePriv){
-		if(comment.createdAt > nodePriv.rawData.updatedAt) nodePriv.rawData.updatedAt = comment.createdAt;
-		nodePriv.cNodes["post-body"].cNodes["comments"].insertBefore(nodeComment,nodePriv.cNodes["post-body"].cNodes["comments"].firstChild);
-	}
+	return new Promise(function(resolve,reject){
+		var cpost = matrix.decrypt(post.body);
+		if (typeof cpost.error !== 'undefined')return;
+		cpost = JSON.parse(cpost);
+		if (typeof cpost.payload.author === 'undefined' ) return spam();
+		var nodeComment;
+		matrix.verify(JSON.stringify(cpost.payload), cpost.sign, cpost.payload.author).then(ham,spam);
+		function ham(){
+			var nodePriv = gPrivTimeline.postsById[cpost.payload.postid];
+			if(!nodePriv)return;
+			var comment = {"body":cpost.payload.data,
+					"createdAt":Date.parse(post.createdAt), 
+					"id":post.id,
+					'user':cpost.payload.author
+					};
+			nodeComment = genComment(comment);
+			nodeComment.hidden = true;
+			nodeComment.sign = cpost.sign;
+			gComments[post.id] = comment;
+			if(comment.createdAt > nodePriv.rawData.updatedAt) nodePriv.rawData.updatedAt = comment.createdAt;
+			nodePriv.cNodes["post-body"].cNodes["comments"].insertBefore(nodeComment,nodePriv.cNodes["post-body"].cNodes["comments"].firstChild);
+			resolve();
+		}
+		function spam(){reject()};
+	});
 }
 function genPost(post){
-	var nodePost = gNodes['post'].cloneAll();
-	var postNBody = nodePost.cNodes["post-body"];
-	var user = gUsers[post.createdBy];
-	nodePost.homed = false;
-	nodePost.rawData = post;
-	nodePost.id = post.id;
-	nodePost.isPrivate = false;
-
-	var cpost = matrix.decrypt(post.body);
-	if (typeof cpost.error !== 'undefined'){
-		switch(cpost.error){
-		case '0':
-			break;
-		case '3':
-			gPrivTimeline.noKey[post.id] = post;
-			console.log(post.id+": unknown key");
-			break;
-		case '4':
-			gPrivTimeline.noDecipher[post.id] = post;
-			console.log("Private keys not loaded");
-			break;
-		}
-		postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-		gotUser();
-	}else{	
-		nodePost.isPrivate = true;
-		post.createdAt = Date.parse(post.createdAt);
-		nodePost.rawData.createdAt = post.createdAt;
-		cpost = JSON.parse(cpost);
-		nodePost.feed = cpost.feed;
+	function spam(){nodePost = document.createElement('span');};
+	function ham(){
+		nodePost.feed = cpost.payload.feed;
 		gPrivTimeline.posts.push(nodePost);
 		gPrivTimeline.postsById[post.id] = nodePost;
-		nodePost.rawData.body = cpost.data;
-		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.data.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-
+		nodePost.rawData.body = cpost.payload.data;
+		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.payload.data.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 		if(typeof user === 'undefined'){
-			var oReq = new XMLHttpRequest();
-			oReq.onload = function(){
-				if(this.status < 400){
-					var oRes = JSON.parse(oReq.response);
-					addUser(oRes.users);
-					user = gUsers[post.createdBy];
+			if (gUsers.byName[cpost.payload.author]){
+				user = gUsers.byName[cpost.payload.author];
+				post.createdBy = user.id;
+				gotUser();
+			} else if(gUsersQ[cpost.payload.author]) gUsersQ[cpost.payload.author].then(
+				function(){
+					user = gUsers.byName[cpost.payload.author];
+					post.createdBy = user.id;
 					gotUser();
-				}
-			};
+				},spam);
+			else{
+				gUsersQ[cpost.payload.author] = new Promise (function(resolve,reject){
+					
+					var oReq = new XMLHttpRequest();
+					oReq.onload = function(){
+						if(this.status < 400){
+							var oRes = JSON.parse(oReq.response);
+							addUser(oRes.users);
+							user = gUsers.byName[cpost.payload.author];
+							post.createdBy = user.id;
+							resolve();
+						}
+					};
 
-			oReq.open("get",gConfig.serverURL + "users/"+post.username, true);
-			oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-			oReq.send();
+					oReq.open("get",gConfig.serverURL + "users/"+post.username, true);
+					oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+					oReq.send();
+				}).then(gotUser,spam);
+			}
 		}else gotUser();
 	}
 	function gotUser(){
 		if(typeof user !== 'undefined'){
 			nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 			var title = user.link;
-			if(nodePost.isPrivate) title += '<span> posted privately to '+StringView.makeFromBase64(matrix.gSymKeys[cpost.feed].name)+"</span>";
+			if(nodePost.isPrivate) title += '<span> posted privately to '+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 			else if(post.postedTo){
 				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
 					title += "<span> posted to: </span>";
@@ -447,12 +450,7 @@ function genPost(post){
 		var anchorDate = document.createElement("a");
 		if(typeof user !== 'undefined') anchorDate.href = gConfig.front+user.username+'/'+post.id;
 		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
-		var tmp = document.createElement("span");
-		tmp.innerHTML = "&nbsp;&mdash;&nbsp;"
-		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(tmp);
-		
 		anchorDate.date = post.createdAt*1;
-
 		window.setTimeout(updateDate, 10,anchorDate);
 
 		if(typeof gMe !== 'undefined'){ 
@@ -466,6 +464,7 @@ function genPost(post){
 			}
 			var tmp  = document.createElement('span');
 			tmp.innerHTML = '-';
+			tmp.className = 'spacer';
 			nodeControls.appendChild(tmp);
 			var aHide = document.createElement('a');
 			aHide.innerHTML = post.isHidden?'Un-hide':'Hide';
@@ -491,6 +490,40 @@ function genPost(post){
 		postNBody.cNodes['comments'].cnt = postNBody.cNodes['comments'].childNodes.length;
 		if (postNBody.cNodes['comments'].cnt > 4) 
 				addLastCmtButton(postNBody);
+	}
+	var nodePost = gNodes['post'].cloneAll();
+	var postNBody = nodePost.cNodes["post-body"];
+	var user = undefined;
+	if(post.createdBy) user = gUsers[post.createdBy];
+	nodePost.homed = false;
+	nodePost.rawData = post;
+	nodePost.id = post.id;
+	nodePost.isPrivate = false;
+
+	var cpost = matrix.decrypt(post.body);
+	if (typeof cpost.error !== 'undefined'){
+		switch(cpost.error){
+		case '0':
+			break;
+		case '3':
+			gPrivTimeline.noKey[post.id] = post;
+			console.log(post.id+": unknown key");
+			break;
+		case '4':
+			gPrivTimeline.noDecipher[post.id] = post;
+			console.log("Private keys not loaded");
+			break;
+		}
+		postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+		gotUser();
+	}else{	
+		nodePost.isPrivate = true;
+		post.createdAt = Date.parse(post.createdAt);
+		nodePost.rawData.createdAt = post.createdAt;
+		cpost = JSON.parse(cpost);
+		if (typeof cpost.payload.author === 'undefined' ) return spam();
+		matrix.verify(JSON.stringify(cpost.payload), cpost.sign, cpost.payload.author).then(ham,spam);
+		nodePost.sign = cpost.sign;
 	}
 	return nodePost;
 
@@ -527,22 +560,24 @@ function newPost(e){
 		if(textField.attachments) post.attachments = textField.attachments;
 		postdata.post = post;
 		if(postTo.isPrivate){ 
-			matrix.makeToken().then(function(token){
-				oReq.open("post",matrix.cfg.srvurl+"?post", true);
-				oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
-				oReq.setRequestHeader("X-Authentication-Token", token);
-				oReq.setRequestHeader('x-content-type', 'post'); 
-				oReq.setRequestHeader("Content-type","text/plain");
-				oReq.onload = onload;
+			oReq.open("post",matrix.cfg.srvurl+"?post", true);
+			oReq.setRequestHeader('x-content-type', 'post'); 
+			oReq.setRequestHeader("Content-type","text/plain");
+			oReq.onload = onload;
+			var payload =  {
+				"feed":postTo.feeds[0],
+				"type":"post", 
+				"author":gMe.users.username,
+				"data":textField.value,
+			};
+			matrix.sign(JSON.stringify(payload)).then(function(sign){
+				var token = matrix.mkOwnToken(sign);
+				if(!token) return console.log("Failed to make access token");
+				oReq.setRequestHeader('x-content-token', token); 
 				post = matrix.encrypt(postTo.feeds, 
-					JSON.stringify({
-						"feed":postTo.feeds[0],
-						"type":"post", 
-						"data":textField.value
-					}));
+					JSON.stringify({'payload':payload,"sign":sign}));
 				oReq.send(post);
-			}, function(){ console.log("can't get auth token"); }
-			);
+			},function(){console.log("Failed to sign")});
 		}else{
 			oReq.open("post",gConfig.serverURL + "posts", true);
 			oReq.onload = onload;
@@ -609,7 +644,11 @@ function postEditedPost(e){
 			var post = JSON.parse(oReq.response).posts;
 			var postCNode = document.createElement('div');
 			var cpost = matrix.decrypt(post.body);
-			if (typeof cpost.error === 'undefined') post.body = JSON.parse(cpost).data;
+			if (typeof cpost.error === 'undefined') {
+				cpost = JSON.parse(cpost);
+				post.body =cpost.payload.data;
+				nodePost.sign = cpost.sign;
+			}
 			postCNode.innerHTML = post.body;
 			postCNode.className = 'post-cont';
 			nodePost.rawData = post;
@@ -626,21 +665,26 @@ function postEditedPost(e){
 	postdata.post = post;
 	var text = e.target.parentNode.parentNode.cNodes['edit-txt-area'].value;
 	if(nodePost.isPrivate){ 
-		matrix.makeToken().then(function(token){
-			oReq.open("put",matrix.cfg.srvurl+"?edit", true);
-			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
-			oReq.setRequestHeader("X-Authentication-Token", token);
-			oReq.setRequestHeader('x-content-id', nodePost.id); 
-			oReq.setRequestHeader('x-content-type', 'post'); 
-			oReq.setRequestHeader("Content-type","text/plain");
+		oReq.open("put",matrix.cfg.srvurl+"?edit", true);
+		oReq.setRequestHeader('x-content-type', 'post'); 
+		oReq.setRequestHeader("Content-type","text/plain");
+		//oReq.onload = onload;
+		var payload =  {
+			"feed":nodePost.feed, 
+			"type":"post", 
+			"author":gMe.users.username,
+			"data":text,
+		};
+		oReq.setRequestHeader('x-access-token', matrix.mkOwnToken(nodePost.sign)); 
+		matrix.sign(JSON.stringify(payload)).then(function(sign){
+			var token = matrix.mkOwnToken(sign);
+			if(!token) return console.log("Failed to make access token");
+			oReq.setRequestHeader('x-content-token', token); 
+			oReq.setRequestHeader('x-content-id',nodePost.id); 
 			post = matrix.encrypt(nodePost.feed, 
-				JSON.stringify({
-					"feed":nodePost.feed, 
-					"type":"post", 
-					"data":text
-				}));
+				JSON.stringify({'payload':payload,"sign":sign}));
 			oReq.send(post);
-		}, function(){ console.log("can't get auth token"); });
+		},function(){console.log("Failed to sign")});
 	}else{
 		post.body =  text;
 		oReq.open("put",gConfig.serverURL + "posts/"+nodePost.id, true);
@@ -663,14 +707,11 @@ function doDeletePost(but){
 		}
 	};
 	if(victim.isPrivate){ 
-		matrix.makeToken().then(function(token){
-			oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
-			oReq.setRequestHeader('x-content-id', victim.id); 
-			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
-			oReq.setRequestHeader("X-Authentication-Token", token);
-			oReq.setRequestHeader('x-content-type', 'post'); 
-			oReq.send();
-		}, function(){ console.log("can't get auth token"); });
+		oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
+		oReq.setRequestHeader('x-content-id', victim.id); 
+		oReq.setRequestHeader('x-access-token', matrix.mkOwnToken(victim.sign)); 
+		oReq.setRequestHeader('x-content-type', 'post'); 
+		oReq.send();
 	}else{
 		oReq.open("delete",gConfig.serverURL + "posts/"+victim.id, true);
 		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
@@ -744,13 +785,11 @@ function addComment(e){
 function editComment(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != 'comment');
 	var nodeEdit = genEditNode(postEditComment,cancelEditComment);
-	var nodeComment = gNodes['comment'].cloneAll();
 	nodeEdit.cNodes['edit-txt-area'].value = gComments[victim.id].body;
-	//nodeComment.replaceChild(nodeEdit, nodeComment.cNodes['comment-body']);
-	 nodeComment.cNodes['comment-body'].appendChild(nodeEdit);
-	victim.parentNode.replaceChild( nodeComment, victim);
-	nodeComment.id = victim.id;
-	nodeComment.getElementsByClassName('edit-txt-area')[0].focus();
+	victim.replaceChild( nodeEdit, victim.cNodes['comment-body']);
+	victim.cNodes['comment-body'] = nodeEdit;
+	nodeEdit.className = 'comment-body';
+	victim.getElementsByClassName('edit-txt-area')[0].focus();
 }
 function sendEditedPrivateComment(textField, nodeComment, nodePost){
 	var oReq = new XMLHttpRequest();
@@ -758,32 +797,42 @@ function sendEditedPrivateComment(textField, nodeComment, nodePost){
 		if(this.status < 400){
 			var res = JSON.parse(this.response);
 			var cpost = JSON.parse(matrix.decrypt(res.posts.body));
-			var comment = {"body":cpost.data,
-					"createdAt":Date.parse(res.posts.createdAt), 
-					"createdBy":res.posts.createdBy, 
-					'user':res.posts.username,
-					"feed":res.posts.id
-					};
+			var comment = {
+				"body":cpost.payload.data,
+				"createdAt":Date.parse(res.posts.createdAt), 
+				'user':cpost.payload.author,
+				"feed":cpost.payload.id,
+				'id':res.posts.id
+			};
 			gComments[res.posts.id] = comment;
+			var nodeNewComment = genComment(comment);
+			nodeNewComment.sign = cpost.sign;
 
-			nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
+			nodeComment.parentNode.replaceChild(nodeNewComment,nodeComment);
 		}
 	};
 
-	oReq.open("put",matrix.cfg.srvurl+"?edit&id="+nodeComment.id, true);
+	oReq.open("put",matrix.cfg.srvurl+"?edit", true);
 	oReq.setRequestHeader("Content-type","text/plain");
 	var post = new Object();
-	post.updatedAt = Date.now();
-	var postdata = new Object();
-	postdata.post = post;
-	post.body = matrix.encrypt(nodePost.feed, JSON.stringify({"id":nodePost.feed,"type":"comment", "data":textField.value,"postid":nodePost.id }));
-	matrix.makeToken().then(function(token){
-			oReq.setRequestHeader("X-Authentication-Token", token);
-			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
-			oReq.setRequestHeader('x-content-type', 'comment'); 
-			oReq.send(JSON.stringify(postdata));
-		}, function(){ console.log("can't get auth token"); }
-	);
+	var payload =  {
+		"id":nodePost.feed,
+		"type":"comment", 
+		"data":textField.value,
+		"author":gMe.users.username,
+		"postid":nodePost.id 
+	};
+	oReq.setRequestHeader('x-access-token', matrix.mkOwnToken(nodeComment.sign)); 
+	oReq.setRequestHeader('x-content-id', nodeComment.id); 
+	oReq.setRequestHeader('x-content-type', 'comment'); 
+	matrix.sign(JSON.stringify(payload)).then(function(sign){
+		var token = matrix.mkOwnToken(sign);
+		if(!token) return console.log("Failed to make access token");
+		oReq.setRequestHeader('x-content-token', token); 
+		post = matrix.encrypt(nodePost.feed, 
+			JSON.stringify({'payload':payload,"sign":sign}));
+		oReq.send(post);
+	},function(){console.log("Failed to sign")});
 
 
 }
@@ -873,7 +922,9 @@ function deleteCancel(nodeConfirm){
 
 function doDeleteComment(but){
 	var nodeComment = but.node;
+	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != 'post');
 	but.parentNode.parentNode.removeChild(but.parentNode);
+	but.node.hidden = false;
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
@@ -882,14 +933,11 @@ function doDeleteComment(but){
 		}
 	};
 	if(nodePost.isPrivate){ 
-		matrix.makeToken().then(function(token){
-			oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
-			oReq.setRequestHeader('x-content-id', nodeComment.id); 
-			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
-			oReq.setRequestHeader("X-Authentication-Token", token);
-			oReq.setRequestHeader('x-content-type', 'comment'); 
-			oReq.send();
-		}, function(){ console.log("can't get auth token"); });
+		oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
+		oReq.setRequestHeader('x-content-id', nodeComment.id); 
+		oReq.setRequestHeader('x-access-token', matrix.mkOwnToken(nodeComment.sign)); 
+		oReq.setRequestHeader('x-content-type', 'comment'); 
+		oReq.send();
 	}else{
 		oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
 		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
@@ -907,13 +955,12 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 			textField.style.height  = '4em';
 			var res = JSON.parse(this.response);
 			var cpost = JSON.parse(matrix.decrypt(res.posts.body));
-			var comment = {"body":cpost.data,
+			var comment = {"body":cpost.payload.data,
 					"createdAt":Date.parse(res.posts.createdAt), 
-					"createdBy":res.posts.createdBy, 
-					'user':res.posts.username,
+					'user':cpost.payload.author,
 					"id":res.posts.id
 					};
-			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment);
+			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment).sign = cpost.sign;
 			gComments[comment.id] = comment;
 			textField.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes['post-body']);
@@ -922,14 +969,24 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 
 	oReq.open("post",matrix.cfg.srvurl+"?post", true);
 	oReq.setRequestHeader("Content-type","text/plain");
-	var post = matrix.encrypt(nodePost.feed, JSON.stringify({"id":nodePost.feed,"type":"comment", "data":textField.value,"postid":nodePost.id }));
-	matrix.makeToken().then(function(token){
-			oReq.setRequestHeader("X-Authentication-User", gMe.users.username);
-			oReq.setRequestHeader('x-content-type', 'comment'); 
-			oReq.setRequestHeader("X-Authentication-Token", token);
-			oReq.send(post);
-		}, function(){ console.log("can't get auth token"); }
-	);
+	var post = new Object();
+	var payload =  {
+		"id":nodePost.feed,
+		"type":"comment", 
+		"data":textField.value,
+		"author":gMe.users.username,
+		"postid":nodePost.id 
+	};
+	oReq.setRequestHeader('x-content-type', 'comment'); 
+	matrix.sign(JSON.stringify(payload)).then(function(sign){
+		var token = matrix.mkOwnToken(sign);
+		if(!token) return console.log("Failed to make access token");
+		oReq.setRequestHeader('x-content-token', token); 
+		post = matrix.encrypt(nodePost.feed, 
+			JSON.stringify({'payload':payload,"sign":sign}));
+		oReq.send(post);
+	},function(){console.log("Failed to sign")});
+
 }
 function sendComment(textField){
 	var nodeComment =textField; do nodeComment = nodeComment.parentNode; while(nodeComment.className != 'comment');
@@ -984,33 +1041,49 @@ function genPComment(cpost){
 }
 */
 function genComment(comment){
+	function gotUser(){
+		nodeSpan.innerHTML += " - " + cUser.link ;
+		if(typeof gMe !== 'undefined') 
+			if(cUser.id == gMe.users.id) 
+				nodeComment.cNodes['comment-body'].appendChild(gNodes['comment-controls'].cloneAll());
+	}
+	function spam(){nodeComment = document.createElement('span');};
 	var nodeComment = gNodes['comment'].cloneAll();
 	var cUser = gUsers[comment.createdBy];
 	var nodeSpan = document.createElement('span');
 	nodeComment.cNodes['comment-body'].appendChild(nodeSpan);
 	nodeSpan.innerHTML = autolinker.link(comment.body.replace(/&/g,'&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+	nodeComment.id = comment.id;
+	nodeComment.createdAt = comment.createdAt;
 	if(typeof cUser !== 'undefined'){
 		nodeSpan.innerHTML += " - " + cUser.link ;
 		if(typeof gMe !== 'undefined') 
 			if(cUser.id == gMe.users.id) 
 				nodeComment.cNodes['comment-body'].appendChild(gNodes['comment-controls'].cloneAll());
 	}else if(comment.user) {
-		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			if(this.status < 400){
-				var oRes = JSON.parse(oReq.response);
-				addUser(oRes.users);
-				cUser = gUsers[comment.createdBy];
-				nodeSpan.innerHTML += " - " + cUser.link ;
-			}
-		};
-
-		oReq.open("get",gConfig.serverURL + "users/"+comment.user, true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-		oReq.send();
+		if (gUsers.byName[comment.user]) {
+			cUser = gUsers.byName[comment.user];
+			gotUser();
+		}
+		else if(gUsersQ[comment.user]) gUsersQ[comment.user].then(gotUser,spam);
+		else{
+			gUsersQ[comment.user] = new Promise (function(resolve,reject){
+				
+				var oReq = new XMLHttpRequest();
+				oReq.onload = function(){
+					if(this.status < 400){
+						var oRes = JSON.parse(oReq.response);
+						addUser(oRes.users);
+						cUser = gUsers.byName[comment.user];
+						resolve();
+					}
+				};
+				oReq.open("get",gConfig.serverURL + "users/"+comment.username, true);
+				oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+				oReq.send();
+			}).then(gotUser,spam);
+		}
 	}
-	nodeComment.id = comment.id;
-	nodeComment.createdAt = comment.createdAt;
 	return nodeComment; 
 }
 function addLastCmtButton(postNBody){
@@ -1245,6 +1318,9 @@ function ctrlPrivNewUser(nodeSubmit){
 function ctrlPrivLogout(e){
 	matrix.ready = 0;
 	matrix.logout();
+	gPrivTimeline.posts.forEach(function(post){post.parentNode.removeChild(post);});
+	gPrivTimeline.posts = new Array();
+	gPrivTimeline.done = false;
 	document.body.removeChild( document.getElementsByClassName("private-control")[0]);
 	privRegenGrps();
 }
@@ -1453,9 +1529,22 @@ function newPostSelect(e){
 	nodeP.parentNode.cNodes['edit-buttons'].cNodes['edit-buttons-post'].disabled = false;
 }
 function frfAutolinker( autolinker,match ){
-	if (match.getType() == "twitter")
-	 return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + '</a>' ;
-	 else return true;
+	switch (match.getType()){
+	case "twitter":
+		return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + '</a>' ;
+	case "url":
+		if( match.getUrl().indexOf("m.freefeed.net") != -1 ) return true;
+		else if( match.getUrl().indexOf("freefeed.net") != -1 ) {
+		    match.url = match.url.replace("freefeed.net","m.freefeed.net",'gm');
+                    var tag = autolinker.getTagBuilder().build( match );  
+                    return tag;
+
+                } else {
+                    return true;  
+                }		
+	default:
+		return true;
+	}
 }
 function initDoc(){
 

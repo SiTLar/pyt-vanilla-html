@@ -8,9 +8,9 @@ var gConfig = {
 };
 var gCryptoPrivateCfg = {
   "srvurl":"https://moimosk.ru/cgi/secret"
-, "mul":10,
-, "authurl": "https://moimosk.ru/v1/",
-, "sk":16, 
+, "mul":10
+, "authurl": "https://moimosk.ru/v1/"
+, "sk":16 
 , "encId":"MATRIX" 
 , "feed":"crypto-matrix" 
 };

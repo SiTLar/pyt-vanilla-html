@@ -166,15 +166,25 @@ function draw(content){
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
 		nodeMore.className = 'more-node';
-		var htmlOffset = '<a href="' + gConfig.front+gConfig.timeline ;
+		var htmlPrefix = '<a href="' + gConfig.front+gConfig.timeline ;
+		var htmlForward;
+		var htmlBackward;
+		var fLastPage = (content.posts.length != gConfig.offset);
 		var backward = gConfig.cSkip*1 - gConfig.offset*1;
 		var forward = gConfig.cSkip*1 + gConfig.offset*1;
 		if (gConfig.cSkip){
-			if (backward>0)htmlOffset += '?offset=' + backward*1+ '&limit='+gConfig.offset*1;
-			htmlOffset += '"><span style="font-size: 120%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+gConfig.timeline;
-		} 
-		htmlOffset += '?offset=' + forward*1 + '&limit='+gConfig.offset*1+ '">Older items <span style="font-size: 120%">&rarr;</span></a>';
-		nodeMore.innerHTML = htmlOffset;
+			if (backward>0) htmlBackward = htmlPrefix + '?offset=' 
+				+ backward*1+ '&limit='+gConfig.offset*1
+				+ '"><span style="font-size: 120%">&larr;</span> Newer items</a>';
+			nodeMore.innerHTML = htmlBackward ;
+		}
+		if(!fLastPage){ 
+			htmlForward = htmlPrefix + '?offset=' 
+			+ forward*1 + '&limit='+gConfig.offset*1
+			+'">Older items <span style="font-size: 120%">&rarr;</span></a>';
+			if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
+			nodeMore.innerHTML +=  htmlForward;
+		}
 		body.appendChild(nodeMore.cloneNode(true));
 		document.posts = document.createElement("div");
 		body.appendChild(document.posts);

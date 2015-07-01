@@ -173,7 +173,7 @@ function draw(content){
 		var backward = gConfig.cSkip*1 - gConfig.offset*1;
 		var forward = gConfig.cSkip*1 + gConfig.offset*1;
 		if (gConfig.cSkip){
-			if (backward>0) htmlBackward = htmlPrefix + '?offset=' 
+			if (backward>=0) htmlBackward = htmlPrefix + '?offset=' 
 				+ backward*1+ '&limit='+gConfig.offset*1
 				+ '"><span style="font-size: 120%">&larr;</span> Newer items</a>';
 			nodeMore.innerHTML = htmlBackward ;

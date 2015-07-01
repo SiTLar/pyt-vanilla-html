@@ -1574,9 +1574,15 @@ function initDoc(){
 					localStorage.removeItem('gMe');
 					location.reload();
 				}
+			if(auth())
+				document.getElementsByTagName("body")[0].appendChild(gNodes['controls-user'].cloneAll());
 			var nodeError = document.createElement('div');
 			nodeError.className = 'error-node';
-			nodeError.innerHTML = oReq.statusText;
+			nodeError.innerHTML = "Error #"+ oReq.status + ': ' + oReq.statusText;
+			try{ 
+				var res = JSON.parse(this.response);
+				nodeError.innerHTML += '<br>'+res.err;
+			}catch(e){};
 			document.getElementsByTagName("body")[0].appendChild(nodeError);
 		}
 

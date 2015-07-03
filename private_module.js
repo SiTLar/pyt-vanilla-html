@@ -55,10 +55,10 @@ CryptoPrivate.prototype = {
 		var caller = this;
 		return new Promise(function(resolve,reject){
 			var token = window.sessionStorage.getItem("crypto_write_token");
-			if(token) return resolve( btoa(openpgp.crypto.hash.sha256(token)));
+			if(token) return resolve( token);
 			caller.requestToken().then(function(){
 				token = window.sessionStorage.getItem("crypto_write_token");
-				return resolve( btoa(openpgp.crypto.hash.sha256(token)));
+				return resolve( token);
 			}, reject);
 		} );
 
@@ -363,7 +363,7 @@ CryptoPrivate.prototype = {
 			}else doReq();
 			function doReq(){
 				token = window.sessionStorage.getItem("crypto_write_token");
-				oReq.setRequestHeader("X-Authentication-Token",btoa(openpgp.crypto.hash.sha256(token)));
+				oReq.setRequestHeader("X-Authentication-Token",token);
 				oReq.setRequestHeader("X-Authentication-User",caller.username);
 				oReq.send(btoa(openpgp.crypto.cfb.encrypt( init,"aes256", JSON.stringify({'prkey':keyPrA,'symkeys':caller.gSymKeys }),caller.password )));
 				window.sessionStorage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys) );

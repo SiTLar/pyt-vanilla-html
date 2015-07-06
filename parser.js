@@ -40,12 +40,10 @@ function unfoldLikes(id){
 
 function writeAllLikes(id,nodeLikes){
 	var post = document.getElementById(id).rawData;
-	var idx;
-	for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
-		if (nodeLikes.childNodes[idx].nodeName == 'UL')break;
+	nodeLikes.innerHTML = '';
 	var nodeLike = document.createElement('li');
 	nodeLike.className = "p-timeline-user-like";
-	for(var like = gConfig.likesFold; like < post.likes.length; like++){
+	for(var like = 0; like < post.likes.length; like++){
 		var nodeCLike = nodeLike.cloneNode();
 		nodeCLike.innerHTML = gUsers[post.likes[like]].link;
 		//nodeLikes.childNodes[idx].appendChild(nodeCLike);
@@ -72,16 +70,15 @@ function genLikes(post, postNBody){
 	}
 	var nodeLike = document.createElement('li');
 	nodeLike.className = "p-timeline-user-like";
-	for (var idx = 0; idx < (gConfig.likesFold<l?gConfig.likesFold:l) ; idx++){
+	post.likes.forEach(function(like){
 		var nodeCLike = nodeLike.cloneNode();
-		nodeCLike.innerHTML = gUsers[post.likes[idx]].link;
+		nodeCLike.innerHTML = gUsers[like].link;
 		nodeLikes.appendChild(nodeCLike);
-	}
+	});
 	var suffix = document.createElement("li");
 	suffix.id = post.id+'-unl' 
-	if (post.omittedLikes>0) l += post.omittedLikes;
-	if ( l > gConfig.likesFold)
-		suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ (l - gConfig.likesFold) +' other people</a>' ;
+	if (post.omittedLikes)
+		suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ post.omittedLikes +' other people</a>' ;
 	suffix.innerHTML += ' liked this';
 	suffix.className = 'nocomma';
 	nodeLikes.appendChild(suffix);
@@ -166,15 +163,25 @@ function draw(content){
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
 		nodeMore.className = 'more-node';
-		var htmlOffset = '<a href="' + gConfig.front+gConfig.timeline ;
+		var htmlPrefix = '<a href="' + gConfig.front+gConfig.timeline ;
+		var htmlForward;
+		var htmlBackward;
+		var fLastPage = (content.posts.length != gConfig.offset);
 		var backward = gConfig.cSkip*1 - gConfig.offset*1;
 		var forward = gConfig.cSkip*1 + gConfig.offset*1;
 		if (gConfig.cSkip){
-			if (backward>0)htmlOffset += '?offset=' + backward*1+ '&limit='+gConfig.offset*1;
-			htmlOffset += '"><span style="font-size: 120%">&larr;</span> Newer items</a>&nbsp;<a href="' + gConfig.front+gConfig.timeline;
-		} 
-		htmlOffset += '?offset=' + forward*1 + '&limit='+gConfig.offset*1+ '">Older items <span style="font-size: 120%">&rarr;</span></a>';
-		nodeMore.innerHTML = htmlOffset;
+			if (backward>=0) htmlBackward = htmlPrefix + '?offset=' 
+				+ backward*1+ '&limit='+gConfig.offset*1
+				+ '"><span style="font-size: 120%">&larr;</span> Newer items</a>';
+			nodeMore.innerHTML = htmlBackward ;
+		}
+		if(!fLastPage){ 
+			htmlForward = htmlPrefix + '?offset=' 
+			+ forward*1 + '&limit='+gConfig.offset*1
+			+'">Older items <span style="font-size: 120%">&rarr;</span></a>';
+			if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
+			nodeMore.innerHTML +=  htmlForward;
+		}
 		body.appendChild(nodeMore.cloneNode(true));
 		document.posts = document.createElement("div");
 		body.appendChild(document.posts);
@@ -1574,9 +1581,15 @@ function initDoc(){
 					localStorage.removeItem('gMe');
 					location.reload();
 				}
+			if(auth())
+				document.getElementsByTagName("body")[0].appendChild(gNodes['controls-user'].cloneAll());
 			var nodeError = document.createElement('div');
 			nodeError.className = 'error-node';
-			nodeError.innerHTML = oReq.statusText;
+			nodeError.innerHTML = "Error #"+ oReq.status + ': ' + oReq.statusText;
+			try{ 
+				var res = JSON.parse(this.response);
+				nodeError.innerHTML += '<br>'+res.err;
+			}catch(e){};
 			document.getElementsByTagName("body")[0].appendChild(nodeError);
 		}
 

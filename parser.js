@@ -429,7 +429,7 @@ function genPost(post){
 	}
 	function gotUser(){
 		if(typeof user !== "undefined"){
-			nodePost.cNodes["avatar"].innerHTML = '<img src=""+ user.profilePictureMediumUrl+"" />';
+			nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 			var title = user.link;
 			if(nodePost.isPrivate) title += "<span> posted privately to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 			else if(post.postedTo){
@@ -452,7 +452,7 @@ function genPost(post){
 			var attsNode = postNBody.cNodes["attachments"];
 			for(var att in post.attachments){
 				var nodeAtt = gNodes["attachment"].cloneAll();
-				nodeAtt.innerHTML = '<a target="_blank" href=""+gAttachments[post.attachments[att]].url+"" border=none ><img src="+gAttachments[post.attachments[att]].thumbnailUrl+"></a>';
+				nodeAtt.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src="'+gAttachments[post.attachments[att]].thumbnailUrl+'"></a>';
 				attsNode.appendChild(nodeAtt);
 			}		
 		}
@@ -612,7 +612,7 @@ function sendAttachment(e){
 				e.target.disabled = false;
 				var attachments = JSON.parse(this.response).attachments;
 				var nodeAtt = gNodes["attachment"].cloneAll();
-				nodeAtt.innerHTML = '<a target="_blank" href=""+attachments.url+"" border=none ><img src="+attachments.thumbnailUrl+"></a>';
+				nodeAtt.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src="'+attachments.thumbnailUrl+'"></a>';
 				nodeSpinner.parentNode.replaceChild(nodeAtt, nodeSpinner);
 				if (typeof(textField.attachments) === "undefined" ) textField.attachments = new Array();
 				textField.attachments.push(attachments.id);

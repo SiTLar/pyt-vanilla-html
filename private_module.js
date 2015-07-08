@@ -232,7 +232,7 @@ CryptoPrivate.prototype = {
 			oReq.open('GET', caller.cfg.srvurl+'?data' );
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
-					var secret 
+					var secret; 
 					try {
 						secret = openpgp.crypto.cfb.decrypt("aes256",caller.password , atob(oReq.response));
 					} catch(e){

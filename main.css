@@ -65,6 +65,7 @@ background: #0199d9;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
 .posts{
+max-width: 50em;
 clear: both;
 }
 .post {

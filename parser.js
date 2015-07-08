@@ -184,6 +184,7 @@ function draw(content){
 		}
 		body.appendChild(nodeMore.cloneNode(true));
 		document.posts = document.createElement("div");
+		document.posts.className = "posts";
 		body.appendChild(document.posts);
 		document.hiddenPosts = new Array();
 		document.hiddenCount = 0;
@@ -1313,11 +1314,14 @@ function ctrlPrivNewUser(nodeSubmit){
 			alert('Passwords must match');
 			return;
 		}
-		document.getElementsByTagName('body')[0].removeChild(node);
-		matrix.register().then( privRegenGrps, 
+		node.cNodes["priv-pass-submit"].disable = true;
+		matrix.register().then(
+			function(){ 
+				document.getElementsByTagName('body')[0].removeChild(node);
+				nodeSubmit.dispatchEvent(new Event('click')); 
+			},
 			function(){new Error("Failed to register on the key sever.");}
 		);
-		nodeSubmit.dispatchEvent(new Event('click'));
 	});
 	node.cNodes["priv-pass-cancel"].addEventListener('click',function(){ document.getElementsByTagName('body')[0].removeChild(node);});
 	document.getElementsByTagName('body')[0].appendChild(node);

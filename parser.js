@@ -156,7 +156,7 @@ function draw(content){
 	if(content.subscribers && content.subscriptions ){	
 		var subscribers = new Object();
 		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
-		content.subscriptions.forEach(function(sub){if(sub.name =='Posts')gFeeds[sub.id] = subscribers[sub.user];});
+		content.subscriptions.forEach(function(sub){if(['Posts', "Directs"].some(function(a){return a == sub.name }))gFeeds[sub.id] = subscribers[sub.user];});
 		if(typeof gMe !== 'undefined') 
 			gFeeds[gMe.users.id] = gMe.users;
 	}
@@ -436,10 +436,11 @@ function genPost(post){
 					title += "<span> posted to: </span>";
 					post.postedTo.forEach(function(id){
 						title += "<a href=" + gConfig.front+ gFeeds[id].username+">"+ gFeeds[id].screenName;
-						if(gFeeds[id].type == 'user')
+						/*if(gFeeds[id].type == 'user')
 							if(gFeeds[id].screenName.slice(-1) == 's')
 								title += "' feed";
 							else title += "'s feed";
+						*/
 						title += '</a>';
 					});
 				}

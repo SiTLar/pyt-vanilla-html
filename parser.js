@@ -166,19 +166,19 @@ function draw(content){
 		var htmlPrefix = '<a href="' + gConfig.front+gConfig.timeline ;
 		var htmlForward;
 		var htmlBackward;
-		var fLastPage = (content.posts.length != gConfig.offset);
+		//var fLastPage = (content.posts.length != gConfig.offset);
 		var backward = gConfig.cSkip*1 - gConfig.offset*1;
 		var forward = gConfig.cSkip*1 + gConfig.offset*1;
 		if (gConfig.cSkip){
 			if (backward>=0) htmlBackward = htmlPrefix + '?offset=' 
 				+ backward*1+ '&limit='+gConfig.offset*1
-				+ '"><span style="font-size: 120%">&larr;</span> Newer items</a>';
+				+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
 			nodeMore.innerHTML = htmlBackward ;
 		}
-		if(!fLastPage){ 
+		/*if(!fLastPage)*/ if(content.posts){ 
 			htmlForward = htmlPrefix + '?offset=' 
 			+ forward*1 + '&limit='+gConfig.offset*1
-			+'">Older items <span style="font-size: 120%">&rarr;</span></a>';
+			+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
 			if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
 			nodeMore.innerHTML +=  htmlForward;
 		}

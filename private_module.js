@@ -1,14 +1,14 @@
-'use strict';
+"use strict";
 /*
-var cfg = {"srvurl":"http://moimosk.ru/cgi/secret?","authurl": gConfig.serverURL,'sk':16 };
+var cfg = {"srvurl":"http://moimosk.ru/cgi/secret?","authurl": gConfig.serverURL,"sk":16 };
 */
 var CryptoPrivate = function(cfg){
 	this.cfg = cfg;
-	if(typeof cfg.authurl === 'undefined' ) throw new Error("authurl is not defined");
+	if(typeof cfg.authurl === "undefined" ) throw new Error("authurl is not defined");
 	var sSymKeys = window.sessionStorage.getItem("crypto_keys");
 	if (sSymKeys != "undefined")if (sSymKeys) var gSymKeys = JSON.parse(window.sessionStorage.getItem("crypto_keys"));
 	if(!this.gSymKeys)this.loadKeys(gSymKeys);
-	var c_login = window.sessionStorage.getItem('crypto_login');
+	var c_login = window.sessionStorage.getItem("crypto_login")
 	if(c_login){
 		c_login = JSON.parse(c_login);	
 		this.password = atob(c_login.password);
@@ -22,21 +22,23 @@ CryptoPrivate.prototype = {
 	cfg: undefined,
 	username: undefined,
 	password: undefined,
-	constants:{'kidlength':btoa(openpgp.crypto.hash.sha256('1')).length},
+	constants:{"kidlength":btoa(openpgp.crypto.hash.sha256("1")).length},
+	pubCache: {},
+	pubQ: {},
 
 	decrypt: function(data){
 		var idL = this.cfg.encId.length;
-		if (data.slice(0,idL) != this.cfg.encId) return {'error':'0'};
-		if(typeof this.decipher === 'undefined') return {'error':'4'};
+		if (data.slice(0,idL) != this.cfg.encId) return {"error":"0"};
+		if(typeof this.decipher === "undefined") return {"error":"4"};
 		var key = this.decipher[data.slice(idL,  this.constants.kidlength+idL)];
-		if(typeof key === 'undefined') return {'error':'3'};
+		if(typeof key === "undefined") return {"error":"3"};
 		return StringView.makeFromBase64(openpgp.crypto.cfb.decrypt("aes256", atob(key), atob(data.slice(idL+this.constants.kidlength) ))).toString();
 
 	},
 	encrypt: function(id, data){
 		var init  = openpgp.crypto.getPrefixRandom("aes256");
 		var key_idx = Math.floor(Math.random()*this.cfg.sk);
-		if (typeof this.gSymKeys[id] === 'undifined') return {'error':'1'};
+		if (typeof this.gSymKeys[id] === "undifined") return {"error":"1"};
 		var sym_key =  atob(this.gSymKeys[id].aKeys[key_idx].key);
 
 		/*var init  = new Uint8Array(16);
@@ -47,16 +49,16 @@ CryptoPrivate.prototype = {
 	},
 	setPassword: function (pass){
 		this.password = openpgp.crypto.hash.sha256(pass);
-		window.sessionStorage.setItem('crypto_login', JSON.stringify({'password':btoa(this.password), 'login':gMe.users.username}));
+		window.sessionStorage.setItem("crypto_login", JSON.stringify({"password":btoa(this.password), "username":gMe.users.username}));
 	},
 	makeToken: function(){
 		var caller = this;
 		return new Promise(function(resolve,reject){
 			var token = window.sessionStorage.getItem("crypto_write_token");
-			if(token) return resolve( btoa(openpgp.crypto.hash.sha256(token)));
+			if(token) return resolve( token);
 			caller.requestToken().then(function(){
 				token = window.sessionStorage.getItem("crypto_write_token");
-				return resolve( btoa(openpgp.crypto.hash.sha256(token)));
+				return resolve( token);
 			}, reject);
 		} );
 
@@ -79,7 +81,7 @@ CryptoPrivate.prototype = {
 		var keyPrA = window.sessionStorage.getItem("key_private");
 		var my_passphrase = ""; // Key Pairs is always protected with a caller.password to safety.
 		return new Promise(function(resolve,reject){
-			if((typeof caller.password === 'undefined')|| (typeof caller.username === 'undefined')){
+			if((typeof caller.password === "undefined")|| (typeof caller.username === "undefined")){
 				reject();
 				return;
 			}
@@ -97,7 +99,7 @@ CryptoPrivate.prototype = {
 					if(oReq.status < 400){
 						var res = JSON.parse(oReq.response);
 						var oReqS = new XMLHttpRequest();
-						oReqS.open("POST", caller.cfg.srvurl+'?register');
+						oReqS.open("POST", caller.cfg.srvurl+"?register");
 						oReqS.onload = function(){
 							if(oReqS.status < 400){ 
 								var msgEnc = openpgp.message.readArmored(oReqS.response);
@@ -108,7 +110,7 @@ CryptoPrivate.prototype = {
 									caller.update().then( resolve()); 
 								});
 								var oReqD = new XMLHttpRequest();
-								oReqD.open('delete',caller.cfg.authurl+'posts/'+res.posts.id);
+								oReqD.open("delete",caller.cfg.authurl+"posts/"+res.posts.id);
 								oReqD.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 								oReqD.send();
 
@@ -120,7 +122,7 @@ CryptoPrivate.prototype = {
 				};
 				
 
-				oReq.open("post",caller.cfg.authurl+'posts' ,true);
+				oReq.open("post",caller.cfg.authurl+"posts" ,true);
 				oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 				oReq.setRequestHeader("Content-type","application/json");
 				var post = new Object();
@@ -137,11 +139,11 @@ CryptoPrivate.prototype = {
 		var caller = this;
 		var arrKeys = new Array(caller.cfg.sk);
 		var id;
-		var grIdRaw = '';
+		var grIdRaw = "";
 		for(var idx = 0; idx < caller.cfg.sk; idx++){
-			var key = openpgp.crypto.generateSessionKey('blowfish');
+			var key = openpgp.crypto.generateSessionKey("blowfish");
 			id = btoa(openpgp.crypto.hash.sha256(key));
-			arrKeys[idx]= {'id':id, 'key':btoa(key)};
+			arrKeys[idx]= {"id":id, "key":btoa(key)};
 			grIdRaw += key;
 		}
 		id = caller.username+"-"+btoa(openpgp.crypto.hash.sha256(grIdRaw));
@@ -149,9 +151,9 @@ CryptoPrivate.prototype = {
 		priv.aKeys = arrKeys;
 		priv.name = new StringView(grName).toBase64();
 		priv.id = id;
-		if (typeof caller.gSymKeys === 'undefined') caller.gSymKeys = new Object();
+		if (typeof caller.gSymKeys === "undefined") caller.gSymKeys = new Object();
 		caller.gSymKeys[id] = priv;
-		if (typeof caller.decipher === 'undefined') caller.decipher = new Object();
+		if (typeof caller.decipher === "undefined") caller.decipher = new Object();
 		priv.aKeys.forEach(function(key){
 			caller.decipher[key.id] = key.key;
 		});
@@ -164,7 +166,7 @@ CryptoPrivate.prototype = {
 		var caller = this;
 		return new Promise(function(resolve,reject){
 			var oReq = new XMLHttpRequest();
-			oReq.open('GET', caller.cfg.srvurl+'?@'+victim);
+			oReq.open("GET", caller.cfg.srvurl+"?@"+victim);
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
 					resolve(oReq.response);
@@ -199,11 +201,11 @@ CryptoPrivate.prototype = {
 	addKeys: function(keys){
 		if (!keys||(keys == "null")) return;
 		var caller = this;
-		if (typeof caller.gSymKeys === 'undefined') caller.gSymKeys = new Object();
+		if (typeof caller.gSymKeys === "undefined") caller.gSymKeys = new Object();
 		console.log(typeof caller.gSymKeys[keys.id]);
 		if((typeof caller.gSymKeys[keys.id]) != "undefined" )return;
 		caller.gSymKeys[keys.id] = keys;
-		if (typeof caller.decipher === 'undefined') caller.decipher = new Object();
+		if (typeof caller.decipher === "undefined") caller.decipher = new Object();
 		keys.aKeys.forEach(function(key){ caller.decipher[key.id] = key.key; });
 		caller.update();
 
@@ -212,7 +214,7 @@ CryptoPrivate.prototype = {
 		if (!keys||(keys == "null")) return;
 		var caller = this;
 		caller.gSymKeys = keys;
-		if (typeof caller.decipher === 'undefined') caller.decipher = new Object();
+		if (typeof caller.decipher === "undefined") caller.decipher = new Object();
 		for(var pid in caller.gSymKeys)
 			caller.gSymKeys[pid].aKeys.forEach(function(key){ caller.decipher[key.id] = key.key; });
 		window.sessionStorage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys));
@@ -222,15 +224,15 @@ CryptoPrivate.prototype = {
 	getUserPriv: function(){
 		var caller = this;
 		return new Promise(function(resolve,reject){
-			if((typeof caller.password === 'undefined')|| (typeof caller.username === 'undefined')){
+			if((typeof caller.password === "undefined")|| (typeof caller.username === "undefined")){
 				reject(-2);
 				return;
 			}
 			var oReq = new XMLHttpRequest();
-			oReq.open('GET', caller.cfg.srvurl+'?data' );
+			oReq.open("GET", caller.cfg.srvurl+"?data" );
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
-					var secret 
+					var secret; 
 					try {
 						secret = openpgp.crypto.cfb.decrypt("aes256",caller.password , atob(oReq.response));
 					} catch(e){
@@ -248,7 +250,72 @@ CryptoPrivate.prototype = {
 			oReq.setRequestHeader("X-Authentication-User",caller.username);
 			oReq.send();
 		});
-	 },
+	},
+	sign: function(data){
+		var caller = this;
+		return new Promise(function(resolve,reject){
+			var keyPrA = window.sessionStorage.getItem("key_private");
+			if(!keyPrA) {
+				caller.getUserPriv().then(function(){caller.requestToken( resolve,reject)},reject);
+				return;
+			}
+			var sign = new openpgp.packet.Signature();
+			sign.signatureType = openpgp.enums.signature.text;
+			sign.hashAlgorithm = openpgp.config.prefer_hash_algorithm;
+			var pLit = new openpgp.packet.Literal();
+			pLit.setText( new StringView(data).toBase64());
+			keyPrA = openpgp.key.readArmored(keyPrA);
+			var pSignKey = keyPrA.keys[0].getSigningKeyPacket();
+			sign.publicKeyAlgorithm = pSignKey.algorithm;
+			sign.sign(pSignKey,pLit);
+			resolve(btoa(sign.write()));
+		});
+	},
+	verify: function(data, txtSign, username){
+		var caller = this;
+		return new Promise(function(resolve,reject){
+			var keyPub;
+			function gotUser(){
+				var sign = new openpgp.packet.Signature();
+				var binSign = atob(txtSign);
+				var pLit = new openpgp.packet.Literal();
+				pLit.setText( new StringView(data).toBase64());
+				sign.read(binSign,0,binSign.length);
+				var pKey = keyPub.keys[0].getKeyPacket([sign.issuerKeyId]);
+				if(!pKey)return reject();
+				if (!sign.verify(pKey, pLit))return reject();
+				resolve();
+			}
+			if (caller.pubCache[username]){
+				keyPub = caller.pubCache[username];
+				gotUser();
+			} else if(caller.pubQ[username]) caller.pubQ[username].then(
+				function(){
+					keyPub = caller.pubCache[username];
+					gotUser();
+				},reject);
+			else{
+				caller.pubQ[username] = new Promise(function(resolveP, rejectP){
+					caller.getUserPub(username).then(function(res){
+						keyPub = openpgp.key.readArmored(res);
+						caller.pubCache[username] = keyPub;
+						gotUser();
+						resolve();
+						resolveP();
+					},function(){
+						reject();
+						rejectP();
+
+					});
+				});
+			}
+		});
+		
+	},
+	mkOwnToken: function(data){
+		if (typeof this.password === "undefined") return null;
+		return btoa(openpgp.crypto.hash.sha256(this.password+data));
+	},
 	requestToken: function(){
 		var caller = this;
 		return new Promise(function(resolve,reject){
@@ -258,7 +325,7 @@ CryptoPrivate.prototype = {
 				return;
 			}
 			var oReq = new XMLHttpRequest();
-			oReq.open('GET', caller.cfg.srvurl+'?token' );
+			oReq.open("GET", caller.cfg.srvurl+"?token" );
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
 					var msgEnc = openpgp.message.readArmored(oReq.response);
@@ -278,13 +345,13 @@ CryptoPrivate.prototype = {
 		var caller = this;
 		var keyPrA = window.sessionStorage.getItem("key_private");
 		return new Promise(function(resolve,reject){
-			if((typeof caller.password === 'undefined')|| (typeof caller.username === 'undefined')){
+			if((typeof caller.password === "undefined")|| (typeof caller.username === "undefined")){
 				reject();
 				return;
 			}
 			var init  = openpgp.crypto.getPrefixRandom("aes256");
 			var oReq = new XMLHttpRequest();
-			oReq.open("POST", caller.cfg.srvurl+'?update' );
+			oReq.open("POST", caller.cfg.srvurl+"?update" );
 			oReq.onload = function(){
 				if(oReq.status < 400){ 
 						resolve();
@@ -296,9 +363,9 @@ CryptoPrivate.prototype = {
 			}else doReq();
 			function doReq(){
 				token = window.sessionStorage.getItem("crypto_write_token");
-				oReq.setRequestHeader("X-Authentication-Token",btoa(openpgp.crypto.hash.sha256(token)));
+				oReq.setRequestHeader("X-Authentication-Token",token);
 				oReq.setRequestHeader("X-Authentication-User",caller.username);
-				oReq.send(btoa(openpgp.crypto.cfb.encrypt( init,"aes256", JSON.stringify({'prkey':keyPrA,'symkeys':caller.gSymKeys }),caller.password )));
+				oReq.send(btoa(openpgp.crypto.cfb.encrypt( init,"aes256", JSON.stringify({"prkey":keyPrA,"symkeys":caller.gSymKeys }),caller.password )));
 				window.sessionStorage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys) );
 			}
 		});

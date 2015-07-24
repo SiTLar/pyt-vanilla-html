@@ -452,7 +452,15 @@ function genPost(post){
 			var attsNode = postNBody.cNodes["attachments"];
 			for(var att in post.attachments){
 				var nodeAtt = gNodes["attachment"].cloneAll();
-				nodeAtt.innerHTML = '<a target="_blank" href="'+gAttachments[post.attachments[att]].url+'" border=none ><img src="'+gAttachments[post.attachments[att]].thumbnailUrl+'"></a>';
+				var oAtt = gAttachments[post.attachments[att]];
+				switch(oAtt.mediaType){
+				case "image":
+					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
+					break;
+				case "audio":
+					nodeAtt.innerHTML = '<audio src="'+oAtt.url+'" controls></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					break;
+				}
 				attsNode.appendChild(nodeAtt);
 			}		
 		}
@@ -541,6 +549,7 @@ function newPost(e){
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 	textField.disabled = true;
 	e.target.disabled = true;
+	e.target.parentNode.replaceChild(gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 	if(textField.pAtt)textField.pAtt.then(send);
 	else send();
 	function send(){
@@ -672,6 +681,9 @@ function postEditedPost(e){
 	post.updatedAt = Date.now();
 	var postdata = new Object();
 	postdata.post = post;
+	e.target.parentNode.parentNode.cNodes["edit-txt-area"].disabled = true;
+
+	e.target.parentNode.replaceChild(gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 	var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value;
 	if(nodePost.isPrivate){ 
 		oReq.open("put",matrix.cfg.srvurl+"?edit", true);
@@ -849,6 +861,8 @@ function postEditComment(e){
 	var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
 	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
+	e.target.disabled = true;
+	e.target.parentNode.replaceChild(gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 	if(nodePost.isPrivate){
 		sendEditedPrivateComment(textField, nodeComment, nodePost);
 		return;
@@ -897,6 +911,8 @@ function cancelNewComment(e){
 
 }
 function postNewComment(e){
+	e.target.disabled = true;
+	e.target.parentNode.replaceChild(gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 	sendComment(e.target.parentNode.previousSibling);
 	var nodeComments =e.target; do nodeComments = nodeComments.parentNode; while(nodeComments.className != "comments");
 	nodeComments.cnt++;
@@ -953,6 +969,13 @@ function doDeleteComment(but){
 		oReq.setRequestHeader("Content-type","application/json");
 		oReq.send();
 	}
+}
+function getUsername(e){
+	var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
+	if (typeof nodeComment.username === 'unfrdined') return;
+	var nodePost = nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
+	var textField = nodePost.getElementsByTagName('textarea')[0];
+	textField.value += "@" + nodeComment.username;
 }
 function sendPrivateComment( textField, nodeComment, nodePost){
 	textField.disabled = true;
@@ -1066,6 +1089,7 @@ function genComment(comment){
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof cUser !== "undefined"){
 		nodeSpan.innerHTML += " - " + cUser.link ;
+		nodeComment.username = cUser.username;
 		if(typeof gMe !== "undefined") 
 			if(cUser.id == gMe.users.id) 
 				nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
@@ -1098,10 +1122,16 @@ function genComment(comment){
 function addLastCmtButton(postNBody){
 	if (postNBody.lastCmtButton == true)return;
 	var aAddComment = document.createElement("a");
+	var aIcon = document.createElement("a");
 	aAddComment.className = "post-control-comment";
-	aAddComment.innerHTML = "Comment";
+	aIcon.className = "fa-stack fa-1x";
+	aIcon.innerHTML = '<i class="fa fa-comment-o fa-stack-1x"></i>'
+	+'<i class="fa fa-square fa-inverse fa-stack-1x" style="left: 3px; top: 3px; font-size: 60%"></i>'
+	+'<i class="fa fa-plus fa-stack-1x" style="left: 3px; top: 3px; font-size: 60%"></i>';
+	aAddComment.innerHTML  = "Add comment";
 	aAddComment.addEventListener("click",addComment);
-	postNBody.appendChild( aAddComment);
+	postNBody.appendChild(aIcon);
+	postNBody.appendChild(aAddComment );
 	postNBody.lastCmtButton = true;
 }
 function unfoldComm(id){
@@ -1545,7 +1575,7 @@ function frfAutolinker( autolinker,match ){
 	case "twitter":
 		return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + "</a>" ;
 	case "url":
-		if( match.getUrl().indexOf("m.freefeed.net") != -1 ) return true;
+		if( match.getUrl().indexOf(".freefeed.net") != -1 ) return true;
 		else if( match.getUrl().indexOf("freefeed.net") != -1 ) {
 		    match.url = match.url.replace("freefeed.net","m.freefeed.net","gm");
                     var tag = autolinker.getTagBuilder().build( match );  

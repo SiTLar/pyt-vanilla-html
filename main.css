@@ -65,7 +65,7 @@ background: #0199d9;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
 .posts{
-max-width: 50em;
+max-width: 500px;
 clear: both;
 }
 .post {
@@ -77,21 +77,28 @@ clear: both;
 .avatar{
 float: left;
        line-height: 0;
+       margin-right: 10px;
+       margin-bottom: 5px;
 }
 .title a{
 color: #000088;
        font-weight: bold;
 }
 .post-body {
-	margin-left: 63px;
 color: #666;
        line-height: 19px;
+}
+@media (min-width: 400px) {
+	.post-body {
+		margin-left: 63px;
+	}
 }
 .post-body a {
 color: #555599;
 }
  .attachments {
 	margin-bottom: 3px;
+clear: both;
 overflow: hidden;
 }
 .attachment {

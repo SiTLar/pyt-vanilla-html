@@ -65,7 +65,7 @@ var templates =  {"nodes": [
 	{"c":"attachment"},
 	{"c":"comment",
 	"children":[
-		{"c":"comment-date","e":{"mouseover":"calcCmtTime"},
+		{"c":"comment-date","e":{"mouseover":"calcCmtTime", "click":"getUsername"},
 		"children":[
 			{"c":"date","t":"a",
 				"children":[
@@ -203,9 +203,14 @@ var templates =  {"nodes": [
 	]}
 	,{"c":"priv-new-user"
 	,"children":[
-		,{"t":"p", "txt": "Please confirm the password<br>There is no way to recover it later"}
+		{"t":"p", "txt": "Please confirm the password<br>There is no way to recover it later"}
 		,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
 		,{"c":"priv-pass-submit", "t":"button", "txt":"OK"}
 		,{"c":"priv-pass-cancel", "t":"button", "txt":"Cancel" }
 	]}
-]};
+	,{"c":"spinner","t":"span"
+	,"children":[
+		{"c":"fa fa-spinner fa-pulse","t":"i"}
+	]}
+]}
+		

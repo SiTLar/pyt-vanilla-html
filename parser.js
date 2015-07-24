@@ -549,7 +549,7 @@ function newPost(e){
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 	textField.disabled = true;
 	e.target.disabled = true;
-	e.target.parentNode.replaceChild(gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
+	var nodeSpinner = e.target.parentNode.appendChild(gNodes["spinner"].cloneNode(true));
 	if(textField.pAtt)textField.pAtt.then(send);
 	else send();
 	function send(){
@@ -570,6 +570,7 @@ function newPost(e){
 				textField.disabled = false;
 				e.target.disabled = false;
 				textField.style.height  = "4em";
+				e.target.parentNode.removeChild(nodeSpinner);
 				var res = JSON.parse(this.response);
 				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
 				document.posts.insertBefore(genPost(res.posts), document.posts.childNodes[0]);

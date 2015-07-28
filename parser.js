@@ -157,8 +157,6 @@ function draw(content){
 		var subscribers = new Object();
 		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
 		content.subscriptions.forEach(function(sub){if(["Posts", "Directs"].some(function(a){return a == sub.name }))gFeeds[sub.id] = subscribers[sub.user];});
-		if(typeof gMe !== "undefined") 
-			gFeeds[gMe.users.id] = gMe.users;
 	}
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
@@ -458,7 +456,7 @@ function genPost(post){
 					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
 					break;
 				case "audio":
-					nodeAtt.innerHTML = '<audio src="'+oAtt.url+'" controls></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.innerHTML = '<audio controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
 					break;
 				}
 				attsNode.appendChild(nodeAtt);
@@ -573,6 +571,12 @@ function newPost(e){
 				e.target.parentNode.removeChild(nodeSpinner);
 				var res = JSON.parse(this.response);
 				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
+				if (res.subscriptions) {
+				
+					var subscribers = new Object();
+					res.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
+					res.subscriptions.forEach(function(sub){if(["Posts", "Directs"].some(function(a){return a == sub.name }))gFeeds[sub.id] = subscribers[sub.user];});
+				}
 				document.posts.insertBefore(genPost(res.posts), document.posts.childNodes[0]);
 			}
 		};
@@ -993,10 +997,12 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 					"user":cpost.payload.author,
 					"id":res.posts.id
 					};
-			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment).sign = cpost.sign;
 			gComments[comment.id] = comment;
 			textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
+			var nodeNewComment = genComment(comment);
+			nodeNewComment.sign = cpost.sign;
+			nodeComment.parentNode.replaceChild(nodeNewComment,nodeComment);
 		}
 	};
 
@@ -1024,6 +1030,7 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 function sendComment(textField){
 	var nodeComment =textField; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
 	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
+	nodePost.cNodes["post-body"].isBeenCommented = false;
 	if(nodePost.isPrivate){
 		sendPrivateComment(textField, nodeComment, nodePost);
 		return;
@@ -1042,10 +1049,10 @@ function sendComment(textField){
 			textField.value = "";
 			textField.style.height = "4em";
 			var comment = JSON.parse(this.response).comments;
-			nodeComment.parentNode.insertBefore(genComment(comment),nodeComment);
 			gComments[comment.id] = comment;
 			textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
+			nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
 		}
 	};
 

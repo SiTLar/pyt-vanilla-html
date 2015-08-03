@@ -458,7 +458,7 @@ function genPost(post){
 					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
 					break;
 				case "audio":
-					nodeAtt.innerHTML = '<audio controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.innerHTML = '<audio preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
 					break;
 				}
 				attsNode.appendChild(nodeAtt);

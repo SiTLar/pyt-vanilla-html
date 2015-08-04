@@ -187,16 +187,18 @@ function draw(content){
 		document.hiddenPosts = new Array();
 		document.hiddenCount = 0;
 		var idx = 0;
-		content.posts.forEach(function(post){
-			post.idx = idx++;
-			if(post.isHidden){
-				document.hiddenPosts.push(post);
-				document.hiddenCount++;
-			}else{ 
-				document.hiddenPosts.push(false);
-				document.posts.appendChild(genPost(post));
-			} 
-		});
+		if (content.posts){
+			content.posts.forEach(function(post){
+				post.idx = idx++;
+				if(post.isHidden){
+					document.hiddenPosts.push(post);
+					document.hiddenCount++;
+				}else{ 
+					document.hiddenPosts.push(false);
+					document.posts.appendChild(genPost(post));
+				} 
+			});
+		}
 		var nodeShowHidden = gNodes["show-hidden"].cloneAll();
 		nodeShowHidden.cNodes["href"].action = true;
 		body.appendChild(nodeShowHidden);
@@ -220,7 +222,7 @@ function draw(content){
 	
 }
 function addPosts(drop, toAdd, offset){
-	var url = matrix.cfg.srvurl + "/posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
+	var url = matrix.cfg.srvurl + "posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(oReq.status < 400){
@@ -246,7 +248,7 @@ function addPosts(drop, toAdd, offset){
 }
 function doPrivComments(drop){
 	var limit = 100;
-	var url = matrix.cfg.srvurl + "/cmts?limit="+limit;
+	var url = matrix.cfg.srvurl + "cmts?limit="+limit;
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		var arrComPr = new Array(); 
@@ -456,7 +458,7 @@ function genPost(post){
 					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
 					break;
 				case "audio":
-					nodeAtt.innerHTML = '<audio controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.innerHTML = '<audio preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
 					break;
 				}
 				attsNode.appendChild(nodeAtt);
@@ -583,7 +585,7 @@ function newPost(e){
 		if(textField.attachments) post.attachments = textField.attachments;
 		postdata.post = post;
 		if(postTo.isPrivate){ 
-			oReq.open("post",matrix.cfg.srvurl+"?post", true);
+			oReq.open("post",matrix.cfg.srvurl+"post", true);
 			oReq.setRequestHeader("x-content-type", "post"); 
 			oReq.setRequestHeader("Content-type","text/plain");
 			oReq.onload = onload;
@@ -599,7 +601,8 @@ function newPost(e){
 				oReq.setRequestHeader("x-content-token", token); 
 				post = matrix.encrypt(postTo.feeds, 
 					JSON.stringify({"payload":payload,"sign":sign}));
-				oReq.send(post);
+				oReq.setRequestHeader("Content-type","application/json");
+				oReq.send(JSON.stringify({"d":post}));
 			},function(){console.log("Failed to sign")});
 		}else{
 			oReq.open("post",gConfig.serverURL + "posts", true);
@@ -691,9 +694,9 @@ function postEditedPost(e){
 	e.target.parentNode.replaceChild(gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 	var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value;
 	if(nodePost.isPrivate){ 
-		oReq.open("put",matrix.cfg.srvurl+"?edit", true);
+		oReq.open("put",matrix.cfg.srvurl+"edit", true);
 		oReq.setRequestHeader("x-content-type", "post"); 
-		oReq.setRequestHeader("Content-type","text/plain");
+		oReq.setRequestHeader("Content-type","application/json");
 		//oReq.onload = onload;
 		var payload =  {
 			"feed":nodePost.feed, 
@@ -709,7 +712,7 @@ function postEditedPost(e){
 			oReq.setRequestHeader("x-content-id",nodePost.id); 
 			post = matrix.encrypt(nodePost.feed, 
 				JSON.stringify({"payload":payload,"sign":sign}));
-			oReq.send(post);
+			oReq.send(JSON.stringify({"d":post}));
 		},function(){console.log("Failed to sign")});
 	}else{
 		post.body =  text;
@@ -733,7 +736,7 @@ function doDeletePost(but){
 		}
 	};
 	if(victim.isPrivate){ 
-		oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
+		oReq.open("delete",matrix.cfg.srvurl+"delete",true);
 		oReq.setRequestHeader("x-content-id", victim.id); 
 		oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(victim.sign)); 
 		oReq.setRequestHeader("x-content-type", "post"); 
@@ -838,8 +841,8 @@ function sendEditedPrivateComment(textField, nodeComment, nodePost){
 		}
 	};
 
-	oReq.open("put",matrix.cfg.srvurl+"?edit", true);
-	oReq.setRequestHeader("Content-type","text/plain");
+	oReq.open("put",matrix.cfg.srvurl+"edit", true);
+	oReq.setRequestHeader("Content-type","application/json");
 	var post = new Object();
 	var payload =  {
 		"id":nodePost.feed,
@@ -857,7 +860,7 @@ function sendEditedPrivateComment(textField, nodeComment, nodePost){
 		oReq.setRequestHeader("x-content-token", token); 
 		post = matrix.encrypt(nodePost.feed, 
 			JSON.stringify({"payload":payload,"sign":sign}));
-		oReq.send(post);
+		oReq.send(JSON.stringify({"d":post}));
 	},function(){console.log("Failed to sign")});
 
 
@@ -963,7 +966,7 @@ function doDeleteComment(but){
 		}
 	};
 	if(nodePost.isPrivate){ 
-		oReq.open("delete",matrix.cfg.srvurl+"?delete",true);
+		oReq.open("delete",matrix.cfg.srvurl+"delete",true);
 		oReq.setRequestHeader("x-content-id", nodeComment.id); 
 		oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodeComment.sign)); 
 		oReq.setRequestHeader("x-content-type", "comment"); 
@@ -1006,8 +1009,8 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 		}
 	};
 
-	oReq.open("post",matrix.cfg.srvurl+"?post", true);
-	oReq.setRequestHeader("Content-type","text/plain");
+	oReq.open("post",matrix.cfg.srvurl+"post", true);
+	oReq.setRequestHeader("Content-type","application/json");
 	var post = new Object();
 	var payload =  {
 		"id":nodePost.feed,
@@ -1023,7 +1026,7 @@ function sendPrivateComment( textField, nodeComment, nodePost){
 		oReq.setRequestHeader("x-content-token", token); 
 		post = matrix.encrypt(nodePost.feed, 
 			JSON.stringify({"payload":payload,"sign":sign}));
-		oReq.send(post);
+		oReq.send(JSON.stringify({"d":post}));
 	},function(){console.log("Failed to sign")});
 
 }
@@ -1153,6 +1156,7 @@ function unfoldComm(id){
 			postUpd.users.forEach(addUser);
 			document.getElementById(id).rawData = post;
 			var nodePB = document.getElementById(id).cNodes["post-body"];
+			nodePB.isBeenCommented = false;
 			nodePB.removeChild(nodePB.cNodes["comments"]);
 			nodePB.cNodes["comments"] = document.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";
@@ -1352,7 +1356,7 @@ function ctrlPrivNewUser(nodeSubmit){
 			alert("Passwords must match");
 			return;
 		}
-		node.cNodes["priv-pass-submit"].disable = true;
+		node.cNodes["priv-pass-submit"].disabled = true;
 		matrix.register().then(
 			function(){ 
 				document.getElementsByTagName("body")[0].removeChild(node);
@@ -1510,15 +1514,17 @@ function genPostTo(victim){
 	victim.cNodes["new-post-feed-select"].appendChild(option);
 	var groups = document.createElement("optgroup");
 	groups.label = "Public groups";
-	gMe.subscribers.forEach(function(sub){
-		if(sub.type == "group"){
-			option = document.createElement("option");
-			option.value = sub.username;
-			option.innerHTML = sub.screenName;
-			groups.appendChild(option);
-		}
-	
-	});
+	if (gMe.subscribers){
+		gMe.subscribers.forEach(function(sub){
+			if(sub.type == "group"){
+				option = document.createElement("option");
+				option.value = sub.username;
+				option.innerHTML = sub.screenName;
+				groups.appendChild(option);
+			}
+		});
+		
+	};
 	if (groups.childNodes.length > 0 )
 		victim.cNodes["new-post-feed-select"].appendChild(groups);
 	groups = document.createElement("optgroup");

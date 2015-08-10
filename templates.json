@@ -11,7 +11,8 @@ var templates =  {"nodes": [
 			"children":[
 				{"c":"post-controls",
 				"children":[
-					{"c":"post-date","t":"span"}
+					{"c":"post-lock","t":"span"}
+					,{"c":"post-date","t":"span"}
 				]},
 				{"c":"likes"}
 			]},

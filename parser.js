@@ -358,7 +358,7 @@ function postHide(e){
 }
 function updateDate(node){
 	node.innerHTML =  relative_time(node.date);
-	window.setTimeout(updateDate, 5000, node );
+	window.setTimeout(updateDate, 30000, node );
 }
 function drawPrivateComment(post) {
 	return new Promise(function(resolve,reject){
@@ -428,11 +428,16 @@ function genPost(post){
 		}else gotUser();
 	}
 	function gotUser(){
+		nodePost.gotLock  = false;
 		if(typeof user !== "undefined"){
 			nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 			var title = user.link;
-			if(nodePost.isPrivate) title += "<span> posted privately to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
+			if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 			else if(post.postedTo){
+				post.postedTo.forEach(function(id){ 
+					if (gFeeds[id].isPrivate == "1")
+						nodePost.gotLock = true; 
+				});
 				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
 					title += "<span> posted to: </span>";
 					post.postedTo.forEach(function(id){
@@ -448,6 +453,8 @@ function genPost(post){
 			}
 			postNBody.cNodes["title"].innerHTML = title;
 		}
+		if(nodePost.gotLock == true)
+			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-lock"].innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
 		if(post.attachments){
 			var attsNode = postNBody.cNodes["attachments"];
 			for(var att in post.attachments){
@@ -458,7 +465,8 @@ function genPost(post){
 					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
 					break;
 				case "audio":
-					nodeAtt.innerHTML = '<audio controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.innerHTML = '<audio style="height:40" preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.className = "att-audio";
 					break;
 				}
 				attsNode.appendChild(nodeAtt);

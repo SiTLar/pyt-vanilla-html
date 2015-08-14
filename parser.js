@@ -1749,6 +1749,7 @@ function frfAutolinker( autolinker,match ){
 	switch (match.getType()){
 	case "twitter":
 		return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + "</a>" ;
+	/*
 	case "url":
 		if( match.getUrl().indexOf(".freefeed.net") != -1 ) return true;
 		else if( match.getUrl().indexOf("freefeed.net") != -1 ) {
@@ -1759,6 +1760,8 @@ function frfAutolinker( autolinker,match ){
                 } else {
                     return true;  
                 }		
+
+	*/
 	default:
 		return true;
 	}

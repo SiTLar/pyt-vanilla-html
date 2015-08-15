@@ -1,8 +1,11 @@
 var templates =  {"nodes": [
 	{"c":"post",
 	"children":[
-		{"c":"avatar"},
-		{"c":"post-body",
+		{"c":"avatar",
+		"children":[
+			{"c":"avatar-h","t":"a","e":{"click":"genUserPopup"}}
+		]}
+		,{"c":"post-body",
 		"children":[
 			{"c":"title"},
 			{"c":"post-cont"},
@@ -11,7 +14,8 @@ var templates =  {"nodes": [
 			"children":[
 				{"c":"post-controls",
 				"children":[
-					{"c":"post-date","t":"span"}
+					{"c":"post-lock","t":"span"}
+					,{"c":"post-date","t":"span"}
 				]},
 				{"c":"likes"}
 			]},
@@ -19,7 +23,7 @@ var templates =  {"nodes": [
 		] }
 	]
 	},
-	
+
 	{"c":"private",
 	"children":[
 		{"c":"priv-body"}
@@ -33,7 +37,10 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-my","t":"a","txt":"my discussions","e":{"mousedown":"my"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-priv","t":"a","txt":"","e":{"click":"ctrlPriv"}},
+		{"c":"user-my","t":"a","txt":"direct messages","e":{"mousedown":"directs"}},
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-priv","t":"a","txt":"privates","e":{"click":"ctrlPriv"}},
+		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
 	]
 	},
@@ -65,7 +72,7 @@ var templates =  {"nodes": [
 	{"c":"attachment"},
 	{"c":"comment",
 	"children":[
-		{"c":"comment-date","e":{"mouseover":"calcCmtTime", "click":"getUsername"},
+		{"c":"comment-date","e":{"mouseover":"calcCmtTime", "click":"genUserPopup"},
 		"children":[
 			{"c":"date","t":"a",
 				"children":[
@@ -98,7 +105,7 @@ var templates =  {"nodes": [
 			{"t":"span", "txt":"Post to:"},
 			{"c":"new-post-feeds","t":"ul",
 			"children":[
-				{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":"newPostRemoveFeed"} }	
+				{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":"newPostRemoveFeed"} }
 			]},
 			{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":"newPostSelect"}  },
 			{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":"newPostAddFeed"} }
@@ -111,6 +118,13 @@ var templates =  {"nodes": [
 			{"c":"edit-buttons-upload","t":"input","p":{"type":"file","accept":"image/*" }, "e":{"change":"sendAttachment" }}
 			,{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":"newPost"}}
 		]}
+	]},
+	{"c":"new-direct-to",
+	"children":[
+		{"t":"span", "txt":"Direct message to:"},
+		{"c":"new-post-feeds","t":"ul"},
+		{"c":"new-direct-input", "t": "input","e":{"input":"newDirectInp", "keyup":"newDirectInp"}  },
+		{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":"newDirectAddFeed"} }
 	]},
 	{"c":"likes-smile","t":"span",
 	"children":[
@@ -212,5 +226,26 @@ var templates =  {"nodes": [
 	,"children":[
 		{"c":"fa fa-spinner fa-pulse","t":"i"}
 	]}
+	,{"c":"user-popup","e":{"mouseleave":"destroy"}
+	,"children":[
+		{"c":"up-close","e":{"click":"upClose"}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"up-avatar"}
+		,{"c":"up-info"}
+	]}
+	,{"c":"up-controls"
+	,"children":[
+		{"c":"up-s","t":"a", "e":{"click":"subscribe"}}
+		,{"c":"spacer","t":"span","txt":"&mdash;"}
+		,{"c":"up-d","t":"a", "txt":"Direct"}
+		,{"c":"spacer","t":"span","txt":"&mdash;"}
+		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
+
+	]}
 ]}
-		
+

@@ -1,15 +1,15 @@
 var gConfig = {
-  "serverURL":"https://moimosk.ru/v1/"
-, "front":"https://moimosk.ru/frf/"
-, "static":"https://moimosk.ru/static/"
+  "serverURL":"https://micropeppa.freefeed.net/v1/"
+, "front":"https://moimosk.ru/Frf_dev/"
+, "static":"https://freefeed.net/"
 , "offset":"30"
 , "likesFold":4
 
-};
+}
 var gCryptoPrivateCfg = {
-  "srvurl":"https://moimosk.ru/cgi/secret"
+  "srvurl":"https://moimosk.ru/secret/"
 , "mul":10
-, "authurl": "https://moimosk.ru/v1/"
+, "authurl": "https://micropeppa.freefeed.net/v1/"
 , "sk":16 
 , "encId":"MATRIX" 
 , "feed":"crypto-matrix" 

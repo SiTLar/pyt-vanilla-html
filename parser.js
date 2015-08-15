@@ -99,8 +99,24 @@ function addUser (user){
 	if (typeof gUsers[user.id] !== "undefined" ) return;
 	user.link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+"</a>";
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
+	user.friend = false;
 	gUsers[user.id] = user;
 	gUsers.byName[user.username] = user;
+}
+function reqSubscription(e){
+	var oReq = new XMLHttpRequest();
+	oReq.open("post", gConfig.serverURL +"users/"+gConfig.timeline+"/sendRequest/", true);
+	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.onload = function(){
+		if(oReq.status < 400) {
+			var span = document.createElement("span");
+			span.innerHTML = "Request sent";
+			e.target.parentNode.repalceChild(span, e.target);
+		}
+	}
+
+	oReq.send();
+
 }
 function subscribe(e){
 	var oReq = new XMLHttpRequest();
@@ -126,13 +142,21 @@ function draw(content){
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	body.appendChild(title);
+	gConfig.cTxt = null;
 	if(typeof gMe === "undefined") 
 		body.appendChild(gNodes["controls-anon"].cloneAll());
 	else{ 
 		body.appendChild(gNodes["controls-user"].cloneAll());
+		
 		switch (gConfig.timeline.split("/")[0]){
-		case "home":
 		case "filter":
+			if (gConfig.timeline.split("/")[1] == "direct"){
+				var nodeAddPost = gNodes["new-post"].cloneAll();
+				body.appendChild(nodeAddPost);
+				genDirectTo(nodeAddPost);
+				break;
+			}
+		case "home":
 		case gMe.users.username:
 			var nodeAddPost = gNodes["new-post"].cloneAll();
 			body.appendChild(nodeAddPost);
@@ -145,18 +169,37 @@ function draw(content){
 			gMe.subscriptions.forEach(function(sub){
 				if(sub.name =="Posts")feeds[subscribers[sub.user].username] = true;
 			});
-			var subscribed = feeds[gConfig.timeline]?true:false
+			var subscribed = feeds[gConfig.timeline]?true:false;
 			var sub = document.createElement("a");
 			sub.innerHTML = subscribed?"Unsubscribe":"Subscribe";
 			sub.subscribed = subscribed;
-			sub.addEventListener("click", subscribe);
+			if (!subscribed && gUsers.byName[gConfig.timeline].isPrivate ){
+				if (gMe.requests.some(function(a){return a.username == gConfig.timeline})){
+					sub = document.createElement("span");
+					sub.innerHTML = "Subscription request sent";
+				}else{
+					sub.innerHTML = "Request subscription";
+					sub.addEventListener("click", reqSubscription);
+				}
+			}else sub.addEventListener("click", subscribe);
 			body.appendChild(sub);
+		}
+		var mysubscribers = new Object();
+		if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
+			gMe.subscribers.forEach(function(sub){mysubscribers[sub.id]=sub;});
+			gMe.subscriptions.forEach(function(sub){
+				if("Posts" == sub.name )if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
+			});
 		}
 	}
 	if(content.subscribers && content.subscriptions ){	
 		var subscribers = new Object();
 		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
-		content.subscriptions.forEach(function(sub){if(["Posts", "Directs"].some(function(a){return a == sub.name }))gFeeds[sub.id] = subscribers[sub.user];});
+		content.subscriptions.forEach(function(sub){
+			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
+				gFeeds[sub.id] = subscribers[sub.user];
+			}
+		});
 	}
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
@@ -358,7 +401,7 @@ function postHide(e){
 }
 function updateDate(node){
 	node.innerHTML =  relative_time(node.date);
-	window.setTimeout(updateDate, 5000, node );
+	window.setTimeout(updateDate, 30000, node );
 }
 function drawPrivateComment(post) {
 	return new Promise(function(resolve,reject){
@@ -428,11 +471,17 @@ function genPost(post){
 		}else gotUser();
 	}
 	function gotUser(){
+		nodePost.gotLock  = false;
 		if(typeof user !== "undefined"){
-			nodePost.cNodes["avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+			nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+			nodePost.cNodes["avatar"].cNodes["avatar-h"].userid = user.id;
 			var title = user.link;
-			if(nodePost.isPrivate) title += "<span> posted privately to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
+			if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 			else if(post.postedTo){
+				post.postedTo.forEach(function(id){ 
+					if (gFeeds[id].isPrivate == "1")
+						nodePost.gotLock = true; 
+				});
 				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
 					title += "<span> posted to: </span>";
 					post.postedTo.forEach(function(id){
@@ -448,6 +497,8 @@ function genPost(post){
 			}
 			postNBody.cNodes["title"].innerHTML = title;
 		}
+		if(nodePost.gotLock == true)
+			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-lock"].innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
 		if(post.attachments){
 			var attsNode = postNBody.cNodes["attachments"];
 			for(var att in post.attachments){
@@ -458,7 +509,8 @@ function genPost(post){
 					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
 					break;
 				case "audio":
-					nodeAtt.innerHTML = '<audio preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.innerHTML = '<audio style="height:40" preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.className = "att-audio";
 					break;
 				}
 				attsNode.appendChild(nodeAtt);
@@ -800,6 +852,7 @@ function genEditNode(post,cancel){
 	var nodeEdit = gNodes["edit"].cloneAll();
 	nodeEdit.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click",post);
 	nodeEdit.cNodes["edit-buttons"].cNodes["edit-buttons-cancel"].addEventListener("click",cancel);
+	gConfig.cTxt = nodeEdit.cNodes["edit-txt-area"];
 	return nodeEdit;
 }
 function addComment(e){
@@ -808,6 +861,7 @@ function addComment(e){
 	postNBody.isBeenCommented = true;
 	var nodeComment = gNodes["comment"].cloneAll();
 	nodeComment.cNodes["comment-body"].appendChild(genEditNode(postNewComment,cancelNewComment));
+	nodeComment.userid = gMe.users.id;
 	postNBody.cNodes["comments"].appendChild(nodeComment);
 	nodeComment.getElementsByClassName("edit-txt-area")[0].focus();
 }
@@ -902,6 +956,7 @@ function cancelEditComment(e){
 	 nodeComment.parentNode.replaceChild(genComment( gComments[nodeComment.id]),nodeComment);
 };
 function processText(e) {
+	gConfig.cTxt = e.target;
 	if (e.target.scrollHeight > e.target.clientHeight) 
 		e.target.style.height = e.target.scrollHeight + "px";
 	if (e.which == "13"){
@@ -979,11 +1034,9 @@ function doDeleteComment(but){
 	}
 }
 function getUsername(e){
-	var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
-	if (typeof nodeComment.username === 'unfrdined') return;
-	var nodePost = nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
-	var textField = nodePost.getElementsByTagName('textarea')[0];
-	textField.value += "@" + nodeComment.username;
+	var node = e.target; do node = node.parentNode; while(typeof node.user === "undefined");
+	if ( gConfig.cTxt == null ) return;
+	gConfig.cTxt.value += "@" + node.user.username;
 }
 function sendPrivateComment( textField, nodeComment, nodePost){
 	textField.disabled = true;
@@ -1084,26 +1137,25 @@ function genPComment(cpost){
 }
 */
 function genComment(comment){
+	var nodeComment = gNodes["comment"].cloneAll();
+	var cUser = gUsers[comment.createdBy];
+	var nodeSpan = document.createElement("span");
+	nodeComment.userid = null; 
 	function gotUser(){
+		nodeComment.userid = cUser.id;
 		nodeSpan.innerHTML += " - " + cUser.link ;
 		if(typeof gMe !== "undefined") 
 			if(cUser.id == gMe.users.id) 
 				nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
+			else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
 	}
 	function spam(){nodeComment = document.createElement("span");};
-	var nodeComment = gNodes["comment"].cloneAll();
-	var cUser = gUsers[comment.createdBy];
-	var nodeSpan = document.createElement("span");
 	nodeComment.cNodes["comment-body"].appendChild(nodeSpan);
 	nodeSpan.innerHTML = autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof cUser !== "undefined"){
-		nodeSpan.innerHTML += " - " + cUser.link ;
-		nodeComment.username = cUser.username;
-		if(typeof gMe !== "undefined") 
-			if(cUser.id == gMe.users.id) 
-				nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
+		gotUser();
 	}else if(comment.user) {
 		if (gUsers.byName[comment.user]) {
 			cUser = gUsers.byName[comment.user];
@@ -1229,7 +1281,6 @@ function auth(check){
 				var oReq = new XMLHttpRequest();
 				oReq.open("get", gConfig.serverURL +"users/whoami", true);
 				oReq.setRequestHeader("X-Authentication-Token", token);
-				oReq.send();
 				oReq.onload = function(){
 					if(oReq.status < 400) {
 						gMe = JSON.parse(oReq.response);
@@ -1240,6 +1291,7 @@ function auth(check){
 						}
 					}			
 				}
+				setTimeout(function (){oReq.send()},300);
 			});
 			return true;
 		}
@@ -1484,13 +1536,65 @@ function home(e){
     e.target.href = gConfig.front;
 }
 
+function directs(e){
+    e.target.href = gConfig.front+ "filter/direct";
+}
 function my(e){
     e.target.href = gConfig.front+ "filter/discussions";
-    //window.location.href =gConfig.front+ "filter/discussions";
 }
 function ctrlPrivClose(e){
 	var victim = e.target; while(victim.parentNode !=  document.body)victim = victim.parentNode;
 	document.body.removeChild(victim);
+}
+function newDirectInp(e){
+	if ((e.which == "13")&& (e.target.value)){
+		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
+		newDirectAddFeed(e);
+		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
+	}
+}
+function newDirect(e){
+	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
+	var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
+	if (input != "") victim.cNodes["new-post-to"].feeds.push(input);
+	newPost(e);	
+}
+function genDirectTo(victim){
+	victim.removeChild(victim.cNodes["new-post-to"]);
+	victim.cNodes["new-post-to"] = gNodes["new-direct-to"].cloneAll();
+	victim.cNodes["new-post-to"].feeds = new Array();
+	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", newPost);
+	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", newDirect);
+	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
+	if(document.location.hash != ""){
+		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
+		victim.cNodes["new-post-to"].cNodes["new-direct-input"].value = document.location.hash.slice(1);
+	}
+	gConfig.regenPostTo = function (){return genDirectTo(victim);};
+	return new Promise(function(){
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(this.status < 400){	
+				var datalist = document.createElement("datalist");
+				datalist.id = "subscribers";
+				JSON.parse(oReq.response).subscribers.forEach( function(sub){
+					var option = document.createElement("option");
+					option.value = sub.username;
+					option.innerHTML = sub.username;
+					datalist.appendChild(option); 
+				} );
+				//subscribers.sort();
+				//victim.cNodes["new-post-to"].subscribers = subscribers;
+				victim.cNodes["new-post-to"].appendChild(datalist);
+				victim.cNodes["new-post-to"].cNodes["new-direct-input"].setAttribute("list", "subscribers");
+
+				victim.insertBefore( victim.cNodes["new-post-to"],  victim.firstChild);
+			}
+		};
+		oReq.open("get", gConfig.serverURL +"users/"+gMe.users.username + "/subscribers", true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.send();
+	})
 }
 function genPostTo(victim){
 	victim.feeds = new Array();
@@ -1555,10 +1659,34 @@ function newPostRemoveFeed(e){
 	if(nodeP.feeds.length == 0)
 		nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 }
+function newDirectRemoveFeed(e){
+	var nodeP = e.target.parentNode.parentNode;
+	for(var idx = 0; idx < nodeP.feeds.length; idx++){
+		if(nodeP.feeds[idx] == e.target.oValue){
+			nodeP.feeds.splice(idx,1);
+			break;
+		}
+	}
+	e.target.parentNode.removeChild(e.target);
+	if((nodeP.feeds.length == 0)&&(nodeP.cNodes["new-direct-input"].value == ""))
+		nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
+}
 function newPostAddFeed(e){
 	e.target.parentNode.cNodes["new-post-feed-select"].hidden = false;
 }
-
+function newDirectAddFeed(e){
+	var nodeP = e.target.parentNode;
+	var option = nodeP.cNodes["new-direct-input"];
+	nodeP.feeds.push(option.value);
+	var li = document.createElement("li");
+	li.innerHTML = option.value;
+	li.className = "new-post-feed";
+	li.oValue = option.value;
+	li.idx = e.target.selectedIndex;
+	li.addEventListener("click",newDirectRemoveFeed);
+	nodeP.cNodes["new-post-feeds"].appendChild(li);
+	option.value = "";
+}
 function newPostSelect(e){
 	var option = e.target[e.target.selectedIndex];
 	if (option.value == "")return;
@@ -1584,10 +1712,44 @@ function newPostSelect(e){
 	nodeP.cNodes["new-post-feeds"].appendChild(li);
 	nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 }
+function genUserPopup(e){
+	var node = e.target; while(typeof node.userid === "undefined")node = node.parentNode;
+	var user = gUsers[node.userid];
+	var nodePopup = gNodes["user-popup"].cloneAll(true);
+	nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+	nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
+	document.getElementsByTagName("body")[0].appendChild(nodePopup);
+	if((typeof gMe !== "undefined") && (user.id != gMe.users.id) ){
+		nodePopup.cNodes["up-controls"] =  gNodes["up-controls"].cloneAll();
+		nodePopup.appendChild(nodePopup.cNodes["up-controls"]);
+		nodePopup.cNodes["up-controls"].user = user;
+		nodePopup.cNodes["up-controls"].cNodes["up-s"].subscribed = user.friend;
+		nodePopup.cNodes["up-controls"].cNodes["up-s"].innerHTML = user.friend?"Unsubscribe":"Subscribe";
+		nodePopup.cNodes["up-controls"].cNodes["up-d"].href = gConfig.front + "filter/direct#"+user.username;
+		nodePopup.cNodes["up-controls"].cNodes["up-d"].target = "_blank";
+
+	}
+	nodePopup.style.top = e.pageY;
+	nodePopup.style.left = e.pageX;
+
+
+}
+function upClose(e){
+	var node = e.target; while(node.className != "user-popup")node = node.parentNode;
+	node.parentNode.removeChild(node);
+}
+function destroy(e){
+	if (!e.currentTarget.parentNode)return;
+	if (e.eventPhase != Event.AT_TARGET)return;
+	e.target.parentNode.removeChild(e.target);
+	//e.stopPropagation();
+
+}
 function frfAutolinker( autolinker,match ){
 	switch (match.getType()){
 	case "twitter":
 		return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + "</a>" ;
+	/*
 	case "url":
 		if( match.getUrl().indexOf(".freefeed.net") != -1 ) return true;
 		else if( match.getUrl().indexOf("freefeed.net") != -1 ) {
@@ -1598,6 +1760,8 @@ function frfAutolinker( autolinker,match ){
                 } else {
                     return true;  
                 }		
+
+	*/
 	default:
 		return true;
 	}
@@ -1647,7 +1811,10 @@ function initDoc(){
 		if (locationPath == "filter/discussions") {
 			gConfig.timeline = locationPath;
 			gConfig.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
-		} else{		
+		} else	if (locationPath == "filter/direct") {
+			gConfig.timeline = locationPath;
+			gConfig.xhrurl = gConfig.serverURL + "timelines/filter/directs";
+		}else{
 			gConfig.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
 			locationSearch = "?maxComments=all";
 		}

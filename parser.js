@@ -120,19 +120,18 @@ function reqSubscription(e){
 }
 function ban(e){
 	var oReq = new XMLHttpRequest();
-	var user = e.target.parentNode.user;
-	oReq.open("post", gConfig.serverURL +"users/"+user+(e.target.banned?"/unban":"/ban"), true);
+	var username = e.target.parentNode.user;
+	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.banned?"/unban":"/ban"), true);
 	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 	oReq.onload = function(){
 		if(oReq.status < 400) {
-			e.target.banned = !e.target.banned;
-			e.target.innerHTML = e.target.banned?"Un-block":"Block";
-			if (e.target.banned)gMe.users.banIds.push(gUsers.byName[user].id);
+			if (!e.target.banned)gMe.users.banIds.push(gUsers.byName[username].id);
 			else{
-				var idx = gMe.users.banIds.indexOf(gUsers.byName[user].id);
+				var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
 				if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
 			}
 			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+			e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
 
 
 		}
@@ -142,15 +141,15 @@ function ban(e){
 }
 function subscribe(e){
 	var oReq = new XMLHttpRequest();
-	var user = e.target.parentNode.user;
-	oReq.open("post", gConfig.serverURL +"users/"+user+(e.target.subscribed?"/unsubscribe":"/subscribe"), true);
+	var username = e.target.parentNode.user;
+	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.subscribed?"/unsubscribe":"/subscribe"), true);
 	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 	oReq.onload = function(){
 		if(oReq.status < 400) {
 			gMe = JSON.parse(oReq.response);
 			window.localStorage.setItem("gMe",JSON.stringify(gMe));
-			e.target.subscribed = !e.target.subscribed;
-			e.target.innerHTML = e.target.subscribed?"Unsubscribe":"Subscribe";
+			gUsers.byName[username].friend = !e.target.subscribed;
+			e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
 		}
 	}
 
@@ -170,6 +169,17 @@ function draw(content){
 		body.appendChild(gNodes["controls-anon"].cloneAll());
 		body.appendChild(title);
 	}else{ 
+		if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
+			gMe.subscribers.forEach(function(sub){
+				if(typeof gUsers[sub.id] !== "undefined")gUsers[sub.id].subscriber = true;
+			});
+			gMe.subscriptions.forEach(function(sub){
+				if(sub.name =="Posts"){
+					if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
+				}
+			});
+		}
+		
 		body.appendChild(gNodes["controls-user"].cloneAll());
 		body.appendChild(title);
 		switch (gConfig.timeline.split("/")[0]){
@@ -264,26 +274,14 @@ function draw(content){
 	
 }
 function genUpControls(username){
-	var subscribers = new Object();
-	var feeds = new Object();
-	if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
-		gMe.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
-		gMe.subscriptions.forEach(function(sub){
-			if(sub.name =="Posts"){
-				feeds[subscribers[sub.user].username] = true;
-				if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
-			}
-		});
-	}
-	
-	var subscribed = feeds[username]?true:false;
 	var controls = gNodes["up-controls"].cloneAll();
 	var sub = controls.cNodes["up-s"]; 
+	var user = gUsers.byName[username];
 	controls.user = username;
-	sub.innerHTML = subscribed?"Unsubscribe":"Subscribe";
-	sub.subscribed = subscribed;
-	if (!subscribed && (gUsers.byName[username].isPrivate == 1 )){
-		if (gMe.requests.some(function(a){return a.username == username})){
+	sub.innerHTML = user.friend?"Unsubscribe":"Subscribe";
+	sub.subscribed = user.friend;
+	if (!user.friend && (user.isPrivate == 1 )){
+		if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
 			sub = document.createElement("span");
 			sub.innerHTML = "Subscription request sent";
 		}else{
@@ -291,11 +289,16 @@ function genUpControls(username){
 			sub.addEventListener("click", reqSubscription);
 		}
 	}
-	controls.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
-	controls.cNodes["up-d"].target = "_blank";
+	if(user.friend && user.subscriber){
+		controls.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
+		controls.cNodes["up-d"].target = "_blank";
+	}else{
+		controls.cNodes["up-d"].hidden = true;
+		controls.cNodes["up-d"].nextSibling.hidden = true;
+	}
 	var aBan = controls.cNodes["up-b"];
 	aBan.banned = gMe.users.banIds.some(function(a){
-		return a == gUsers.byName[username].id;
+		return a == user.id;
 	});
 	aBan.innerHTML = aBan.banned?"Un-block":"Block";
 	aBan.addEventListener("click", ban); 
@@ -1075,7 +1078,7 @@ function doDeleteComment(but){
 function getUsername(e){
 	var node = e.target; do node = node.parentNode; while(typeof node.user === "undefined");
 	if ( gConfig.cTxt == null ) return;
-	gConfig.cTxt.value += "@" + node.user.username;
+	gConfig.cTxt.value += "@" + node.user;
 }
 function sendPrivateComment( textField, nodeComment, nodePost){
 	textField.disabled = true;

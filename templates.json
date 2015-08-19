@@ -48,7 +48,7 @@ var templates =  {"nodes": [
 	{"c":"controls-anon","t":"div",
 	"children":[
 		{"c":"user-signup","t":"a","txt":""},
-		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}}
+		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}},
 		{"t":"hr"}
 	]
 	},

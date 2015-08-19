@@ -118,9 +118,32 @@ function reqSubscription(e){
 	oReq.send();
 
 }
+function ban(e){
+	var oReq = new XMLHttpRequest();
+	var user = e.target.parentNode.user;
+	oReq.open("post", gConfig.serverURL +"users/"+user+(e.target.banned?"/unban":"/ban"), true);
+	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.onload = function(){
+		if(oReq.status < 400) {
+			e.target.banned = !e.target.banned;
+			e.target.innerHTML = e.target.banned?"Un-block":"Block";
+			if (e.target.banned)gMe.users.banIds.push(gUsers.byName[user].id);
+			else{
+				var idx = gMe.users.banIds.indexOf(gUsers.byName[user].id);
+				if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
+			}
+			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+
+
+		}
+	}
+
+	oReq.send();
+}
 function subscribe(e){
 	var oReq = new XMLHttpRequest();
-	oReq.open("post", gConfig.serverURL +"users/"+gConfig.timeline+(e.target.subscribed?"/unsubscribe":"/subscribe"), true);
+	var user = e.target.parentNode.user;
+	oReq.open("post", gConfig.serverURL +"users/"+user+(e.target.subscribed?"/unsubscribe":"/subscribe"), true);
 	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 	oReq.onload = function(){
 		if(oReq.status < 400) {
@@ -132,22 +155,23 @@ function subscribe(e){
 	}
 
 	oReq.send();
-
 }
 function draw(content){
-	var body = document.getElementsByTagName("body")[0];
+	var body = document.createElement("div");
+	body.className = "content";
+	document.getElementsByTagName("body")[0].appendChild(body);
 	if(content.attachments)content.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
 	if(content.comments)content.comments.forEach(function(comment){ gComments[comment.id] = comment; });
 	content.users.forEach(addUser);
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
-	body.appendChild(title);
 	gConfig.cTxt = null;
-	if(typeof gMe === "undefined") 
+	if(typeof gMe === "undefined"){ 
 		body.appendChild(gNodes["controls-anon"].cloneAll());
-	else{ 
+		body.appendChild(title);
+	}else{ 
 		body.appendChild(gNodes["controls-user"].cloneAll());
-		
+		body.appendChild(title);
 		switch (gConfig.timeline.split("/")[0]){
 		case "filter":
 			if (gConfig.timeline.split("/")[1] == "direct"){
@@ -163,33 +187,8 @@ function draw(content){
 			genPostTo(nodeAddPost.cNodes["new-post-to"]);
 			break;
 		default:
-			var subscribers = new Object();
-			var feeds = new Object();
-			gMe.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
-			gMe.subscriptions.forEach(function(sub){
-				if(sub.name =="Posts")feeds[subscribers[sub.user].username] = true;
-			});
-			var subscribed = feeds[gConfig.timeline]?true:false;
-			var sub = document.createElement("a");
-			sub.innerHTML = subscribed?"Unsubscribe":"Subscribe";
-			sub.subscribed = subscribed;
-			if (!subscribed && gUsers.byName[gConfig.timeline].isPrivate ){
-				if (gMe.requests.some(function(a){return a.username == gConfig.timeline})){
-					sub = document.createElement("span");
-					sub.innerHTML = "Subscription request sent";
-				}else{
-					sub.innerHTML = "Request subscription";
-					sub.addEventListener("click", reqSubscription);
-				}
-			}else sub.addEventListener("click", subscribe);
-			body.appendChild(sub);
-		}
-		var mysubscribers = new Object();
-		if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
-			gMe.subscribers.forEach(function(sub){mysubscribers[sub.id]=sub;});
-			gMe.subscriptions.forEach(function(sub){
-				if("Posts" == sub.name )if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
-			});
+			body.appendChild(genUpControls(gConfig.timeline));
+			
 		}
 	}
 	if(content.subscribers && content.subscriptions ){	
@@ -264,6 +263,46 @@ function draw(content){
   ga("send", "pageview");	
 	
 }
+function genUpControls(username){
+	var subscribers = new Object();
+	var feeds = new Object();
+	if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
+		gMe.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
+		gMe.subscriptions.forEach(function(sub){
+			if(sub.name =="Posts"){
+				feeds[subscribers[sub.user].username] = true;
+				if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
+			}
+		});
+	}
+	
+	var subscribed = feeds[username]?true:false;
+	var controls = gNodes["up-controls"].cloneAll();
+	var sub = controls.cNodes["up-s"]; 
+	controls.user = username;
+	sub.innerHTML = subscribed?"Unsubscribe":"Subscribe";
+	sub.subscribed = subscribed;
+	if (!subscribed && (gUsers.byName[username].isPrivate == 1 )){
+		if (gMe.requests.some(function(a){return a.username == username})){
+			sub = document.createElement("span");
+			sub.innerHTML = "Subscription request sent";
+		}else{
+			sub.innerHTML = "Request subscription";
+			sub.addEventListener("click", reqSubscription);
+		}
+	}
+	controls.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
+	controls.cNodes["up-d"].target = "_blank";
+	var aBan = controls.cNodes["up-b"];
+	aBan.banned = gMe.users.banIds.some(function(a){
+		return a == gUsers.byName[username].id;
+	});
+	aBan.innerHTML = aBan.banned?"Un-block":"Block";
+	aBan.addEventListener("click", ban); 
+	return controls;
+
+}
+
 function addPosts(drop, toAdd, offset){
 	var url = matrix.cfg.srvurl + "posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
 	var oReq = new XMLHttpRequest();
@@ -1719,16 +1758,8 @@ function genUserPopup(e){
 	nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 	nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
 	document.getElementsByTagName("body")[0].appendChild(nodePopup);
-	if((typeof gMe !== "undefined") && (user.id != gMe.users.id) ){
-		nodePopup.cNodes["up-controls"] =  gNodes["up-controls"].cloneAll();
-		nodePopup.appendChild(nodePopup.cNodes["up-controls"]);
-		nodePopup.cNodes["up-controls"].user = user;
-		nodePopup.cNodes["up-controls"].cNodes["up-s"].subscribed = user.friend;
-		nodePopup.cNodes["up-controls"].cNodes["up-s"].innerHTML = user.friend?"Unsubscribe":"Subscribe";
-		nodePopup.cNodes["up-controls"].cNodes["up-d"].href = gConfig.front + "filter/direct#"+user.username;
-		nodePopup.cNodes["up-controls"].cNodes["up-d"].target = "_blank";
-
-	}
+	if((typeof gMe !== "undefined") && (user.id != gMe.users.id) )
+		nodePopup.appendChild(genUpControls(user.username));
 	nodePopup.style.top = e.pageY;
 	nodePopup.style.left = e.pageX;
 

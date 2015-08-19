@@ -1,6 +1,6 @@
 var gConfig = {
   "serverURL":"https://micropeppa.freefeed.net/v1/"
-, "front":"https://moimosk.ru/Frf_dev/"
+, "front":"https://moimosk.ru/frf/"
 , "static":"https://freefeed.net/"
 , "offset":"30"
 , "likesFold":4

@@ -41,13 +41,15 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-priv","t":"a","txt":"privates","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}}
+		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
+		{"t":"hr"}
 	]
 	},
 	{"c":"controls-anon","t":"div",
 	"children":[
 		{"c":"user-signup","t":"a","txt":""},
 		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}}
+		{"t":"hr"}
 	]
 	},
 
@@ -243,6 +245,8 @@ var templates =  {"nodes": [
 		{"c":"up-s","t":"a", "e":{"click":"subscribe"}}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-d","t":"a", "txt":"Direct"}
+		,{"c":"spacer","t":"span","txt":"&mdash;"}
+		,{"c":"up-b","t":"a", "txt":"Block"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 

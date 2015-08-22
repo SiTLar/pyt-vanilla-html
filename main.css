@@ -15,7 +15,12 @@ cursor: pointer;
 h1{
     margin-bottom: 0.3em;
 }
-
+.content{
+	max-width: 680;
+	width: 100%;
+	padding: 0 1em;
+	margin: 0 auto;
+}
 .controls-user{
     margin-bottom: 0.5em;
 }
@@ -32,9 +37,32 @@ h1{
 	    border-style: solid;
 	    border-width: 1px;
 	margin-bottom: 0.5em;
-	width: 100%;
 	height: 4em;
+	width:100%;
 padding: 3px;
+}
+.up-close{
+	float:right;
+}
+.up-avatar{
+float:left;
+}
+.up-info {
+display: inline-block;
+margin: 0 0.5em;
+
+}
+.up-controls{
+clear:both;
+}
+.user-popup{
+position:absolute;
+background: white none repeat scroll 0 0;
+border: thin solid gray;
+padding: 0.5em;
+margin:1em;
+
+
 }
 .control-button-post{
 margin-right:0.3em;
@@ -65,7 +93,6 @@ background: #0199d9;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
 .posts{
-max-width: 500px;
 clear: both;
 }
 .post {
@@ -107,7 +134,10 @@ overflow: hidden;
     margin: 0 8px 8px 0;
     padding: 1px;
 }
-
+.att-audio{
+	clear:both;
+	margin-bottom: 0.5em;
+}
 .title {
 	font-size: 15px;
 	margin-bottom: 2px;

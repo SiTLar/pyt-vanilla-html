@@ -1757,7 +1757,10 @@ function newPostSelect(e){
 function genUserPopup(e){
 	var node = e.target; while(typeof node.userid === "undefined")node = node.parentNode;
 	var user = gUsers[node.userid];
+	if(document.getElementById("userPopup" + node.userid))return;
 	var nodePopup = gNodes["user-popup"].cloneAll(true);
+	document.getElementsByTagName("body")[0].appendChild(nodePopup);
+	nodePopup.id = "userPopup" + node.userid; 
 	nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 	nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
 	document.getElementsByTagName("body")[0].appendChild(nodePopup);

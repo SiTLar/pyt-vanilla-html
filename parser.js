@@ -704,6 +704,9 @@ function newPost(e){
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.setRequestHeader("X-Authentication-Token", 
 				window.localStorage.getItem("token"));
+			if (textField.value == ""){
+				alern("you should provide some text");
+			}
 			post.body = textField.value;
 			oReq.send(JSON.stringify(postdata));
 		}
@@ -1589,10 +1592,10 @@ function ctrlPrivClose(e){
 	document.body.removeChild(victim);
 }
 function newDirectInp(e){
-	if ((e.which == "13")&& (e.target.value)){
+	if (e.target.value){
 		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
-		newDirectAddFeed(e);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
+		if(e.which == "13") newDirectAddFeed(e);
 	}
 }
 function newDirect(e){

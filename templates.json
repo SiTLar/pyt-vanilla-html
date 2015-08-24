@@ -39,7 +39,7 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-my","t":"a","txt":"direct messages","e":{"mousedown":"directs"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-priv","t":"a","txt":"privates","e":{"click":"ctrlPriv"}},
+		{"c":"user-priv","t":"a","txt":"secrets","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
 		{"t":"hr"}
@@ -188,7 +188,7 @@ var templates =  {"nodes": [
 			]}
 		]}
 		,{"c":"priv-header", "txt":"THE MATRIX" }
-		,{"t":"p", "txt":"Please log in to get access to private groups"}
+		,{"t":"p", "txt":"Please log in to get access to secret groups"}
 		,{"c":"priv-info"}
 		,{"c":"priv-login"
 		,"children":[

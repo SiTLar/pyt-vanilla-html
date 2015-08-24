@@ -15,6 +15,13 @@ cursor: pointer;
 h1{
     margin-bottom: 0.3em;
 }
+.friends-tip{
+	position:absolute;
+}
+.ft-friend{
+
+
+}
 .content{
 	max-width: 680;
 	width: 100%;
@@ -332,6 +339,21 @@ float:right;
 }
 .priv-header{font-size:x-large; clear: both; text-align: center;}
 .private-control p{text-align:center}
+.friends-tip{
+	background-color:white;
+	border: thin solid #d8d8d8;
+	padding: 3;
+}
+.ft-list{
+	margin:0;
+	padding:0;
+}
+.ft-i{
+box-sizing: border-box;
+display: block;
+cursor: pointer;
+
+}
 .new-post-to{
 margin-top: 1.5em;
 margin-bottom: 0.3em;

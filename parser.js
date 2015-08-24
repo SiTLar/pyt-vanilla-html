@@ -100,6 +100,7 @@ function addUser (user){
 	user.link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+"</a>";
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
 	user.friend = false;
+	user.subscriber = false;
 	gUsers[user.id] = user;
 	gUsers.byName[user.username] = user;
 }
@@ -1596,7 +1597,52 @@ function newDirectInp(e){
 		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 		if(e.which == "13") newDirectAddFeed(e);
+		else{
+			var txt = e.target.value.toLowerCase();
+			var nodeTip = gNodes["friends-tip"].cloneAll();
+			var oDest = e.target.dest;
+			var pos = oDest;
+			for(var idx = 0; idx < txt.length; idx++){
+				if (typeof pos[txt.charAt(idx)] !== "undefined") 
+					pos = pos[txt.charAt(idx)];
+				else{
+					pos = null;
+					break;
+				}
+			}
+			if(pos)pos.arr.forEach(function(user){
+				var li = document.createElement("li");
+				li.className = "ft-i";
+				li.innerHTML = user;
+				li.addEventListener("click",selectFriend);
+				nodeTip.cNodes["ft-list"].appendChild(li);
+			});
+			nodeTip.inp = e.target;
+			nodeTip.style.top = e.target.offsetTop+e.target.offsetHeight;
+			nodeTip.style.left =  e.target.offsetLeft;
+			nodeTip.style.width = e.target.clientWidth;
+			if(typeof e.target.tip !== "undefined") {
+				document.body.replaceChild(nodeTip, e.target.tip);
+				e.target.tip = nodeTip;
+			}else e.target.tip = document.body.appendChild(nodeTip);
+		}
+	}else if(e.target.tip){
+		document.body.removeChild(e.target.tip);
+		e.target.tip = undefined;
 	}
+	
+	
+}
+function ftClose(e){
+	var victim =e.target;while(victim.className != "friends-tip") victim = victim.parentNode;
+	victim.inp.tip = undefined;
+	document.body.removeChild(victim);
+
+}
+function selectFriend(e){
+	var victim =e.target; do victim = victim.parentNode; while(victim.className != "friends-tip");
+	victim.inp.value = e.target.innerHTML;
+
 }
 function newDirect(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
@@ -1605,41 +1651,43 @@ function newDirect(e){
 	newPost(e);	
 }
 function genDirectTo(victim){
-	victim.removeChild(victim.cNodes["new-post-to"]);
-	victim.cNodes["new-post-to"] = gNodes["new-direct-to"].cloneAll();
-	victim.cNodes["new-post-to"].feeds = new Array();
+	var nodeDirectTo = gNodes["new-direct-to"].cloneAll();
+	victim.replaceChild(nodeDirectTo, victim.cNodes["new-post-to"]);
+	victim.cNodes["new-post-to"] = nodeDirectTo;
+	nodeDirectTo.feeds = new Array();
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", newPost);
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", newDirect);
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 	if(document.location.hash != ""){
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
-		victim.cNodes["new-post-to"].cNodes["new-direct-input"].value = document.location.hash.slice(1);
+		nodeDirectTo.cNodes["new-direct-input"].value = document.location.hash.slice(1);
 	}
-	gConfig.regenPostTo = function (){return genDirectTo(victim);};
-	return new Promise(function(){
-		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			if(this.status < 400){	
-				var datalist = document.createElement("datalist");
-				datalist.id = "subscribers";
-				JSON.parse(oReq.response).subscribers.forEach( function(sub){
-					var option = document.createElement("option");
-					option.value = sub.username;
-					option.innerHTML = sub.username;
-					datalist.appendChild(option); 
-				} );
-				//subscribers.sort();
-				//victim.cNodes["new-post-to"].subscribers = subscribers;
-				victim.cNodes["new-post-to"].appendChild(datalist);
-				victim.cNodes["new-post-to"].cNodes["new-direct-input"].setAttribute("list", "subscribers");
-
-				victim.insertBefore( victim.cNodes["new-post-to"],  victim.firstChild);
+	if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
+		var oDest = new Object();
+		gMe.subscribers.forEach(function(sub){
+			addUser(sub);
+			gUsers[sub.id].subscriber = true;
+		});
+		gMe.subscriptions.forEach(function(sub){
+			if(sub.name =="Posts"){
+				if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
 			}
-		};
-		oReq.open("get", gConfig.serverURL +"users/"+gMe.users.username + "/subscribers", true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-		oReq.send();
-	})
+		});
+		for (var user in gUsers.byName){
+			if (gUsers.byName[user].subscriber && gUsers.byName[user].friend){
+				var pos = oDest;
+				for(var idx = 0; idx < user.length; idx++){
+					if (typeof pos.arr === "undefined") pos.arr = new Array();
+					pos.arr.push(user);
+					if (typeof pos[user.charAt(idx)] === "undefined") 
+						pos[user.charAt(idx)] = new Object();
+					pos = pos[user.charAt(idx)];
+				}
+			}
+		}
+	}
+	nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
+	gConfig.regenPostTo = function (){return genDirectTo(victim);};
 }
 function genPostTo(victim){
 	victim.feeds = new Array();
@@ -1722,6 +1770,7 @@ function newPostAddFeed(e){
 function newDirectAddFeed(e){
 	var nodeP = e.target.parentNode;
 	var option = nodeP.cNodes["new-direct-input"];
+	if(typeof option.tip !== "undefined")document.body.removeChild(option.tip); 
 	nodeP.feeds.push(option.value);
 	var li = document.createElement("li");
 	li.innerHTML = option.value;

@@ -128,8 +128,19 @@ var templates =  {"nodes": [
 		{"c":"new-post-feeds","t":"ul"},
 		{"c":"new-direct-input", "t": "input","e":{"input":"newDirectInp", "keyup":"newDirectInp"}  },
 		{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":"newDirectAddFeed"} }
-	]},
-	{"c":"likes-smile","t":"span",
+	]}
+	,{"c":"friends-tip","e":{"mouseleave":"ftClose"}
+	,"children":[
+		{"c":"priv-close","e":{"click":"ftClose"}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"ft-list","t":"ul"}
+	]}
+	,{"c":"likes-smile","t":"span",
 	"children":[
 		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"},
 		{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
@@ -252,5 +263,6 @@ var templates =  {"nodes": [
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 
 	]}
+
 ]}
 		

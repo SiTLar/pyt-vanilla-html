@@ -39,7 +39,7 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-my","t":"a","txt":"direct messages","e":{"mousedown":"directs"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-priv","t":"a","txt":"privates","e":{"click":"ctrlPriv"}},
+		{"c":"user-priv","t":"a","txt":"secrets","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
 		{"t":"hr"}
@@ -127,8 +127,19 @@ var templates =  {"nodes": [
 		{"c":"new-post-feeds","t":"ul"},
 		{"c":"new-direct-input", "t": "input","e":{"input":"newDirectInp", "keyup":"newDirectInp"}  },
 		{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":"newDirectAddFeed"} }
-	]},
-	{"c":"likes-smile","t":"span",
+	]}
+	,{"c":"friends-tip","e":{"mouseleave":"ftClose"}
+	,"children":[
+		{"c":"priv-close","e":{"click":"ftClose"}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"ft-list","t":"ul"}
+	]}
+	,{"c":"likes-smile","t":"span",
 	"children":[
 		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"},
 		{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
@@ -187,7 +198,7 @@ var templates =  {"nodes": [
 			]}
 		]}
 		,{"c":"priv-header", "txt":"THE MATRIX" }
-		,{"t":"p", "txt":"Please log in to get access to private groups"}
+		,{"t":"p", "txt":"Please log in to get access to secret groups"}
 		,{"c":"priv-info"}
 		,{"c":"priv-login"
 		,"children":[
@@ -251,5 +262,6 @@ var templates =  {"nodes": [
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 
 	]}
+
 ]}
 

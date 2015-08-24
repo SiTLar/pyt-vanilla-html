@@ -7,6 +7,7 @@ var gMe = new Object();
 var gComments = new Object();
 var gAttachments  = new Object();
 var gFeeds = new Object();
+var gRt = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var autolinker = new Autolinker({"truncate":20,  "replaceFn":frfAutolinker } );
 var matrix = new CryptoPrivate(gCryptoPrivateCfg );
@@ -263,7 +264,12 @@ function draw(content){
 			new Promise(function (){addPosts(drop,toAdd,0);});
 		};
 	}else body.appendChild(genPost(content.posts));
-
+	var token = window.localStorage.getItem("token");
+	if(token != "" ){
+		gRt = new RtUpdate(token);
+		if(content.timelines) gRt.subscribe(content.timelines.id);
+		gRt.handle(function (e){console.log(e.data);});
+	}
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)

@@ -695,6 +695,8 @@ function newPost(e){
 				textField.parentNode.cNodes["attachments"] = nodeAtt;
 				textField.value = "";
 				textField.disabled = false;
+				delete textField.pAtt;
+				delete textField.attachments;
 				e.target.disabled = false;
 				textField.style.height  = "4em";
 				e.target.parentNode.removeChild(nodeSpinner);
@@ -1406,7 +1408,7 @@ function auth(check){
 	if (check !== true ){
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
-		nodeAuth.innerHTML = '<div id=auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" onsubmit=getauth(this)><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td><input type="submit" value="Log in"></td></tr></table></form>';
+		nodeAuth.innerHTML = '<div id=auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" onsubmit=getauth(this)><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
 		document.getElementsByTagName("body")[0].appendChild(nodeAuth);
 	}
 	return false;
@@ -1814,6 +1816,7 @@ function newPostAddFeed(e){
 function newDirectAddFeed(e){
 	var nodeP = e.target.parentNode;
 	var option = nodeP.cNodes["new-direct-input"];
+	if (option.value == "") return;
 	if(typeof option.tip !== "undefined")document.body.removeChild(option.tip); 
 	nodeP.feeds.push(option.value);
 	var li = document.createElement("li");

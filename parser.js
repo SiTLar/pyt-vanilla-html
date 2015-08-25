@@ -101,6 +101,7 @@ function addUser (user){
 	user.link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+"</a>";
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
 	user.friend = false;
+	user.subscriber = false;
 	gUsers[user.id] = user;
 	gUsers.byName[user.username] = user;
 }
@@ -112,7 +113,7 @@ function reqSubscription(e){
 		if(oReq.status < 400) {
 			var span = document.createElement("span");
 			span.innerHTML = "Request sent";
-			e.target.parentNode.repalceChild(span, e.target);
+			e.target.parentNode.replaceChild(span, e.target);
 		}
 	}
 
@@ -170,13 +171,22 @@ function draw(content){
 		body.appendChild(gNodes["controls-anon"].cloneAll());
 		body.appendChild(title);
 	}else{ 
-		if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
-			gMe.subscribers.forEach(function(sub){
-				if(typeof gUsers[sub.id] !== "undefined")gUsers[sub.id].subscriber = true;
-			});
+		if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
+			gMe.subscribers.forEach(function(sub){addUser(sub);});
+			var oSubscriptions = new Object();
 			gMe.subscriptions.forEach(function(sub){
 				if(sub.name =="Posts"){
-					if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
+					oSubscriptions[sub.id] = sub.user;
+				}
+			});
+			gMe.users.subscribers.forEach(function(sub){
+				addUser(sub);
+				gUsers[sub.id].subscriber = true;
+			});
+			gMe.users.subscriptions.forEach(function(subid){
+				if (typeof oSubscriptions[subid] !== "undefined") {
+					if (typeof gUsers[oSubscriptions[subid]] !== "undefined")
+						gUsers[oSubscriptions[subid]].friend = true;
 				}
 			});
 		}
@@ -204,7 +214,7 @@ function draw(content){
 	}
 	if(content.subscribers && content.subscriptions ){	
 		var subscribers = new Object();
-		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
+		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;addUser(sub);});
 		content.subscriptions.forEach(function(sub){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 				gFeeds[sub.id] = subscribers[sub.user];
@@ -283,33 +293,50 @@ function genUpControls(username){
 	var controls = gNodes["up-controls"].cloneAll();
 	var sub = controls.cNodes["up-s"]; 
 	var user = gUsers.byName[username];
-	controls.user = username;
-	sub.innerHTML = user.friend?"Unsubscribe":"Subscribe";
-	sub.subscribed = user.friend;
-	if (!user.friend && (user.isPrivate == 1 )){
-		if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
-			sub = document.createElement("span");
-			sub.innerHTML = "Subscription request sent";
-		}else{
-			sub.innerHTML = "Request subscription";
-			sub.addEventListener("click", reqSubscription);
+	if (typeof user !== "undifined") gen();
+	else new Promise(function(resolve, reject){
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(this.status < 400){
+				var oRes = JSON.parse(oReq.response);
+				addUser(oRes.users);
+				user = gUsers.byName[comment.user];
+				resolve();
+			}
+		};
+		oReq.open("get",gConfig.serverURL + "users/"+username, true);
+		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.send();
+	}).then(gen);
+	function gen() {
+		controls.user = username;
+		sub.innerHTML = user.friend?"Unsubscribe":"Subscribe";
+		sub.subscribed = user.friend;
+		if (!user.friend && (user.isPrivate == 1 )){
+			sub.removeEventListener("click",subscribe);
+			if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
+				sub = document.createElement("span");
+				sub.innerHTML = "Subscription request sent";
+			}else{
+				sub.innerHTML = "Request subscription";
+				sub.addEventListener("click", reqSubscription);
+			}
 		}
+		if(user.friend && user.subscriber){
+			controls.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
+			controls.cNodes["up-d"].target = "_blank";
+		}else{
+			controls.cNodes["up-d"].hidden = true;
+			controls.cNodes["up-d"].nextSibling.hidden = true;
+		}
+		var aBan = controls.cNodes["up-b"];
+		aBan.banned = gMe.users.banIds.some(function(a){
+			return a == user.id;
+		});
+		aBan.innerHTML = aBan.banned?"Un-block":"Block";
+		aBan.addEventListener("click", ban); 
 	}
-	if(user.friend && user.subscriber){
-		controls.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
-		controls.cNodes["up-d"].target = "_blank";
-	}else{
-		controls.cNodes["up-d"].hidden = true;
-		controls.cNodes["up-d"].nextSibling.hidden = true;
-	}
-	var aBan = controls.cNodes["up-b"];
-	aBan.banned = gMe.users.banIds.some(function(a){
-		return a == user.id;
-	});
-	aBan.innerHTML = aBan.banned?"Un-block":"Block";
-	aBan.addEventListener("click", ban); 
 	return controls;
-
 }
 
 function addPosts(drop, toAdd, offset){
@@ -660,7 +687,7 @@ function newPost(e){
 		postdata.meta.feeds = postTo.feeds ;
 		var oReq = new XMLHttpRequest();
 		var onload = function(){
-			if(this.status < 400){
+			if(oReq.status < 400){
 				var nodeAtt = document.createElement("div");
 				nodeAtt.className = "attachments";
 				textField.parentNode.replaceChild(nodeAtt, 
@@ -671,7 +698,7 @@ function newPost(e){
 				e.target.disabled = false;
 				textField.style.height  = "4em";
 				e.target.parentNode.removeChild(nodeSpinner);
-				var res = JSON.parse(this.response);
+				var res = JSON.parse(oReq.response);
 				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
 				if (res.subscriptions) {
 				
@@ -680,6 +707,16 @@ function newPost(e){
 					res.subscriptions.forEach(function(sub){if(["Posts", "Directs"].some(function(a){return a == sub.name }))gFeeds[sub.id] = subscribers[sub.user];});
 				}
 				document.posts.insertBefore(genPost(res.posts), document.posts.childNodes[0]);
+			}else{
+				textField.disabled = false;
+				e.target.disabled = false;
+				e.target.parentNode.removeChild(nodeSpinner );
+				var errmsg = "";
+				try{	
+					var eresp = JSON.parse(oReq.response);
+					errmsg = eresp.err;
+				}catch(e){};
+				alert("Error #"+oReq.status+": "+oReq.statusText+" "+errmsg) ;
 			}
 		};
 		if(textField.attachments) post.attachments = textField.attachments;
@@ -710,6 +747,13 @@ function newPost(e){
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.setRequestHeader("X-Authentication-Token", 
 				window.localStorage.getItem("token"));
+			if (textField.value == ""){
+				textField.disabled = false;
+				e.target.disabled = false;
+				e.target.parentNode.removeChild(nodeSpinner );
+				alert("you should provide some text");
+				return;
+			}
 			post.body = textField.value;
 			oReq.send(JSON.stringify(postdata));
 		}
@@ -1595,54 +1639,95 @@ function ctrlPrivClose(e){
 	document.body.removeChild(victim);
 }
 function newDirectInp(e){
-	if ((e.which == "13")&& (e.target.value)){
+	if (e.target.value){
 		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
-		newDirectAddFeed(e);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
+		if(e.which == "13") newDirectAddFeed(e);
+		else{
+			var txt = e.target.value.toLowerCase();
+			var nodeTip = gNodes["friends-tip"].cloneAll();
+			var oDest = e.target.dest;
+			var pos = oDest;
+			for(var idx = 0; idx < txt.length; idx++){
+				if (typeof pos[txt.charAt(idx)] !== "undefined") 
+					pos = pos[txt.charAt(idx)];
+				else{
+					pos = null;
+					break;
+				}
+			}
+			if(pos)pos.arr.forEach(function(user){
+				var li = document.createElement("li");
+				li.className = "ft-i";
+				li.innerHTML = user;
+				li.addEventListener("click",selectFriend);
+				nodeTip.cNodes["ft-list"].appendChild(li);
+			});
+			nodeTip.inp = e.target;
+			nodeTip.style.top = e.target.offsetTop+e.target.offsetHeight;
+			nodeTip.style.left =  e.target.offsetLeft;
+			nodeTip.style.width = e.target.clientWidth;
+			if((typeof e.target.tip !== "undefined") && e.target.tip.parentNode) {
+				document.body.replaceChild(nodeTip, e.target.tip);
+				e.target.tip = nodeTip;
+			}else e.target.tip = document.body.appendChild(nodeTip);
+		}
+	}else if(e.target.tip){
+		document.body.removeChild(e.target.tip);
+		e.target.tip = undefined;
 	}
+	
+	
+}
+function ftClose(e){
+	var victim =e.target;while(victim.className != "friends-tip") victim = victim.parentNode;
+	victim.inp.tip = undefined;
+	document.body.removeChild(victim);
+
+}
+function selectFriend(e){
+	var victim =e.target; do victim = victim.parentNode; while(victim.className != "friends-tip");
+	victim.inp.value = e.target.innerHTML;
+
 }
 function newDirect(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 	var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
-	if (input != "") victim.cNodes["new-post-to"].feeds.push(input);
-	newPost(e);	
+	if ((input != "") && (typeof gUsers.byName[input] !== "undefined") 
+		&& gUsers.byName[input].friend && (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group")) 
+		victim.cNodes["new-post-to"].feeds.push(input);
+	if (victim.cNodes["new-post-to"].feeds.length) newPost(e);	
+	else alert("should have valid recipients");
 }
 function genDirectTo(victim){
-	victim.removeChild(victim.cNodes["new-post-to"]);
-	victim.cNodes["new-post-to"] = gNodes["new-direct-to"].cloneAll();
-	victim.cNodes["new-post-to"].feeds = new Array();
+	var nodeDirectTo = gNodes["new-direct-to"].cloneAll();
+	victim.replaceChild(nodeDirectTo, victim.cNodes["new-post-to"]);
+	victim.cNodes["new-post-to"] = nodeDirectTo;
+	nodeDirectTo.feeds = new Array();
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", newPost);
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", newDirect);
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 	if(document.location.hash != ""){
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
-		victim.cNodes["new-post-to"].cNodes["new-direct-input"].value = document.location.hash.slice(1);
+		nodeDirectTo.cNodes["new-direct-input"].value = document.location.hash.slice(1);
 	}
-	gConfig.regenPostTo = function (){return genDirectTo(victim);};
-	return new Promise(function(){
-		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			if(this.status < 400){	
-				var datalist = document.createElement("datalist");
-				datalist.id = "subscribers";
-				JSON.parse(oReq.response).subscribers.forEach( function(sub){
-					var option = document.createElement("option");
-					option.value = sub.username;
-					option.innerHTML = sub.username;
-					datalist.appendChild(option); 
-				} );
-				//subscribers.sort();
-				//victim.cNodes["new-post-to"].subscribers = subscribers;
-				victim.cNodes["new-post-to"].appendChild(datalist);
-				victim.cNodes["new-post-to"].cNodes["new-direct-input"].setAttribute("list", "subscribers");
-
-				victim.insertBefore( victim.cNodes["new-post-to"],  victim.firstChild);
+	if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
+		var oDest = new Object();
+		for (var username in gUsers.byName){
+			if (!gUsers.byName[username].friend || !(gUsers.byName[username].subscriber || (gUsers.byName[username].type == "group")))
+				continue;
+			var pos = oDest;
+			for(var idx = 0; idx < username.length; idx++){
+				if (typeof pos.arr === "undefined") pos.arr = new Array();
+				pos.arr.push(username);
+				if (typeof pos[username.charAt(idx)] === "undefined") 
+					pos[username.charAt(idx)] = new Object();
+				pos = pos[username.charAt(idx)];
 			}
-		};
-		oReq.open("get", gConfig.serverURL +"users/"+gMe.users.username + "/subscribers", true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
-		oReq.send();
-	})
+		}
+	}
+	nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
+	gConfig.regenPostTo = function (){return genDirectTo(victim);};
 }
 function genPostTo(victim){
 	victim.feeds = new Array();
@@ -1666,9 +1751,13 @@ function genPostTo(victim){
 	victim.cNodes["new-post-feed-select"].appendChild(option);
 	var groups = document.createElement("optgroup");
 	groups.label = "Public groups";
-	if (gMe.subscribers){
-		gMe.subscribers.forEach(function(sub){
-			if(sub.type == "group"){
+	if (typeof gMe.users.subscriptions !== "undefined"){
+		var oSubscriptions = new Object();
+		gMe.subscriptions.forEach(function(sub){if (sub.name == "Posts")oSubscriptions[sub.id] = sub; });	
+		gMe.users.subscriptions.forEach(function(subid){
+			if (typeof oSubscriptions[subid] === "undefined") return;
+			var sub = gUsers[oSubscriptions[subid].user];
+			if((typeof sub !=="undefined") && (sub.type == "group")){
 				option = document.createElement("option");
 				option.value = sub.username;
 				option.innerHTML = sub.screenName;
@@ -1725,6 +1814,7 @@ function newPostAddFeed(e){
 function newDirectAddFeed(e){
 	var nodeP = e.target.parentNode;
 	var option = nodeP.cNodes["new-direct-input"];
+	if(typeof option.tip !== "undefined")document.body.removeChild(option.tip); 
 	nodeP.feeds.push(option.value);
 	var li = document.createElement("li");
 	li.innerHTML = option.value;

@@ -324,6 +324,11 @@ function genUpControls(username){
 			controls.cNodes["up-d"].nextSibling.hidden = true;
 		}
 		var aBan = controls.cNodes["up-b"];
+		if (user.type == "group"){
+			aBan.nextSibling.hidden = true;
+			aBan.hidden = true;
+			return;
+		}
 		aBan.banned = gMe.users.banIds.some(function(a){
 			return a == user.id;
 		});

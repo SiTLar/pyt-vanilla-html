@@ -1687,7 +1687,7 @@ function newDirect(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 	var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
 	if ((input != "") && (typeof gUsers.byName[input] !== "undefined") 
-		&& gUsers.byName[input].friend && gUsers.byName[input].subscriber) 
+		&& gUsers.byName[input].friend && (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group")) 
 		victim.cNodes["new-post-to"].feeds.push(input);
 	if (victim.cNodes["new-post-to"].feeds.length) newPost(e);	
 	else alert("should have valid recipients");

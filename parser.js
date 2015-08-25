@@ -170,13 +170,23 @@ function draw(content){
 		body.appendChild(gNodes["controls-anon"].cloneAll());
 		body.appendChild(title);
 	}else{ 
-		if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
-			gMe.subscribers.forEach(function(sub){
-				if(typeof gUsers[sub.id] !== "undefined")gUsers[sub.id].subscriber = true;
-			});
+		if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
+			gMe.subscribers.forEach(function(sub){addUser(sub);});
+			var oSubscriptions = new Object();
 			gMe.subscriptions.forEach(function(sub){
 				if(sub.name =="Posts"){
-					if(typeof gUsers[sub.user] !== "undefined")gUsers[sub.user].friend = true;
+					oSubscriptions[sub.id] = sub.user;
+				}
+			});
+			gMe.users.subscribers.forEach(function(sub){
+				addUser(sub);
+				gUsers[sub.id].subscriber = true;
+			});
+			gMe.users.subscriptions.forEach(function(subid){
+				if (typeof oSubscriptions[subid] !== "undefined") {
+					if (typeof gUsers[oSubscriptions[subid]] === "undefined")
+						console.log(oSubscriptions[subid]);
+					else gUsers[oSubscriptions[subid]].friend = true;
 				}
 			});
 		}
@@ -1695,31 +1705,21 @@ function genDirectTo(victim){
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 		nodeDirectTo.cNodes["new-direct-input"].value = document.location.hash.slice(1);
 	}
-	if ((typeof gMe.subscribers !== "undefined") && (typeof gMe.subscriptions !== "undefined")){
+	if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
 		var oDest = new Object();
 		var aMutual = new Array()
-		gMe.subscribers.forEach(function(sub){
-			addUser(sub);
-			gUsers[sub.id].subscriber = true;
-		});
-		gMe.subscriptions.forEach(function(sub){
-			if(sub.name =="Posts"){
-				if(typeof gUsers[sub.user] !== "undefined"){
-					gUsers[sub.user].friend = true;
-					if(gUsers[sub.user].subscriber) aMutual.push(gUsers[sub.user].username);
-				}
-			}
-		});
-		aMutual.forEach(function (user){
+		for (var username in gUsers.byName){
+			if (!gUsers.byName[username].friend || !gUsers.byName[username].subscriber)
+				continue;
 			var pos = oDest;
-			for(var idx = 0; idx < user.length; idx++){
+			for(var idx = 0; idx < username.length; idx++){
 				if (typeof pos.arr === "undefined") pos.arr = new Array();
-				pos.arr.push(user);
-				if (typeof pos[user.charAt(idx)] === "undefined") 
-					pos[user.charAt(idx)] = new Object();
-				pos = pos[user.charAt(idx)];
+				pos.arr.push(username);
+				if (typeof pos[username.charAt(idx)] === "undefined") 
+					pos[username.charAt(idx)] = new Object();
+				pos = pos[username.charAt(idx)];
 			}
-		});
+		}
 	}
 	nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
 	gConfig.regenPostTo = function (){return genDirectTo(victim);};
@@ -1746,8 +1746,8 @@ function genPostTo(victim){
 	victim.cNodes["new-post-feed-select"].appendChild(option);
 	var groups = document.createElement("optgroup");
 	groups.label = "Public groups";
-	if (gMe.subscribers){
-		gMe.subscribers.forEach(function(sub){
+	if (gMe.user.subscribers){
+		gMe.user.subscribers.forEach(function(sub){
 			if(sub.type == "group"){
 				option = document.createElement("option");
 				option.value = sub.username;

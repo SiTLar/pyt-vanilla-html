@@ -112,7 +112,7 @@ function reqSubscription(e){
 		if(oReq.status < 400) {
 			var span = document.createElement("span");
 			span.innerHTML = "Request sent";
-			e.target.parentNode.repalceChild(span, e.target);
+			e.target.parentNode.replaceChild(span, e.target);
 		}
 	}
 
@@ -307,6 +307,7 @@ function genUpControls(username){
 		sub.innerHTML = user.friend?"Unsubscribe":"Subscribe";
 		sub.subscribed = user.friend;
 		if (!user.friend && (user.isPrivate == 1 )){
+			sub.removeEventListener("click",subscribe);
 			if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
 				sub = document.createElement("span");
 				sub.innerHTML = "Subscription request sent";

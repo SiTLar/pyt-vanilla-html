@@ -91,6 +91,7 @@ function genLikes(post, postNBody){
 			if( postNBody.cNodes["post-info"].nodeLike) {
 				postNBody.cNodes["post-info"].nodeLike.innerHTML = "Un-like";
 				postNBody.cNodes["post-info"].nodeLike.action = false;
+
 			}
 
 		}
@@ -172,7 +173,7 @@ function draw(content){
 		body.appendChild(title);
 	}else{ 
 		if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
-			gMe.subscribers.forEach(function(sub){addUser(sub);});
+			gMe.subscribers.forEach(addUser);
 			var oSubscriptions = new Object();
 			gMe.subscriptions.forEach(function(sub){
 				if(sub.name =="Posts"){
@@ -439,30 +440,9 @@ function showHidden(e){
 function postHide(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 	var oReq = new XMLHttpRequest();
-	var aShow = document.getElementsByClassName("show-hidden")[0].cNodes["href"];
 	oReq.onload = function(){
 		if(this.status < 400){	
-			if(e.target.action){
-				victim.rawData.isHidden = true;
-				document.hiddenPosts[victim.rawData.idx] = victim.rawData;
-				victim.parentNode.removeChild(victim);
-				document.hiddenCount++;
-				aShow.action = false;
-				aShow.dispatchEvent(new Event("click"));
-			}else{
-				var count = 0;
-				var idx = victim.rawData.idx;
-				do if(document.hiddenPosts[idx--])count++;
-				while ( idx >0 );
-				if ((victim.rawData.idx - count+1) >= document.posts.childNodes.length )document.posts.appendChild(victim);
-				else document.posts.insertBefore(victim, document.posts.childNodes[victim.rawData.idx - count+1]);
-				e.target.innerHTML = "Hide";
-				document.hiddenPosts[victim.rawData.idx] = false;
-				document.hiddenCount--;
-				if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries"; 
-				else aShow.dispatchEvent(new Event("click"));
-			}
-			e.target.action = !e.target.action; 
+			doHide(victim, e.target.action);
 		};
 	}
 	
@@ -473,6 +453,33 @@ function postHide(e){
 		
 
 	
+}
+function doHide(victim, action){
+	var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
+	if(action != nodeHide.action) return; 
+	var aShow = document.getElementsByClassName("show-hidden")[0].cNodes["href"];
+	if(action){
+		victim.rawData.isHidden = true;
+		document.hiddenPosts[victim.rawData.idx] = victim.rawData;
+		victim.parentNode.removeChild(victim);
+		document.hiddenCount++;
+		aShow.action = false;
+		aShow.dispatchEvent(new Event("click"));
+	}else{
+		var count = 0;
+		var idx = victim.rawData.idx;
+		do if(document.hiddenPosts[idx--])count++;
+		while ( idx >0 );
+		if ((victim.rawData.idx - count+1) >= document.posts.childNodes.length )document.posts.appendChild(victim);
+		else document.posts.insertBefore(victim, document.posts.childNodes[victim.rawData.idx - count+1]);
+		nodeHide.innerHTML = "Hide";
+		document.hiddenPosts[victim.rawData.idx] = false;
+		document.hiddenCount--;
+		if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries"; 
+		else aShow.dispatchEvent(new Event("click"));
+	}
+	nodeHide.action = !action; 
+
 }
 function updateDate(node){
 	node.innerHTML =  relative_time(node.date);
@@ -616,6 +623,7 @@ function genPost(post){
 			aHide.addEventListener("click", postHide);
 			nodeControls.appendChild(aHide);
 			postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
+			postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
 		}
 		if (post.likes)	genLikes(post, postNBody );
 		if (post.comments){

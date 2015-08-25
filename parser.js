@@ -552,9 +552,10 @@ function genPost(post){
 			var title = user.link;
 			if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 			else if(post.postedTo){
+				nodePost.gotLock  = true;
 				post.postedTo.forEach(function(id){ 
-					if (gFeeds[id].isPrivate == "1")
-						nodePost.gotLock = true; 
+					if (gFeeds[id].isPrivate == "0")
+						nodePost.gotLock = false; 
 				});
 				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
 					title += "<span> posted to: </span>";

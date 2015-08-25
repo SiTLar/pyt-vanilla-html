@@ -184,9 +184,8 @@ function draw(content){
 			});
 			gMe.users.subscriptions.forEach(function(subid){
 				if (typeof oSubscriptions[subid] !== "undefined") {
-					if (typeof gUsers[oSubscriptions[subid]] === "undefined")
-						console.log(oSubscriptions[subid]);
-					else gUsers[oSubscriptions[subid]].friend = true;
+					if (typeof gUsers[oSubscriptions[subid]] !== "undefined")
+						gUsers[oSubscriptions[subid]].friend = true;
 				}
 			});
 		}
@@ -1661,7 +1660,7 @@ function newDirectInp(e){
 			nodeTip.style.top = e.target.offsetTop+e.target.offsetHeight;
 			nodeTip.style.left =  e.target.offsetLeft;
 			nodeTip.style.width = e.target.clientWidth;
-			if(typeof e.target.tip !== "undefined") {
+			if((typeof e.target.tip !== "undefined") && e.target.tip.parentNode) {
 				document.body.replaceChild(nodeTip, e.target.tip);
 				e.target.tip = nodeTip;
 			}else e.target.tip = document.body.appendChild(nodeTip);
@@ -1707,9 +1706,8 @@ function genDirectTo(victim){
 	}
 	if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
 		var oDest = new Object();
-		var aMutual = new Array()
 		for (var username in gUsers.byName){
-			if (!gUsers.byName[username].friend || !gUsers.byName[username].subscriber)
+			if (!gUsers.byName[username].friend || !(gUsers.byName[username].subscriber || (gUsers.byName[username].type == "group")))
 				continue;
 			var pos = oDest;
 			for(var idx = 0; idx < username.length; idx++){
@@ -1746,9 +1744,13 @@ function genPostTo(victim){
 	victim.cNodes["new-post-feed-select"].appendChild(option);
 	var groups = document.createElement("optgroup");
 	groups.label = "Public groups";
-	if (gMe.user.subscribers){
-		gMe.user.subscribers.forEach(function(sub){
-			if(sub.type == "group"){
+	if (typeof gMe.users.subscriptions !== "undefined"){
+		var oSubscriptions = new Object();
+		gMe.subscriptions.forEach(function(sub){if (sub.name == "Posts")oSubscriptions[sub.id] = sub; });	
+		gMe.users.subscriptions.forEach(function(subid){
+			if (typeof oSubscriptions[subid] === "undefined") return;
+			var sub = gUsers[oSubscriptions[subid].user];
+			if((typeof sub !=="undefined") && (sub.type == "group")){
 				option = document.createElement("option");
 				option.value = sub.username;
 				option.innerHTML = sub.screenName;

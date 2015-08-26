@@ -16,7 +16,7 @@ var RtUpdate = function (token){
 						if(e.data == "3probe")rt.wSocket.send("5");
 						setInterval(function (){rt.ping();}, res.pingInterval);
 						rt.wSocket.onmessage = null;
-						rt.wSocket.addEventListener("message",rt.message);
+						rt.wSocket.addEventListener("message", function (e){rt.message(e)});
 						resolve(); 
 					};
 				};
@@ -43,8 +43,8 @@ RtUpdate.prototype = {
 		if (idxPayload == -1) return;
 		var type = msg.data.slice(0,idxPayload);
 		var data = JSON.parse(msg.data.slice(idxPayload));
-		if (Array.isArray(data) &&  (typeof rt.handlers[data[0]] !== "undefined")) rt.handlers[data[0]](data[1]);
 		console.log(msg);	
+		if (Array.isArray(data) &&  (typeof rt.handlers[data[0]] !== "undefined")) rt.handlers[data[0]](data[1]);
 	}
 	, handle: function (msg,f){
 		var rt = this;

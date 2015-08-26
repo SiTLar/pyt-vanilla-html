@@ -128,9 +128,9 @@ var templates =  {"nodes": [
 		{"c":"new-direct-input", "t": "input","e":{"input":"newDirectInp", "keyup":"newDirectInp"}  },
 		{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":"newDirectAddFeed"} }
 	]}
-	,{"c":"friends-tip","e":{"mouseleave":"ftClose"}
+	,{"c":"friends-tip","e":{"mouseleave":"ftClose","click":"ftClose" }
 	,"children":[
-		{"c":"priv-close","e":{"click":"ftClose"}
+		{"c":"priv-close"//,"e":{"click":"ftClose"}
 		,"children":[
 			{"t":"a"
 			,"children":[

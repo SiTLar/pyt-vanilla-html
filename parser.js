@@ -112,7 +112,7 @@ function reqSubscription(e){
 		if(oReq.status < 400) {
 			var span = document.createElement("span");
 			span.innerHTML = "Request sent";
-			e.target.parentNode.repalceChild(span, e.target);
+			e.target.parentNode.replaceChild(span, e.target);
 		}
 	}
 
@@ -307,6 +307,7 @@ function genUpControls(username){
 		sub.innerHTML = user.friend?"Unsubscribe":"Subscribe";
 		sub.subscribed = user.friend;
 		if (!user.friend && (user.isPrivate == 1 )){
+			sub.removeEventListener("click",subscribe);
 			if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
 				sub = document.createElement("span");
 				sub.innerHTML = "Subscription request sent";
@@ -323,6 +324,11 @@ function genUpControls(username){
 			controls.cNodes["up-d"].nextSibling.hidden = true;
 		}
 		var aBan = controls.cNodes["up-b"];
+		if (user.type == "group"){
+			aBan.nextSibling.hidden = true;
+			aBan.hidden = true;
+			return;
+		}
 		aBan.banned = gMe.users.banIds.some(function(a){
 			return a == user.id;
 		});
@@ -546,9 +552,10 @@ function genPost(post){
 			var title = user.link;
 			if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 			else if(post.postedTo){
+				nodePost.gotLock  = true;
 				post.postedTo.forEach(function(id){ 
-					if (gFeeds[id].isPrivate == "1")
-						nodePost.gotLock = true; 
+					if (gFeeds[id].isPrivate == "0")
+						nodePost.gotLock = false; 
 				});
 				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
 					title += "<span> posted to: </span>";
@@ -688,6 +695,8 @@ function newPost(e){
 				textField.parentNode.cNodes["attachments"] = nodeAtt;
 				textField.value = "";
 				textField.disabled = false;
+				delete textField.pAtt;
+				delete textField.attachments;
 				e.target.disabled = false;
 				textField.style.height  = "4em";
 				e.target.parentNode.removeChild(nodeSpinner);
@@ -1399,7 +1408,7 @@ function auth(check){
 	if (check !== true ){
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
-		nodeAuth.innerHTML = '<div id=auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" onsubmit=getauth(this)><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td><input type="submit" value="Log in"></td></tr></table></form>';
+		nodeAuth.innerHTML = '<div id=auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" onsubmit=getauth(this)><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
 		document.getElementsByTagName("body")[0].appendChild(nodeAuth);
 	}
 	return false;
@@ -1687,7 +1696,7 @@ function newDirect(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 	var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
 	if ((input != "") && (typeof gUsers.byName[input] !== "undefined") 
-		&& gUsers.byName[input].friend && gUsers.byName[input].subscriber) 
+		&& gUsers.byName[input].friend && (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group")) 
 		victim.cNodes["new-post-to"].feeds.push(input);
 	if (victim.cNodes["new-post-to"].feeds.length) newPost(e);	
 	else alert("should have valid recipients");
@@ -1807,6 +1816,7 @@ function newPostAddFeed(e){
 function newDirectAddFeed(e){
 	var nodeP = e.target.parentNode;
 	var option = nodeP.cNodes["new-direct-input"];
+	if (option.value == "") return;
 	if(typeof option.tip !== "undefined")document.body.removeChild(option.tip); 
 	nodeP.feeds.push(option.value);
 	var li = document.createElement("li");

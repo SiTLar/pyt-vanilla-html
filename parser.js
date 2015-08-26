@@ -205,7 +205,7 @@ function draw(content){
 		case gMe.users.username:
 			var nodeAddPost = gNodes["new-post"].cloneAll();
 			body.appendChild(nodeAddPost);
-			genPostTo(nodeAddPost.cNodes["new-post-to"]);
+			genPostTo(nodeAddPost);
 			break;
 		default:
 			body.appendChild(genUpControls(gConfig.timeline));
@@ -698,6 +698,8 @@ function newPost(e){
 				textField.disabled = false;
 				delete textField.pAtt;
 				delete textField.attachments;
+				postTo.feeds = new Array();
+				gConfig.regenPostTo();
 				e.target.disabled = false;
 				textField.style.height  = "4em";
 				e.target.parentNode.removeChild(nodeSpinner);
@@ -1693,7 +1695,7 @@ function selectFriend(e){
 	victim.inp.value = e.target.innerHTML;
 
 }
-function newDirect(e){
+function postDirect(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 	var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
 	if ((input != "") && (typeof gUsers.byName[input] !== "undefined") 
@@ -1708,7 +1710,7 @@ function genDirectTo(victim){
 	victim.cNodes["new-post-to"] = nodeDirectTo;
 	nodeDirectTo.feeds = new Array();
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", newPost);
-	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", newDirect);
+	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", postDirect);
 	victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 	if(document.location.hash != ""){
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
@@ -1733,25 +1735,28 @@ function genDirectTo(victim){
 	gConfig.regenPostTo = function (){return genDirectTo(victim);};
 }
 function genPostTo(victim){
-	victim.feeds = new Array();
-	victim.feeds.push(gMe.users.username);
-	victim.parentNode.isPrivate  = false;
-	victim.cNodes["new-post-feeds"].firstChild.idx = 1;
-	victim.cNodes["new-post-feeds"].firstChild.oValue = gMe.users.username;
+	var nodePostTo = gNodes["new-post-to"].cloneAll(); 
+	victim.replaceChild(nodePostTo, victim.cNodes["new-post-to"]);
+	victim.cNodes["new-post-to"] = nodePostTo;
+	nodePostTo.feeds = new Array();
+	nodePostTo.feeds.push(gMe.users.username);
+	nodePostTo.parentNode.isPrivate  = false;
+	nodePostTo.cNodes["new-post-feeds"].firstChild.idx = 1;
+	nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = gMe.users.username;
 	var option = document.createElement("option");
 	option.selected = true;
 	var select = document.createElement("select");
 	select.className = "new-post-feed-select";
-	select.hidden = victim.cNodes["new-post-feed-select"].hidden;
+	select.hidden = nodePostTo.cNodes["new-post-feed-select"].hidden;
 	select.addEventListener("change",newPostSelect);
-	victim.replaceChild(select, victim.cNodes["new-post-feed-select"]);
-	victim.cNodes["new-post-feed-select"] = select;
-	victim.cNodes["new-post-feed-select"].appendChild(option);
+	nodePostTo.replaceChild(select, nodePostTo.cNodes["new-post-feed-select"]);
+	nodePostTo.cNodes["new-post-feed-select"] = select;
+	nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
 	option = document.createElement("option");
 	option.disabled = true;
 	option.innerHTML = "My feed";
 	option.value = gMe.users.username;
-	victim.cNodes["new-post-feed-select"].appendChild(option);
+	nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
 	var groups = document.createElement("optgroup");
 	groups.label = "Public groups";
 	if (typeof gMe.users.subscriptions !== "undefined"){
@@ -1770,7 +1775,7 @@ function genPostTo(victim){
 		
 	};
 	if (groups.childNodes.length > 0 )
-		victim.cNodes["new-post-feed-select"].appendChild(groups);
+		nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
 	groups = document.createElement("optgroup");
 	groups.label = "Private groups";
 	for (var id in matrix.gSymKeys){
@@ -1781,7 +1786,7 @@ function genPostTo(victim){
 		groups.appendChild(option);
 	}
 	if (groups.childNodes.length > 0 )
-		victim.cNodes["new-post-feed-select"].appendChild(groups);
+		nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
 	
 	gConfig.regenPostTo = function (){return genPostTo(victim);};
 

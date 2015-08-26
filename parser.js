@@ -106,7 +106,8 @@ function addUser (user){
 }
 function reqSubscription(e){
 	var oReq = new XMLHttpRequest();
-	oReq.open("post", gConfig.serverURL +"users/"+gConfig.timeline+"/sendRequest/", true);
+	var username = e.target.parentNode.user;
+	oReq.open("post", gConfig.serverURL +"users/"+username+"/sendRequest/", true);
 	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
 	oReq.onload = function(){
 		if(oReq.status < 400) {
@@ -309,8 +310,8 @@ function genUpControls(username){
 		if (!user.friend && (user.isPrivate == 1 )){
 			sub.removeEventListener("click",subscribe);
 			if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
-				sub = document.createElement("span");
-				sub.innerHTML = "Subscription request sent";
+				controls.cNodes["up-s"] = document.createElement("span");
+				controls.cNodes["up-s"] = "Subscription request sent";
 			}else{
 				sub.innerHTML = "Request subscription";
 				sub.addEventListener("click", reqSubscription);

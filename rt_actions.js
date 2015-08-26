@@ -31,11 +31,10 @@ RtHandler.prototype = {
 		oReq.send();	
 	}
 	,handlers: [
-	{"comment:new":
-	 function(data){
+	{"comment:new": function(data){
 	 	var that = this;
 	 	if (gMe && Array.isArray(gMe.users.banIds)
-			&& (gMe.users.banIds.indexOf(datacomments.createdBy) > -1))
+			&& (gMe.users.banIds.indexOf(data.comments.createdBy) > -1))
 			return;
 		var nodePost = document.getElementById(data.comments.postId);
 		if(nodePost){
@@ -44,14 +43,12 @@ RtHandler.prototype = {
 			that.bumpPost(nodePost);
 		}else injectPost(data.comments.postId);
 	}}
-	,{"comment:update":
-	function(data){
+	,{"comment:update": function(data){
 		gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(data.comments.id);
 		if (nodeComment) nodeComment.cNodes["comment-body"] = data.comments.body;
 	}}
-	,{"comment:destroy":
-	function(data){
+	,{"comment:destroy": function(data){
 		var nodeComment = document.getElementById(data.comments.id);
 		if(!nodeComment)return;
 		nodeComment.parentNode.removeChild(nodeComment);
@@ -61,36 +58,52 @@ RtHandler.prototype = {
 			&&(nodePost.rawData.comments.indexOf(data.comments.id))
 			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(data.comments.id),1);
 	}}
-	,{"like:new":"newLike"}
-		,{"like:remove":"removeLike"}
-	,{"post:new" :
-	 function(data){
+	,{"like:new": function(data){
+	 	var that = this;
+	 	if (gMe && Array.isArray(gMe.users.banIds)
+			&& (gMe.users.banIds.indexOf(data.users.id) > -1))
+			return;
+		addUser(data.users);
+		var nodePost = document.getElementById(data.meta.postId);
+		if(nodePost){
+			if (!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
+			nodePost.rawData.likes.unshift(data.users.id);
+			genLikes(nodePost);
+			that.bumpPost(nodePost);
+		}else injectPost(data.meta.postId);
+	}}
+	,{"like:remove": function(data){
+		var nodePost = document.getElementById(data.meta.postId);
+		if(nodePost  && (Array.isArray(nodePost.rawData.likes))) {
+			nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(data.meta.userId, 1)) ;
+				
+			genLikes(nodePost);
+		}
+
+	}}
+	,{"post:new" : function(data){
 	 	var that = this;
 		if(gConfig.skip)return;
 		if(document.getElementById(data.posts.id)) return;
 		that.unshiftPost(data);
 	}}
-	, {"post:update" :
-	 function(data){
+	, {"post:update" : function(data){
 		var nodePost = document.getElementById(data.posts.id);
 		if(!nodePost) return;
 		nodePost.cNodes["post-body"].cNodes["post-cont"] = autolinker.link(data.posts.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodePost.rawData.body = data.posts.body;
 	}}
-	, {"post:destroy" :
-	 function(data){
+	, {"post:destroy" : function(data){
 		var nodePost = document.getElementById(data.posts.id);
 		if(!nodePost) return;
 		nodePost.parentNode.removeChild(nodePost);
 	}}
-	, {"post:hide" :
-	 function(data){
+	, {"post:hide" : function(data){
 		var nodePost = document.getElementById(data.posts.id);
 		if(!nodePost) return;
 		doHide(nodePost, true);
 	}}
-	, {"post:unhide" :
-	 function(data){
+	, {"post:unhide" : function(data){
 		var nodePost = document.getElementById(data.posts.id);
 		if(nodePost) {
 			doHide(nodePost, false);

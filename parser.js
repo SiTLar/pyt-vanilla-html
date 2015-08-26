@@ -55,7 +55,9 @@ function writeAllLikes(id,nodeLikes){
 	//nodeLikes.childNodes[idx].appendChild(suffix);
 	nodeLikes.appendChild(suffix);
 }
-function genLikes(post, postNBody){
+function genLikes(nodePost){
+	var post = nodePost.rawData;
+	var postNBody = nodePost.cNodes["post-body"];
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(gNodes["likes-smile"].cloneNode(true));
 	var nodeLikes = document.createElement( "ul");
  	var l =  post.likes.length;
@@ -624,7 +626,7 @@ function genPost(post){
 			postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
 			postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
 		}
-		if (post.likes)	genLikes(post, postNBody );
+		if (post.likes)	genLikes(nodePost );
 		if (post.comments){
 			if(post.omittedComments){
 				if(post.comments[0])

@@ -7,6 +7,7 @@ var gMe = new Object();
 var gComments = new Object();
 var gAttachments  = new Object();
 var gFeeds = new Object();
+var gRt = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var autolinker = new Autolinker({"truncate":20,  "replaceFn":frfAutolinker } );
 var matrix = new CryptoPrivate(gCryptoPrivateCfg );
@@ -54,7 +55,13 @@ function writeAllLikes(id,nodeLikes){
 	//nodeLikes.childNodes[idx].appendChild(suffix);
 	nodeLikes.appendChild(suffix);
 }
-function genLikes(post, postNBody){
+function genLikes(nodePost){
+	var post = nodePost.rawData;
+	var postNBody = nodePost.cNodes["post-body"];
+	var node = document.createElement("div");
+	node.className = "likes";
+	postNBody.cNodes["post-info"].replaceChild(node,  postNBody.cNodes["post-info"].cNodes["likes"]);
+	postNBody.cNodes["post-info"].cNodes["likes"] = node;
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(gNodes["likes-smile"].cloneNode(true));
 	var nodeLikes = document.createElement( "ul");
  	var l =  post.likes.length;
@@ -90,6 +97,7 @@ function genLikes(post, postNBody){
 			if( postNBody.cNodes["post-info"].nodeLike) {
 				postNBody.cNodes["post-info"].nodeLike.innerHTML = "Un-like";
 				postNBody.cNodes["post-info"].nodeLike.action = false;
+
 			}
 
 		}
@@ -157,13 +165,25 @@ function subscribe(e){
 
 	oReq.send();
 }
+function loadGlobals(data){
+	if(data.attachments)data.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
+	if(data.comments)data.comments.forEach(function(comment){ gComments[comment.id] = comment; });
+	if(data.users)data.users.forEach(addUser);
+	if(data.subscribers && data.subscriptions ){	
+		var subscribers = new Object();
+		data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;addUser(sub);});
+		data.subscriptions.forEach(function(sub){
+			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
+				gFeeds[sub.id] = subscribers[sub.user];
+			}
+		});
+	}
+}
 function draw(content){
 	var body = document.createElement("div");
 	body.className = "content";
 	document.getElementsByTagName("body")[0].appendChild(body);
-	if(content.attachments)content.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-	if(content.comments)content.comments.forEach(function(comment){ gComments[comment.id] = comment; });
-	content.users.forEach(addUser);
+	loadGlobals(content);
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	gConfig.cTxt = null;
@@ -172,7 +192,7 @@ function draw(content){
 		body.appendChild(title);
 	}else{ 
 		if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
-			gMe.subscribers.forEach(function(sub){addUser(sub);});
+			gMe.subscribers.forEach(addUser);
 			var oSubscriptions = new Object();
 			gMe.subscriptions.forEach(function(sub){
 				if(sub.name =="Posts"){
@@ -212,15 +232,6 @@ function draw(content){
 			
 		}
 	}
-	if(content.subscribers && content.subscriptions ){	
-		var subscribers = new Object();
-		content.subscribers.forEach(function(sub){subscribers[sub.id]=sub;addUser(sub);});
-		content.subscriptions.forEach(function(sub){
-			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
-				gFeeds[sub.id] = subscribers[sub.user];
-			}
-		});
-	}
 	if(content.timelines){
 		var nodeMore = document.createElement("div");
 		nodeMore.className = "more-node";
@@ -254,12 +265,12 @@ function draw(content){
 			content.posts.forEach(function(post){
 				post.idx = idx++;
 				if(post.isHidden){
-					document.hiddenPosts.push(post);
 					document.hiddenCount++;
 				}else{ 
-					document.hiddenPosts.push(false);
+					post.isHidden = false;
 					document.posts.appendChild(genPost(post));
 				} 
+				document.hiddenPosts.push({"is":post.isHidden,"data":post});
 			});
 		}
 		var nodeShowHidden = gNodes["show-hidden"].cloneAll();
@@ -274,7 +285,12 @@ function draw(content){
 			new Promise(function (){addPosts(drop,toAdd,0);});
 		};
 	}else body.appendChild(genPost(content.posts));
-
+	var token = window.localStorage.getItem("token");
+	if(token != "" ){
+		gRt = new RtUpdate(token);
+		if(content.timelines) gRt.subscribe(content.timelines.id);
+	}
+	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -425,7 +441,7 @@ function showHidden(e){
 		if(!document.hiddenCount)return;	
 		var nodeHiddenPosts = document.createElement("div");
 		nodeHiddenPosts.id = "hidden-posts"; 
-		document.hiddenPosts.forEach(function(post){if(post)nodeHiddenPosts.appendChild(genPost(post));});
+		document.hiddenPosts.forEach(function(oHidden){if(oHidden.is)nodeHiddenPosts.appendChild(genPost(oHidden.data));});
 		e.target.parentNode.parentNode.insertBefore(nodeHiddenPosts , e.target.parentNode.nextSibling);
 		e.target.innerHTML =  "Collapse "+ document.hiddenCount + " hidden entries";
 	}else{
@@ -439,30 +455,9 @@ function showHidden(e){
 function postHide(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 	var oReq = new XMLHttpRequest();
-	var aShow = document.getElementsByClassName("show-hidden")[0].cNodes["href"];
 	oReq.onload = function(){
 		if(this.status < 400){	
-			if(e.target.action){
-				victim.rawData.isHidden = true;
-				document.hiddenPosts[victim.rawData.idx] = victim.rawData;
-				victim.parentNode.removeChild(victim);
-				document.hiddenCount++;
-				aShow.action = false;
-				aShow.dispatchEvent(new Event("click"));
-			}else{
-				var count = 0;
-				var idx = victim.rawData.idx;
-				do if(document.hiddenPosts[idx--])count++;
-				while ( idx >0 );
-				if ((victim.rawData.idx - count+1) >= document.posts.childNodes.length )document.posts.appendChild(victim);
-				else document.posts.insertBefore(victim, document.posts.childNodes[victim.rawData.idx - count+1]);
-				e.target.innerHTML = "Hide";
-				document.hiddenPosts[victim.rawData.idx] = false;
-				document.hiddenCount--;
-				if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries"; 
-				else aShow.dispatchEvent(new Event("click"));
-			}
-			e.target.action = !e.target.action; 
+			doHide(victim, e.target.action);
 		};
 	}
 	
@@ -473,6 +468,39 @@ function postHide(e){
 		
 
 	
+}
+function doHide(victim, action){
+	var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
+	if(action != nodeHide.action) return; 
+	var aShow = document.getElementsByClassName("show-hidden")[0].cNodes["href"];
+	if(action){
+		victim.rawData.isHidden = true;
+		document.hiddenPosts[victim.rawData.idx].is  = true;
+		victim.parentNode.removeChild(victim);
+		document.hiddenCount++;
+		aShow.action = false;
+		aShow.dispatchEvent(new Event("click"));
+	}else{
+		var count = 0;
+		var idx = victim.rawData.idx;
+		do if(document.hiddenPosts[idx--].is)count++;
+		while ( idx >0 );
+		if ((victim.rawData.idx - count+1) >= document.posts.childNodes.length )document.posts.appendChild(victim);
+		else document.posts.insertBefore(victim, document.posts.childNodes[victim.rawData.idx - count+1]);
+		nodeHide.innerHTML = "Hide";
+		document.hiddenPosts[victim.rawData.idx].is = false;
+		document.hiddenCount--;
+		if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries"; 
+		else aShow.dispatchEvent(new Event("click"));
+	}
+	nodeHide.action = !action; 
+
+}
+function regenHides(){
+	var idx = 0;
+	document.hiddenPosts.forEach(function(victim){
+		victim.data.idx = idx++;
+	});
 }
 function updateDate(node){
 	node.innerHTML =  relative_time(node.date);
@@ -617,8 +645,9 @@ function genPost(post){
 			aHide.addEventListener("click", postHide);
 			nodeControls.appendChild(aHide);
 			postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
+			postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
 		}
-		if (post.likes)	genLikes(post, postNBody );
+		if (post.likes)	genLikes(nodePost );
 		if (post.comments){
 			if(post.omittedComments){
 				if(post.comments[0])
@@ -881,7 +910,9 @@ function doDeletePost(but){
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
+			document.hiddenPosts.splice(victim.rawData.idx,1);
 			victim.parentNode.removeChild(victim);
+			regenHides();
 		}
 	};
 	if(victim.isPrivate){ 
@@ -1066,6 +1097,7 @@ function processText(e) {
 function cancelNewComment(e){ 
 	var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != "post-body");
 	postNBody.isBeenCommented = false;
+	if(typeof postNBody.bumpLater !== "undefined")postNBody.bumpLater(); 
 	var nodeComment =e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
 	nodeComment.parentNode.removeChild(nodeComment);
 
@@ -1184,6 +1216,7 @@ function sendComment(textField){
 	var nodeComment =textField; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
 	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
 	nodePost.cNodes["post-body"].isBeenCommented = false;
+	if(typeof postNBody.bumpLater !== "undefined")postNBody.bumpLater(); 
 	if(nodePost.isPrivate){
 		sendPrivateComment(textField, nodeComment, nodePost);
 		return;
@@ -1306,6 +1339,7 @@ function unfoldComm(id){
 			document.getElementById(id).rawData = post;
 			var nodePB = document.getElementById(id).cNodes["post-body"];
 			nodePB.isBeenCommented = false;
+			if(typeof postNBody.bumpLater !== "undefined")postNBody.bumpLater(); 
 			nodePB.removeChild(nodePB.cNodes["comments"]);
 			nodePB.cNodes["comments"] = document.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";

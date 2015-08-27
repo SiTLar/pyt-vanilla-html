@@ -3,21 +3,23 @@ var RtHandler = function (){};
 RtHandler.prototype = {
 	constructor: RtHandler
 	,unshiftPost: function(data){
-		data.subscribers.forEach(addUser);
-		if(data.attachments)data.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-		if(data.comments)data.comments.forEach(function(comment){ gComments[comment.id] = comment; });
-		if(data.users)data.users.forEach(addUser);
+		loadGlobals(content);
 		document.posts.insertBefore(genPost(data.posts),document.posts.firstChild);
-		this.regenHids();
+		document.hiddenPosts.unshift({"is":data.posts.isHidden,"data":data.posts});
+		regenHides();
+		if (data.posts.isHidden)doHide(document.getElementById(data.posts.id),true);
 	}
 	,bumpPost: function(nodePost){
+		var that = this;
 		if(nodePost.cNodes["post-body"].isBeenCommented)
-			nodePost.cNodes["post-body"].bumpLater = true;
+			nodePost.cNodes["post-body"].bumpLater = function(){ that.bumpPost(nodePost);}
 		else {
 			var nodeParent = nodePost.parentNode;
 			nodeParent.removeChild(nodePost);
 			nodeParent.insertBefore(nodePost,nodeParent.firstChild);
-			this.regenHids();
+			document.hiddenPosts.splice(nodePost.rawData.idx,1);
+			document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
+			regenHides();
 		}
 	}
 	,injectPost: function(id){
@@ -30,10 +32,9 @@ RtHandler.prototype = {
 		oReq.open("get",gConfig.serverURL+"posts/"+id, true);
 		oReq.send();	
 	}
-	,handlers: [
-	{"comment:new": function(data){
-	 	var that = this;
-	 	if (gMe && Array.isArray(gMe.users.banIds)
+	,"comment:new": function(data){
+		var that = this;
+		if (gMe && Array.isArray(gMe.users.banIds)
 			&& (gMe.users.banIds.indexOf(data.comments.createdBy) > -1))
 			return;
 		var nodePost = document.getElementById(data.comments.postId);
@@ -41,26 +42,26 @@ RtHandler.prototype = {
 			gComments[data.comments.id] = data.comments; 
 			nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
 			that.bumpPost(nodePost);
-		}else injectPost(data.comments.postId);
-	}}
-	,{"comment:update": function(data){
+		}else that.injectPost(data.comments.postId);
+	}
+	,"comment:update": function(data){
 		gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(data.comments.id);
-		if (nodeComment) nodeComment.cNodes["comment-body"] = data.comments.body;
-	}}
-	,{"comment:destroy": function(data){
+		if (nodeComment) nodeComment.cNodes["comment-body"].innerHTML = data.comments.body;
+	}
+	,"comment:destroy": function(data){
 		var nodeComment = document.getElementById(data.comments.id);
 		if(!nodeComment)return;
 		nodeComment.parentNode.removeChild(nodeComment);
 		if(typeof gComments[data.comments.id] !== "undefined")delete gComments[data.comments.id];
 		var nodePost  = document.getElementById(data.comments.postId);
 		if((typeof nodePost.rawData.comments !== "undefined")
-			&&(nodePost.rawData.comments.indexOf(data.comments.id))
+			&&(nodePost.rawData.comments.indexOf(data.comments.id) > -1))
 			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(data.comments.id),1);
-	}}
-	,{"like:new": function(data){
-	 	var that = this;
-	 	if (gMe && Array.isArray(gMe.users.banIds)
+	}
+	,"like:new": function(data){
+		var that = this;
+		if (gMe && Array.isArray(gMe.users.banIds)
 			&& (gMe.users.banIds.indexOf(data.users.id) > -1))
 			return;
 		addUser(data.users);
@@ -70,48 +71,45 @@ RtHandler.prototype = {
 			nodePost.rawData.likes.unshift(data.users.id);
 			genLikes(nodePost);
 			that.bumpPost(nodePost);
-		}else injectPost(data.meta.postId);
-	}}
-	,{"like:remove": function(data){
+		}else that.injectPost(data.meta.postId);
+	}
+	,"like:remove": function(data){
 		var nodePost = document.getElementById(data.meta.postId);
-		if(nodePost  && (Array.isArray(nodePost.rawData.likes))) {
-			nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(data.meta.userId, 1)) ;
-				
+		if(nodePost  && Array.isArray(nodePost.rawData.likes)
+			&& (nodePost.rawData.likes.indexOf(data.meta.userId) > -1 )) {
+			nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(data.meta.userId), 1) ;
 			genLikes(nodePost);
 		}
 
-	}}
-	,{"post:new" : function(data){
-	 	var that = this;
+	}
+	,"post:new" : function(data){
+		var that = this;
 		if(gConfig.skip)return;
 		if(document.getElementById(data.posts.id)) return;
 		that.unshiftPost(data);
-	}}
-	, {"post:update" : function(data){
+	}
+	, "post:update" : function(data){
 		var nodePost = document.getElementById(data.posts.id);
 		if(!nodePost) return;
-		nodePost.cNodes["post-body"].cNodes["post-cont"] = autolinker.link(data.posts.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		nodePost.cNodes["post-body"].cNodes["post-cont"].innerHTML = autolinker.link(data.posts.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodePost.rawData.body = data.posts.body;
-	}}
-	, {"post:destroy" : function(data){
-		var nodePost = document.getElementById(data.posts.id);
+	}
+	, "post:destroy" : function(data){
+		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) return;
 		nodePost.parentNode.removeChild(nodePost);
-	}}
-	, {"post:hide" : function(data){
-		var nodePost = document.getElementById(data.posts.id);
+	}
+	, "post:hide" : function(data){
+		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) return;
 		doHide(nodePost, true);
-	}}
-	, {"post:unhide" : function(data){
-		var nodePost = document.getElementById(data.posts.id);
-		if(nodePost) {
-			doHide(nodePost, false);
-			return;
-		}
-		document.hiddenEnries.forEach(function (item){
-			if (item && (item.id == data.posts.id))	nodePost = genPost(item);
-		})
-	}}
-	]	
+	}
+	, "post:unhide" : function(data){
+		var nodePost = document.getElementById(data.meta.postId);
+		if(!nodePost) 
+			document.hiddenPosts.forEach(function (item){
+				if (item.is && (item.data.id == data.meta.postId))nodePost = genPost(item.data);
+			});
+		if (nodePost) doHide(nodePost, false);
+	}
 }

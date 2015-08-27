@@ -3,6 +3,7 @@
 var RtUpdate = function (token){
 	var rt = this;
 	rt.token = token;
+	rt.handlers = new RtHandler();
 	rt.ready = new Promise(function(resolve,reject){
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function (){

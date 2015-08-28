@@ -1,7 +1,16 @@
 "use strict";
-var RtHandler = function (){};
+var RtHandler = function (bumpCooldown, bumpInterval){
+	var that = this;
+	if(typeof bumpCooldown !== "undefined") that.bumpCooldown = bumpCooldown;
+	if(typeof bumpInterval !== "undefined") that.bumpInterval = bumpInterval;
+	if(typeof gConfig.bumpIntervalId !== "undefined" ) clearInterval(gConfig.bumpIntervalId);
+	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){gConfig.bumps.forEach(that.bump);gConfig.bumps = new Array(); }, that.bumpInterval);
+	
+};
 RtHandler.prototype = {
 	constructor: RtHandler
+	,bumpCooldown: 0
+	,bumpInterval: 300
 	,unshiftPost: function(data){
 		loadGlobals(content);
 		document.posts.insertBefore(genPost(data.posts),document.posts.firstChild);
@@ -10,11 +19,12 @@ RtHandler.prototype = {
 		if (data.posts.isHidden)doHide(document.getElementById(data.posts.id),true);
 	}
 	,bumpPost: function(nodePost){
+		if(gConfig.skip)return;
 		var that = this;
 		if(nodePost.cNodes["post-body"].isBeenCommented)
 			nodePost.cNodes["post-body"].bumpLater = function(){ that.bumpPost(nodePost);}
 		else {
-			var nodeParent = nodePost.parentNode;
+	 		var nodeParent = nodePost.parentNode;
 			nodeParent.removeChild(nodePost);
 			nodeParent.insertBefore(nodePost,nodeParent.firstChild);
 			document.hiddenPosts.splice(nodePost.rawData.idx,1);
@@ -23,6 +33,7 @@ RtHandler.prototype = {
 		}
 	}
 	,injectPost: function(id){
+		if(gConfig.skip)return;
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function (){
 			if(oReq.status < 400){
@@ -41,7 +52,12 @@ RtHandler.prototype = {
 		if(nodePost){
 			gComments[data.comments.id] = data.comments; 
 			nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
-			that.bumpPost(nodePost);
+			if (nodePost.rawData.updatedAt + that.bumpCooldown < Date.now()){
+				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
+				gConfig.bumps.push(nodePost);
+			}
+			nodePost.rawData.updatedAt = Date.now();
+						
 		}else that.injectPost(data.comments.postId);
 	}
 	,"comment:update": function(data){
@@ -70,7 +86,11 @@ RtHandler.prototype = {
 			if (!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
 			nodePost.rawData.likes.unshift(data.users.id);
 			genLikes(nodePost);
-			that.bumpPost(nodePost);
+			if (nodePost.rawData.updatedAt + that.bumpCooldown < Date.now()){
+				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
+				gConfig.bumps.push(nodePost);
+			}
+			nodePost.rawData.updatedAt = Date.now();
 		}else that.injectPost(data.meta.postId);
 	}
 	,"like:remove": function(data){

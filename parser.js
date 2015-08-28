@@ -287,7 +287,7 @@ function draw(content){
 	}else body.appendChild(genPost(content.posts));
 	var token = window.localStorage.getItem("token");
 	if(token != "" ){
-		gRt = new RtUpdate(token);
+		gRt = new RtUpdate(token, 0);
 		if(content.timelines) gRt.subscribe(content.timelines.id);
 	}
 	document.body.removeChild(document.getElementById("splash"));
@@ -540,7 +540,7 @@ function genPost(post){
 		gPrivTimeline.posts.push(nodePost);
 		gPrivTimeline.postsById[post.id] = nodePost;
 		nodePost.rawData.body = cpost.payload.data;
-		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.payload.data.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.payload.data.replace(/\n/g,"").replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		if(typeof user === "undefined"){
 			if (gUsers.byName[cpost.payload.author]){
 				user = gUsers.byName[cpost.payload.author];
@@ -688,7 +688,7 @@ function genPost(post){
 			console.log("Private keys not loaded");
 			break;
 		}
-		postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		postNBody.cNodes["post-cont"].innerHTML =  autolinker.link(post.body.replace(/\n/g,"").replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		gotUser();
 	}else{	
 		nodePost.isPrivate = true;
@@ -850,10 +850,10 @@ function postEditedPost(e){
 			var cpost = matrix.decrypt(post.body);
 			if (typeof cpost.error === "undefined") {
 				cpost = JSON.parse(cpost);
-				post.body =cpost.payload.data;
+				post.body = cpost.payload.data;
 				nodePost.sign = cpost.sign;
 			}
-			postCNode.innerHTML = post.body;
+			postCNode.innerHTML = autolinker.link(post.body.replace(/\n/g,"").replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 			postCNode.className = "post-cont";
 			nodePost.rawData = post;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
@@ -1058,7 +1058,7 @@ function postEditComment(e){
 		return;
 	}
 	var comment = gComments[nodeComment.id];
-	comment.body = textField.value; 
+	comment.body = textField.value ; 
 	comment.updatedAt = Date.now();
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
@@ -1097,7 +1097,7 @@ function processText(e) {
 function cancelNewComment(e){ 
 	var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != "post-body");
 	postNBody.isBeenCommented = false;
-	if(typeof postNBody.bumpLater !== "undefined")postNBody.bumpLater(); 
+	if(typeof postNBody.bumpLater !== "undefined")setTimeout(postNBody.bumpLater, 1000);
 	var nodeComment =e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
 	nodeComment.parentNode.removeChild(nodeComment);
 
@@ -1216,7 +1216,7 @@ function sendComment(textField){
 	var nodeComment =textField; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
 	var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
 	nodePost.cNodes["post-body"].isBeenCommented = false;
-	if(typeof postNBody.bumpLater !== "undefined")postNBody.bumpLater(); 
+	if(typeof nodePost.cNodes["post-body"].bumpLater !== "undefined")setTimeout(nodePost.cNodes["post-body"].bumpLater, 1000); 
 	if(nodePost.isPrivate){
 		sendPrivateComment(textField, nodeComment, nodePost);
 		return;
@@ -1281,7 +1281,7 @@ function genComment(comment){
 	}
 	function spam(){nodeComment = document.createElement("span");};
 	nodeComment.cNodes["comment-body"].appendChild(nodeSpan);
-	nodeSpan.innerHTML = autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+	nodeSpan.innerHTML = autolinker.link(comment.body.replace(/\n/g,"").replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof cUser !== "undefined"){
@@ -1335,11 +1335,11 @@ function unfoldComm(id){
 	oReq.onload = function(){
 		if(oReq.status < 400){
 			var postUpd = JSON.parse(this.response);
-			postUpd.users.forEach(addUser);
+			loadGlobals(postUpd);
 			document.getElementById(id).rawData = post;
 			var nodePB = document.getElementById(id).cNodes["post-body"];
 			nodePB.isBeenCommented = false;
-			if(typeof postNBody.bumpLater !== "undefined")postNBody.bumpLater(); 
+			if(typeof nodePB.bumpLater !== "undefined")setTimeout(postPB.bumpLater, 1000); 
 			nodePB.removeChild(nodePB.cNodes["comments"]);
 			nodePB.cNodes["comments"] = document.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";

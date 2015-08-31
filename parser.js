@@ -1946,7 +1946,7 @@ function realTimeSwitch(e){
 function setRTCooldown(e){
 	var bump = e.target.value;
 	window.localStorage.setItem("rtbump",bump);
-	if(gRt.on)gRt.handlers.bumpCooldown = bump;
+	if(gRt.on)gRt.handlers.setBumpCooldown( bump);
 }
 function frfAutolinker( autolinker,match ){
 	switch (match.getType()){

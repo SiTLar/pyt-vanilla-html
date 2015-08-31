@@ -4,7 +4,7 @@ var RtHandler = function (bumpCooldown, bumpInterval){
 	if(typeof bumpCooldown !== "undefined") that.bumpCooldown = bumpCooldown;
 	if(typeof bumpInterval !== "undefined") that.bumpInterval = bumpInterval;
 	if(typeof gConfig.bumpIntervalId !== "undefined" ) clearInterval(gConfig.bumpIntervalId);
-	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){gConfig.bumps.forEach(that.bump);gConfig.bumps = new Array(); }, that.bumpInterval*1000);
+	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps}, that.bumpInterval*1000);
 	
 };
 RtHandler.prototype = {
@@ -31,6 +31,17 @@ RtHandler.prototype = {
 			node.style.opacity = 1; 
 			setTimeout(function(){ node.style.height = "auto"; } ,  that.timeGrow);
 		}, 1);
+	}
+	,setBumpCooldown(cooldown){
+		var that = this;
+		that.bumpCooldown = cooldown;
+		clearInterval(gConfig.bumpIntervalId);
+		if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps}, that.bumpInterval*1000);
+	}
+	,chkBumps: function(){
+		var that = this;
+		if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
+		gConfig.bumps.forEach(that.bump);
 	}
 	,unshiftPost: function(data){
 		var that = this;
@@ -73,7 +84,7 @@ RtHandler.prototype = {
 		if(nodePost){
 			gComments[data.comments.id] = data.comments; 
 			nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
-			if (nodePost.rawData.updatedAt + that.bumpCooldown*1000 < Date.now()){
+			if (that.bumpCooldown && ( nodePost.rawData.updatedAt + that.bumpCooldown*1000 < Date.now())){
 				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
 				gConfig.bumps.push(nodePost);
 			}

@@ -187,8 +187,12 @@ function draw(content){
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	gConfig.cTxt = null;
+	var nodeRTControls = gNodes["rt-controls"].cloneAll();
 	if(typeof gMe === "undefined"){ 
-		body.appendChild(gNodes["controls-anon"].cloneAll());
+		var nodeGControls = gNodes["controls-anon"].cloneAll();
+		nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
+		body.appendChild(nodeGControls);
+
 		body.appendChild(title);
 	}else{ 
 		if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
@@ -211,7 +215,9 @@ function draw(content){
 			});
 		}
 		
-		body.appendChild(gNodes["controls-user"].cloneAll());
+		var nodeGControls = gNodes["controls-user"].cloneAll();
+		nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
+		body.appendChild(nodeGControls);
 		body.appendChild(title);
 		switch (gConfig.timeline.split("/")[0]){
 		case "filter":
@@ -285,9 +291,17 @@ function draw(content){
 			new Promise(function (){addPosts(drop,toAdd,0);});
 		};
 	}else body.appendChild(genPost(content.posts));
-	var token = window.localStorage.getItem("token");
-	if(token != "" ){
-		gRt = new RtUpdate(token, 0);
+	var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
+	nodeRTCtrl.cNodes["rt-chkbox"].checked = window.localStorage.getItem("rt");
+	var bump = window.localStorage.getItem("rtbump");
+	var nodeBump = nodeRTCtrl.cNodes["rt-bump"];
+	for(var idx = 0; idx<nodeBump.childNodes.length; idx++)
+		if(nodeBump.childNodes[idx].value == bump){
+			nodeBump.selectedIndex = idx;
+			break;
+		}
+	if( nodeRTCtrl.cNodes["rt-chkbox"].checked){
+		gRt = new RtUpdate(window.localStorage.getItem("token"), bump);
 		if(content.timelines) gRt.subscribe(content.timelines.id);
 	}
 	document.body.removeChild(document.getElementById("splash"));
@@ -733,14 +747,8 @@ function newPost(e){
 				textField.style.height  = "4em";
 				e.target.parentNode.removeChild(nodeSpinner);
 				var res = JSON.parse(oReq.response);
-				if(res.attachments)res.attachments.forEach(function(attachment){ gAttachments[attachment.id] = attachment; });
-				if (res.subscriptions) {
-				
-					var subscribers = new Object();
-					res.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
-					res.subscriptions.forEach(function(sub){if(["Posts", "Directs"].some(function(a){return a == sub.name }))gFeeds[sub.id] = subscribers[sub.user];});
-				}
-				document.posts.insertBefore(genPost(res.posts), document.posts.childNodes[0]);
+				loadGlobals(res);
+				if(!document.getElementById(res.posts.id))document.posts.insertBefore(genPost(res.posts), document.posts.childNodes[0]);
 			}else{
 				textField.disabled = false;
 				e.target.disabled = false;
@@ -911,7 +919,7 @@ function doDeletePost(but){
 	oReq.onload = function(){
 		if(this.status < 400){
 			document.hiddenPosts.splice(victim.rawData.idx,1);
-			victim.parentNode.removeChild(victim);
+			//victim.parentNode.removeChild(victim);
 			regenHides();
 		}
 	};
@@ -1238,7 +1246,8 @@ function sendComment(textField){
 			gComments[comment.id] = comment;
 			textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
-			nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
+			if(!document.getElementById(comment.id))nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
+			else nodeComment.parentNode.removeChild(nodeComment);
 		}
 	};
 
@@ -1920,6 +1929,24 @@ function destroy(e){
 	e.target.parentNode.removeChild(e.target);
 	//e.stopPropagation();
 
+}
+function realTimeSwitch(e){
+	var bump = e.target.parentNode.cNodes["rt-bump"].value;
+	if(e.target.checked && !gRt.on){
+		window.localStorage.setItem("rt",true);
+		gRt = new RtUpdate(window.localStorage.getItem("token"),bump);
+	}else if(!e.target.checked){
+		window.localStorage.setItem("rt",false);
+		if(gRt.on){
+			gRt.close();
+			gRt = new Object();
+		}
+	}
+}
+function setRTCooldown(e){
+	var bump = e.target.value;
+	window.localStorage.setItem("rtbump",bump);
+	if(gRt.on)gRt.handlers.bumpCooldown = bump;
 }
 function frfAutolinker( autolinker,match ){
 	switch (match.getType()){

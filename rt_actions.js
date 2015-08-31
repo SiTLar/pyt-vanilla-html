@@ -4,19 +4,40 @@ var RtHandler = function (bumpCooldown, bumpInterval){
 	if(typeof bumpCooldown !== "undefined") that.bumpCooldown = bumpCooldown;
 	if(typeof bumpInterval !== "undefined") that.bumpInterval = bumpInterval;
 	if(typeof gConfig.bumpIntervalId !== "undefined" ) clearInterval(gConfig.bumpIntervalId);
-	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){gConfig.bumps.forEach(that.bump);gConfig.bumps = new Array(); }, that.bumpInterval);
+	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){gConfig.bumps.forEach(that.bump);gConfig.bumps = new Array(); }, that.bumpInterval*1000);
 	
 };
 RtHandler.prototype = {
 	constructor: RtHandler
 	,bumpCooldown: 0
-	,bumpInterval: 300
+	,bumpInterval:60 
+	,timeGrow : 1000
+	,insertSmooth: function(node, nodePos){
+		var that = this;
+		node.style.opacity = 0;
+		node.style.position = "absolute";
+		nodePos.parentNode.insertBefore(node,nodePos);
+		node.style.width = nodePos.parentNode.clientWidth;
+		var height = node.clientHeight;
+		node.style.width = "auto";
+		console.log("height=" + height);
+		node.style.height = 0;
+		if(node.className == "post")regenHides();
+		node.style.position = "static";
+		node.style["transition-property"] = "height";
+		node.style["transition-duration"] = that.timeGrow;
+		setTimeout(function(){
+			node.style.height = height;
+			node.style.opacity = 1; 
+			setTimeout(function(){ node.style.height = "auto"; } ,  that.timeGrow);
+		}, 1);
+	}
 	,unshiftPost: function(data){
-		loadGlobals(content);
-		document.posts.insertBefore(genPost(data.posts),document.posts.firstChild);
-		document.hiddenPosts.unshift({"is":data.posts.isHidden,"data":data.posts});
-		regenHides();
-		if (data.posts.isHidden)doHide(document.getElementById(data.posts.id),true);
+		var that = this;
+		loadGlobals(data);
+		var nodePost = genPost(data.posts);
+		document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
+		that.insertSmooth(nodePost, document.posts.firstChild);
 	}
 	,bumpPost: function(nodePost){
 		if(gConfig.skip)return;
@@ -25,14 +46,14 @@ RtHandler.prototype = {
 			nodePost.cNodes["post-body"].bumpLater = function(){ that.bumpPost(nodePost);}
 		else {
 	 		var nodeParent = nodePost.parentNode;
-			nodeParent.removeChild(nodePost);
-			nodeParent.insertBefore(nodePost,nodeParent.firstChild);
 			document.hiddenPosts.splice(nodePost.rawData.idx,1);
 			document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
-			regenHides();
+			nodeParent.removeChild(nodePost);
+			that.insertSmooth(nodePost, nodeParent.firstChild);
 		}
 	}
 	,injectPost: function(id){
+		var that = this;
 		if(gConfig.skip)return;
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function (){
@@ -52,7 +73,7 @@ RtHandler.prototype = {
 		if(nodePost){
 			gComments[data.comments.id] = data.comments; 
 			nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
-			if (nodePost.rawData.updatedAt + that.bumpCooldown < Date.now()){
+			if (nodePost.rawData.updatedAt + that.bumpCooldown*1000 < Date.now()){
 				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
 				gConfig.bumps.push(nodePost);
 			}
@@ -86,10 +107,12 @@ RtHandler.prototype = {
 			if (!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
 			nodePost.rawData.likes.unshift(data.users.id);
 			genLikes(nodePost);
-			if (nodePost.rawData.updatedAt + that.bumpCooldown < Date.now()){
+			/*
+			if (nodePost.rawData.updatedAt + that.bumpCooldown*1000 < Date.now()){
 				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
 				gConfig.bumps.push(nodePost);
 			}
+			*/
 			nodePost.rawData.updatedAt = Date.now();
 		}else that.injectPost(data.meta.postId);
 	}

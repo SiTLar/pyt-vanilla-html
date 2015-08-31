@@ -101,8 +101,11 @@ clear: both;
 .post {
 	border-bottom: 1px solid #eee;
 	line-height: 19px;
-	padding-bottom: 14px;
-	padding-top: 14px;
+	margin-bottom: 14px;
+	margin-top: 14px;
+	transition-property: height ; 
+	transition-duration: 5s;
+	overflow:hidden;
 }
 .avatar{
 float: left;
@@ -371,4 +374,8 @@ cursor: pointer;
 	display:inline;
 	margin-left:0;
 	padding:0;
+}
+.rt-controls{
+	margin: .5em 0;
+
 }

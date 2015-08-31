@@ -2,6 +2,7 @@
 
 var RtUpdate = function (token){
 	var rt = this;
+	rt.on = true;
 	rt.token = token;
 	rt.handlers = new RtHandler();
 	rt.ready = new Promise(function(resolve,reject){
@@ -11,7 +12,6 @@ var RtUpdate = function (token){
 				var res = JSON.parse(oReq.response.slice(oReq.response.indexOf("{")));
 				rt.wSocket = new WebSocket(gConfig.rt.replace("https","wss")+"?token="+token+"&transport=websocket&sid=" + res.sid);
 				rt.wSocket.onopen = function(){
-					rt.connected = true;
 					rt.wSocket.send("2probe"); 
 					rt.wSocket.onmessage = function(e){
 						if(e.data == "3probe")rt.wSocket.send("5");
@@ -29,11 +29,17 @@ var RtUpdate = function (token){
 }
 RtUpdate.prototype = {
 	  constructor: RtUpdate
-	, connected: false
+	, on: false
 	, wSocket: undefined
 	, token: undefined
 	, ready: undefined
 	, handlers: Object
+	, close: function(){
+		var rt = this;
+		try{
+			rt.wSocket.close();	
+		}catch(e){};
+	}
 	, ping: function (){
 		var rt = this;
 		rt.wSocket.send("2");

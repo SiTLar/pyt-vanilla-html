@@ -42,6 +42,7 @@ var templates =  {"nodes": [
 		{"c":"user-priv","t":"a","txt":"secrets","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
+		{"c":"rt"},
 		{"t":"hr"}
 	]
 	},
@@ -49,6 +50,7 @@ var templates =  {"nodes": [
 	"children":[
 		{"c":"user-signup","t":"a","txt":""},
 		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}},
+		{"c":"rt"},
 		{"t":"hr"}
 	]
 	},
@@ -263,6 +265,20 @@ var templates =  {"nodes": [
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 
 	]}
+
+	,{"c":"rt-controls"
+	,"children":[
+		{"c":"rt-chkbox","t":"input","p":{"type":"checkbox"}, "e":{"click":"realTimeSwitch"} }
+		,{"t":"span", "txt":"real-time updateds"}
+		,{"c":"spacer","t":"span","txt":"&mdash;"}
+		,{"t":"span", "txt":"Bumping cooldown:"}
+		,{"c":"rt-bump", "t":"select","e":{"change":"setRTCooldown"} 
+		,"children":[
+			{"t":"option", "txt":"no bumping", "p":{"value":0}}
+			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
+			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
+		]} 
+	]} 
 
 ]}
 

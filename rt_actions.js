@@ -4,7 +4,7 @@ var RtHandler = function (bumpCooldown, bumpInterval){
 	if(typeof bumpCooldown !== "undefined") that.bumpCooldown = bumpCooldown;
 	if(typeof bumpInterval !== "undefined") that.bumpInterval = bumpInterval;
 	if(typeof gConfig.bumpIntervalId !== "undefined" ) clearInterval(gConfig.bumpIntervalId);
-	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps}, that.bumpInterval*1000);
+	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps();}, that.bumpInterval*1000);
 	
 };
 RtHandler.prototype = {
@@ -41,7 +41,8 @@ RtHandler.prototype = {
 	,chkBumps: function(){
 		var that = this;
 		if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
-		gConfig.bumps.forEach(that.bump);
+		gConfig.bumps.forEach(that.bumpPost, that);
+		gConfig.bumps = new Array();
 	}
 	,unshiftPost: function(data){
 		var that = this;
@@ -83,8 +84,9 @@ RtHandler.prototype = {
 		var nodePost = document.getElementById(data.comments.postId);
 		if(nodePost){
 			gComments[data.comments.id] = data.comments; 
-			nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
-			if (that.bumpCooldown && ( nodePost.rawData.updatedAt + that.bumpCooldown*1000 < Date.now())){
+			if(!document.getElementById(data.comments.id))
+				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
+			if (that.bumpCooldown && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown*1000) < Date.now())){
 				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
 				gConfig.bumps.push(nodePost);
 			}

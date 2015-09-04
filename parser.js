@@ -1240,11 +1240,8 @@ function sendComment(textField){
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
-			textField.value = "";
-			textField.style.height = "4em";
 			var comment = JSON.parse(this.response).comments;
 			gComments[comment.id] = comment;
-			textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
 			if(!document.getElementById(comment.id))nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
 			else nodeComment.parentNode.removeChild(nodeComment);
@@ -1352,7 +1349,8 @@ function unfoldComm(id){
 			nodePB.removeChild(nodePB.cNodes["comments"]);
 			nodePB.cNodes["comments"] = document.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";
-			postUpd.comments.forEach(function(cmt){nodePB.cNodes["comments"].appendChild(genComment(cmt))});
+			 
+			postUpd.comments.forEach(function(cmt){gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(genComment(cmt))});
 			nodePB.appendChild(nodePB.cNodes["comments"]);
 			addLastCmtButton(nodePB);
 			nodePB.cNodes["comments"].cnt = postUpd.comments.length;
@@ -1935,6 +1933,7 @@ function realTimeSwitch(e){
 	if(e.target.checked && !gRt.on){
 		window.localStorage.setItem("rt",true);
 		gRt = new RtUpdate(window.localStorage.getItem("token"),bump);
+		if(content.timelines) gRt.subscribe(content.timelines.id);
 	}else if(!e.target.checked){
 		window.localStorage.setItem("rt",false);
 		if(gRt.on){

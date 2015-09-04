@@ -1,17 +1,18 @@
 "use strict";
 
-var RtUpdate = function (token){
+var RtUpdate = function (token, bump){
 	var rt = this;
-	rt.on = true;
 	rt.token = token;
 	rt.connect();
-	rt.handlers = new RtHandler();
+	rt.handlers = new RtHandler(bump);
 	rt.subscriptions = new Array();
 }
 RtUpdate.prototype = {
 	  constructor: RtUpdate
 	, on: false
-	, gotping: true
+	, timeout: 6000
+	, pingInterval: undefined
+	, pingTimeout: undefined
 	, wSocket: undefined
 	, token: undefined
 	, ready: undefined
@@ -30,40 +31,52 @@ RtUpdate.prototype = {
 						rt.wSocket.send("2probe"); 
 						rt.wSocket.onmessage = function(e){
 							if(e.data == "3probe")rt.wSocket.send("5");
-							setInterval(function (){rt.ping();}, res.pingInterval);
+							rt.on = true;
+							rt.timeout = res.pingTimeout;
+							rt.pingInterval = setInterval(function (){rt.ping();}, res.pingInterval);
 							rt.wSocket.onmessage = null;
 							rt.callback =  function (e){rt.message(e)};
 							rt.wSocket.addEventListener("message",rt.callback);
+							console.log("connected");
 							resolve(); 
 						};
 					};
-				} else console.log(oReq);
+				} else {
+					rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
+					console.log(oReq);
+					reject();
+				}
 			}
 			oReq.open("get",gConfig.rt+"?token="+rt.token+"&transport=polling&t="+Date.now(), true);
 			oReq.send();	
 		});
+		return rt.ready;
 	}
 	, close: function(){
 		var rt = this;
+		if(typeof rt.callback !== "undefined")		
+			rt.wSocket.removeEventListener("message", rt.callback);
 		try{
+			clearInterval(rt.pingInterval);
 			rt.wSocket.close();	
 		}catch(e){};
 	}
 	, ping: function (){
 		var rt = this;
-		if (rt.gotPing){
-			rt.wSocket.send("2");
-			return;
-		}
-		if(typeof rt.callback !== "undefined")		
-			rt.wSocket.removeEventListener("message", rt.callback);
+		rt.wSocket.send("2");
+		rt.gotPing = false;
+		rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
+	}
+	, reconnect: function (rt){
+		console.log("Reconnecting");
 		rt.close();
-		rt.connect().then(function(){rt.subscriptions.forEach(function(t){rt.subscribe(t);})});
+		rt.connect().then( function(){rt.subscriptions.forEach(function(t){rt.subscribe(t);})});
 	}
 	, message: function(msg){
 		var rt = this;
 		if (msg.data == "3"){
-			rt.gotPing = true;
+			clearTimeout(rt.pingTimeout);
+			return;
 		}
 		var idxPayload = msg.data.indexOf("[");
 		if (idxPayload == -1) return;

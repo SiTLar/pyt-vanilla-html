@@ -74,6 +74,11 @@ var templates =  {"nodes": [
 		{"c":"post-control-like","t":"a","txt":"Like","e":{"click":"postLike"}}
 	]
 	},
+	{"c":"hide","t":"span",
+	"children":[
+		{"c":"spacer","t":"span","txt":"|"}
+		, {"c":"href","t":"a","txt":"Hide","e":{"click":"postHide"}}
+	]},
 	{"c":"attachment"},
 	{"c":"comment",
 	"children":[

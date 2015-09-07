@@ -16,8 +16,9 @@ RtHandler.prototype = {
 		var that = this;
 		node.style.opacity = 0;
 		node.style.position = "absolute";
-		nodePos.parentNode.insertBefore(node,nodePos);
-		node.style.width = nodePos.parentNode.clientWidth;
+		if(!nodePos)document.posts.appendChild(node);
+		else nodePos.parentNode.insertBefore(node,nodePos);
+		node.style.width = node.parentNode.clientWidth;
 		var height = node.clientHeight;
 		node.style.width = "auto";
 		console.log("height=" + height);
@@ -97,7 +98,7 @@ RtHandler.prototype = {
 	,"comment:update": function(data){
 		gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(data.comments.id);
-		if (nodeComment) nodeComment.cNodes["comment-body"].innerHTML = data.comments.body;
+		if (nodeComment) nodeComment.parentNode.replaceChild( genComment(data.comments), nodeComment);
 	}
 	,"comment:destroy": function(data){
 		var nodeComment = document.getElementById(data.comments.id);

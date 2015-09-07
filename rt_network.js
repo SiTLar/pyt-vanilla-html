@@ -10,7 +10,7 @@ var RtUpdate = function (token, bump){
 RtUpdate.prototype = {
 	  constructor: RtUpdate
 	, on: false
-	, timeout: 6000
+	, timeout: 60000
 	, pingInterval: undefined
 	, pingTimeout: undefined
 	, wSocket: undefined
@@ -23,6 +23,8 @@ RtUpdate.prototype = {
 		var rt= this;
 		rt.ready = new Promise(function(resolve,reject){
 			var oReq = new XMLHttpRequest();
+			clearTimeout(rt.pingTimeout);
+			rt.pingTimeout = undefined;
 			oReq.onload = function (){
 				if(oReq.status < 400){
 					var res = JSON.parse(oReq.response.slice(oReq.response.indexOf("{")));
@@ -42,6 +44,7 @@ RtUpdate.prototype = {
 						};
 					};
 				} else {
+					clearTimeout(rt.pingTimeout);
 					rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
 					console.log(oReq);
 					reject();
@@ -65,17 +68,18 @@ RtUpdate.prototype = {
 		var rt = this;
 		rt.wSocket.send("2");
 		rt.gotPing = false;
-		rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
+		if(rt.pingTimeout == undefined) rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
 	}
 	, reconnect: function (rt){
 		console.log("Reconnecting");
 		rt.close();
-		rt.connect().then( function(){rt.subscriptions.forEach(function(t){rt.subscribe(t);})});
+		rt.connect().then(function(){rt.subscribe();});
 	}
 	, message: function(msg){
 		var rt = this;
 		if (msg.data == "3"){
 			clearTimeout(rt.pingTimeout);
+			rt.pingTimeout = undefined;
 			return;
 		}
 		var idxPayload = msg.data.indexOf("[");
@@ -91,10 +95,15 @@ RtUpdate.prototype = {
 	}
 	, subscribe: function (timeline){
 		var rt = this;
-		rt.subscriptions.push(timeline);
+		function sendSubReq(sub){
+			rt.wSocket.send("42"+JSON.stringify(["subscribe", sub]));
+		}
 		if(rt.ready == undefined)return;
-		rt.ready.then(function(){
-			rt.wSocket.send("42"+JSON.stringify(["subscribe", {"timeline":[timeline]}]));
-		});
+		if (timeline == undefined) 
+			rt.ready.then(function(){rt.subscriptions.forEach(sendSubReq);});
+		else{
+			rt.subscriptions.push(timeline);
+			rt.ready.then(function(){sendSubReq(timeline);});
+		}
 	}
 } 

@@ -33,7 +33,7 @@ RtHandler.prototype = {
 			setTimeout(function(){ node.style.height = "auto"; } ,  that.timeGrow);
 		}, 1);
 	}
-	,setBumpCooldown(cooldown){
+	,setBumpCooldown: function(cooldown){
 		var that = this;
 		that.bumpCooldown = cooldown;
 		clearInterval(gConfig.bumpIntervalId);

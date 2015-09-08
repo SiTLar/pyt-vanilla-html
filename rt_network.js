@@ -39,14 +39,12 @@ RtUpdate.prototype = {
 							rt.wSocket.onmessage = null;
 							rt.callback =  function (e){rt.message(e)};
 							rt.wSocket.addEventListener("message",rt.callback);
-							console.log("connected");
 							resolve(); 
 						};
 					};
 				} else {
 					clearTimeout(rt.pingTimeout);
 					rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
-					console.log(oReq);
 					reject();
 				}
 			}
@@ -71,7 +69,6 @@ RtUpdate.prototype = {
 		if(rt.pingTimeout == undefined) rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
 	}
 	, reconnect: function (rt){
-		console.log("Reconnecting");
 		rt.close();
 		rt.connect().then(function(){rt.subscribe();});
 	}
@@ -86,7 +83,6 @@ RtUpdate.prototype = {
 		if (idxPayload == -1) return;
 		var type = msg.data.slice(0,idxPayload);
 		var data = JSON.parse(msg.data.slice(idxPayload));
-		console.log(msg);	
 		if (Array.isArray(data) &&  (typeof rt.handlers[data[0]] !== "undefined")) rt.handlers[data[0]](data[1]);
 	}
 	, handle: function (msg,f){

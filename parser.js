@@ -987,8 +987,7 @@ function postLike(e){
 				var myLike = e.target.parentNode.parentNode.parentNode.myLike;
 				likesUL = myLike.parentNode;
 				likesUL.removeChild(myLike);  	
-				console.log(likesUL.childNodes.length);
-			genLikes(nodePost);
+				genLikes(nodePost);
 
 			/*	
 				if (likesUL.childNodes.length < 2){ 

@@ -119,6 +119,7 @@ RtHandler.prototype = {
 		var nodePost = document.getElementById(data.meta.postId);
 		if(nodePost){
 			if (!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
+			if (nodePost.rawData.likes.indexOf(data.users.id) > -1) return;
 			nodePost.rawData.likes.unshift(data.users.id);
 			genLikes(nodePost);
 			/*
@@ -136,6 +137,8 @@ RtHandler.prototype = {
 			&& (nodePost.rawData.likes.indexOf(data.meta.userId) > -1 )) {
 			nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(data.meta.userId), 1) ;
 			genLikes(nodePost);
+			nodePost.cNodes["post-body"].cNodes["post-info"].nodeLike.innerHTML = "Like";
+			nodePost.cNodes["post-body"].cNodes["post-info"].nodeLike.action = true ;
 		}
 
 	}

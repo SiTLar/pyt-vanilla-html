@@ -2,7 +2,7 @@ var gConfig = {
   "serverURL":"https://micropeppa.freefeed.net/v1/"
 , "front":"https://moimosk.ru/frf/"
 , "static":"https://moimosk.ru/frf/"
-, "rt":"https://moimosk.ru/socket.io/"
+, "rtURL":"https://moimosk.ru/socket.io/"
 , "offset":"30"
 , "likesFold":4
 

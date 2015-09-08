@@ -62,6 +62,7 @@ function genLikes(nodePost){
 	node.className = "likes";
 	postNBody.cNodes["post-info"].replaceChild(node,  postNBody.cNodes["post-info"].cNodes["likes"]);
 	postNBody.cNodes["post-info"].cNodes["likes"] = node;
+	if(!Array.isArray(post.likes) || !post.likes.length ) return;
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(gNodes["likes-smile"].cloneNode(true));
 	var nodeLikes = document.createElement( "ul");
  	var l =  post.likes.length;
@@ -305,10 +306,11 @@ function draw(content){
 			nodeBump.selectedIndex = idx;
 			break;
 		}
+	if(content.timelines) gConfig.rt = {"timeline":[content.timelines.id]};
+	else gConfig.rt = {"post":[content.posts.id]};
 	if( nodeRTCtrl.cNodes["rt-chkbox"].checked){
 		gRt = new RtUpdate(gConfig.token, bump);
-		if(content.timelines) gRt.subscribe({"timeline":[content.timelines.id]});
-		else gRt.subscribe({"post":[content.posts.id]});
+		gRt.subscribe(gConfig.rt);
 	}
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
@@ -949,12 +951,12 @@ function doDeletePost(but){
 }
 function postLike(e){
 	var oReq = new XMLHttpRequest();
-
+	var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
+	var nodePost =nodeLikes; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
 	oReq.onload = function(){
 		if(this.status < 400){	
 			if(e.target.action){
 				var idx;
-				var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
 				var likesUL;
 				if (!nodeLikes.childNodes.length){
 					nodeLikes.appendChild(gNodes["likes-smile"].cloneNode(true));
@@ -978,21 +980,36 @@ function postLike(e){
 				if(likesUL.childNodes.length)likesUL.insertBefore(nodeLike, likesUL.childNodes[0]);
 				else likesUL.appendChild(nodeLike);
 				e.target.parentNode.parentNode.parentNode.myLike = nodeLike;
+				if(!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
+				nodePost.rawData.likes.unshift(gMe.users.id);
 			}else{
+				nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(gMe.users.id), 1) ;
 				var myLike = e.target.parentNode.parentNode.parentNode.myLike;
 				likesUL = myLike.parentNode;
 				likesUL.removeChild(myLike);  	
-				if (!likesUL.childNodes.length) likesUL.parentNode.innerHTML = "";
+				console.log(likesUL.childNodes.length);
+			genLikes(nodePost);
+
+			/*	
+				if (likesUL.childNodes.length < 2){ 
+					var nodePI = nodeLikes.parentNode;
+					nodePI.cNodes["likes"] = document.createElement("div");
+					nodePI.cNodes["likes"].className = "likes";
+					nodePI.replaceChild(nodePI.cNodes["likes"], nodeLikes);
+				}
+				*/
 			 }
 			e.target.innerHTML=e.target.action?"Un-like":"Like";
 			e.target.action = !e.target.action; 
-		};
+		}else e.target.innerHTML= !e.target.action?"Un-like":"Like";
 	}
 	
 
 		oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"like":"unlike"), true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
+		e.target.innerHTML = "";
+		e.target.appendChild(gNodes["spinner"].cloneAll());
 		
 }
 function genEditNode(post,cancel){
@@ -1968,8 +1985,7 @@ function realTimeSwitch(e){
 	if(e.target.checked && !gRt.on){
 		window.localStorage.setItem("rt",true);
 		gRt = new RtUpdate(gConfig.token,bump);
-		if(content.timelines) gRt.subscribe({"timeline":[content.timelines.id]});
-		else gRt.subscribe({"post":[content.posts.id]});
+		gRt.subscribe(gConfig.rt);
 	}else if(!e.target.checked){
 		window.localStorage.setItem("rt",false);
 		if(gRt.on){

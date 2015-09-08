@@ -28,7 +28,7 @@ RtUpdate.prototype = {
 			oReq.onload = function (){
 				if(oReq.status < 400){
 					var res = JSON.parse(oReq.response.slice(oReq.response.indexOf("{")));
-					rt.wSocket = new WebSocket(gConfig.rt.replace("https","wss")+"?token="+rt.token+"&transport=websocket&sid=" + res.sid);
+					rt.wSocket = new WebSocket(gConfig.rtURL.replace("https","wss")+"?token="+rt.token+"&transport=websocket&sid=" + res.sid);
 					rt.wSocket.onopen = function(){
 						rt.wSocket.send("2probe"); 
 						rt.wSocket.onmessage = function(e){
@@ -50,7 +50,7 @@ RtUpdate.prototype = {
 					reject();
 				}
 			}
-			oReq.open("get",gConfig.rt+"?token="+rt.token+"&transport=polling&t="+Date.now(), true);
+			oReq.open("get",gConfig.rtURL+"?token="+rt.token+"&transport=polling&t="+Date.now(), true);
 			oReq.send();	
 		});
 		return rt.ready;

@@ -21,7 +21,6 @@ RtHandler.prototype = {
 		node.style.width = node.parentNode.clientWidth;
 		var height = node.clientHeight;
 		node.style.width = "auto";
-		console.log("height=" + height);
 		node.style.height = 0;
 		if(node.className == "post")regenHides();
 		node.style.position = "static";
@@ -101,14 +100,15 @@ RtHandler.prototype = {
 		if (nodeComment) nodeComment.parentNode.replaceChild( genComment(data.comments), nodeComment);
 	}
 	,"comment:destroy": function(data){
-		var nodeComment = document.getElementById(data.comments.id);
+		if(typeof gComments[data.commentId] !== "undefined")delete gComments[data.commentId];
+		var nodePost  = document.getElementById(data.postId);
+		if(!nodePost)return;
+		if((typeof nodePost.rawData.comments !== "undefined")
+			&&(nodePost.rawData.comments.indexOf(data.commentId) > -1))
+			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(data.commentId),1);
+		var nodeComment = document.getElementById(data.commentId);
 		if(!nodeComment)return;
 		nodeComment.parentNode.removeChild(nodeComment);
-		if(typeof gComments[data.comments.id] !== "undefined")delete gComments[data.comments.id];
-		var nodePost  = document.getElementById(data.comments.postId);
-		if((typeof nodePost.rawData.comments !== "undefined")
-			&&(nodePost.rawData.comments.indexOf(data.comments.id) > -1))
-			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(data.comments.id),1);
 	}
 	,"like:new": function(data){
 		var that = this;

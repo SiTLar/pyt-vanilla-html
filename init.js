@@ -9,7 +9,7 @@ var gAttachments  = new Object();
 var gFeeds = new Object();
 var gRt = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
-var autolinker = new Autolinker({"truncate":20,  "replaceFn":frfAutolinker } );
+var autolinker = new Object();
 var matrix  = new Object();
 document.addEventListener("DOMContentLoaded", initDoc);
 
@@ -21,7 +21,6 @@ function initDoc(){
 	gConfig.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
-	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 	switch(gConfig.timeline){
 	case "home":
 	case "filter":
@@ -31,41 +30,21 @@ function initDoc(){
 		if(!auth(true)) gMe = undefined;
 	}
 	var arrStage1 = new Array();
-	arrStage1.push();
+	arrStage1.push(loadScript("openpgp.min.js"));
+	arrStage1.push(loadScript("Autolinker.min.js"));
+	arrStage1.push(loadScript("stringview.js"));
+	arrStage1.push(loadScript("private_module.js"));
+	arrStage1.push(loadScript("secrets.js"));
+	arrStage1.push(loadScript("rt_actions.js"));
+	arrStage1.push(loadScript("rt_network.js"));
+	arrStage1.push(loadScript("draw.js"));
+	arrStage1.push(new Promise(function(resolve,reject){
+		genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
+		resolve();
+	
+	}));
 
 
-	Promise.All(arrStage1).then(window["draw"](JSON.parse(this.response)));
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		if(oReq.status < 400) 
-		else{
-			if (oReq.status==401)
-				{
-					deleteCookie("token");
-					try {localStorage.removeItem("gMe");}catch(e){
-					
-						window.localStorage ={
-							setItem: function(){return;}
-							,getItem: function(){return null;}
-							,removeItem: function(){return null;}
-						};
-						window.sessionStorage = window.localStorage;
-					};
-					location.reload();
-				}
-			if(auth())
-				document.getElementsByTagName("body")[0].appendChild(gNodes["controls-user"].cloneAll());
-			var nodeError = document.createElement("div");
-			nodeError.className = "error-node";
-			nodeError.innerHTML = "Error #"+ oReq.status + ": " + oReq.statusText;
-			try{ 
-				var res = JSON.parse(this.response);
-				nodeError.innerHTML += "<br>"+res.err;
-			}catch(e){};
-			document.getElementsByTagName("body")[0].appendChild(nodeError);
-		}
-
-	};
 	if(arrLocationPath.length > 1){
 		if (locationPath == "filter/discussions") {
 			gConfig.timeline = locationPath;
@@ -78,17 +57,59 @@ function initDoc(){
 			locationSearch = "?maxComments=all";
 		}
 	} else 
-		gConfig.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
-	
-	oReq.open("get",gConfig.xhrurl+locationSearch,true);
-	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
-	oReq.send();
+	gConfig.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
+	var content;
+	arrStage1.push( getContent(gConfig.xhrurl+locationSearch).then(function(data){content = data}));
+
+	Promise.all(arrStage1).then(window["draw"](content));
+}
+function getContent(url){
+	return new Promise(function(resolve,reject){
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(oReq.status < 400) 
+				resolve(JSON.parse(oReq.response));
+			else{
+				if (oReq.status==401)
+					{
+						deleteCookie("token");
+						try {localStorage.removeItem("gMe");}catch(e){
+						
+							window.localStorage ={
+								setItem: function(){return;}
+								,getItem: function(){return null;}
+								,removeItem: function(){return null;}
+							};
+							window.sessionStorage = window.localStorage;
+						};
+						location.reload();
+					}
+				if(auth())
+					document.getElementsByTagName("body")[0].appendChild(gNodes["controls-user"].cloneAll());
+				var nodeError = document.createElement("div");
+				nodeError.className = "error-node";
+				nodeError.innerHTML = "Error #"+ oReq.status + ": " + oReq.statusText;
+				try{ 
+					var res = JSON.parse(this.response);
+					nodeError.innerHTML += "<br>"+res.err;
+				}catch(e){};
+				document.getElementsByTagName("body")[0].appendChild(nodeError);
+				reject();
+			}
+		};
+		
+		oReq.open("get",url,true);
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+		oReq.send();
+	});
 }
 function loadScript(script){
-	return new Promis(function(resolve,reject){
-		document.createElement("script");
-		
-
+	return new Promise(function(resolve,reject){
+		var node = document.createElement("script");
+		node.onload = resolve;
+		node.onerror = reject;
+		node.src = gConfig.static + script;
+		document.getElementsByTagName("body")[0].appendChild(node);
 	});
 }
 function auth(check){
@@ -146,6 +167,29 @@ function auth(check){
 	}
 	return false;
 
+}
+function genNodes(templates){
+	var nodes = new Array();
+	//oTemplates = JSON.parse(templates);
+	templates.forEach(function(template){
+		if (!template.t)template.t = "div";
+		var node = document.createElement(template.t); 
+		node.cloneAll = function(){
+			var newNode = this.cloneNode(true); 
+			genCNodes(newNode, this);
+			return newNode;
+		};
+		if(template.c)node.className = template.c; 
+		if(template.children)
+		genNodes(template.children).forEach(function(victim){
+			node.appendChild(victim);
+		});
+		if(template.txt) node.innerHTML = template.txt;
+		if(template.e) node.e = template.e;
+		if(template.p) for( var p in template.p) node[p] =  template.p[p];
+		nodes.push(node);
+	} );
+	return nodes;
 }
 function addUser (user){
 	if (typeof gUsers[user.id] !== "undefined" ) return;

@@ -1,4 +1,3 @@
-
 "use strict";
 function writeAllLikes(id,nodeLikes){
 	var post = document.getElementById(id).rawData;
@@ -825,29 +824,6 @@ function genCNodes(node, proto){
 	if (typeof(proto.e) !== "undefined" ) 
 		for(var action in proto.e)
 			node.addEventListener(action, window[proto.e[action]]);	
-}
-function genNodes(templates){
-	var nodes = new Array();
-	//oTemplates = JSON.parse(templates);
-	templates.forEach(function(template){
-		if (!template.t)template.t = "div";
-		var node = document.createElement(template.t); 
-		node.cloneAll = function(){
-			var newNode = this.cloneNode(true); 
-			genCNodes(newNode, this);
-			return newNode;
-		};
-		if(template.c)node.className = template.c; 
-		if(template.children)
-		genNodes(template.children).forEach(function(victim){
-			node.appendChild(victim);
-		});
-		if(template.txt) node.innerHTML = template.txt;
-		if(template.e) node.e = template.e;
-		if(template.p) for( var p in template.p) node[p] =  template.p[p];
-		nodes.push(node);
-	} );
-	return nodes;
 }
 
 function genDirectTo(victim){

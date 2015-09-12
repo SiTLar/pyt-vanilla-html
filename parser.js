@@ -10,7 +10,7 @@ var gFeeds = new Object();
 var gRt = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var autolinker = new Autolinker({"truncate":20,  "replaceFn":frfAutolinker } );
-var matrix = new CryptoPrivate(gCryptoPrivateCfg );
+var matrix  = new Object();
 document.addEventListener("DOMContentLoaded", initDoc);
 function unfoldLikes(id){
 	var post = document.getElementById(id).rawData;
@@ -33,7 +33,7 @@ function unfoldLikes(id){
 			};
 		};
 		oReq.open("get",gConfig.serverURL + "posts/"+post.id+"?maxComments=0&maxLikes=all", true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
 
 	}else  writeAllLikes(id, nodeLikes);
@@ -62,6 +62,7 @@ function genLikes(nodePost){
 	node.className = "likes";
 	postNBody.cNodes["post-info"].replaceChild(node,  postNBody.cNodes["post-info"].cNodes["likes"]);
 	postNBody.cNodes["post-info"].cNodes["likes"] = node;
+	if(!Array.isArray(post.likes) || !post.likes.length ) return;
 	postNBody.cNodes["post-info"].cNodes["likes"].appendChild(gNodes["likes-smile"].cloneNode(true));
 	var nodeLikes = document.createElement( "ul");
  	var l =  post.likes.length;
@@ -105,8 +106,8 @@ function genLikes(nodePost){
 }
 function addUser (user){
 	if (typeof gUsers[user.id] !== "undefined" ) return;
-	user.link = "<a href=" + gConfig.front+  user.username+">"+ user.screenName+"</a>";
-	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "img/default-userpic-48.png";
+	user.link = '<a class="'+(user.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
+	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
 	user.friend = false;
 	user.subscriber = false;
 	gUsers[user.id] = user;
@@ -116,7 +117,7 @@ function reqSubscription(e){
 	var oReq = new XMLHttpRequest();
 	var username = e.target.parentNode.user;
 	oReq.open("post", gConfig.serverURL +"users/"+username+"/sendRequest/", true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.onload = function(){
 		if(oReq.status < 400) {
 			var span = document.createElement("span");
@@ -132,7 +133,7 @@ function ban(e){
 	var oReq = new XMLHttpRequest();
 	var username = e.target.parentNode.user;
 	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.banned?"/unban":"/ban"), true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.onload = function(){
 		if(oReq.status < 400) {
 			if (!e.target.banned)gMe.users.banIds.push(gUsers.byName[username].id);
@@ -142,8 +143,6 @@ function ban(e){
 			}
 			window.localStorage.setItem("gMe",JSON.stringify(gMe));
 			e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
-
-
 		}
 	}
 
@@ -153,7 +152,7 @@ function subscribe(e){
 	var oReq = new XMLHttpRequest();
 	var username = e.target.parentNode.user;
 	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.subscribed?"/unsubscribe":"/subscribe"), true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.onload = function(){
 		if(oReq.status < 400) {
 			gMe = JSON.parse(oReq.response);
@@ -175,13 +174,16 @@ function loadGlobals(data){
 		data.subscriptions.forEach(function(sub){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 				gFeeds[sub.id] = subscribers[sub.user];
+				gFeeds[sub.id].link = '<a class="'+(sub.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ sub.username+'">'+ sub.screenName+"</a>";
 			}
 		});
 	}
 }
 function draw(content){
+	matrix = new CryptoPrivate(gCryptoPrivateCfg );
 	var body = document.createElement("div");
 	body.className = "content";
+	body.id = "content";
 	document.getElementsByTagName("body")[0].appendChild(body);
 	loadGlobals(content);
 	var title =  document.createElement("div");
@@ -290,7 +292,11 @@ function draw(content){
 			gPrivTimeline.done = true;
 			new Promise(function (){addPosts(drop,toAdd,0);});
 		};
-	}else body.appendChild(genPost(content.posts));
+	}else{
+		var singlePost = genPost(content.posts);
+		body.appendChild(singlePost);
+		singlePost.getElementsByClassName("hide")[0].hidden = true;
+	} 
 	var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
 	nodeRTCtrl.cNodes["rt-chkbox"].checked = window.localStorage.getItem("rt");
 	var bump = window.localStorage.getItem("rtbump");
@@ -300,9 +306,11 @@ function draw(content){
 			nodeBump.selectedIndex = idx;
 			break;
 		}
+	if(content.timelines) gConfig.rt = {"timeline":[content.timelines.id]};
+	else gConfig.rt = {"post":[content.posts.id]};
 	if( nodeRTCtrl.cNodes["rt-chkbox"].checked){
-		gRt = new RtUpdate(window.localStorage.getItem("token"), bump);
-		if(content.timelines) gRt.subscribe(content.timelines.id);
+		gRt = new RtUpdate(gConfig.token, bump);
+		gRt.subscribe(gConfig.rt);
 	}
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
@@ -330,7 +338,7 @@ function genUpControls(username){
 			}
 		};
 		oReq.open("get",gConfig.serverURL + "users/"+username, true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
 	}).then(gen);
 	function gen() {
@@ -477,7 +485,7 @@ function postHide(e){
 	
 
 		oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"hide":"unhide"), true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
 		
 
@@ -486,7 +494,13 @@ function postHide(e){
 function doHide(victim, action){
 	var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
 	if(action != nodeHide.action) return; 
-	var aShow = document.getElementsByClassName("show-hidden")[0].cNodes["href"];
+	var nodeShow = document.getElementsByClassName("show-hidden")[0]
+	if (!nodeShow){
+		nodeShow = gNodes["show-hidden"].cloneAll();
+		nodeShow.cNodes["href"].action = true;
+		document.getElementById("content").appendChild(nodeShow);
+	}
+	var aShow =  nodeShow.cNodes["href"];
 	if(action){
 		victim.rawData.isHidden = true;
 		document.hiddenPosts[victim.rawData.idx].is  = true;
@@ -518,6 +532,8 @@ function regenHides(){
 }
 function updateDate(node){
 	node.innerHTML =  relative_time(node.date);
+	var txtdate = new Date(node.date).toString();
+	node.title = txtdate.slice(0, txtdate.indexOf("(")).trim();
 	window.setTimeout(updateDate, 30000, node );
 }
 function drawPrivateComment(post) {
@@ -581,7 +597,7 @@ function genPost(post){
 					};
 
 					oReq.open("get",gConfig.serverURL + "users/"+post.username, true);
-					oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+					oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 					oReq.send();
 				}).then(gotUser,spam);
 			}
@@ -592,28 +608,7 @@ function genPost(post){
 		if(typeof user !== "undefined"){
 			nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 			nodePost.cNodes["avatar"].cNodes["avatar-h"].userid = user.id;
-			var title = user.link;
-			if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
-			else if(post.postedTo){
-				nodePost.gotLock  = true;
-				post.postedTo.forEach(function(id){ 
-					if (gFeeds[id].isPrivate == "0")
-						nodePost.gotLock = false; 
-				});
-				if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
-					title += "<span> posted to: </span>";
-					post.postedTo.forEach(function(id){
-						title += "<a href=" + gConfig.front+ gFeeds[id].username+">"+ gFeeds[id].screenName;
-						/*if(gFeeds[id].type == "user")
-							if(gFeeds[id].screenName.slice(-1) == "s")
-								title += "' feed";
-							else title += "'s feed";
-						*/
-						title += "</a>";
-					});
-				}
-			}
-			postNBody.cNodes["title"].innerHTML = title;
+			postNBody.cNodes["title"].innerHTML = genTitle(nodePost);
 		}
 		if(nodePost.gotLock == true)
 			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-lock"].innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
@@ -642,22 +637,19 @@ function genPost(post){
 
 		if(typeof gMe !== "undefined"){ 
 			var nodeControls;
-				if (post.createdBy == gMe.users.id)
+			if (post.createdBy == gMe.users.id){
 				nodeControls = gNodes["controls-self"].cloneAll();
-			else {
+			}else {
 				nodeControls = gNodes["controls-others"].cloneAll();
 				postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes["post-control-like"];
 				nodeControls.cNodes["post-control-like"].action = true;
 			}
-			var tmp  = document.createElement("span");
-			tmp.innerHTML = "-";
-			tmp.className = "spacer";
-			nodeControls.appendChild(tmp);
-			var aHide = document.createElement("a");
+			var nodeHide  = gNodes["hide"].cloneAll();
+			nodeControls.appendChild(nodeHide);
+			var aHide = nodeHide.cNodes["href"]
+			aHide.className = "hide";
 			aHide.innerHTML = post.isHidden?"Un-hide":"Hide";
 			aHide.action = !post.isHidden;
-			aHide.addEventListener("click", postHide);
-			nodeControls.appendChild(aHide);
 			postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
 			postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
 		}
@@ -714,6 +706,27 @@ function genPost(post){
 		nodePost.sign = cpost.sign;
 	}
 	return nodePost;
+
+}
+function genTitle(nodePost){
+	var post = nodePost.rawData;
+	var user = gUsers[post.createdBy];
+	var title = user.link;
+	if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
+	else if(post.postedTo){
+		nodePost.gotLock  = true;
+		post.postedTo.forEach(function(id){ 
+			if (gFeeds[id].isPrivate == "0")
+				nodePost.gotLock = false; 
+		});
+		if ((post.postedTo.length >1)||(gFeeds[post.postedTo[0]].id!=user.id)){
+			title += "<span> posted to: </span>";
+			post.postedTo.forEach(function(id){
+				title += gFeeds[id].link;
+			});
+		}
+	}
+	return title;
 
 }
 function newPost(e){
@@ -788,7 +801,7 @@ function newPost(e){
 			oReq.onload = onload;
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.setRequestHeader("X-Authentication-Token", 
-				window.localStorage.getItem("token"));
+				gConfig.token);
 			if (textField.value == ""){
 				textField.disabled = false;
 				e.target.disabled = false;
@@ -805,7 +818,7 @@ function sendAttachment(e){
 	e.target.disabled = true;
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 	var nodeSpinner = gNodes["attachment"].cloneAll();
-	nodeSpinner.innerHTML = "<img src="+gConfig.static+"img/uploading.gif"+">";
+	nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
 	e.target.parentNode.parentNode.cNodes["attachments"].appendChild(nodeSpinner);
 	textField.pAtt = new Promise(function(resolve,reject){
 		var oReq = new XMLHttpRequest();
@@ -825,7 +838,7 @@ function sendAttachment(e){
 		};
 
 		oReq.open("post",gConfig.serverURL + "attachments", true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		var data = new FormData();
 		data.append( "name", "attachment[file]");
 		data.append( "attachment[file]", e.target.files[0], e.target.value);
@@ -903,7 +916,7 @@ function postEditedPost(e){
 	}else{
 		post.body =  text;
 		oReq.open("put",gConfig.serverURL + "posts/"+nodePost.id, true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.setRequestHeader("Content-type","application/json");
 		oReq.send(JSON.stringify(postdata));
 	}
@@ -931,19 +944,19 @@ function doDeletePost(but){
 		oReq.send();
 	}else{
 		oReq.open("delete",gConfig.serverURL + "posts/"+victim.id, true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.setRequestHeader("Content-type","application/json");
 		oReq.send();
 	}
 }
 function postLike(e){
 	var oReq = new XMLHttpRequest();
-
+	var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
+	var nodePost =nodeLikes; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
 	oReq.onload = function(){
 		if(this.status < 400){	
 			if(e.target.action){
 				var idx;
-				var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
 				var likesUL;
 				if (!nodeLikes.childNodes.length){
 					nodeLikes.appendChild(gNodes["likes-smile"].cloneNode(true));
@@ -967,21 +980,36 @@ function postLike(e){
 				if(likesUL.childNodes.length)likesUL.insertBefore(nodeLike, likesUL.childNodes[0]);
 				else likesUL.appendChild(nodeLike);
 				e.target.parentNode.parentNode.parentNode.myLike = nodeLike;
+				if(!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
+				nodePost.rawData.likes.unshift(gMe.users.id);
 			}else{
+				nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(gMe.users.id), 1) ;
 				var myLike = e.target.parentNode.parentNode.parentNode.myLike;
 				likesUL = myLike.parentNode;
 				likesUL.removeChild(myLike);  	
-				if (!likesUL.childNodes.length) likesUL.parentNode.innerHTML = "";
+				console.log(likesUL.childNodes.length);
+			genLikes(nodePost);
+
+			/*	
+				if (likesUL.childNodes.length < 2){ 
+					var nodePI = nodeLikes.parentNode;
+					nodePI.cNodes["likes"] = document.createElement("div");
+					nodePI.cNodes["likes"].className = "likes";
+					nodePI.replaceChild(nodePI.cNodes["likes"], nodeLikes);
+				}
+				*/
 			 }
 			e.target.innerHTML=e.target.action?"Un-like":"Like";
 			e.target.action = !e.target.action; 
-		};
+		}else e.target.innerHTML= !e.target.action?"Un-like":"Like";
 	}
 	
 
 		oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"like":"unlike"), true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
+		e.target.innerHTML = "";
+		e.target.appendChild(gNodes["spinner"].cloneAll());
 		
 }
 function genEditNode(post,cancel){
@@ -1079,7 +1107,7 @@ function postEditComment(e){
 	};
 
 	oReq.open("put",gConfig.serverURL + "comments/"+comment.id, true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.setRequestHeader("Content-type","application/json");
 	var postdata = new Object();
 	postdata.comment = comment;
@@ -1153,7 +1181,7 @@ function doDeleteComment(but){
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
-			nodeComment.parentNode.removeChild(nodeComment);
+			if(nodeComment.parentNode) nodeComment.parentNode.removeChild(nodeComment);
 			delete gComments[nodeComment.id];
 		}
 	};
@@ -1165,7 +1193,7 @@ function doDeleteComment(but){
 		oReq.send();
 	}else{
 		oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
-		oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.setRequestHeader("Content-type","application/json");
 		oReq.send();
 	}
@@ -1240,11 +1268,8 @@ function sendComment(textField){
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){
-			textField.value = "";
-			textField.style.height = "4em";
 			var comment = JSON.parse(this.response).comments;
 			gComments[comment.id] = comment;
-			textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 			if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
 			if(!document.getElementById(comment.id))nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
 			else nodeComment.parentNode.removeChild(nodeComment);
@@ -1252,7 +1277,7 @@ function sendComment(textField){
 	};
 
 	oReq.open("post",gConfig.serverURL + "comments", true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.setRequestHeader("Content-type","application/json");
 	var postdata = new Object();
 	postdata.comment = comment;
@@ -1314,7 +1339,7 @@ function genComment(comment){
 					}
 				};
 				oReq.open("get",gConfig.serverURL + "users/"+comment.username, true);
-				oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+				oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 				oReq.send();
 			}).then(gotUser,spam);
 		}
@@ -1352,7 +1377,8 @@ function unfoldComm(id){
 			nodePB.removeChild(nodePB.cNodes["comments"]);
 			nodePB.cNodes["comments"] = document.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";
-			postUpd.comments.forEach(function(cmt){nodePB.cNodes["comments"].appendChild(genComment(cmt))});
+			 
+			postUpd.comments.forEach(function(cmt){gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(genComment(cmt))});
 			nodePB.appendChild(nodePB.cNodes["comments"]);
 			addLastCmtButton(nodePB);
 			nodePB.cNodes["comments"].cnt = postUpd.comments.length;
@@ -1365,15 +1391,18 @@ function unfoldComm(id){
 	};
 
 	oReq.open("get",gConfig.serverURL + "posts/"+post.id+"?maxComments=all&maxLikes=0", true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.send();
 
 
 }
 function calcCmtTime(e){
-	if (typeof(e.target.parentNode.parentNode.parentNode.createdAt) !== "undefined" )
-		e.target.title =  relative_time(e.target.parentNode.parentNode.parentNode.createdAt*1);
-
+	if (typeof(e.target.parentNode.parentNode.parentNode.createdAt) !== "undefined" ){
+		var absUxTime = e.target.parentNode.parentNode.parentNode.createdAt*1;
+		var txtdate = new Date(absUxTime ).toString();
+		
+		e.target.title =  relative_time(absUxTime) + " ("+ txtdate.slice(0, txtdate.indexOf("(")).trim()+ ")";
+	}
 }
 function genCNodes(node, proto){
 	node.cNodes = new Object(); 
@@ -1410,23 +1439,29 @@ function genNodes(templates){
 
 }
 function auth(check){
-	var token = window.localStorage.getItem("token");
-
-	gMe = window.localStorage.getItem("gMe");
-	if (gMe && token){
-		gMe = JSON.parse(gMe);
+	gConfig.token = getCookie("token");
+	var txtgMe = null;
+	try{txtgMe = window.localStorage.getItem("gMe");} catch(e){
+		window.localStorage ={
+			setItem: function(){return;}
+			,getItem: function(){return null;}
+			,removeItem: function(){return null;}
+		};
+		window.sessionStorage = window.localStorage;
+	}
+	if (txtgMe && gConfig.token){
+		gMe = JSON.parse(txtgMe);
 		if (gMe.users) {
 			addUser(gMe.users);
 			new Promise(function(){
 				var oReq = new XMLHttpRequest();
 				oReq.open("get", gConfig.serverURL +"users/whoami", true);
-				oReq.setRequestHeader("X-Authentication-Token", token);
+				oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 				oReq.onload = function(){
 					if(oReq.status < 400) {
 						gMe = JSON.parse(oReq.response);
 						if (gMe.users) {
-							window.localStorage.setItem("gMe",JSON.stringify(gMe));
-							addUser(gMe.users);
+							refreshgMe();
 							return true;
 						}
 					}			
@@ -1438,15 +1473,14 @@ function auth(check){
 	}
 
 	var oReq = new XMLHttpRequest();
-	if(token){
+	if(gConfig.token){
 		oReq.open("get", gConfig.serverURL +"users/whoami", false);
-		oReq.setRequestHeader("X-Authentication-Token", token);
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
 		if(oReq.status < 400) {
 			gMe = JSON.parse(oReq.response);
 			if (gMe.users) {
-				window.localStorage.setItem("gMe",JSON.stringify(gMe));
-				addUser(gMe.users);
+				refreshgMe();
 				return true;
 			}
 		}
@@ -1460,11 +1494,21 @@ function auth(check){
 	return false;
 
 }
+function refreshgMe(){
+	window.localStorage.setItem("gMe",JSON.stringify(gMe));
+	delete gUsers[gMe.users.id];
+	addUser(gMe.users);
+	var links = document.getElementsByClassName("my-link");
+	if(Array.isArray(links))links.forEach(function(link){
+		link.innerHTML = gMe.users.screenName;
+	});
+}
 function getauth(oFormElement){
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){	
-			window.localStorage.setItem("token", JSON.parse(this.response).authToken);
+			setCookie("token", JSON.parse(this.response).authToken);
+			gConfig.token =  JSON.parse(this.response).authToken;
 			document.getElementsByTagName("body")[0].removeChild(document.getElementsByClassName("nodeAuth")[0]);
 		//	initDoc();
 
@@ -1480,7 +1524,7 @@ function logout(){
 	matrix.ready = 0;
 	matrix.logout();
 	window.localStorage.removeItem("gMe");
-	window.localStorage.removeItem("token");
+	deleteCookie("token");
 	location.reload();
 }
 function ctrlPriv(){
@@ -1916,6 +1960,12 @@ function genUserPopup(e){
 		nodePopup.appendChild(genUpControls(user.username));
 	nodePopup.style.top = e.pageY;
 	nodePopup.style.left = e.pageX;
+	if (typeof node.createdAt !== "undefined"){
+		var spanDate = document.createElement("span");
+		var txtdate = new Date(node.createdAt*1).toString();
+		spanDate.innerHTML = txtdate.slice(0, txtdate.indexOf("(")).trim();
+		nodePopup.appendChild(spanDate);
+	}
 
 
 }
@@ -1934,7 +1984,8 @@ function realTimeSwitch(e){
 	var bump = e.target.parentNode.cNodes["rt-bump"].value;
 	if(e.target.checked && !gRt.on){
 		window.localStorage.setItem("rt",true);
-		gRt = new RtUpdate(window.localStorage.getItem("token"),bump);
+		gRt = new RtUpdate(gConfig.token,bump);
+		gRt.subscribe(gConfig.rt);
 	}else if(!e.target.checked){
 		window.localStorage.setItem("rt",false);
 		if(gRt.on){
@@ -1993,8 +2044,16 @@ function initDoc(){
 		else{
 			if (oReq.status==401)
 				{
-					localStorage.removeItem("token");
-					localStorage.removeItem("gMe");
+					deleteCookie("token");
+					try {localStorage.removeItem("gMe");}catch(e){
+					
+						window.localStorage ={
+							setItem: function(){return;}
+							,getItem: function(){return null;}
+							,removeItem: function(){return null;}
+						};
+						window.sessionStorage = window.localStorage;
+					};
 					location.reload();
 				}
 			if(auth())
@@ -2025,6 +2084,6 @@ function initDoc(){
 		gConfig.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
 	
 	oReq.open("get",gConfig.xhrurl+locationSearch,true);
-	oReq.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.send();
 }

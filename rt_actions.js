@@ -4,7 +4,7 @@ var RtHandler = function (bumpCooldown, bumpInterval){
 	if(typeof bumpCooldown !== "undefined") that.bumpCooldown = bumpCooldown;
 	if(typeof bumpInterval !== "undefined") that.bumpInterval = bumpInterval;
 	if(typeof gConfig.bumpIntervalId !== "undefined" ) clearInterval(gConfig.bumpIntervalId);
-	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps}, that.bumpInterval*1000);
+	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps();}, that.bumpInterval*1000);
 	
 };
 RtHandler.prototype = {
@@ -16,11 +16,11 @@ RtHandler.prototype = {
 		var that = this;
 		node.style.opacity = 0;
 		node.style.position = "absolute";
-		nodePos.parentNode.insertBefore(node,nodePos);
-		node.style.width = nodePos.parentNode.clientWidth;
+		if(!nodePos)document.posts.appendChild(node);
+		else nodePos.parentNode.insertBefore(node,nodePos);
+		node.style.width = node.parentNode.clientWidth;
 		var height = node.clientHeight;
 		node.style.width = "auto";
-		console.log("height=" + height);
 		node.style.height = 0;
 		if(node.className == "post")regenHides();
 		node.style.position = "static";
@@ -32,7 +32,7 @@ RtHandler.prototype = {
 			setTimeout(function(){ node.style.height = "auto"; } ,  that.timeGrow);
 		}, 1);
 	}
-	,setBumpCooldown(cooldown){
+	,setBumpCooldown: function(cooldown){
 		var that = this;
 		that.bumpCooldown = cooldown;
 		clearInterval(gConfig.bumpIntervalId);
@@ -41,7 +41,8 @@ RtHandler.prototype = {
 	,chkBumps: function(){
 		var that = this;
 		if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
-		gConfig.bumps.forEach(that.bump);
+		gConfig.bumps.forEach(that.bumpPost, that);
+		gConfig.bumps = new Array();
 	}
 	,unshiftPost: function(data){
 		var that = this;
@@ -83,8 +84,9 @@ RtHandler.prototype = {
 		var nodePost = document.getElementById(data.comments.postId);
 		if(nodePost){
 			gComments[data.comments.id] = data.comments; 
-			nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
-			if (that.bumpCooldown && ( nodePost.rawData.updatedAt + that.bumpCooldown*1000 < Date.now())){
+			if(!document.getElementById(data.comments.id))
+				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
+			if (that.bumpCooldown && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown*1000) < Date.now())){
 				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
 				gConfig.bumps.push(nodePost);
 			}
@@ -95,17 +97,18 @@ RtHandler.prototype = {
 	,"comment:update": function(data){
 		gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(data.comments.id);
-		if (nodeComment) nodeComment.cNodes["comment-body"].innerHTML = data.comments.body;
+		if (nodeComment) nodeComment.parentNode.replaceChild( genComment(data.comments), nodeComment);
 	}
 	,"comment:destroy": function(data){
-		var nodeComment = document.getElementById(data.comments.id);
+		if(typeof gComments[data.commentId] !== "undefined")delete gComments[data.commentId];
+		var nodePost  = document.getElementById(data.postId);
+		if(!nodePost)return;
+		if((typeof nodePost.rawData.comments !== "undefined")
+			&&(nodePost.rawData.comments.indexOf(data.commentId) > -1))
+			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(data.commentId),1);
+		var nodeComment = document.getElementById(data.commentId);
 		if(!nodeComment)return;
 		nodeComment.parentNode.removeChild(nodeComment);
-		if(typeof gComments[data.comments.id] !== "undefined")delete gComments[data.comments.id];
-		var nodePost  = document.getElementById(data.comments.postId);
-		if((typeof nodePost.rawData.comments !== "undefined")
-			&&(nodePost.rawData.comments.indexOf(data.comments.id) > -1))
-			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(data.comments.id),1);
 	}
 	,"like:new": function(data){
 		var that = this;
@@ -116,6 +119,7 @@ RtHandler.prototype = {
 		var nodePost = document.getElementById(data.meta.postId);
 		if(nodePost){
 			if (!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
+			if (nodePost.rawData.likes.indexOf(data.users.id) > -1) return;
 			nodePost.rawData.likes.unshift(data.users.id);
 			genLikes(nodePost);
 			/*
@@ -133,6 +137,8 @@ RtHandler.prototype = {
 			&& (nodePost.rawData.likes.indexOf(data.meta.userId) > -1 )) {
 			nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(data.meta.userId), 1) ;
 			genLikes(nodePost);
+			nodePost.cNodes["post-body"].cNodes["post-info"].nodeLike.innerHTML = "Like";
+			nodePost.cNodes["post-body"].cNodes["post-info"].nodeLike.action = true ;
 		}
 
 	}

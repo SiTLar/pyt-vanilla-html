@@ -11,6 +11,10 @@ var gRt = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var autolinker = new Object();
 var matrix  = new Object();
+var Drawer =  new Object();
+var Actions = new Object();
+var arrStage1 = new Array();
+var arrStage2 = new Array();
 document.addEventListener("DOMContentLoaded", initDoc);
 
 function initDoc(){
@@ -29,15 +33,11 @@ function initDoc(){
 	default:
 		if(!auth(true)) gMe = undefined;
 	}
-	var arrStage1 = new Array();
 	arrStage1.push(loadScript("openpgp.min.js"));
 	arrStage1.push(loadScript("Autolinker.min.js"));
-	arrStage1.push(loadScript("stringview.js"));
-	arrStage1.push(loadScript("private_module.js"));
-	arrStage1.push(loadScript("secrets.js"));
-	arrStage1.push(loadScript("rt_actions.js"));
-	arrStage1.push(loadScript("rt_network.js"));
 	arrStage1.push(loadScript("draw.js"));
+	arrStage1.push(loadScript("stringview.js"));
+	arrStage1.push(loadScript("secrets.js"));
 	arrStage1.push(new Promise(function(resolve,reject){
 		genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 		resolve();
@@ -61,7 +61,29 @@ function initDoc(){
 	var content;
 	arrStage1.push( getContent(gConfig.xhrurl+locationSearch).then(function(data){content = data}));
 
-	Promise.all(arrStage1).then(window["draw"](content));
+	var prStage1 = Promise.all(arrStage1);
+	prStage1.then(function(){ 
+		arrStage2.push(new Promise(function(resolve,reject){
+			Drawer["draw"](content);
+			resolve();
+		}));
+	});
+	arrStage2.push(prStage1);
+	arrStage2.push(loadScript("actions.js"));
+	arrStage2.push(loadScript("private_module.js"));
+	arrStage2.push(loadScript("rt_actions.js"));
+	arrStage2.push(loadScript("rt_network.js"));
+	Promise.all(arrStage2).then(function(){
+		matrix = new CryptoPrivate(gCryptoPrivateCfg );
+		var nodeRTCtrl = document.getElementsByClassName("rt-controls")[0];
+		var bump = nodeRTCtrl.cNodes["rt-bump"].value;
+		if( nodeRTCtrl.cNodes["rt-chkbox"].checked){
+			gRt = new RtUpdate(gConfig.token, bump);
+			gRt.subscribe(gConfig.rt);
+		}
+
+	} );
+
 }
 function getContent(url){
 	return new Promise(function(resolve,reject){
@@ -101,15 +123,6 @@ function getContent(url){
 		oReq.open("get",url,true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
-	});
-}
-function loadScript(script){
-	return new Promise(function(resolve,reject){
-		var node = document.createElement("script");
-		node.onload = resolve;
-		node.onerror = reject;
-		node.src = gConfig.static + script;
-		document.getElementsByTagName("body")[0].appendChild(node);
 	});
 }
 function auth(check){
@@ -176,7 +189,7 @@ function genNodes(templates){
 		var node = document.createElement(template.t); 
 		node.cloneAll = function(){
 			var newNode = this.cloneNode(true); 
-			genCNodes(newNode, this);
+			Drawer.genCNodes(newNode, this);
 			return newNode;
 		};
 		if(template.c)node.className = template.c; 

@@ -173,8 +173,9 @@ function loadGlobals(data){
 		data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;addUser(sub);});
 		data.subscriptions.forEach(function(sub){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
-				gFeeds[sub.id] = subscribers[sub.user];
-				gFeeds[sub.id].link = '<a class="'+(sub.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ sub.username+'">'+ sub.screenName+"</a>";
+				var user = subscribers[sub.user];
+				gFeeds[sub.id] = user;
+				gFeeds[sub.id].link = '<a class="'+(user.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
 			}
 		});
 	}
@@ -484,7 +485,7 @@ function postHide(e){
 	}
 	
 
-		oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"hide":"unhide"), true);
+		oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(e.target.action?"hide":"unhide"), true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
 		
@@ -494,6 +495,7 @@ function postHide(e){
 function doHide(victim, action){
 	var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
 	if(action != nodeHide.action) return; 
+	nodeHide.action = !action; 
 	var nodeShow = document.getElementsByClassName("show-hidden")[0]
 	if (!nodeShow){
 		nodeShow = gNodes["show-hidden"].cloneAll();
@@ -521,7 +523,6 @@ function doHide(victim, action){
 		if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries"; 
 		else aShow.dispatchEvent(new Event("click"));
 	}
-	nodeHide.action = !action; 
 
 }
 function regenHides(){

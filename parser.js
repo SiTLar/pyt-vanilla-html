@@ -483,14 +483,9 @@ function postHide(e){
 			doHide(victim, e.target.action);
 		};
 	}
-	
-
 		oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(e.target.action?"hide":"unhide"), true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
-		
-
-	
 }
 function doHide(victim, action){
 	var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
@@ -2021,8 +2016,18 @@ function frfAutolinker( autolinker,match ){
 		return true;
 	}
 }
+function addIcon(ico){
+	var linkFavicon = document.getElementById("favicon"); 
+	if (linkFavicon) linkFavicon.parentNode.removeChild(linkFavicon);
+	linkFavicon = document.createElement('link');
+	linkFavicon.id = "favicon";
+	linkFavicon.type = 'image/x-icon';
+	linkFavicon.rel = 'shortcut icon';
+	linkFavicon.href = gConfig.static + ico; 
+	document.getElementsByTagName('head')[0].appendChild(linkFavicon);
+}
 function initDoc(){
-
+	addIcon("throbber-16.gif");
 	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 	var locationSearch = document.location.search;
 	if (locationPath == "")locationPath = "home";
@@ -2041,7 +2046,10 @@ function initDoc(){
 	}
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
-		if(oReq.status < 400) draw(JSON.parse(this.response));
+		if(oReq.status < 400){
+			draw(JSON.parse(this.response));
+			addIcon("favicon.ico");
+		}
 		else{
 			if (oReq.status==401)
 				{

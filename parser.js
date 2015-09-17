@@ -478,18 +478,20 @@ function showHidden(e){
 function postHide(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 	var oReq = new XMLHttpRequest();
+	var action = e.target.action;
 	oReq.onload = function(){
 		if(this.status < 400){	
-			doHide(victim, e.target.action);
+			doHide(victim, action, "user");
 		};
 	}
-		oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(e.target.action?"hide":"unhide"), true);
+		oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(action?"hide":"unhide"), true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
 }
-function doHide(victim, action){
+function doHide(victim, action,src ){
 	var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
 	if(action != nodeHide.action) return; 
+	victim.rawData.isHidden = action;
 	nodeHide.action = !action; 
 	var nodeShow = document.getElementsByClassName("show-hidden")[0]
 	if (!nodeShow){
@@ -499,7 +501,6 @@ function doHide(victim, action){
 	}
 	var aShow =  nodeShow.cNodes["href"];
 	if(action){
-		victim.rawData.isHidden = true;
 		document.hiddenPosts[victim.rawData.idx].is  = true;
 		victim.parentNode.removeChild(victim);
 		document.hiddenCount++;

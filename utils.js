@@ -31,7 +31,15 @@ function relative_time(date) {
 	return 'about ' + r;
 };
 function setCookie(name, data){
-	document.cookie = encodeURIComponent(name)+"="+data+";expires=" + new Date(Date.now()+3600000*24*365).toUTCString()+";secure";
+	var hostname = window.location.hostname.split(".");
+	hostname.reverse();
+
+	document.cookie = name
+		+"="+data
+		+";expires=" + new Date(Date.now()+3600000*24*365).toUTCString()
+		+"; domain="+ hostname[1] + "." + hostname[0] 
+		+"; path=/"
+		+";secure";
 }
 function getCookie(name){
 	var arrCookies = document.cookie.split(";");
@@ -39,12 +47,19 @@ function getCookie(name){
 	arrCookies.some(function(c){
 		var cookie = c.split("=");
 		if(cookie[0].trim() == name ){
-			res = decodeURIComponent(cookie[1]);
+			res = cookie[1];
 			return true;
 		}
 	});
 	return res;
 }
 function deleteCookie(name){
-	document.cookie = name+"=;expires=" + new Date(0).toUTCString();
+	var hostname = window.location.hostname.split(".");
+	hostname.reverse();
+	var cookie = name
+		+"=;expires=" + new Date(0).toUTCString()
+		+"; domain="+ hostname[1] + "." + hostname[0]
+		+"; path=/";
+	console.log(cookie);
+	document.cookie = cookie;
 }

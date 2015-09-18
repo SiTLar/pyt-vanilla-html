@@ -5,6 +5,7 @@ var gConfig = {
 , "rtURL":"https://moimosk.ru/socket.io/"
 , "offset":"30"
 , "likesFold":4
+, "tokenPrefix":"test_"
 
 }
 var gCryptoPrivateCfg = {

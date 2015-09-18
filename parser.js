@@ -1436,7 +1436,7 @@ function genNodes(templates){
 
 }
 function auth(check){
-	gConfig.token = getCookie("token");
+	gConfig.token = getCookie(gConfig.tokenPrefix + "authToken");
 	var txtgMe = null;
 	try{txtgMe = window.localStorage.getItem("gMe");} catch(e){
 		window.localStorage ={
@@ -1483,6 +1483,7 @@ function auth(check){
 		}
 	}
 	if (check !== true ){
+		addIcon("favicon.ico");
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
 		nodeAuth.innerHTML = '<div id=auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" onsubmit=getauth(this)><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
@@ -1504,7 +1505,7 @@ function getauth(oFormElement){
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){	
-			setCookie("token", JSON.parse(this.response).authToken);
+			setCookie(gConfig.tokenPrefix + "authToken", JSON.parse(this.response).authToken);
 			gConfig.token =  JSON.parse(this.response).authToken;
 			document.getElementsByTagName("body")[0].removeChild(document.getElementsByClassName("nodeAuth")[0]);
 		//	initDoc();
@@ -1521,7 +1522,7 @@ function logout(){
 	matrix.ready = 0;
 	matrix.logout();
 	window.localStorage.removeItem("gMe");
-	deleteCookie("token");
+	deleteCookie(gConfig.tokenPrefix + "authToken");
 	location.reload();
 }
 function ctrlPriv(){

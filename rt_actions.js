@@ -162,7 +162,7 @@ RtHandler.prototype = {
 	, "post:hide" : function(data){
 		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) return;
-		doHide(nodePost, true);
+		doHide(nodePost, true, "rt");
 	}
 	, "post:unhide" : function(data){
 		var nodePost = document.getElementById(data.meta.postId);
@@ -170,6 +170,6 @@ RtHandler.prototype = {
 			document.hiddenPosts.forEach(function (item){
 				if (item.is && (item.data.id == data.meta.postId))nodePost = genPost(item.data);
 			});
-		if (nodePost) doHide(nodePost, false);
+		if (nodePost) doHide(nodePost, false, "rt");
 	}
 }

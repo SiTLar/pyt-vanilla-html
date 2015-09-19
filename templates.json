@@ -75,7 +75,7 @@ var templates =  {"nodes": [
 	},
 	{"c":"hide","t":"span",
 	"children":[
-		{"c":"spacer","t":"span","txt":"|"}
+		{"c":"spacer","t":"span","txt":"-"}
 		, {"c":"href","t":"a","txt":"Hide","e":{"click":"postHide"}}
 	]},
 	{"c":"attachment"},

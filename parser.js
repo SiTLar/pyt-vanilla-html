@@ -173,8 +173,9 @@ function loadGlobals(data){
 		data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;addUser(sub);});
 		data.subscriptions.forEach(function(sub){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
-				gFeeds[sub.id] = subscribers[sub.user];
-				gFeeds[sub.id].link = '<a class="'+(sub.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ sub.username+'">'+ sub.screenName+"</a>";
+				var user = subscribers[sub.user];
+				gFeeds[sub.id] = user;
+				gFeeds[sub.id].link = '<a class="'+(user.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
 			}
 		});
 	}
@@ -477,23 +478,21 @@ function showHidden(e){
 function postHide(e){
 	var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 	var oReq = new XMLHttpRequest();
+	var action = e.target.action;
 	oReq.onload = function(){
 		if(this.status < 400){	
-			doHide(victim, e.target.action);
+			doHide(victim, action, "user");
 		};
 	}
-	
-
-		oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"hide":"unhide"), true);
+		oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(action?"hide":"unhide"), true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 		oReq.send();
-		
-
-	
 }
-function doHide(victim, action){
+function doHide(victim, action,src ){
 	var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
 	if(action != nodeHide.action) return; 
+	victim.rawData.isHidden = action;
+	nodeHide.action = !action; 
 	var nodeShow = document.getElementsByClassName("show-hidden")[0]
 	if (!nodeShow){
 		nodeShow = gNodes["show-hidden"].cloneAll();
@@ -502,7 +501,6 @@ function doHide(victim, action){
 	}
 	var aShow =  nodeShow.cNodes["href"];
 	if(action){
-		victim.rawData.isHidden = true;
 		document.hiddenPosts[victim.rawData.idx].is  = true;
 		victim.parentNode.removeChild(victim);
 		document.hiddenCount++;
@@ -521,7 +519,6 @@ function doHide(victim, action){
 		if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries"; 
 		else aShow.dispatchEvent(new Event("click"));
 	}
-	nodeHide.action = !action; 
 
 }
 function regenHides(){
@@ -1439,7 +1436,7 @@ function genNodes(templates){
 
 }
 function auth(check){
-	gConfig.token = getCookie("token");
+	gConfig.token = getCookie(gConfig.tokenPrefix + "authToken");
 	var txtgMe = null;
 	try{txtgMe = window.localStorage.getItem("gMe");} catch(e){
 		window.localStorage ={
@@ -1486,6 +1483,7 @@ function auth(check){
 		}
 	}
 	if (check !== true ){
+		addIcon("favicon.ico");
 		var nodeAuth = document.createElement("div");
 		nodeAuth.className = "nodeAuth";
 		nodeAuth.innerHTML = '<div id=auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" onsubmit=getauth(this)><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
@@ -1507,7 +1505,7 @@ function getauth(oFormElement){
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		if(this.status < 400){	
-			setCookie("token", JSON.parse(this.response).authToken);
+			setCookie(gConfig.tokenPrefix + "authToken", JSON.parse(this.response).authToken);
 			gConfig.token =  JSON.parse(this.response).authToken;
 			document.getElementsByTagName("body")[0].removeChild(document.getElementsByClassName("nodeAuth")[0]);
 		//	initDoc();
@@ -1524,7 +1522,7 @@ function logout(){
 	matrix.ready = 0;
 	matrix.logout();
 	window.localStorage.removeItem("gMe");
-	deleteCookie("token");
+	deleteCookie(gConfig.tokenPrefix + "authToken");
 	location.reload();
 }
 function ctrlPriv(){
@@ -2020,8 +2018,18 @@ function frfAutolinker( autolinker,match ){
 		return true;
 	}
 }
+function addIcon(ico){
+	var linkFavicon = document.getElementById("favicon"); 
+	if (linkFavicon) linkFavicon.parentNode.removeChild(linkFavicon);
+	linkFavicon = document.createElement('link');
+	linkFavicon.id = "favicon";
+	linkFavicon.type = 'image/x-icon';
+	linkFavicon.rel = 'shortcut icon';
+	linkFavicon.href = gConfig.static + ico; 
+	document.getElementsByTagName('head')[0].appendChild(linkFavicon);
+}
 function initDoc(){
-
+	addIcon("throbber-16.gif");
 	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 	var locationSearch = document.location.search;
 	if (locationPath == "")locationPath = "home";
@@ -2040,7 +2048,10 @@ function initDoc(){
 	}
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
-		if(oReq.status < 400) draw(JSON.parse(this.response));
+		if(oReq.status < 400){
+			draw(JSON.parse(this.response));
+			addIcon("favicon.ico");
+		}
 		else{
 			if (oReq.status==401)
 				{

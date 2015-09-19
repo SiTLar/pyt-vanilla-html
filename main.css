@@ -6,6 +6,33 @@ color: #333333;
        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
        font-size: 16px;
 }
+@keyframes loader0 {
+	0% {opacity:0}
+	24%{opacity:0}
+	25% {opacity:1}
+}
+@keyframes loader1 {
+	0% {opacity:0}
+	45% {opacity:0}
+	50% {opacity:1}
+}
+@keyframes loader2 {
+	0% {opacity:0}
+	74% {opacity:0}
+	75% {opacity:1}
+}
+.loading span:nth-child(1){
+animation: loader0 3s infinite ;
+animation-timing-functioni: steps(3, start);
+}
+.loading span:nth-child(2){
+animation: loader1 3s infinite ;
+animation-timing-functioni: steps(4, start);
+}
+.loading span:nth-child(3){
+animation: loader2 3s infinite; 
+animation-timing-functioni: steps(4, start);
+}
 a {
 color: #000088;
        text-decoration: none;
@@ -185,7 +212,6 @@ display: inline;
 
 .post-body .likes ul li+li::before {
 content: ",";
-display: inline-block;
 margin-right:.3em;
 }
 .confirm-button{
@@ -193,7 +219,6 @@ margin-right: 3em;
 }
 .title a+a::before{
 content: ",";
-display: inline-block;
 margin-right:.3em;
 }
 .post-body .likes ul li.nocomma:before {

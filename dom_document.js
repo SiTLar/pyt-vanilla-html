@@ -1,12 +1,11 @@
 'use strict';
-var util = require('util');
 (function(){
 
  var gIdCount = 0;
  var gEventHandling = new Object();
  function Element (tag){
 	this.tagName = tag;
-	this.parentNode = null;
+	//this.parentNode = null;
 	this.childNodes = new Array();
 	this.style = new Object();
  };
@@ -16,7 +15,6 @@ Element.prototype = {
 	,childNodes: Array
 	,innerHTML: ""
 	,className: ""
-	,parentNode: null
 	,id: ""
 	,style: {}
 	,appendChild: function(newChild){
@@ -126,17 +124,18 @@ Element.prototype = {
  }	
  var Document = function(){
 	Element.call(this, "html");
+	this.head = new Element("head");
+	this.body = new Element("body")
 	this.appendChild(this.head);
-
 	this.appendChild(this.body);
 
  };
  Document.prototype = Object.create(Element.prototype, {
-	 head : {value: new Element("head")}
-	 ,body : {value:new Element("body") }
-	 ,createElement :  {value: function(tag){return new Element(tag);}}
+	// head : {value: new Element("head")}
+	// ,body : {value:new Element("body") }
+	 createElement :  {value: function(tag){return new Element(tag);}}
 	 ,writeEventHandling : {value: function(){}}
  } );
  Document.prototype.constructor = Document;
- module.exports = new Document();
+ module.exports =  Document;
 })();

@@ -154,6 +154,7 @@ var Drawer = {
 				
 			}
 		}
+			console.log("halfway")
 		if(content.timelines){
 			var nodeMore = doc.createElement("div");
 			nodeMore.className = "more-node";
@@ -588,6 +589,7 @@ var Drawer = {
 	}
 	,"genPostTo": function(victim){
 		var nodePostTo = gNodes["new-post-to"].cloneAll(); 
+		console.log(victim)
 		victim.replaceChild(nodePostTo, victim.cNodes["new-post-to"]);
 		victim.cNodes["new-post-to"] = nodePostTo;
 		nodePostTo.feeds = new Array();

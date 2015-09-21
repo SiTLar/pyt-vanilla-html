@@ -106,7 +106,10 @@ function genLikes(nodePost){
 }
 function addUser (user){
 	if (typeof gUsers[user.id] !== "undefined" ) return;
-	user.link = '<a class="'+(user.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
+	var className = "not-my-link";
+	if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
+		className = (user.id==gMe.users.id?"my-link":"not-my-link");
+	user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
 	user.friend = false;
 	user.subscriber = false;
@@ -174,8 +177,11 @@ function loadGlobals(data){
 		data.subscriptions.forEach(function(sub){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 				var user = subscribers[sub.user];
+				var className = "not-my-link";
+				if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
+					className = (user.id==gMe.users.id?"my-link":"not-my-link");
 				gFeeds[sub.id] = user;
-				gFeeds[sub.id].link = '<a class="'+(user.id==gMe.users.id?"my-link":"not-my-link")+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
+				gFeeds[sub.id].link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
 			}
 		});
 	}

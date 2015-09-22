@@ -104,9 +104,7 @@ var Drawer = {
 		var title =  doc.createElement("div");
 		title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 		gConfig.cTxt = null;
-		console.log("kuku");
 		var nodeRTControls = gNodes["rt-controls"].cloneAll();
-		console.log("kuku");
 		if(typeof gMe === "undefined"){ 
 			var nodeGControls = gNodes["controls-anon"].cloneAll();
 			nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
@@ -114,13 +112,9 @@ var Drawer = {
 
 			body.appendChild(title);
 		}else{ 
-		console.log("kuku");
 			if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
-		console.log("kuku");
 				gMe.subscribers.forEach(Utils["addUser"]);
-		console.log("kuku");
 				var oSubscriptions = new Object();
-		console.log("kuku");
 				gMe.subscriptions.forEach(function(sub){
 					if(sub.name =="Posts"){
 						oSubscriptions[sub.id] = sub.user;
@@ -138,15 +132,10 @@ var Drawer = {
 				});
 			}
 			
-		console.log("kuku");
 			var nodeGControls = gNodes["controls-user"].cloneAll();
-		console.log("kuku");
 			nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
-		console.log("kuku");
 			body.appendChild(nodeGControls);
-		console.log("kuku");
 			body.appendChild(title);
-		console.log("kuku");
 			switch (gConfig.timeline.split("/")[0]){
 			case "filter":
 				if (gConfig.timeline.split("/")[1] == "direct"){
@@ -166,7 +155,6 @@ var Drawer = {
 				
 			}
 		}
-		console.log("kuku");
 		if(content.timelines){
 			var nodeMore = doc.createElement("div");
 			nodeMore.className = "more-node";

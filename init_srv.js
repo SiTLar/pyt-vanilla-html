@@ -48,6 +48,7 @@ module.exports = function(req,res){
 		nodeInitS.innerHTML += "\nicecreamInit()";
 		document.body.appendChild(nodeInitS);
 		res.write(document.toString());
+		console.log("kuku");
 		res.end();
 		gMe = undefined;
 		gConfig.token = null;

@@ -57,14 +57,14 @@ Element.prototype = {
 		out.className = that.className;
 		if (deep == true){
 			out.innerHTML = that.innerHTML;
-			for(key in that){
+			Object.keys(that).forEach(function(key){
 				if((typeof that[key] == "string")||(typeof that[key] == "boolean")){
 					out[key] = that[key];
 				}
-			};
-			for(key in that.style){
+			});
+			Object.keys(that).forEach(function(key){
 				out.style[key] = that.style[key];
-			};
+			});
 			that.childNodes.forEach(
 				function(child){out.appendChild(child.cloneNode(true));}
 			);
@@ -124,9 +124,9 @@ Element.prototype = {
 	}
 	,transferEvents: function(newChild){
 		var that = this;
-		for (key in newChild.eventHost){
+		Object.keys(newChild.eventHost).forEach(function(key){
 			that.eventHost[key] = newChild.eventHost[key];
-		};
+		});
 		newChild.eventHost =  that.eventHost;
 	}
 	,toString: function(){
@@ -139,6 +139,7 @@ Element.prototype = {
 			else if(typeof that[key] == "boolean")  return total + " " + key + "="+ that[key];
 			else return total;
 		},"");
+		console.log(this.tagName);
 		return "<" + this.tagName 
 			+ (this["className"] != ""?(' class="' + this.className + '"' ) : "")
 			+ attributes

@@ -264,10 +264,16 @@ var templates =  {"nodes": [
 	,"children":[
 		{"c":"up-s","t":"a", "e":{"click":"subscribe"}}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"up-d","t":"a", "txt":"Direct"}
-		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"up-b","t":"a", "txt":"Block"}
-		,{"c":"spacer","t":"span","txt":"&mdash;"}
+		,{"c":"up-d","t":"span"
+		,"children":[
+			{"c":"up-d-a","t":"a", "txt":"Direct"}
+			,{"c":"spacer","t":"span","txt":"&mdash;"}
+		]}	
+		,{"c":"up-b","t":"span"
+		,"children":[
+			,{"c":"up-b-a","t":"a", "txt":"Block"}
+			,{"c":"spacer","t":"span","txt":"&mdash;"}
+		]}
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 
 	]}

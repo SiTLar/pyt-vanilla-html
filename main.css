@@ -185,7 +185,6 @@ display: inline;
 
 .post-body .likes ul li+li::before {
 content: ",";
-display: inline-block;
 margin-right:.3em;
 }
 .confirm-button{
@@ -193,7 +192,6 @@ margin-right: 3em;
 }
 .title a+a::before{
 content: ",";
-display: inline-block;
 margin-right:.3em;
 }
 .post-body .likes ul li.nocomma:before {

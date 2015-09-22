@@ -18,7 +18,7 @@ global.gFeeds = new Object();
 global.autolinker = new Object();
 global.gRt = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
-var matrix  = new Object();
+global.matrix  = new Object();
 eval(fs.readFileSync('templates.json')+'');
 eval(fs.readFileSync('config.json')+'');
 var head = fs.readFileSync('head.template');
@@ -37,28 +37,31 @@ module.exports = function(req,res){
 		var content = vals[0];
 		if(vals.length>1){
 			gMe = vals[1];
-			console.log("add user")
 			Utils["addUser"](gMe);
 		}
 		Drawer.init(document, gNodes);
-		console.log("draw")
 		Drawer.draw(content);
 		document.head.innerHTML += head;
-		console.log(document.toString().lenght);
+		var nodeInitS = document.createElement("script");
+		nodeInitS.innerHTML = "var gContent = " + JSON.stringify(content)+"\n";
+		//if(typeof gMe !== "undefined")nodeInitS.innerHTML += "gMe = " + JSON.stringify(gMe);
+		nodeInitS.innerHTML += "\nicecreamInit()";
+		document.body.appendChild(nodeInitS);
 		res.write(document.toString());
 		res.end();
+		gMe = undefined;
+		gConfig.token = null;
 	},function(ret){
 		res.writeHead(500);	
 		res.end();
+		gConfig.token = null;
 	
 	});
 }
 function initDoc(req){
 	var token = null;
 	var urlReq = url.parse(req.url, true);	
-	console.log(urlReq.pathname);
 	var locationPath = (urlReq.pathname).slice(gConfig.front.length);
-	console.log(locationPath);
 	var locationSearch = urlReq.search;
 	if (locationPath == "")locationPath = "home";
 	if (locationSearch == "")locationSearch = "?offset=0";
@@ -72,6 +75,7 @@ function initDoc(req){
 			return true;
 		}
 	});
+	gConfig.token = token;
 	/*
 	switch(gConfig.timeline){
 	case "home":
@@ -95,7 +99,6 @@ function initDoc(req){
 			locationSearch = "?maxComments=all";
 		}
 	} else gConfig.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
-	console.log(gConfig.xhrurl+locationSearch);
 	return getContent(gConfig.xhrurl+locationSearch, token);
 }
 function genNodes(templates){
@@ -154,6 +157,7 @@ function getContent(url, token){
 		}
 		oReq.send();
 	}));
+
 	//console.log(util.inspect(arrP[0], { showHidden: true, depth: null }));
 	return Promise.all(arrP);
 }

@@ -82,12 +82,13 @@ var Drawer = {
 			data.subscriptions.forEach(function(sub){
 				if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 					gFeeds[sub.id] = subscribers[sub.user];
+					var user = gFeeds[sub.id];
 					var className = "not-my-link";
 					if((typeof gMe !== "undefined")
 						&&(typeof gMe.users !== "undefined")
-						&&(sub.id==gMe.users.id))
+						&&(user.id==gMe.users.id))
 						className = "my-link";
-					gFeeds[sub.id].link = '<a class="'+className+'" href="' + gConfig.front+ sub.username+'">'+ sub.screenName+"</a>";
+					gFeeds[sub.id].link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
 				}
 			});
 		}
@@ -103,7 +104,9 @@ var Drawer = {
 		var title =  doc.createElement("div");
 		title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 		gConfig.cTxt = null;
+		console.log("kuku");
 		var nodeRTControls = gNodes["rt-controls"].cloneAll();
+		console.log("kuku");
 		if(typeof gMe === "undefined"){ 
 			var nodeGControls = gNodes["controls-anon"].cloneAll();
 			nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
@@ -111,9 +114,13 @@ var Drawer = {
 
 			body.appendChild(title);
 		}else{ 
+		console.log("kuku");
 			if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
+		console.log("kuku");
 				gMe.subscribers.forEach(Utils["addUser"]);
+		console.log("kuku");
 				var oSubscriptions = new Object();
+		console.log("kuku");
 				gMe.subscriptions.forEach(function(sub){
 					if(sub.name =="Posts"){
 						oSubscriptions[sub.id] = sub.user;
@@ -131,10 +138,15 @@ var Drawer = {
 				});
 			}
 			
+		console.log("kuku");
 			var nodeGControls = gNodes["controls-user"].cloneAll();
+		console.log("kuku");
 			nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
+		console.log("kuku");
 			body.appendChild(nodeGControls);
+		console.log("kuku");
 			body.appendChild(title);
+		console.log("kuku");
 			switch (gConfig.timeline.split("/")[0]){
 			case "filter":
 				if (gConfig.timeline.split("/")[1] == "direct"){
@@ -154,7 +166,7 @@ var Drawer = {
 				
 			}
 		}
-			console.log("halfway")
+		console.log("kuku");
 		if(content.timelines){
 			var nodeMore = doc.createElement("div");
 			nodeMore.className = "more-node";
@@ -271,23 +283,24 @@ var Drawer = {
 				}
 			}
 			if(user.friend && user.subscriber){
-				controls.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
-				controls.cNodes["up-d"].target = "_blank";
-			}else{
+				controls.cNodes["up-d"].cNodes["up-d-a"].href = gConfig.front + "filter/direct#"+username;
+				controls.cNodes["up-d"].cNodes["up-d-a"].target = "_blank";
+			}else
 				controls.cNodes["up-d"].hidden = true;
-				controls.cNodes["up-d"].nextSibling.hidden = true;
-			}
-			var aBan = controls.cNodes["up-b"];
+			
+			var nodeBan = controls.cNodes["up-b"];
 			if (user.type == "group"){
-				aBan.nextSibling.hidden = true;
-				aBan.hidden = true;
+				nodeBan.hidden = true;
 				return;
 			}
-			aBan.banned = gMe.users.banIds.some(function(a){
-				return a == user.id;
-			});
-			aBan.innerHTML = aBan.banned?"Un-block":"Block";
-			aBan.addEventListener("click", Actions["ban"]); 
+			nodeBan.banned = false;
+			if(Array.isArray( gMe.users.banIds)){
+				nodeBan.banned = gMe.users.banIds.some(function(a){
+					return a == user.id;
+				});
+			}
+			nodeBan.cNodes["up-b-a"].innerHTML = nodeBan.banned?"Un-block":"Block";
+			nodeBan.addEventListener("click", Actions["ban"]); 
 		}
 		return controls;
 	}
@@ -589,8 +602,8 @@ var Drawer = {
 	}
 	,"genPostTo": function(victim){
 		var nodePostTo = gNodes["new-post-to"].cloneAll(); 
-		console.log(victim)
 		victim.replaceChild(nodePostTo, victim.cNodes["new-post-to"]);
+		//console.log(victim);
 		victim.cNodes["new-post-to"] = nodePostTo;
 		nodePostTo.feeds = new Array();
 		nodePostTo.feeds.push(gMe.users.username);

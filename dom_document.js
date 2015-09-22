@@ -2,24 +2,26 @@
 (function(){
 
  var gIdCount = 0;
- var gEventHandling = new Object();
+ var arrSkipKeys = ["tagName", "className","innerHTML"];
  function Element (tag){
 	this.tagName = tag;
-	//this.parentNode = null;
 	this.childNodes = new Array();
 	this.style = new Object();
+	this.eventHost = new Object();
  };
 Element.prototype = {
  	constructor: Element
 	,tagName: ""
+	,className:""
 	,childNodes: Array
 	,innerHTML: ""
-	,className: ""
-	,id: ""
-	,style: {}
+	,eventHost: null
+	,style: null 
 	,appendChild: function(newChild){
 		if(newChild)this.childNodes.push(newChild);
 		newChild.parentNode = this;
+		if (this.childNodes.length == 1)this.firstChild = newChild;
+		this.transferEvents(newChild);
 		return newChild;
 	}
 	,insertBefore: function(newChild, child){
@@ -28,30 +30,43 @@ Element.prototype = {
 		else index--;
 		this.childNodes.splice(index,0,newChild);
 		newChild.parentNode = this;
+		if (!index)this.firstChild = newChild;
+		this.transferEvents(newChild);
 		return newChild;
 	}
 	,removeChild: function(child){
 		var index  = this.childNodes.indexOf(child);
 		if (index < 0 )return null;
-		return this.childNodes.splice(index,1)[0];
+		var oraph = this.childNodes.splice(index,1)[0];
+		if (this.childNodes.length > 0)this.firstChild = newChild;
+		else this.firstChild = null;
+		return oraph;
 	}
 	,replaceChild: function(newChild, child){
 		var index  = this.childNodes.indexOf(child);
-		if (index <= 0) return null;
+		if (index < 0) return null;
 		this.childNodes.splice(index,1,newChild);
 		newChild.parentNode = this;
+		if (!index)this.firstChild = newChild;
+		this.transferEvents(newChild);
 		return child;
 	}
 	,cloneNode: function(deep){
-		var out = new Element(this.tagName);
-		out.className = this.className;
+		var that = this;
+		var out = new Element(that.tagName);
+		out.className = that.className;
 		if (deep == true){
-			out.innerHTML = this.innerHTML;
-			Object.keys(this.style).forEach(function(key){
-				out.style[key] = this.style[key];
-			});
-			out.childNodes = this.childNodes.map(
-				function(child){return child.cloneNode(true);}
+			out.innerHTML = that.innerHTML;
+			for(key in that){
+				if((typeof that[key] == "string")||(typeof that[key] == "boolean")){
+					out[key] = that[key];
+				}
+			};
+			for(key in that.style){
+				out.style[key] = that.style[key];
+			};
+			that.childNodes.forEach(
+				function(child){out.appendChild(child.cloneNode(true));}
 			);
 		}
 		return out;
@@ -83,22 +98,23 @@ Element.prototype = {
 		},out);
 	}
 	,addEventListener: function(e, handler){
-		if (this.id == "") this.id = "eh-" + gIdCount++;
-		if (typeof gEventHandling[this.id] === "undefined") 
-			gEventHandling[this.id] = new Object();
-		if (typeof gEventHandling[this.id][e] === "undefined") 
-			gEventHandling[this.id][e] = new Array();
-		gEventHandling[this.id][e].push(handler);
+		if (typeof this.id === "undefined") this.id = "eh-" + Date.now().toString(36);
+		if (typeof this.eventHost[this.id] === "undefined") 
+			this.eventHost[this.id] = new Object();
+		if (typeof this.eventHost[this.id][e] === "undefined") 
+			this.eventHost[this.id][e] = new Array();
+		this.eventHost[this.id][e].push(handler);
 	}
 	,removeEventListener: function(e, handler){
 		if ((this.id == "")
-			|| (typeof gEventHandling[this.id] === "undefined") 
-			|| (typeof gEventHandling[this.id][e] === "undefined") 
+			|| (typeof this.eventHost[this.id] === "undefined") 
+			|| (typeof this.eventHost[this.id][e] === "undefined") 
 		)
 			return;
-		var index =  gEventHandling[this.id][e].indexOf(handler);
+			console.log(this.eventHost);
+		var index =  this.eventHost[this.id][e].indexOf(handler);
 		if (index < 0) return;
-		gEventHandling[this.id][e].splice(index,1);
+		this.eventHost[this.id][e].splice(index,1);
 	}
 	,writeStyle: function(){
 		var that = this;
@@ -106,15 +122,28 @@ Element.prototype = {
 			return out + prop + ": " + that[prop] + "; ";
 		},"");	
 	}
+	,transferEvents: function(newChild){
+		var that = this;
+		for (key in newChild.eventHost){
+			that.eventHost[key] = newChild.eventHost[key];
+		};
+		newChild.eventHost =  that.eventHost;
+	}
 	,toString: function(){
+		var that = this;
 		var style =  this.writeStyle();
-
-		return "<" + this.tagName + " "
-			+ (this.className !=""? ('class="' + this.className + '" '):"")
-			+ (this.id != ""?("id="+this.id):"") 
+		var attributes = Object.keys(that).reduce(function(total,key){
+			if((typeof that[key] == "string")
+				&& !(arrSkipKeys.some(function(a){return a == key}))) 
+				return total + " " + key + '="' + that[key]+'"';
+			else if(typeof that[key] == "boolean")  return total + " " + key + "="+ that[key];
+			else return total;
+		},"");
+		return "<" + this.tagName 
+			+ (this["className"] != ""?(' class="' + this.className + '"' ) : "")
+			+ attributes
 			+ (style != ""?(' style="' + style + '"'):"")
-			+ (this.value?(' value="'+this.value+'"'):"") 
-			+ " >"
+			+ ">"
 			+ this.innerHTML
 			+ this.childNodes.reduce(
 				function(out, child){ return out + child.toString();}
@@ -125,16 +154,23 @@ Element.prototype = {
  var Document = function(){
 	Element.call(this, "html");
 	this.head = new Element("head");
+	this.events = new Element("script");
+	this.head.appendChild(this.events);
 	this.body = new Element("body")
 	this.appendChild(this.head);
 	this.appendChild(this.body);
 
  };
  Document.prototype = Object.create(Element.prototype, {
-	// head : {value: new Element("head")}
-	// ,body : {value:new Element("body") }
-	 createElement :  {value: function(tag){return new Element(tag);}}
-	 ,writeEventHandling : {value: function(){}}
+	 createElement :  {value: function(tag){
+	 	return new Element(tag);
+	} }
+	,toString : { value: function(){
+		this.events.innerHTML = JSON.stringify(this.eventHost);
+		return Element.prototype.toString.call(this);
+	}}
+
+	,writeEventHandling : {value: function(){}}
  } );
  Document.prototype.constructor = Document;
  module.exports =  Document;

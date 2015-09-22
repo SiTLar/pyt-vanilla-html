@@ -302,7 +302,8 @@ function draw(content){
 	}else{
 		var singlePost = genPost(content.posts);
 		body.appendChild(singlePost);
-		singlePost.getElementsByClassName("hide")[0].hidden = true;
+		var nodesHide = singlePost.getElementsByClassName("hide");
+		if (Array.isArray(nodesHide))nodesHide[0].hidden = true;
 	} 
 	var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
 	nodeRTCtrl.cNodes["rt-chkbox"].checked = window.localStorage.getItem("rt");

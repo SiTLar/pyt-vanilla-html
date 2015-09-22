@@ -147,6 +147,7 @@ color: #000088;
 .post-body {
 color: #666;
        line-height: 19px;
+       margin-bottom: .5em;
 }
 @media (min-width: 400px) {
 	.post-body {
@@ -210,7 +211,7 @@ padding: 0;
 display: inline;
 }
 
-.post-body .likes ul li+li::before {
+.post-body .comma span:nth-child(1n+1)::after{
 content: ",";
 margin-right:.3em;
 }
@@ -221,7 +222,7 @@ margin-right: 3em;
 content: ",";
 margin-right:.3em;
 }
-.post-body .likes ul li.nocomma:before {
+.post-body .comma span:last-child::after {
 content: "";
 display: inline-block;
 margin-right:.3em;
@@ -252,7 +253,7 @@ clear: both;
 
 float: left;
 height: auto;
-width: auto;
+width: 1.2em;
 font-size: 1.2em;
 position: relative;
 }

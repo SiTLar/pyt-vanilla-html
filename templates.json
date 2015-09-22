@@ -147,10 +147,11 @@ var templates =  {"nodes": [
 		]}
 		,{"c":"ft-list","t":"ul"}
 	]}
-	,{"c":"likes-smile","t":"span",
-	"children":[
-		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"},
-		{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
+	,{"c":"likes-smile","t":"span"
+	,"children":[
+		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"}
+		,{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
+		,{"t":"span", "txt":"&nbsp;"}
 	]}
 	,{"c":"show-hidden",
 	"children":[
@@ -274,7 +275,7 @@ var templates =  {"nodes": [
 	,{"c":"rt-controls"
 	,"children":[
 		{"c":"rt-chkbox","t":"input","p":{"type":"checkbox"}, "e":{"click":"realTimeSwitch"} }
-		,{"t":"span", "txt":"real-time updateds"}
+		,{"t":"span", "txt":"update feed in real-time"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"t":"span", "txt":"Bumping cooldown:"}
 		,{"c":"rt-bump", "t":"select","e":{"change":"setRTCooldown"} 

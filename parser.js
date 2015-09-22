@@ -973,7 +973,7 @@ function postLike(e){
 				if (!nodeLikes.childNodes.length){
 					nodeLikes.appendChild(gNodes["likes-smile"].cloneNode(true));
 					likesUL = document.createElement( "span");
-					likesUL.className ="p-timeline-user-likes";
+					likesUL.className ="comma";
 					var suffix = document.createElement("span");
 					suffix.id = e.target.parentNode.postId+"-unl";
 					suffix.innerHTML = " liked this";
@@ -982,9 +982,11 @@ function postLike(e){
 
 				}else {
 
-					for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
+				/*	for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
 						if (nodeLikes.childNodes[idx].nodeName == "UL")break;
 					likesUL = nodeLikes.childNodes[idx];
+					*/
+					likesUL = nodeLikes.cNodes["comma"];
 				}
 				var nodeLike = document.createElement("span");
 				nodeLike.className = "p-timeline-user-like";

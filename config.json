@@ -1,9 +1,11 @@
 var gConfig = {
   "serverURL":"https://micropeppa.freefeed.net/v1/"
 , "front":"https://moimosk.ru/frf/"
-, "static":"https://freefeed.net/"
+, "static":"https://moimosk.ru/frf/"
+, "rtURL":"https://moimosk.ru/socket.io/"
 , "offset":"30"
 , "likesFold":4
+, "tokenPrefix":"test_"
 
 }
 var gCryptoPrivateCfg = {

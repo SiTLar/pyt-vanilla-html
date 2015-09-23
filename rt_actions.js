@@ -46,6 +46,9 @@ RtHandler.prototype = {
 	}
 	,unshiftPost: function(data){
 		var that = this;
+		if (gMe && Array.isArray(gMe.users.banIds)
+			&& (gMe.users.banIds.indexOf(data.posts.createdBy) > -1))
+			return;
 		loadGlobals(data);
 		var nodePost = genPost(data.posts);
 		document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});

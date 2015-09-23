@@ -6,6 +6,16 @@ color: #333333;
        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
        font-size: 16px;
 }
+.global-settings label.radio {
+	margin-left:3em;
+}
+.global-settings h3{
+	margin-bottom: .5em;
+}
+.global-settings label{
+display: block;
+}
+
 @keyframes loader0 {
 	0% {opacity:0}
 	24%{opacity:0}
@@ -214,6 +224,7 @@ display: inline;
 .post-body .comma span:nth-child(1n+1)::after{
 content: ",";
 margin-right:.3em;
+display:inline-block;
 }
 .confirm-button{
 margin-right: 3em;

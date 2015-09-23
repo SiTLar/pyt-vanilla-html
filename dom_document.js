@@ -1,4 +1,5 @@
 'use strict';
+var shortid = require("shortid");
 (function(){
 
  var gIdCount = 0;
@@ -62,7 +63,7 @@ Element.prototype = {
 					out[key] = that[key];
 				}
 			});
-			Object.keys(that).forEach(function(key){
+			Object.keys(that.style).forEach(function(key){
 				out.style[key] = that.style[key];
 			});
 			that.childNodes.forEach(
@@ -98,7 +99,7 @@ Element.prototype = {
 		},out);
 	}
 	,addEventListener: function(e, handler){
-		if (typeof this.id === "undefined") this.id = "eh-" + Date.now().toString(36);
+		if (typeof this.id === "undefined") this.id = "eh-" + shortid.generate();
 		if (typeof this.eventHost[this.id] === "undefined") 
 			this.eventHost[this.id] = new Object();
 		if (typeof this.eventHost[this.id][e] === "undefined") 
@@ -118,8 +119,8 @@ Element.prototype = {
 	}
 	,writeStyle: function(){
 		var that = this;
-		return Object.keys(this.style).reduce(function(out, prop){
-			return out + prop + ": " + that[prop] + "; ";
+		return Object.keys(that.style).reduce(function(out, prop){
+			return out + prop + ": " + that.style[prop] + "; ";
 		},"");	
 	}
 	,transferEvents: function(newChild){
@@ -139,7 +140,6 @@ Element.prototype = {
 			else if(typeof that[key] == "boolean")  return total + " " + key + "="+ that[key];
 			else return total;
 		},"");
-		console.log(this.tagName);
 		return "<" + this.tagName 
 			+ (this["className"] != ""?(' class="' + this.className + '"' ) : "")
 			+ attributes
@@ -167,7 +167,7 @@ Element.prototype = {
 	 	return new Element(tag);
 	} }
 	,toString : { value: function(){
-		this.events.innerHTML = JSON.stringify(this.eventHost);
+		this.events.innerHTML = "gEvents = " + JSON.stringify(this.eventHost);
 		return Element.prototype.toString.call(this);
 	}}
 

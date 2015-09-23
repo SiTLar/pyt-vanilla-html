@@ -43,12 +43,11 @@ module.exports = function(req,res){
 		Drawer.draw(content);
 		document.head.innerHTML += head;
 		var nodeInitS = document.createElement("script");
-		nodeInitS.innerHTML = "var gContent = " + JSON.stringify(content)+"\n";
-		//if(typeof gMe !== "undefined")nodeInitS.innerHTML += "gMe = " + JSON.stringify(gMe);
+		nodeInitS.innerHTML = "var gContent = " + JSON.stringify(content);
+		if(typeof gMe !== "undefined")nodeInitS.innerHTML += "\ngMe = " + JSON.stringify(gMe);
 		nodeInitS.innerHTML += "\nicecreamInit()";
 		document.body.appendChild(nodeInitS);
 		res.write(document.toString());
-		console.log("kuku");
 		res.end();
 		gMe = undefined;
 		gConfig.token = null;

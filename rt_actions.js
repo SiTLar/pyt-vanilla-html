@@ -85,6 +85,7 @@ RtHandler.prototype = {
 			&& (gMe.users.banIds.indexOf(data.comments.createdBy) > -1))
 			return;
 		var nodePost = document.getElementById(data.comments.postId);
+		addUser(data.users[0]);
 		if(nodePost){
 			gComments[data.comments.id] = data.comments; 
 			if(!document.getElementById(data.comments.id))

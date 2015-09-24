@@ -132,11 +132,15 @@ background: #0199d9;
 	    -webkit-box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
+.username{
+font-family:monospace;
+
+}
 .posts{
 clear: both;
 }
 .post {
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid #cccccc;
 	line-height: 19px;
 	margin-bottom: 14px;
 	margin-top: 14px;

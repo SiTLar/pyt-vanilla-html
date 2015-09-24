@@ -124,11 +124,11 @@ function addUser (user){
 		break;
 	case "screen_u":
 		if(user.screenName != user.username)
-			userTitle  = user.screenName + " <i>(" + user.username + ")</i>";
-		else userTitle  = user.username;
+			userTitle  = user.screenName + " <span class=username>(" + user.username + ")</span>";
+		else userTitle  = "<span class=username>"+user.username+"</span>";
 		break;
 	case "username":
-		userTitle  = user.username;
+		userTitle  = "<span class=username>"+user.username+"</span>";
 	}
 	if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
 		className = (user.id==gMe.users.id?"my-link":"not-my-link");
@@ -211,11 +211,11 @@ function loadGlobals(data){
 					break;
 				case "screen_u":
 					if(user.screenName != user.username)
-						userTitle  = user.screenName + " <i>(" + user.username + ")</i>";
-					else userTitle  = user.username;
+						userTitle  = user.screenName + " <span class=username>("+user.username+")</span>";
+					else userTitle  = "<span class=username>"+user.username+"</span>";
 					break;
 				case "username":
-					userTitle  = user.username;
+					userTitle  = "<span class=username>"+user.username+"</span>";
 				}
 				var className = "not-my-link";
 				if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
@@ -240,7 +240,25 @@ function drawSettings(){
 	gConfig.cTxt = null;
 	body.appendChild( gNodes["controls-user"].cloneAll());
 	body.appendChild(title);
-	body.appendChild(gNodes["global-settings"].cloneAll());
+	var nodeSettings = gNodes["global-settings"].cloneAll();
+	body.appendChild(nodeSettings);
+	var mode = window.localStorage.getItem("screenname");
+	if (mode == null) mode = "screen";
+	var nodes = nodeSettings.getElementsByTagName("input");
+	for(var idx = 0; idx < nodes.length; idx++){
+		var node = nodes[idx];
+		if((node.type == "radio" ) &&(node.name == "display_name") &&(node.value == mode))
+			node.checked = true;
+	};
+	document.getElementById("rt-chkbox").checked = parseInt(window.localStorage.getItem("rt"));
+	var bump = window.localStorage.getItem("rtbump");
+	var nodeBump = document.getElementById("rt-bump");
+	for(var idx = 0; idx<nodeBump.childNodes.length; idx++){
+		if(nodeBump.childNodes[idx].value == bump){
+			nodeBump.selectedIndex = idx;
+			break;
+		}
+	}
 	addIcon("favicon.ico");
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
@@ -2056,13 +2074,14 @@ function destroy(e){
 
 }
 function realTimeSwitch(e){
+	if(e.target.checked )window.localStorage.setItem("rt",1);
+	else window.localStorage.setItem("rt",0);
+	if(gConfig.timeline == "settings") return;
 	var bump = e.target.parentNode.cNodes["rt-bump"].value;
 	if(e.target.checked && !gRt.on){
-		window.localStorage.setItem("rt",1);
 		gRt = new RtUpdate(gConfig.token,bump);
 		gRt.subscribe(gConfig.rt);
 	}else if(!e.target.checked){
-		window.localStorage.setItem("rt",0);
 		if(gRt.on){
 			gRt.close();
 			gRt = new Object();

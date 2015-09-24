@@ -715,6 +715,13 @@ function genPost(post){
 				}
 				attsNode.appendChild(nodeAtt);
 			}		
+		}else if(postNBody.cNodes["post-cont"].getElementsByTagName("a").length
+			&&(window.localStorage.getItem("show_link_preview") == "1")){
+			var aEmbed = document.createElement("a");
+			aEmbed.href = postNBody.cNodes["post-cont"].getElementsByTagName("a")[0].href;
+			postNBody.cNodes["attachments"].appendChild(aEmbed);
+			aEmbed.className = "embedly-card";
+			//embedly('card',aEmbed);
 		}
 		var anchorDate = document.createElement("a");
 		if(typeof user !== "undefined") anchorDate.href = gConfig.front+user.username+"/"+post.id;
@@ -2093,6 +2100,10 @@ function setRTCooldown(e){
 	window.localStorage.setItem("rtbump",bump);
 	if(gRt.on)gRt.handlers.setBumpCooldown( bump);
 }
+function linkPreviewSwitch(e){
+	if(e.target.checked )window.localStorage.setItem("show_link_preview",1);
+	else window.localStorage.setItem("show_link_preview",0);
+}
 function frfAutolinker( autolinker,match ){
 	switch (match.getType()){
 	case "twitter":
@@ -2133,7 +2144,23 @@ function initDoc(){
 	gConfig.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
+	if(window.localStorage.getItem("show_link_preview") == "1"){
+		var nodeEmScript =  document.createElement("script");
+		nodeEmScript.innerHTML = "  (function(w, d){"
+		  +"var id='embedly-platform', n = 'script';"
+		  + "if (!d.getElementById(id)){"
+		   + "w.embedly = w.embedly || function() {(w.embedly.q = w.embedly.q || []).push(arguments);};"
+		    + "var e = d.createElement(n); e.id = id; e.async=1;"
+		    + "e.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://cdn.embedly.com/widgets/platform.js';"
+		    + "var s = d.getElementsByTagName(n)[0];"
+		    + "s.parentNode.insertBefore(e, s);"
+		  + "}"
+		 + "})(window, document);"
+		 document.getElementsByTagName("head")[0].appendChild(nodeEmScript);
+	}
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
+
+
 	switch(gConfig.timeline){
 	case "home":
 	case "filter":

@@ -316,12 +316,12 @@ var templates =  {"nodes": [
 			,{"t":"span","txt":"Username"}
 		]} 
 		,{"t":"h3","txt":"Link previews","p":{"hidden":"true"} }
-		,{"t":"label","p":{"hidden":"true"} 
+		,{"t":"label"
 		,"children":[
 			,{"t":"input"
-				,"p":{"hidden":"true","type":"checkbox"}, "e":{"click":"linkPrevoewSwitch" }
+				,"p":{"type":"checkbox"}, "e":{"click":"linkPreviewSwitch" }
 			}
-			,{"t":"span","txt":"Show link preview","p":{"hidden":"true"} }
+			,{"t":"span","txt":"Show link preview"}
 		]} 
 		,{"t":"h3","txt":"Real-time Updates" }
 		,{"t":"label"

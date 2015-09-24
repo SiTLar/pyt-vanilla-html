@@ -6,6 +6,16 @@ color: #333333;
        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
        font-size: 16px;
 }
+.global-settings label.radio {
+	margin-left:3em;
+}
+.global-settings h3{
+	margin-bottom: .5em;
+}
+.global-settings label{
+display: block;
+}
+
 @keyframes loader0 {
 	0% {opacity:0}
 	24%{opacity:0}
@@ -122,11 +132,15 @@ background: #0199d9;
 	    -webkit-box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
+.username{
+font-family:monospace;
+
+}
 .posts{
 clear: both;
 }
 .post {
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid #cccccc;
 	line-height: 19px;
 	margin-bottom: 14px;
 	margin-top: 14px;
@@ -214,6 +228,7 @@ display: inline;
 .post-body .comma span:nth-child(1n+1)::after{
 content: ",";
 margin-right:.3em;
+display:inline-block;
 }
 .confirm-button{
 margin-right: 3em;

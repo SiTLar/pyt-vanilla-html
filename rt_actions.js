@@ -46,6 +46,9 @@ RtHandler.prototype = {
 	}
 	,unshiftPost: function(data){
 		var that = this;
+		if (gMe && Array.isArray(gMe.users.banIds)
+			&& (gMe.users.banIds.indexOf(data.posts.createdBy) > -1))
+			return;
 		loadGlobals(data);
 		var nodePost = genPost(data.posts);
 		document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
@@ -82,6 +85,7 @@ RtHandler.prototype = {
 			&& (gMe.users.banIds.indexOf(data.comments.createdBy) > -1))
 			return;
 		var nodePost = document.getElementById(data.comments.postId);
+		addUser(data.users[0]);
 		if(nodePost){
 			gComments[data.comments.id] = data.comments; 
 			if(!document.getElementById(data.comments.id))

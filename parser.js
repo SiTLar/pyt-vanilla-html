@@ -115,9 +115,26 @@ function genLikes(nodePost){
 function addUser (user){
 	if (typeof gUsers[user.id] !== "undefined" ) return;
 	var className = "not-my-link";
+	var userTitle;
+	var mode = window.localStorage.getItem("screenname");
+	if (mode == null) mode = "screen";
+	switch(mode){
+	case "screen":
+		userTitle  = user.screenName;
+		break;
+	case "screen_u":
+		if(user.screenName != user.username)
+			userTitle  = user.screenName + " <span class=username>(" + user.username + ")</span>";
+		else userTitle  = "<span class=username>"+user.username+"</span>";
+		break;
+	case "username":
+		userTitle  = "<span class=username>"+user.username+"</span>";
+	}
 	if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
 		className = (user.id==gMe.users.id?"my-link":"not-my-link");
-	user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
+	user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'
+	+ userTitle
+	+"</a>";
 	if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
 	user.friend = false;
 	user.subscriber = false;
@@ -184,15 +201,73 @@ function loadGlobals(data){
 		data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;addUser(sub);});
 		data.subscriptions.forEach(function(sub){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
+				var userTitle;
 				var user = subscribers[sub.user];
+				var mode = window.localStorage.getItem("screenname");
+				if (mode == null) mode = "screen";
+				switch(mode){
+				case "screen":
+					userTitle  = user.screenName;
+					break;
+				case "screen_u":
+					if(user.screenName != user.username)
+						userTitle  = user.screenName + " <span class=username>("+user.username+")</span>";
+					else userTitle  = "<span class=username>"+user.username+"</span>";
+					break;
+				case "username":
+					userTitle  = "<span class=username>"+user.username+"</span>";
+				}
 				var className = "not-my-link";
 				if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
 					className = (user.id==gMe.users.id?"my-link":"not-my-link");
 				gFeeds[sub.id] = user;
-				gFeeds[sub.id].link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ user.screenName+"</a>";
+				gFeeds[sub.id].link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ userTitle+"</a>";
 			}
 		});
 	}
+}
+function setScreenNameView(e){
+	window.localStorage.setItem("screenname",e.target.value );
+
+}
+function drawSettings(){
+	var body = document.createElement("div");
+	body.className = "content";
+	body.id = "content";
+	document.getElementsByTagName("body")[0].appendChild(body);
+	var title =  document.createElement("div");
+	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
+	gConfig.cTxt = null;
+	body.appendChild( gNodes["controls-user"].cloneAll());
+	body.appendChild(title);
+	var nodeSettings = gNodes["global-settings"].cloneAll();
+	body.appendChild(nodeSettings);
+	var mode = window.localStorage.getItem("screenname");
+	if (mode == null) mode = "screen";
+	var nodes = nodeSettings.getElementsByTagName("input");
+	for(var idx = 0; idx < nodes.length; idx++){
+		var node = nodes[idx];
+		if((node.type == "radio" ) &&(node.name == "display_name") &&(node.value == mode))
+			node.checked = true;
+	};
+	document.getElementById("rt-chkbox").checked = parseInt(window.localStorage.getItem("rt"));
+	var bump = window.localStorage.getItem("rtbump");
+	var nodeBump = document.getElementById("rt-bump");
+	for(var idx = 0; idx<nodeBump.childNodes.length; idx++){
+		if(nodeBump.childNodes[idx].value == bump){
+			nodeBump.selectedIndex = idx;
+			break;
+		}
+	}
+	addIcon("favicon.ico");
+	document.body.removeChild(document.getElementById("splash"));
+  (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,"script","//www.google-analytics.com/analytics.js","ga");
+
+  ga("create", "UA-0-1", "auto");
+  ga("send", "pageview");	
 }
 function draw(content){
 	matrix = new CryptoPrivate(gCryptoPrivateCfg );
@@ -1734,6 +1809,9 @@ function me(e){
 function home(e){
     e.target.href = gConfig.front;
 }
+function goSettings(e){
+    e.target.href = gConfig.front+"settings";
+}
 
 function directs(e){
     e.target.href = gConfig.front+ "filter/direct";
@@ -1996,13 +2074,14 @@ function destroy(e){
 
 }
 function realTimeSwitch(e){
+	if(e.target.checked )window.localStorage.setItem("rt",1);
+	else window.localStorage.setItem("rt",0);
+	if(gConfig.timeline == "settings") return;
 	var bump = e.target.parentNode.cNodes["rt-bump"].value;
 	if(e.target.checked && !gRt.on){
-		window.localStorage.setItem("rt",1);
 		gRt = new RtUpdate(gConfig.token,bump);
 		gRt.subscribe(gConfig.rt);
 	}else if(!e.target.checked){
-		window.localStorage.setItem("rt",0);
 		if(gRt.on){
 			gRt.close();
 			gRt = new Object();
@@ -2058,11 +2137,13 @@ function initDoc(){
 	switch(gConfig.timeline){
 	case "home":
 	case "filter":
+	case "settings":
 		if(!auth()) return;
 		break;
 	default:
 		if(!auth(true)) gMe = undefined;
 	}
+	if(gConfig.timeline == "settings")return drawSettings();
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		document.getElementById("loading").innerHTML = "Building page";

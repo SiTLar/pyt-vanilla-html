@@ -41,6 +41,8 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-priv","t":"a","txt":"secrets","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
+		{"c":"user-priv","t":"a","txt":"settings","e":{"click":"goSettings"}},
+		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
 		{"c":"rt"},
 		{"t":"hr"}
@@ -147,10 +149,11 @@ var templates =  {"nodes": [
 		]}
 		,{"c":"ft-list","t":"ul"}
 	]}
-	,{"c":"likes-smile","t":"span",
-	"children":[
-		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"},
-		{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
+	,{"c":"likes-smile","t":"span"
+	,"children":[
+		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"}
+		,{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
+		,{"t":"span", "txt":"&nbsp;"}
 	]}
 	,{"c":"show-hidden",
 	"children":[
@@ -193,7 +196,7 @@ var templates =  {"nodes": [
 	]}
 	,{"c":"priv-grp"
 	,"children":[
-		{"t":"input", "p":{"name":"privGrp","type":"radio","e":{"change":"privGrpActivateButton"} }}
+		{"t":"input", "p":{"name":"privGrp","type":"radio"},"e":{"change":"privGrpActivateButton"} }
 		,{"c":"priv-grp-name", "t":"span"}
 	]}
 	,{"c":"priv-dlg-login",
@@ -274,7 +277,7 @@ var templates =  {"nodes": [
 	,{"c":"rt-controls"
 	,"children":[
 		{"c":"rt-chkbox","t":"input","p":{"type":"checkbox"}, "e":{"click":"realTimeSwitch"} }
-		,{"t":"span", "txt":"real-time updateds"}
+		,{"t":"span", "txt":"update feed in real-time"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"t":"span", "txt":"Bumping cooldown:"}
 		,{"c":"rt-bump", "t":"select","e":{"change":"setRTCooldown"} 
@@ -283,6 +286,58 @@ var templates =  {"nodes": [
 			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
 			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
 		]} 
+	]} 
+	,{"c":"global-settings"
+	,"children":[
+		{"t":"h3","txt":"Display names" }
+		,{"c":"radio", "t":"label"
+		,"children":[
+			,{"t":"input"
+				,"p":{"type":"radio", "value":"screen", "name":"display_name"}
+				,"e":{"change":"setScreenNameView"} 
+			}
+			,{"t":"span","txt":"Screen name"}
+		]}
+		,{"c":"radio", "t":"label"
+		,"children":[
+			,{"c":"radio", "t":"input"
+				,"p":{"type":"radio", "value":"screen_u", "name":"display_name"}
+				,"e":{"change":"setScreenNameView"}
+			}
+			,{"t":"span" ,"txt":"Screen name (username)"}
+		]} 
+		,{"c":"radio", "t":"label"
+		,"children":[
+			,{"c":"radio", "t":"input"
+				,"p":{"type":"radio", "value":"username", "name":"display_name"}
+				,"e":{"change":"setScreenNameView"}
+			}
+			,{"t":"span","txt":"Username"}
+		]} 
+		,{"t":"h3","txt":"Link previews","p":{"hidden":"true"} }
+		,{"t":"label","p":{"hidden":"true"} 
+		,"children":[
+			,{"t":"input"
+				,"p":{"hidden":"true","type":"checkbox"}, "e":{"click":"linkPrevoewSwitch" }
+			}
+			,{"t":"span","txt":"Show link preview","p":{"hidden":"true"} }
+		]} 
+		,{"t":"h3","txt":"Real-time Updates" }
+		,{"t":"label"
+		,"children":[
+			,{"t":"input"
+				,"p":{"type":"checkbox","id":"rt-chkbox"}, "e":{"click":"realTimeSwitch" }
+			}
+			,{"t":"span","txt":"Update feed in real-time"}
+		]}
+		,{"t":"span", "txt":"Bumping cooldown:"}
+		,{"t":"select","e":{"change":"setRTCooldown"}, "p":{"id":"rt-bump" }
+		,"children":[
+			{"t":"option", "txt":"no bumping", "p":{"value":0}}
+			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
+			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
+		]} 
+
 	]} 
 
 ]}

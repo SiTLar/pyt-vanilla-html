@@ -133,7 +133,6 @@ background: #0199d9;
 	    box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
 .username{
-font-family:monospace;
 
 }
 .posts{
@@ -142,7 +141,7 @@ clear: both;
 .post {
 	border-bottom: 1px solid #cccccc;
 	line-height: 19px;
-	margin-bottom: 14px;
+	margin-bottom: 1.5em;
 	margin-top: 14px;
 	transition-property: height ; 
 	transition-duration: 5s;
@@ -161,11 +160,15 @@ color: #000088;
 .post-body {
 color: #666;
        line-height: 19px;
-       margin-bottom: .5em;
+       padding-bottom:1em;
+       margin-bottom: 1em;
 }
 @media (min-width: 400px) {
 	.post-body {
 		margin-left: 63px;
+	}
+	.avatar{
+		position:absolute;
 	}
 }
 .post-body a {

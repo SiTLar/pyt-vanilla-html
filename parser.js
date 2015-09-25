@@ -279,10 +279,10 @@ function draw(content){
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	gConfig.cTxt = null;
-	var nodeRTControls = gNodes["rt-controls"].cloneAll();
+	//var nodeRTControls = gNodes["rt-controls"].cloneAll();
 	if(typeof gMe === "undefined"){ 
 		var nodeGControls = gNodes["controls-anon"].cloneAll();
-		nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
+	//	nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
 		body.appendChild(nodeGControls);
 
 		body.appendChild(title);
@@ -308,7 +308,7 @@ function draw(content){
 		}
 		
 		var nodeGControls = gNodes["controls-user"].cloneAll();
-		nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
+	//	nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
 		body.appendChild(nodeGControls);
 		body.appendChild(title);
 		switch (gConfig.timeline.split("/")[0]){
@@ -388,21 +388,25 @@ function draw(content){
 		var nodesHide = singlePost.getElementsByClassName("hide");
 		if (Array.isArray(nodesHide))nodesHide[0].hidden = true;
 	} 
+/*
 	var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
 	nodeRTCtrl.cNodes["rt-chkbox"].checked = parseInt(window.localStorage.getItem("rt"));
-	var bump = window.localStorage.getItem("rtbump");
 	var nodeBump = nodeRTCtrl.cNodes["rt-bump"];
 	for(var idx = 0; idx<nodeBump.childNodes.length; idx++)
 		if(nodeBump.childNodes[idx].value == bump){
 			nodeBump.selectedIndex = idx;
 			break;
 		}
+	*/
+	var bump = window.localStorage.getItem("rtbump");
 	if(content.timelines) gConfig.rt = {"timeline":[content.timelines.id]};
 	else gConfig.rt = {"post":[content.posts.id]};
-	if( nodeRTCtrl.cNodes["rt-chkbox"].checked){
+	if(parseInt(window.localStorage.getItem("rt")) ){
 		gRt = new RtUpdate(gConfig.token, bump);
 		gRt.subscribe(gConfig.rt);
 	}
+	
+	
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -1076,7 +1080,6 @@ function postLike(e){
 				var myLike = e.target.parentNode.parentNode.parentNode.myLike;
 				likesUL = myLike.parentNode;
 				likesUL.removeChild(myLike);  	
-				console.log(likesUL.childNodes.length);
 			genLikes(nodePost);
 
 			/*	

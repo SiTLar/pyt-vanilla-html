@@ -440,7 +440,8 @@ function genUpControls(username){
 			sub.removeEventListener("click",subscribe);
 			if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
 				controls.cNodes["up-s"] = document.createElement("span");
-				controls.cNodes["up-s"] = "Subscription request sent";
+				controls.cNodes["up-s"].innerHTML = "Subscription request sent";
+				controls.replaceChild(controls.cNodes["up-s"], sub);
 			}else{
 				sub.innerHTML = "Request subscription";
 				sub.addEventListener("click", reqSubscription);
@@ -650,6 +651,15 @@ function drawPrivateComment(post) {
 		function spam(){reject()};
 	});
 }
+function embedPreview(){
+{
+			var aEmbed = document.createElement("a");
+			aEmbed.href = postNBody.cNodes["post-cont"].getElementsByTagName("a")[0].href;
+			postNBody.cNodes["attachments"].appendChild(aEmbed);
+			aEmbed.className = "embedly-card";
+			//embedly('card',aEmbed);
+		}
+}
 function genPost(post){
 	function spam(){nodePost = document.createElement("span");};
 	function ham(){
@@ -716,13 +726,8 @@ function genPost(post){
 				attsNode.appendChild(nodeAtt);
 			}		
 		}else if(postNBody.cNodes["post-cont"].getElementsByTagName("a").length
-			&&(window.localStorage.getItem("show_link_preview") == "1")){
-			var aEmbed = document.createElement("a");
-			aEmbed.href = postNBody.cNodes["post-cont"].getElementsByTagName("a")[0].href;
-			postNBody.cNodes["attachments"].appendChild(aEmbed);
-			aEmbed.className = "embedly-card";
-			//embedly('card',aEmbed);
-		}
+			&&(window.localStorage.getItem("show_link_preview") == "1"))
+			embedPreview(postNBody.cNodes["post-cont"].getElementsByTagName("a")[0]);
 		var anchorDate = document.createElement("a");
 		if(typeof user !== "undefined") anchorDate.href = gConfig.front+user.username+"/"+post.id;
 		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
@@ -2156,7 +2161,17 @@ function initDoc(){
 		    + "s.parentNode.insertBefore(e, s);"
 		  + "}"
 		 + "})(window, document);"
-		 document.getElementsByTagName("head")[0].appendChild(nodeEmScript);
+		document.getElementsByTagName("head")[0].appendChild(nodeEmScript);
+		embedly("defaults", {
+			cards: {
+				height: 200
+				//width: 700
+				//align: 'right',
+				//chrome: 0
+			}
+		});
+
+
 	}
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 

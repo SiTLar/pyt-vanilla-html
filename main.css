@@ -161,6 +161,7 @@ color: #000088;
 color: #666;
        line-height: 19px;
        margin-bottom: .5em;
+       display:table-cell;
 }
 @media (min-width: 400px) {
 	.post-body {

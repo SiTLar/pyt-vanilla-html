@@ -319,7 +319,7 @@ var templates =  {"nodes": [
 		,{"t":"label"
 		,"children":[
 			,{"t":"input"
-				,"p":{"type":"checkbox"}, "e":{"click":"linkPreviewSwitch" }
+				,"p":{"type":"checkbox", "id":"link-preview"}, "e":{"click":"linkPreviewSwitch" }
 			}
 			,{"t":"span","txt":"Show link preview"}
 		]} 

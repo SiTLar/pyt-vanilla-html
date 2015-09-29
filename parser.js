@@ -236,7 +236,7 @@ function drawSettings(){
 	body.id = "content";
 	document.getElementsByTagName("body")[0].appendChild(body);
 	var title =  document.createElement("div");
-	div.className = "pagetitle";
+	title.className = "pagetitle";
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	gConfig.cTxt = null;
 	body.appendChild( gNodes["controls-user"].cloneAll());
@@ -1218,7 +1218,9 @@ function processText(e) {
 		e.target.style.height = e.target.scrollHeight + "px";
 	if (e.which == "13"){
 		var text = e.target.value;
-		if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		//if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);
 		e.target.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].dispatchEvent(new Event("click"));
 	}
 

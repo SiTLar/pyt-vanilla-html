@@ -101,7 +101,7 @@ var templates =  {"nodes": [
 	]},
 	{"c":"edit",
 	"children":[
-		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
 		{"c":"edit-buttons",
 		"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"},
@@ -112,7 +112,7 @@ var templates =  {"nodes": [
 	{"c":"new-post",
 	"children":[
 		{"c":"new-post-to"},
-		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
 
 		{"c":"attachments"},
 		{"c":"edit-buttons",

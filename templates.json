@@ -1,7 +1,7 @@
 var templates =  {"nodes": [
 	{"c":"post",
 	"children":[
-		{"c":"avatar", 
+		{"c":"avatar",
 		"children":[
 			{"c":"avatar-h","t":"a","e":{"click":"genUserPopup"}}
 		]}
@@ -23,7 +23,7 @@ var templates =  {"nodes": [
 		] }
 	]
 	},
-	
+
 	{"c":"private",
 	"children":[
 		{"c":"priv-body"}
@@ -44,8 +44,7 @@ var templates =  {"nodes": [
 		{"c":"user-priv","t":"a","txt":"settings","e":{"click":"goSettings"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
-		{"c":"rt"},
-		{"t":"hr"}
+		{"c":"rt"}
 	]
 	},
 	{"c":"controls-anon","t":"div",
@@ -127,7 +126,7 @@ var templates =  {"nodes": [
 		{"t":"span", "txt":"Post to:"},
 		{"c":"new-post-feeds","t":"ul",
 		"children":[
-			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":"newPostRemoveFeed"} }	
+			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":"newPostRemoveFeed"} }
 		]},
 		{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":"newPostSelect"}  },
 		{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":"newPostAddFeed"} }
@@ -281,13 +280,13 @@ var templates =  {"nodes": [
 		,{"t":"span", "txt":"update feed in real-time"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"t":"span", "txt":"Bumping cooldown:"}
-		,{"c":"rt-bump", "t":"select","e":{"change":"setRTCooldown"} 
+		,{"c":"rt-bump", "t":"select","e":{"change":"setRTCooldown"}
 		,"children":[
 			{"t":"option", "txt":"no bumping", "p":{"value":0}}
 			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
 			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
-		]} 
-	]} 
+		]}
+	]}
 	,{"c":"global-settings"
 	,"children":[
 		{"t":"h3","txt":"Display names" }
@@ -295,7 +294,7 @@ var templates =  {"nodes": [
 		,"children":[
 			,{"t":"input"
 				,"p":{"type":"radio", "value":"screen", "name":"display_name"}
-				,"e":{"change":"setScreenNameView"} 
+				,"e":{"change":"setScreenNameView"}
 			}
 			,{"t":"span","txt":"Screen name"}
 		]}
@@ -306,7 +305,7 @@ var templates =  {"nodes": [
 				,"e":{"change":"setScreenNameView"}
 			}
 			,{"t":"span" ,"txt":"Screen name (username)"}
-		]} 
+		]}
 		,{"c":"radio", "t":"label"
 		,"children":[
 			,{"c":"radio", "t":"input"
@@ -314,15 +313,15 @@ var templates =  {"nodes": [
 				,"e":{"change":"setScreenNameView"}
 			}
 			,{"t":"span","txt":"Username"}
-		]} 
+		]}
 		,{"t":"h3","txt":"Link previews","p":{"hidden":"true"} }
-		,{"t":"label","p":{"hidden":"true"} 
+		,{"t":"label","p":{"hidden":"true"}
 		,"children":[
 			,{"t":"input"
 				,"p":{"hidden":"true","type":"checkbox"}, "e":{"click":"linkPrevoewSwitch" }
 			}
 			,{"t":"span","txt":"Show link preview","p":{"hidden":"true"} }
-		]} 
+		]}
 		,{"t":"h3","txt":"Real-time Updates" }
 		,{"t":"label"
 		,"children":[
@@ -337,9 +336,9 @@ var templates =  {"nodes": [
 			{"t":"option", "txt":"no bumping", "p":{"value":0}}
 			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
 			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
-		]} 
+		]}
 
-	]} 
+	]}
 
 ]}
-		
+

@@ -101,7 +101,7 @@ var templates =  {"nodes": [
 	]},
 	{"c":"edit",
 	"children":[
-		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
 		{"c":"edit-buttons",
 		"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"},
@@ -112,7 +112,7 @@ var templates =  {"nodes": [
 	{"c":"new-post",
 	"children":[
 		{"c":"new-post-to"},
-		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
 
 		{"c":"attachments"},
 		{"c":"edit-buttons",
@@ -315,13 +315,13 @@ var templates =  {"nodes": [
 			,{"t":"span","txt":"Username"}
 		]}
 		,{"t":"h3","txt":"Link previews","p":{"hidden":"true"} }
-		,{"t":"label","p":{"hidden":"true"}
+		,{"t":"label"
 		,"children":[
 			,{"t":"input"
-				,"p":{"hidden":"true","type":"checkbox"}, "e":{"click":"linkPrevoewSwitch" }
+				,"p":{"type":"checkbox", "id":"link-preview"}, "e":{"click":"linkPreviewSwitch" }
 			}
-			,{"t":"span","txt":"Show link preview","p":{"hidden":"true"} }
-		]}
+			,{"t":"span","txt":"Show link preview"}
+		]} 
 		,{"t":"h3","txt":"Real-time Updates" }
 		,{"t":"label"
 		,"children":[

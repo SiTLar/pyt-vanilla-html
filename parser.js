@@ -423,7 +423,21 @@ function draw(content){
 		gRt.subscribe(gConfig.rt);
 	}
 
-
+	if(window.localStorage.getItem("show_link_preview") == "1"){
+		(function(a,b,c){
+			var d,e,f;
+			f="PIN_"+~~((new Date).getTime()/864e5),
+			a[f]||(a[f]=!0,a.setTimeout(function(){
+				d=b.getElementsByTagName("SCRIPT")[0],
+				e=b.createElement("SCRIPT"),
+				e.type="text/javascript",
+				e.async=!0,
+				e.src=c+"?"+f,
+				d.parentNode.insertBefore(e,d)
+			}
+			,10))
+		})(window,document,"//assets.pinterest.com/js/pinit_main.js");
+	}
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -766,6 +780,11 @@ function embedPreview(oEmbedPrs, victim, target){
 			img.onerror=function(){nodeA.hidden = true;};
 		});
 	return;	
+	}else if (/^https?:\/\/(www\.)?pinterest.com\/pin\/.*/.exec(victim) !== null){
+		var node = gNodes["attachment"].cloneAll();
+		node.innerHTML = '<a data-pin-do="embedPin" href="' + victim + '"></a>';
+		target.appendChild(node);
+		return;
 	}
 	var bIsOEmbed = oEmbedPrs.some(function(o){
 		return o.endpoints.some(function(endp){
@@ -2389,17 +2408,16 @@ function initDoc(){
 	gConfig.timeline = arrLocationPath[0];
 	if(window.localStorage.getItem("show_link_preview") == "1"){
 		var nodeEmScript =  document.createElement("script");
-		nodeEmScript.innerHTML = "  (function(w, d){"
-		  +"var id='embedly-platform', n = 'script';"
-		  + "if (!d.getElementById(id)){"
-		   + "w.embedly = w.embedly || function() {(w.embedly.q = w.embedly.q || []).push(arguments);};"
-		    + "var e = d.createElement(n); e.id = id; e.async=1;"
-		    + "e.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://cdn.embedly.com/widgets/platform.js';"
-		    + "var s = d.getElementsByTagName(n)[0];"
-		    + "s.parentNode.insertBefore(e, s);"
-		  + "}"
-		 + "})(window, document);"
-		document.getElementsByTagName("head")[0].appendChild(nodeEmScript);
+		(function(w, d){
+			var id='embedly-platform', n = 'script';
+			if (!d.getElementById(id)){
+				w.embedly = w.embedly || function() {(w.embedly.q = w.embedly.q || []).push(arguments);};
+				var e = d.createElement(n); e.id = id; e.async=1;
+				e.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://cdn.embedly.com/widgets/platform.js';
+				var s = d.getElementsByTagName(n)[0];
+				s.parentNode.insertBefore(e, s);
+			}
+		})(window, document);
 		embedly("defaults", {
 			cards: {
 				height: 200
@@ -2408,7 +2426,6 @@ function initDoc(){
 				//chrome: 0
 			}
 		});
-
 
 		gEmbed.p = new Promise(function(resolve,reject){
 			var oReq = new XMLHttpRequest();

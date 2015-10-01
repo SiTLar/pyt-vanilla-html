@@ -9,7 +9,12 @@ var templates =  {"nodes": [
 		"children":[
 			{"c":"title"},
 			{"c":"post-cont"},
-			{"c":"attachments"},
+			{"c":"attachments",
+			"children":[
+				{"c":"atts-img"}
+				,{"c":"atts-audio"}
+				,{"c":"atts-general"}
+			]},
 			{"c":"post-info",
 			"children":[
 				{"c":"post-controls",

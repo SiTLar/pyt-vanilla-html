@@ -231,7 +231,7 @@ function setScreenNameView(e){
 	window.localStorage.setItem("screenname",e.target.value );
 
 }
-function drawSettings(){
+function makeContainer(){
 	var body = document.createElement("div");
 	body.className = "content";
 	body.id = "content";
@@ -239,9 +239,20 @@ function drawSettings(){
 	var title =  document.createElement("div");
 	title.className = "pagetitle";
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
-	gConfig.cTxt = null;
-	body.appendChild( gNodes["controls-user"].cloneAll());
+	var controls = gNodes["controls-user"].cloneAll();
+	if(Array.isArray(gMe.users.subscriptionRequests)){
+		controls.cNodes["sr-info"].cNodes["sr-info-a"].innerHTML = "You have "
+		+ gMe.users.subscriptionRequests.length 
+		+ " subscription requests to review.";
+		controls.cNodes["sr-info"].hidden = false;
+		gConfig.subReqsCount = gMe.users.subscriptionRequests.length;
+	} else gConfig.subReqsCount = 0;
+	body.appendChild(controls );
 	body.appendChild(title);
+	return body;
+}
+function drawSettings(){
+	var body = makeContainer();
 	var nodeSettings = gNodes["global-settings"].cloneAll();
 	body.appendChild(nodeSettings);
 	var mode = window.localStorage.getItem("screenname");
@@ -278,23 +289,26 @@ function drawSettings(){
 }
 function draw(content){
 	matrix = new CryptoPrivate(gCryptoPrivateCfg );
+	/*
 	var body = document.createElement("div");
 	body.className = "content";
 	body.id = "content";
 	document.getElementsByTagName("body")[0].appendChild(body);
-	loadGlobals(content);
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
+	title.className = "pagetitle";
+	*/
+	var body = makeContainer();
+	loadGlobals(content);
 	gConfig.cTxt = null;
 	//var nodeRTControls = gNodes["rt-controls"].cloneAll();
 	if(typeof gMe === "undefined"){
 		var nodeGControls = gNodes["controls-anon"].cloneAll();
-	//	nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
-		body.appendChild(nodeGControls);
-
-		body.appendChild(title);
+		var controls = body.getElementsByClassName("controls-user");
+		body.replaceChild(nodeGControls, controls);
 	}else{
-		if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
+		if ((typeof gMe.users.subscribers !== "undefined") 
+		&& (typeof gMe.users.subscriptions !== "undefined")){
 			gMe.subscribers.forEach(addUser);
 			var oSubscriptions = new Object();
 			gMe.subscriptions.forEach(function(sub){
@@ -314,10 +328,6 @@ function draw(content){
 			});
 		}
 
-		var nodeGControls = gNodes["controls-user"].cloneAll();
-	//	nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
-		body.appendChild(nodeGControls);
-		body.appendChild(title);
 		switch (gConfig.timeline.split("/")[0]){
 		case "filter":
 			if (gConfig.timeline.split("/")[1] == "direct"){
@@ -424,6 +434,62 @@ function draw(content){
   ga("send", "pageview");
 
 }
+
+function drawRequests(){
+	var oReq = new XMLHttpRequest();
+	oReq.open("get", gConfig.serverURL +"users/whoami", true);
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	oReq.onload = function(){
+		if(oReq.status < 400) {
+			gMe = JSON.parse(oReq.response);
+			if (gMe.users) {
+				refreshgMe();
+				completeRequests();
+				return true;
+			}
+		}
+	}
+	oReq.send();
+}
+function completeRequests(){
+	var body = makeContainer();
+	if (Array.isArray(gMe.requests)) gMe.requests.forEach( addUser);
+	else body.getElementsByClassName("pagetitle")[0].innerHTML = "<h1>No requests</h1>";
+	
+	if(Array.isArray(gMe.users.subscriptionRequests)){
+		var nodeTPReq = document.createElement("h3");
+		nodeTPReq.innerHTML = "Pending requests";
+		nodeTPReq.id = "sr-header";
+		body.appendChild(nodeTPReq);
+		gMe.users.subscriptionRequests.forEach(function(req){
+			body.appendChild(genReqNode(gUsers[req]));
+		});
+	}
+	if(Array.isArray(gMe.users.pendingSubscriptionRequests)){
+		var nodeTReq = document.createElement("h3");
+		nodeTReq.innerHTML = "Sent requests";
+		body.appendChild(nodeTReq);
+		gMe.users.pendingSubscriptionRequests.forEach(function(req){
+			var node = genReqNode(gUsers[req]);
+			node.cNodes["sr-ctrl"].hidden = true;
+			body.appendChild(node);
+		});
+	}
+
+	addIcon("favicon.ico");
+	document.body.removeChild(document.getElementById("splash"));
+	function genReqNode(user){
+		var node = gNodes["sub-request"].cloneAll();
+		node.cNodes["sr-name"].innerHTML = "<a href="+gConfig.front+user.username+">"
+			+user.screenName
+			+"</a>"
+			+" @" + user.username; 
+		node.cNodes["sr-avatar"].src =  user.profilePictureMediumUrl ;
+		node.cNodes["sr-user"].value = user.username;
+		return node;
+	}
+
+}
 function genUpControls(username){
 	var controls = gNodes["up-controls"].cloneAll();
 	var sub = controls.cNodes["up-s"];
@@ -449,7 +515,16 @@ function genUpControls(username){
 		sub.subscribed = user.friend;
 		if (!user.friend && (user.isPrivate == 1 )){
 			sub.removeEventListener("click",subscribe);
-			if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
+			var oRequests = new Object();
+			if (Array.isArray(gMe.requests)){
+				gMe.requests.forEach(function(req){
+					oRequests[req.id] = req;
+				});
+			}
+			if(Array.isArray(gMe.users.subscriptionRequests)
+			&&gMe.users.subscriptionRequests.some(function(a){
+					return oRequests[a].username == username
+				})){
 				controls.cNodes["up-s"] = document.createElement("span");
 				controls.cNodes["up-s"].innerHTML = "Subscription request sent";
 				controls.replaceChild(controls.cNodes["up-s"], sub);
@@ -825,7 +900,7 @@ function genPost(post){
 				attsNode.appendChild(nodeAtt);
 			}		
 		}else if(postNBody.cNodes["post-cont"].getElementsByTagName("a").length
-			&&(window.localStorage.getItem("show_link_preview") == "1")){
+		&&(window.localStorage.getItem("show_link_preview") == "1")){
 			gEmbed.p.then(function(oEmbedPr){
 				embedPreview(oEmbedPr
 					,postNBody.cNodes["post-cont"].getElementsByTagName("a")[0].href
@@ -1503,7 +1578,7 @@ function genPComment(cpost){
 	if(typeof gMe !== "undefined")
 		if(cUser.id == gMe.users.id)
 			nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
-	return nodeComment;
+	 return nodeComment;
 
 }
 */
@@ -1710,6 +1785,19 @@ function refreshgMe(){
 	if(Array.isArray(links))links.forEach(function(link){
 		link.innerHTML = gMe.users.screenName;
 	});
+	var nodeSR = document.getElementById("sr-info");
+	if(!nodeSR)return;
+	if(Array.isArray(gMe.users.subscriptionRequests)){
+		nodeSR.cNodes["sr-info-a"].innerHTML = "You have "
+		+ gMe.users.subscriptionRequests.length 
+		+ " subscription requests to review.";
+		nodeSR.hidden = false;
+		gConfig.subReqsCount = gMe.users.subscriptionRequests.length;
+	}else{
+		gConfig.subReqsCount = 0;
+		nodeSR.hidden = true;
+	}
+	
 }
 function getauth(oFormElement){
 	var oReq = new XMLHttpRequest();
@@ -1730,7 +1818,7 @@ function getauth(oFormElement){
 }
 function logout(){
 	matrix.ready = 0;
-	matrix.logout();
+	try{matrix.logout();}catch(e){};
 	window.localStorage.removeItem("gMe");
 	deleteCookie(gConfig.tokenPrefix + "authToken");
 	location.reload();
@@ -1930,6 +2018,9 @@ function home(e){
 function goSettings(e){
     e.target.href = gConfig.front+"settings";
 }
+function goRequests(e){
+    e.target.href = gConfig.front+"requests";
+}
 
 function directs(e){
     e.target.href = gConfig.front+ "filter/direct";
@@ -1997,7 +2088,8 @@ function postDirect(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 	var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
 	if ((input != "") && (typeof gUsers.byName[input] !== "undefined")
-		&& gUsers.byName[input].friend && (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group"))
+	&& gUsers.byName[input].friend 
+	&& (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group"))
 		victim.cNodes["new-post-to"].feeds.push(input);
 	if (victim.cNodes["new-post-to"].feeds.length) newPost(e);
 	else alert("should have valid recipients");
@@ -2215,6 +2307,46 @@ function linkPreviewSwitch(e){
 	if(e.target.checked )window.localStorage.setItem("show_link_preview",1);
 	else window.localStorage.setItem("show_link_preview",0);
 }
+function srAccept(e){
+	sendReqResp(e.target, "acceptRequest" );
+}
+function srReject(e){
+	sendReqResp(e.target, "rejectRequest" );
+}
+function sendReqResp(node, action){
+	node.parentNode.hidden = true;
+	var host = node.parentNode.parentNode;
+	var spinner = gNodes["spinner"].cloneNode(true);
+	host.appendChild(spinner);
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		if(oReq.status < 400){
+			host.parentNode.removeChild(host);
+			var nodeSR = document.getElementById("sr-info");
+			if(--gConfig.subReqsCount){
+				nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
+				+ gMe.users.subscriptionRequests.length 
+				+ " subscription requests to review.";
+			}else{
+				nodeSR.hidden = true;
+				var victim = document.getElementById("sr-header");
+				victim.parentNode.removeChild(victim);
+			}
+			
+		}else {
+			host.removeChild(spinner);
+			node.parentNode.hidden = false;
+		}
+	}
+
+	oReq.open("post",gConfig.serverURL
+		+ "users/" 
+		+ action + "/" 
+		+ host.cNodes["sr-user"].value
+	,true);
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	oReq.send();
+}
 function frfAutolinker( autolinker,match ){
 	switch (match.getType()){
 	case "twitter":
@@ -2294,16 +2426,14 @@ function initDoc(){
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 
 
-	switch(gConfig.timeline){
-	case "home":
-	case "filter":
-	case "settings":
+	if(["home", "filter", "settings", "requests"].some(function(a){
+		return a == gConfig.timeline;
+	})){
 		if(!auth()) return;
-		break;
-	default:
-		if(!auth(true)) gMe = undefined;
-	}
+	}else if(!auth(true)) gMe = undefined;
+	
 	if(gConfig.timeline == "settings")return drawSettings();
+	if(gConfig.timeline == "requests")return drawRequests();
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		document.getElementById("loading").innerHTML = "Building page";

@@ -41,19 +41,20 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-priv","t":"a","txt":"secrets","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-priv","t":"a","txt":"settings","e":{"click":"goSettings"}},
+		{"c":"user-priv","t":"a","txt":"settings","e":{"mousedown":"goSettings"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
-		{"c":"rt"}
+		{"c":"sr-info","p":{"id":"sr-info","hidden":"true"},
+		"children":[
+			{"c":"sr-info-a","t":"a","e":{"mousedown":"goRequests"}}
+		]}
 	]
 	},
 	{"c":"controls-anon","t":"div",
 	"children":[
 		{"c":"user-signup","t":"a","txt":"sign up"},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}},
-		{"c":"rt"},
-		{"t":"hr"}
+		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}}
 	]
 	},
 
@@ -101,7 +102,7 @@ var templates =  {"nodes": [
 	]},
 	{"c":"edit",
 	"children":[
-		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
 		{"c":"edit-buttons",
 		"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"},
@@ -112,7 +113,7 @@ var templates =  {"nodes": [
 	{"c":"new-post",
 	"children":[
 		{"c":"new-post-to"},
-		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
 
 		{"c":"attachments"},
 		{"c":"edit-buttons",
@@ -338,6 +339,18 @@ var templates =  {"nodes": [
 			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
 		]}
 
+	]}
+	,{"c":"sub-request"
+	,"children":[
+		{"c":"sr-avatar", "t":"img"}
+		,{"c":"sr-name"}
+		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-ctrl"
+		,"children":[
+			{"t":"a","txt":"Accept request", "e":{"click":"srAccept"}}
+			,{"c":"spacer","t":"span","txt":"&mdash;"}
+			,{"t":"a","txt":"Reject request", "e":{"click":"srReject"}}
+		]}
 	]}
 
 ]}

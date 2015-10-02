@@ -422,7 +422,13 @@ function draw(content){
 		gRt = new RtUpdate(gConfig.token, bump);
 		gRt.subscribe(gConfig.rt);
 	}
-
+	var nodes = document.getElementsByClassName("post");
+	for(var idx = 0; idx < nodes.length; idx++ ){
+		var nodePost = nodes[idx];
+		var nodeImgAtt = nodePost.cNodes["post-body"].cNodes["attachments"].cNodes["atts-img"];
+		if(nodeImgAtt.scrollWidth != nodeImgAtt.clientWidth)
+			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+	};
 	if(window.localStorage.getItem("show_link_preview") == "1"){
 		(function(a,b,c){
 			var d,e,f;
@@ -772,7 +778,8 @@ function embedPreview(oEmbedPrs, victim, target){
 			var img = document.createElement("img");
 			var width = document.getElementById("content").clientWidth*3/4;
 			img.src = info.thumbnailLink.replace("=s220","=w"+ width+"-c-h"+ width/5 );// "=s"+document.getElementById("content").clientWidth/2+"-p");
-			var node = gNodes["attachment"].cloneAll();;
+			var node = document.createElement("div");
+			node.className = "att-img";
 			nodeA.appendChild(img);
 			nodeA.href = victim;
 			node.appendChild(nodeA);
@@ -781,7 +788,8 @@ function embedPreview(oEmbedPrs, victim, target){
 		});
 	return;	
 	}else if (/^https?:\/\/(www\.)?pinterest.com\/pin\/.*/.exec(victim) !== null){
-		var node = gNodes["attachment"].cloneAll();
+		var node = document.createElement("div");
+		node.className = "att-img";
 		node.innerHTML = '<a data-pin-do="embedPin" href="' + victim + '"></a>';
 		target.appendChild(node);
 		return;
@@ -904,20 +912,26 @@ function genPost(post){
 			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-lock"].innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
 		if(post.attachments){
 			var attsNode = postNBody.cNodes["attachments"];
-			for(var att in post.attachments){
-				var nodeAtt = gNodes["attachment"].cloneAll();
-				var oAtt = gAttachments[post.attachments[att]];
+			post.attachments.forEach(function(att){
+				var nodeAtt = document.createElement("div");
+				var oAtt = gAttachments[att];
 				switch(oAtt.mediaType){
 				case "image":
 					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
+					attsNode.cNodes["atts-img"].appendChild(nodeAtt);
+					nodeAtt.className = "att-img";
 					break;
 				case "audio":
 					nodeAtt.innerHTML = '<audio style="height:40" preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
 					nodeAtt.className = "att-audio";
+					attsNode.cNodes["atts-audio"].appendChild(nodeAtt);
 					break;
+				default:
+					nodeAtt.innerHTML = '<a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					attsNode.appendChild(nodeAtt);
+
 				}
-				attsNode.appendChild(nodeAtt);
-			}		
+			});		
 		}else if(postNBody.cNodes["post-cont"].getElementsByTagName("a").length
 		&&(window.localStorage.getItem("show_link_preview") == "1")){
 			gEmbed.p.then(function(oEmbedPr){
@@ -1027,6 +1041,19 @@ function genTitle(nodePost){
 	return title;
 
 }
+function unfoldAttImgs(e){
+	var nodeAtts = e.target; do nodeAtts = nodeAtts.parentNode; while(nodeAtts.className != "attachments");
+	if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
+		nodeAtts.cNodes["atts-img"].style.display = "block";
+		nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';
+		nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "false";
+	}else{
+		nodeAtts.cNodes["atts-img"].style.display = "flex";
+		nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-down fa-2x"></i>';
+		nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "true";
+	}
+
+}
 function newPost(e){
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 	textField.disabled = true;
@@ -1115,7 +1142,7 @@ function newPost(e){
 function sendAttachment(e){
 	e.target.disabled = true;
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
-	var nodeSpinner = gNodes["attachment"].cloneAll();
+	var nodeSpinner = document.createElement("div");
 	nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
 	e.target.parentNode.parentNode.cNodes["attachments"].appendChild(nodeSpinner);
 	textField.pAtt = new Promise(function(resolve,reject){
@@ -1125,7 +1152,8 @@ function sendAttachment(e){
 				e.target.value = "";
 				e.target.disabled = false;
 				var attachments = JSON.parse(this.response).attachments;
-				var nodeAtt = gNodes["attachment"].cloneAll();
+				var nodeAtt = document.createElement("div");
+				nodeAtt.className = "att-img";
 				nodeAtt.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src="'+attachments.thumbnailUrl+'"></a>';
 				nodeSpinner.parentNode.replaceChild(nodeAtt, nodeSpinner);
 				if (typeof(textField.attachments) === "undefined" ) textField.attachments = new Array();

@@ -12,8 +12,15 @@ var templates =  {"nodes": [
 			{"c":"attachments",
 			"children":[
 				{"c":"atts-img"}
+				,{"c":"atts-unfold", "p":{"hidden":"true"},
+				"children":[
+					{"c":"unfold-action","t":"input", "p":{"type":"hidden", "value":"true"}}
+					,{"t":"a","e":{"click":"unfoldAttImgs"}, 
+					"children":[
+						,{"c":"fa fa-chevron-down fa-2x","t":"i"}
+					]}
+				]},
 				,{"c":"atts-audio"}
-				,{"c":"atts-general"}
 			]},
 			{"c":"post-info",
 			"children":[
@@ -86,7 +93,6 @@ var templates =  {"nodes": [
 		{"c":"spacer","t":"span","txt":"-"}
 		, {"c":"href","t":"a","txt":"Hide","e":{"click":"postHide"}}
 	]},
-	{"c":"attachment"},
 	{"c":"comment",
 	"children":[
 		{"c":"comment-date","e":{"mouseover":"calcCmtTime", "click":"genUserPopup"},

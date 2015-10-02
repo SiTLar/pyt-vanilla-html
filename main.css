@@ -193,7 +193,15 @@ h1{
 	clear: both;
 	overflow: hidden;
 }
-.attachment {
+.atts-img {
+	display: flex;
+	flex-flow: row nowrap;
+}
+
+.atts-unfold {
+	text-align: center;
+}
+.att-img {
 	border: 1px solid silver;
 	float: left;
 	margin: 0 8px 8px 0;

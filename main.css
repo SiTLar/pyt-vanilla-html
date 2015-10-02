@@ -452,8 +452,8 @@ span.comment-controls::before {
 	margin-left: 3px;
 	font-size: 13px;
 }
-.rt-controls{
-	margin: .5em 0;
+.settings label{
+	margin: 1.5em 0;
 }
 
 .sr-ctrl {

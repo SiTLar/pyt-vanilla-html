@@ -286,19 +286,6 @@ var templates =  {"nodes": [
 
 	]}
 
-	,{"c":"rt-controls"
-	,"children":[
-		{"c":"rt-chkbox","t":"input","p":{"type":"checkbox"}, "e":{"click":"realTimeSwitch"} }
-		,{"t":"span", "txt":"update feed in real-time"}
-		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"t":"span", "txt":"Bumping cooldown:"}
-		,{"c":"rt-bump", "t":"select","e":{"change":"setRTCooldown"}
-		,"children":[
-			{"t":"option", "txt":"no bumping", "p":{"value":0}}
-			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
-			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
-		]}
-	]}
 	,{"c":"global-settings"
 	,"children":[
 		{"t":"h3","txt":"Display names" }
@@ -342,12 +329,45 @@ var templates =  {"nodes": [
 			}
 			,{"t":"span","txt":"Update feed in real-time"}
 		]}
-		,{"t":"span", "txt":"Bumping cooldown:"}
-		,{"t":"select","e":{"change":"setRTCooldown"}, "p":{"id":"rt-bump" }
+		,{"t":"label"
 		,"children":[
-			{"t":"option", "txt":"no bumping", "p":{"value":0}}
-			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
-			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
+			,{"t":"input"
+				,"p":{"type":"checkbox", "id":"rt-bump"}, "e":{"click":"setRTBump" }
+			}
+			,{"t":"span","txt":"Bump posts with new comments"}
+		]} 
+		,{"p":{"id":"rt-params","hidden":"true"}
+		,"children":[
+			,{"t":"label"
+			,"children":[
+				{"t":"p", "txt":"Bumping interval:"}
+				,{"t":"input"
+					,"p":{"type":"range", "min":"1","max":"10", "value":"1","step":"1"
+						,"id":"rt-bump-int"}
+					, "e":{"change":"setRTparams"} 
+				}
+				,{"t":"span"}
+			]}
+			,{"t":"label"
+			,"children":[
+				{"t":"p", "txt":"Bumping cooldown:"}
+				,{"t":"input"
+					,"p":{"type":"range","min":"0", "max":"60", "value":"20","step":"1"
+						,"id":"rt-bump-cd"}
+					, "e":{"change":"setRTparams"} 
+				}
+				,{"t":"span"}
+			]}
+			,{"t":"label"
+			,"children":[
+				{"t":"p", "txt":"Bumping delay:"}
+				,{"t":"input"
+					,"p":{"type":"range","min":"0", "max":"10", "value":"0","step":"1"
+						,"id":"rt-bump-d"}
+					, "e":{"change":"setRTparams"} 
+				}
+				,{"t":"span"}
+			]}
 		]}
 
 	]}

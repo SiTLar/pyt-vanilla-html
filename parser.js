@@ -254,6 +254,7 @@ function makeContainer(){
 }
 function drawSettings(){
 	var body = makeContainer();
+	body.className += " settings";
 	var nodeSettings = gNodes["global-settings"].cloneAll();
 	body.appendChild(nodeSettings);
 	var mode = window.localStorage.getItem("screenname");
@@ -270,13 +271,17 @@ function drawSettings(){
 	else nodeLinkPreview.checked = false;
 
 	document.getElementById("rt-chkbox").checked = parseInt(window.localStorage.getItem("rt"));
-	var bump = window.localStorage.getItem("rtbump");
-	var nodeBump = document.getElementById("rt-bump");
-	for(var idx = 0; idx<nodeBump.childNodes.length; idx++){
-		if(nodeBump.childNodes[idx].value == bump){
-			nodeBump.selectedIndex = idx;
-			break;
-		}
+	var bump = (window.localStorage.getItem("rtbump") == 1);
+	document.getElementById("rt-params").hidden = !bump;
+	document.getElementById("rt-bump").checked = bump ;
+	var oRTParams = window.localStorage.getItem("rt_params");
+	if (oRTParams != null){
+		oRTParams = JSON.parse(oRTParams);
+		["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
+			var node = document.getElementById(id);
+			if(oRTParams)node.value = oRTParams[id];
+			node.parentNode.getElementsByTagName("span")[0].innerHTML = node.value + " minutes";
+		});
 	}
 	addIcon("favicon.ico");
 	document.body.removeChild(document.getElementById("splash"));
@@ -2351,10 +2356,19 @@ function realTimeSwitch(e){
 		}
 	}
 }
-function setRTCooldown(e){
-	var bump = parseInt(e.target.value,10);
-	window.localStorage.setItem("rtbump",bump);
-	if(gRt.on)gRt.handlers.setBumpCooldown( bump);
+function setRTparams(e){
+	var value = e.target.value;
+	e.target.parentNode.getElementsByTagName("span")[0].innerHTML = value + " minutes";
+	var oRTParams = new Object();
+	["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
+		oRTParams[id] = document.getElementById(id).value;
+	});
+	window.localStorage.setItem("rt_params",JSON.stringify(oRTParams) );
+}
+function setRTBump(e){
+	var bump = e.target.checked;
+	window.localStorage.setItem("rtbump",bump?1:0);
+	document.getElementById("rt-params").hidden = !bump;
 }
 function linkPreviewSwitch(e){
 	if(e.target.checked )window.localStorage.setItem("show_link_preview",1);

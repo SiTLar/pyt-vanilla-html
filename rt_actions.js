@@ -1,17 +1,23 @@
 "use strict";
-var RtHandler = function (bumpCooldown, bumpInterval){
+var RtHandler = function (bump,oRTparams){
 	var that = this;
-	if(typeof bumpCooldown !== "undefined") that.bumpCooldown = bumpCooldown;
-	if(typeof bumpInterval !== "undefined") that.bumpInterval = bumpInterval;
+	if(typeof bump !== "undefined") that.bump = bump;
+	if(typeof oRTparams !== "undefined"){
+		that.bumpCooldown = oRTparams["rt-bump-cd"]*60000;
+		that.bumpInterval = oRTparams["rt-bump-int"]*60000;
+		that.bumpDelay = oRTparams["rt-bump-d"]*60000;
+	}
 	if(typeof gConfig.bumpIntervalId !== "undefined" ) clearInterval(gConfig.bumpIntervalId);
-	if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps();}, that.bumpInterval*1000);
+	if(that.bump) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps();}, that.bumpInterval);
 	
 };
 RtHandler.prototype = {
 	constructor: RtHandler
-	,bumpCooldown: 0
-	,bumpInterval:60 
-	,timeGrow : 1000
+	,bumpCooldown: 1200000
+	,bumpInterval: 60000 
+	,bumpDelay: 0 
+	,timeGrow: 1000
+	,bump: 0
 	,insertSmooth: function(node, nodePos){
 		var that = this;
 		node.style.opacity = 0;
@@ -36,7 +42,7 @@ RtHandler.prototype = {
 		var that = this;
 		that.bumpCooldown = cooldown;
 		clearInterval(gConfig.bumpIntervalId);
-		if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps}, that.bumpInterval*1000);
+		if(that.bumpCooldown && that.bumpInterval ) gConfig.bumpIntervalId = setInterval(function(){that.chkBumps}, that.bumpInterval);
 	}
 	,chkBumps: function(){
 		var that = this;
@@ -46,6 +52,7 @@ RtHandler.prototype = {
 	}
 	,unshiftPost: function(data){
 		var that = this;
+		if(gConfig.skip)return;
 		if (gMe && Array.isArray(gMe.users.banIds)
 			&& (gMe.users.banIds.indexOf(data.posts.createdBy) > -1))
 			return;
@@ -90,9 +97,9 @@ RtHandler.prototype = {
 			gComments[data.comments.id] = data.comments; 
 			if(!document.getElementById(data.comments.id))
 				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(genComment(data.comments));
-			if (that.bumpCooldown && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown*1000) < Date.now())){
+			if (that.bump && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown) < Date.now())){
 				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
-				gConfig.bumps.push(nodePost);
+				setTimeout(function(){ gConfig.bumps.push(nodePost)},that.bumpDelay+1);
 			}
 			nodePost.rawData.updatedAt = Date.now();
 						
@@ -126,12 +133,6 @@ RtHandler.prototype = {
 			if (nodePost.rawData.likes.indexOf(data.users.id) > -1) return;
 			nodePost.rawData.likes.unshift(data.users.id);
 			genLikes(nodePost);
-			/*
-			if (nodePost.rawData.updatedAt + that.bumpCooldown*1000 < Date.now()){
-				if(!Array.isArray(gConfig.bumps))gConfig.bumps = new Array();
-				gConfig.bumps.push(nodePost);
-			}
-			*/
 			nodePost.rawData.updatedAt = Date.now();
 		}else that.injectPost(data.meta.postId);
 	}

@@ -239,6 +239,7 @@ function makeContainer(){
 	var title =  document.createElement("div");
 	title.className = "pagetitle";
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
+	document.title = "FreeFeed: " + gConfig.timeline; 
 	var controls = gNodes["controls-user"].cloneAll();
 	if(Array.isArray(gMe.users.subscriptionRequests)){
 		controls.cNodes["sr-info"].cNodes["sr-info-a"].innerHTML = "You have "
@@ -404,6 +405,11 @@ function draw(content){
 		body.appendChild(singlePost);
 		var nodesHide = singlePost.getElementsByClassName("hide");
 		if (Array.isArray(nodesHide))nodesHide[0].hidden = true;
+		document.title = "@" 
+			+ gUsers[singlePost.rawData.createdBy].username + ": "
+			+ singlePost.rawData.body.slice(0,20).trim()
+			+ (singlePost.rawData.body.length > 20?"\u2026":"" )
+			+ " (FreeFeed)";
 	}
 /*
 	var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];

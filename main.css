@@ -14,6 +14,24 @@ body {
 }
 .global-settings label{
 	display: block;
+	margin: 1.5em 0;
+}
+.prof-upd{
+	margin-bottom: .5em;
+}
+.rt-params{
+	margin-left:3em;
+}
+.msg-error{
+	background-color: #f2dede;
+	border-color: #ebccd1;
+	color: #a94442;
+	padding: .3em .6em;
+	border-radius: 4px;
+}
+.gs-input{
+	height: 2em;
+	width: 100%;
 }
 
 @keyframes loader0 {
@@ -231,6 +249,9 @@ h1{
 .post-controls{
 	display: inline-block;
 	margin: 0.4em 0;
+}
+.post-controls span{
+	margin-bottom: 1em;
 }
 .spacer{
 	margin-right: 0.3em;
@@ -452,10 +473,6 @@ span.comment-controls::before {
 	margin-left: 3px;
 	font-size: 13px;
 }
-.settings label{
-	margin: 1.5em 0;
-}
-
 .sr-ctrl {
 	clear: both;
 	margin-top: 0.5em;

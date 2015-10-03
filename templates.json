@@ -288,7 +288,27 @@ var templates =  {"nodes": [
 
 	,{"c":"global-settings"
 	,"children":[
-		{"t":"h3","txt":"Display names" }
+		{"t":"h3","txt":"Profile" }
+		,{"t":"p", "txt":"Screen name:"}
+		,{"c":"gs-input","t":"input","p":{"id":"my-screen-name"}}
+		,{"t":"p", "txt":"Email:"}
+		,{"c":"gs-input","t":"input","p":{"id":"my-email"}}
+		,{"t":"label"
+		,"children":[
+			,{"t":"input" ,"p":{"type":"checkbox", "id":"me-private"}}
+			,{"t":"span","txt":"Private feed (only let people I approve see my feed)" }
+		]}
+		,{"c":"prof-upd"
+		,"children":[
+			,{"t":"button","txt":"Update","e":{"click":"updateProfile"}}
+			,{"c":"spacer","t":"span","txt":"&nbsp;"}
+			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":"true"}
+			,"children":[
+				{"c":"fa fa-spinner fa-pulse","t":"i"}
+			]}
+		]}
+		,{"p":{"id":"update-status"}}
+		,{"t":"h3","txt":"Display names style" }
 		,{"c":"radio", "t":"label"
 		,"children":[
 			,{"t":"input"
@@ -313,7 +333,7 @@ var templates =  {"nodes": [
 			}
 			,{"t":"span","txt":"Username"}
 		]}
-		,{"t":"h3","txt":"Link previews","p":{"hidden":"true"} }
+		,{"t":"h3","txt":"Link previews"}
 		,{"t":"label"
 		,"children":[
 			,{"t":"input"
@@ -336,7 +356,7 @@ var templates =  {"nodes": [
 			}
 			,{"t":"span","txt":"Bump posts with new comments"}
 		]} 
-		,{"p":{"id":"rt-params","hidden":"true"}
+		,{"c":"rt-params","p":{"id":"rt-params","hidden":"true"}
 		,"children":[
 			,{"t":"label"
 			,"children":[

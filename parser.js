@@ -254,9 +254,11 @@ function makeContainer(){
 }
 function drawSettings(){
 	var body = makeContainer();
-	body.className += " settings";
 	var nodeSettings = gNodes["global-settings"].cloneAll();
 	body.appendChild(nodeSettings);
+	document.getElementById("my-screen-name").value = gMe.users.screenName;
+	if(typeof gMe.users.email !== "undefined" )document.getElementById("my-email").value = gMe.users.email;
+	document.getElementById("me-private").checked = (gMe.users.isPrivate == 1);
 	var mode = window.localStorage.getItem("screenname");
 	if (mode == null) mode = "screen";
 	var nodes = nodeSettings.getElementsByTagName("input");
@@ -275,14 +277,14 @@ function drawSettings(){
 	document.getElementById("rt-params").hidden = !bump;
 	document.getElementById("rt-bump").checked = bump ;
 	var oRTParams = window.localStorage.getItem("rt_params");
-	if (oRTParams != null){
+	if (oRTParams != null)
 		oRTParams = JSON.parse(oRTParams);
-		["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
-			var node = document.getElementById(id);
-			if(oRTParams)node.value = oRTParams[id];
-			node.parentNode.getElementsByTagName("span")[0].innerHTML = node.value + " minutes";
-		});
-	}
+	["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
+		var node = document.getElementById(id);
+		if(oRTParams)node.value = oRTParams[id];
+		node.parentNode.getElementsByTagName("span")[0].innerHTML = node.value + " minutes";
+	});
+	
 	addIcon("favicon.ico");
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
@@ -409,7 +411,7 @@ function draw(content){
 		var singlePost = genPost(content.posts);
 		body.appendChild(singlePost);
 		var nodesHide = singlePost.getElementsByClassName("hide");
-		if (Array.isArray(nodesHide))nodesHide[0].hidden = true;
+		if (nodesHide.lenght)nodesHide[0].hidden = true;
 		document.title = "@" 
 			+ gUsers[singlePost.rawData.createdBy].username + ": "
 			+ singlePost.rawData.body.slice(0,20).trim()
@@ -1840,9 +1842,8 @@ function refreshgMe(){
 	delete gUsers[gMe.users.id];
 	addUser(gMe.users);
 	var links = document.getElementsByClassName("my-link");
-	if(Array.isArray(links))links.forEach(function(link){
-		link.innerHTML = gMe.users.screenName;
-	});
+	for(var idx = 0; idx< links.length; idx++)
+		links[idx].innerHTML = gMe.users.link;
 	var nodeSR = document.getElementById("sr-info");
 	if(!nodeSR)return;
 	if(Array.isArray(gMe.users.subscriptionRequests)){
@@ -2340,6 +2341,37 @@ function destroy(e){
 	e.target.parentNode.removeChild(e.target);
 	//e.stopPropagation();
 
+}
+function updateProfile(e){
+	e.target.disabled = true;
+	document.getElementById("update-spinner").hidden = false;
+	gMe.users.screenName = document.getElementById("my-screen-name").value;
+	gMe.users.email = document.getElementById("my-email").value;
+	gMe.users.isPrivate = (document.getElementById("me-private").chacked?1:0);
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		var nodeMsg = document.getElementById("update-status");
+		e.target.disabled = false;
+		document.getElementById("update-spinner").hidden = true;
+		if(oReq.status < 400){
+			gMe = JSON.parse(oReq.response);
+			nodeMsg.className = "sr-info";
+			nodeMsg.innerHTML = "Updated";
+			refreshgMe();
+		}else {
+			nodeMsg.className = "msg-error";
+			nodeMsg.innerHTML = "Got error: ";
+			try{ 
+				nodeMsg.innerHTML += JSON.parse(oReq.response).err;
+			}catch(e) {nodeMsg.innerHTML += "unknown error";};
+
+		}
+	}
+
+	oReq.open("put",gConfig.serverURL + "users/" + gMe.users.id ,true);
+	oReq.setRequestHeader("Content-type","application/json");
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	oReq.send(JSON.stringify({"user":gMe.users}));
 }
 function realTimeSwitch(e){
 	if(e.target.checked )window.localStorage.setItem("rt",1);

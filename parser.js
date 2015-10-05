@@ -2528,7 +2528,6 @@ function initDoc(){
 	})){
 		if(!auth()) return;
 	}else if(!auth(true)) gMe = undefined;
-	
 	if(gConfig.timeline == "settings")return drawSettings();
 	if(gConfig.timeline == "requests")return drawRequests();
 	var oReq = new XMLHttpRequest();

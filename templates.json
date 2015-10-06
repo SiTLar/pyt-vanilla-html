@@ -285,21 +285,28 @@ var templates =  {"nodes": [
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 
 	]}
-	,{"c":"up-block"
+	,{"c":"up-block","e":{"mouseleave":"destroy"}
 	,"children":[
-		,{"t":"label"
+		{"c":"up-close","e":{"click":"upClose"}
 		,"children":[
-			{"t":"input" ,"p":{"type":"checkbox"}, "e":{"click":"doBlockPosts"} }
-			,{"t":"span", "txt":"Block posts"}
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
 		]}
 		,{"t":"label"
 		,"children":[
-			{"t":"input" ,"p":{"type":"checkbox"}, "e":{"click":"doBlockCom"} }
-			,{"t":"span", "txt":"Block comments"}
+			{"t":"input" ,"p":{"type":"checkbox", "value":"blockPosts"}, "e":{"click":"doBlockPosts"} }
+			,{"t":"span", "txt":"Block&nbsp;posts"}
 		]}
 		,{"t":"label"
 		,"children":[
-			{"t":"input" ,"p":{"type":"checkbox"}, "e":{"click":"doBan"} }
+			{"t":"input" ,"p":{"type":"checkbox", "value":"blockComments"}, "e":{"click":"doBlockCom"} }
+			,{"t":"span", "txt":"Block&nbsp;comments"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "value":"banIds"}, "e":{"click":"doBan"} }
 			,{"t":"span", "txt":"Ban"}
 		]}
 	]}

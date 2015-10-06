@@ -158,24 +158,67 @@ function reqSubscription(e){
 	oReq.send();
 
 }
-function doBan(e){
+function doUnBan(e){
 	var oReq = new XMLHttpRequest();
-	var username = e.target.parentNode.parentNode.parentNode.user;
-	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.checked?"/unban":"/ban"), true);
+	var nodeHost = e.target; do nodeHost = nodeHost.parentNode; while(nodeHost.className != "up-controls");
+	var username = nodeHost.user;
+	oReq.open("post", gConfig.serverURL +"users/"+username+"/unban", true);
 	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.onload = function(){
 		if(oReq.status < 400) {
-			if (e.target.checked)gMe.users.banIds.push(gUsers.byName[username].id);
+			var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
+			if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
+			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+			setChild(nodeHost.parentNode, "up-controls", genUpControls(username));
+		}
+	}
+
+	oReq.send();
+}
+
+function doBan(e){
+	var oReq = new XMLHttpRequest();
+	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+	var username = nodePopUp.user;
+	var bBan = e.target.checked;
+	var nodeParent = e.target.parentNode;
+	oReq.open("post", gConfig.serverURL +"users/"+username+(bBan?"/ban":"/unban"), true);
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	var spinner = gNodes["spinner"].cloneNode(true);
+	var ckBox = nodeParent.replaceChild(spinner,e.target);
+	oReq.onload = function(){
+		nodeParent.replaceChild(ckBox, spinner);
+		if(oReq.status < 400) {
+			if (bBan)gMe.users.banIds.push(gUsers.byName[username].id);
 			else{
 				var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
 				if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
 			}
 			window.localStorage.setItem("gMe",JSON.stringify(gMe));
-			e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
+			setChild(nodePopUp.parentNode.parentNode, "up-controls", genUpControls(username));
 		}
 	}
 
 	oReq.send();
+}
+function doBlockCom(e){
+	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+	updateBlockList("blockComments", nodePopUp.user, e.target.checked);
+}
+function doBlockPosts(e){
+	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+	updateBlockList("blockPosts", nodePopUp.user, e.target.checked);
+}
+function updateBlockList(list, username, add){
+	var id = gUsers.byName[username].id;
+	if(add){
+		if (typeof gConfig[list] === "undefined") gConfig[list] = new Object();
+		gConfig[list][id] = true;
+		window.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+	}else try{
+		delete gConfig[list][id];
+		window.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+	}catch(e){};
 }
 function subscribe(e){
 	var oReq = new XMLHttpRequest();
@@ -187,7 +230,7 @@ function subscribe(e){
 			gMe = JSON.parse(oReq.response);
 			window.localStorage.setItem("gMe",JSON.stringify(gMe));
 			gUsers.byName[username].friend = !e.target.subscribed;
-			e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
+			setChild(e.target.parentNode.parentNode, "up-controls", genUpControls(username));
 		}
 	}
 
@@ -309,6 +352,9 @@ function draw(content){
 	var body = makeContainer();
 	loadGlobals(content);
 	gConfig.cTxt = null;
+	["blockPosts", "blockComments"].forEach(function(list){
+		gConfig[list]= JSON.parse(window.localStorage.getItem(list));
+	})
 	//var nodeRTControls = gNodes["rt-controls"].cloneAll();
 	if(typeof gMe === "undefined"){
 		var nodeGControls = gNodes["controls-anon"].cloneAll();
@@ -351,7 +397,7 @@ function draw(content){
 			genPostTo(nodeAddPost);
 			break;
 		default:
-			body.appendChild(genUpControls(gConfig.timeline));
+			setChild(body, "up-controls", genUpControls(gConfig.timeline));
 
 		}
 	}
@@ -579,13 +625,14 @@ function genUpControls(username){
 			aBan.hidden = true;
 			return;
 		}
-		/*
 		aBan.banned = gMe.users.banIds.some(function(a){
 			return a == user.id;
 		});
-		aBan.innerHTML = aBan.banned?"Un-block":"Block";
-		aBan.addEventListener("click", ban);
-		*/
+		if (aBan.banned){
+			aBan.innerHTML = "Un-ban";
+			aBan.removeEventListener("click",genBlock);
+			aBan.addEventListener("click", doUnBan);
+		}
 	}
 	return controls;
 }
@@ -838,6 +885,7 @@ function embedPreview(oEmbedPrs, victim, target){
 			oReq.open("get",oEmbedURL,true);
 			oReq.send();
 		}).then(function(qoEmbed){
+			if (!qoEmbed.query.count) return;
 			var oEmbed = qoEmbed.query.results.json;
 			if(oEmbed.type == "photo"){
 				target.appendChild(oEmbedImg(oEmbed.url,victim));
@@ -917,6 +965,11 @@ function genPost(post){
 		}else gotUser();
 	}
 	function gotUser(){
+		
+		if(( typeof gConfig["blockPosts"]!== "undefined") && (gConfig["blockPosts"][user.id])){
+			nodePost = document.createElement("div") ;
+			return;
+		}
 		nodePost.gotLock  = false;
 		if(typeof user !== "undefined"){
 			nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
@@ -1652,10 +1705,14 @@ function genComment(comment){
 	function gotUser(){
 		nodeComment.userid = cUser.id;
 		nodeSpan.innerHTML += " - " + cUser.link ;
-		if(typeof gMe !== "undefined")
+		if(typeof gMe !== "undefined"){
 			if(cUser.id == gMe.users.id)
 				nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
 			else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
+		}
+		if(( typeof gConfig["blockComments"]!== "undefined") && (gConfig["blockComments"][cUser.id]))
+			nodeComment.innerHTML = "---";
+
 	}
 	function spam(){nodeComment = document.createElement("span");};
 	nodeComment.cNodes["comment-body"].appendChild(nodeSpan);
@@ -2319,9 +2376,10 @@ function genUserPopup(e){
 	nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
 	document.getElementsByTagName("body")[0].appendChild(nodePopup);
 	if((typeof gMe !== "undefined") && (user.id != gMe.users.id) )
-		nodePopup.appendChild(genUpControls(user.username));
+		setChild(nodePopup, "up-controls", genUpControls(user.username));
 	nodePopup.style.top = e.pageY;
 	nodePopup.style.left = e.pageX;
+	nodePopup.style["z-index"] = 1;
 	if (typeof node.createdAt !== "undefined"){
 		var spanDate = document.createElement("span");
 		var txtdate = new Date(node.createdAt*1).toString();
@@ -2332,10 +2390,20 @@ function genUserPopup(e){
 
 }
 function genBlock(e){
-	var node = e.target; while(node.className != "user-popup")node = node.parentNode;
+	var node = e.target.parentNode;
 	var nodeBlock = gNodes["up-block"].cloneAll();
 	nodeBlock.className = "user-popup"; 
-	node.appendChild();
+	nodeBlock.user = node.user;
+	node.appendChild(nodeBlock);
+	nodeBlock.style.top =  e.target.offsetTop;
+	nodeBlock.style.left = e.target.offsetLeft;
+	nodeBlock.style["z-index"] = 2;
+	var chkboxes = nodeBlock.getElementsByTagName("input");
+	for(var idx = 0; idx < chkboxes.length; idx++){
+		var list = gConfig[chkboxes[idx].value];
+		if((typeof list !== "undefined") && (list[gUsers.byName[node.user].id]>-1))
+			chkboxes[idx].checked = true;
+	}
 
 }
 function upClose(e){

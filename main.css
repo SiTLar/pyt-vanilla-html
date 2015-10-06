@@ -125,6 +125,11 @@ h1{
 .up-controls{
 	clear:both;
 }
+.user-popup label {
+	display:flex;
+	margin-top:1em;
+
+}
 .user-popup{
 	position:absolute;
 	background: white none repeat scroll 0 0;
@@ -316,7 +321,8 @@ span.comment-controls::before {
 	line-height: 16px;
 }
 .fa-spinner{
-	margin-left: 0.5em
+	margin-left: 0.5em;
+	margin-right: 0.5em;
 }
 .likes-smile {
 	float: left;

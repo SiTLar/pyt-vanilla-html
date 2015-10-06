@@ -158,14 +158,14 @@ function reqSubscription(e){
 	oReq.send();
 
 }
-function ban(e){
+function doBan(e){
 	var oReq = new XMLHttpRequest();
-	var username = e.target.parentNode.user;
-	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.banned?"/unban":"/ban"), true);
+	var username = e.target.parentNode.parentNode.parentNode.user;
+	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.checked?"/unban":"/ban"), true);
 	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.onload = function(){
 		if(oReq.status < 400) {
-			if (!e.target.banned)gMe.users.banIds.push(gUsers.byName[username].id);
+			if (e.target.checked)gMe.users.banIds.push(gUsers.byName[username].id);
 			else{
 				var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
 				if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
@@ -579,11 +579,13 @@ function genUpControls(username){
 			aBan.hidden = true;
 			return;
 		}
+		/*
 		aBan.banned = gMe.users.banIds.some(function(a){
 			return a == user.id;
 		});
 		aBan.innerHTML = aBan.banned?"Un-block":"Block";
 		aBan.addEventListener("click", ban);
+		*/
 	}
 	return controls;
 }
@@ -1795,21 +1797,19 @@ function auth(check){
 		gMe = JSON.parse(txtgMe);
 		if (gMe.users) {
 			addUser(gMe.users);
-			new Promise(function(){
-				var oReq = new XMLHttpRequest();
-				oReq.open("get", gConfig.serverURL +"users/whoami", true);
-				oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
-				oReq.onload = function(){
-					if(oReq.status < 400) {
-						gMe = JSON.parse(oReq.response);
-						if (gMe.users) {
-							refreshgMe();
-							return true;
-						}
+			var oReq = new XMLHttpRequest();
+			oReq.open("get", gConfig.serverURL +"users/whoami", true);
+			oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+			oReq.onload = function(){
+				if(oReq.status < 400) {
+					gMe = JSON.parse(oReq.response);
+					if (gMe.users) {
+						refreshgMe();
+						return true;
 					}
 				}
-				setTimeout(function (){oReq.send()},300);
-			});
+			}
+			setTimeout(function (){oReq.send()},300);
 			return true;
 		}
 	}
@@ -1843,7 +1843,7 @@ function refreshgMe(){
 	addUser(gMe.users);
 	var links = document.getElementsByClassName("my-link");
 	for(var idx = 0; idx< links.length; idx++)
-		links[idx].innerHTML = gMe.users.link;
+		links[idx].outerHTML = gMe.users.link;
 	var nodeSR = document.getElementById("sr-info");
 	if(!nodeSR)return;
 	if(Array.isArray(gMe.users.subscriptionRequests)){
@@ -2331,6 +2331,13 @@ function genUserPopup(e){
 
 
 }
+function genBlock(e){
+	var node = e.target; while(node.className != "user-popup")node = node.parentNode;
+	var nodeBlock = gNodes["up-block"].cloneAll();
+	nodeBlock.className = "user-popup"; 
+	node.appendChild();
+
+}
 function upClose(e){
 	var node = e.target; while(node.className != "user-popup")node = node.parentNode;
 	node.parentNode.removeChild(node);
@@ -2536,6 +2543,7 @@ function initDoc(){
 		if(oReq.status < 400){
 			draw(JSON.parse(this.response));
 			addIcon("favicon.ico");
+			return;
 		}
 		else{
 			if (oReq.status==401)

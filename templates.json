@@ -280,12 +280,29 @@ var templates =  {"nodes": [
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-d","t":"a", "txt":"Direct"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"up-b","t":"a", "txt":"Block"}
+		,{"c":"up-b","t":"a", "txt":"Block","e":{"click":"genBlock"}}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 
 	]}
-
+	,{"c":"up-block"
+	,"children":[
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox"}, "e":{"click":"doBlockPosts"} }
+			,{"t":"span", "txt":"Block posts"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox"}, "e":{"click":"doBlockCom"} }
+			,{"t":"span", "txt":"Block comments"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox"}, "e":{"click":"doBan"} }
+			,{"t":"span", "txt":"Ban"}
+		]}
+	]}
 	,{"c":"global-settings"
 	,"children":[
 		{"t":"h3","txt":"Profile" }

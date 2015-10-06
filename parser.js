@@ -202,17 +202,33 @@ function doBan(e){
 	oReq.send();
 }
 function doBlockCom(e){
+	var action = e.target.checked;
 	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
-	updateBlockList("blockComments", nodePopUp.user, e.target.checked);
+	updateBlockList("blockComments", nodePopUp.user, action);
+	var id = gUsers.byName[nodePopUp.user].id;
+	var nodesCmts = document.getElementsByClassName("comment");
+	for(var idx = 0; idx < nodesCmts.length; idx++){
+		if(nodesCmts[idx].userid == id){
+			if(action) nodesCmts[idx].innerHTML = "---";
+			else nodesCmts[idx].parentNode.replaceChild(genComment(gComments[nodesCmts[idx].id]), nodesCmts[idx]);
+		}
+	}
 }
 function doBlockPosts(e){
+	var action = e.target.checked;
 	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
-	updateBlockList("blockPosts", nodePopUp.user, e.target.checked);
+	updateBlockList("blockPosts", nodePopUp.user, action);
+	var id = gUsers.byName[nodePopUp.user].id;
+	var nodesPosts = document.getElementsByClassName("post");
+	for(var idx = 0; idx < nodesPosts.length; idx++){
+		if(nodesPosts[idx].rawData.createdBy == id)
+			nodesPosts[idx].hidden = action;
+	}
 }
 function updateBlockList(list, username, add){
 	var id = gUsers.byName[username].id;
 	if(add){
-		if (typeof gConfig[list] === "undefined") gConfig[list] = new Object();
+		if ((typeof gConfig[list] === "undefined") || (gConfig[list] == null)) gConfig[list] = new Object();
 		gConfig[list][id] = true;
 		window.localStorage.setItem(list, JSON.stringify(gConfig[list]));
 	}else try{
@@ -966,9 +982,8 @@ function genPost(post){
 	}
 	function gotUser(){
 		
-		if(( typeof gConfig["blockPosts"]!== "undefined") && (gConfig["blockPosts"][user.id])){
-			nodePost = document.createElement("div") ;
-			return;
+		if(( typeof gConfig["blockPosts"]!== "undefined")&& (gConfig["blockPosts"] != null)&& (gConfig["blockPosts"][user.id])){
+			nodePost.hidden = true  ;
 		}
 		nodePost.gotLock  = false;
 		if(typeof user !== "undefined"){
@@ -1710,7 +1725,7 @@ function genComment(comment){
 				nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
 			else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
 		}
-		if(( typeof gConfig["blockComments"]!== "undefined") && (gConfig["blockComments"][cUser.id]))
+		if(( typeof gConfig["blockComments"]!== "undefined") && ( gConfig["blockComments"]!= null) && (gConfig["blockComments"][cUser.id]))
 			nodeComment.innerHTML = "---";
 
 	}
@@ -2401,7 +2416,7 @@ function genBlock(e){
 	var chkboxes = nodeBlock.getElementsByTagName("input");
 	for(var idx = 0; idx < chkboxes.length; idx++){
 		var list = gConfig[chkboxes[idx].value];
-		if((typeof list !== "undefined") && (list[gUsers.byName[node.user].id]>-1))
+		if((typeof list !== "undefined") && (list != null) && (list[gUsers.byName[node.user].id]>-1))
 			chkboxes[idx].checked = true;
 	}
 

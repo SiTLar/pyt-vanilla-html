@@ -63,3 +63,11 @@ function deleteCookie(name){
 	console.log(cookie);
 	document.cookie = cookie;
 }
+function setChild(node,name, newNode){
+	if(typeof node.cNodes === "undefined")
+		node.cNodes = new Object();
+	if(typeof node.cNodes[name] !== "undefined") 
+		node.replaceChild(newNode, node.cNodes[name]);
+	else node.appendChild(newNode);
+	node.cNodes[name] = newNode;
+}

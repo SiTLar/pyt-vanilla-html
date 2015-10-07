@@ -2,6 +2,7 @@
 var gUsers = new Object();
 var gUsersQ = new Object();
 gUsers.byName = new Object();
+var gEmbed = new Object();
 var gNodes = new Object();
 var gMe = new Object();
 var gComments = new Object();
@@ -157,24 +158,83 @@ function reqSubscription(e){
 	oReq.send();
 
 }
-function ban(e){
+function doUnBan(e){
 	var oReq = new XMLHttpRequest();
-	var username = e.target.parentNode.user;
-	oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.banned?"/unban":"/ban"), true);
+	var nodeHost = e.target; do nodeHost = nodeHost.parentNode; while(nodeHost.className != "up-controls");
+	var username = nodeHost.user;
+	oReq.open("post", gConfig.serverURL +"users/"+username+"/unban", true);
 	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 	oReq.onload = function(){
 		if(oReq.status < 400) {
-			if (!e.target.banned)gMe.users.banIds.push(gUsers.byName[username].id);
+			var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
+			if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
+			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+			setChild(nodeHost.parentNode, "up-controls", genUpControls(username));
+		}
+	}
+
+	oReq.send();
+}
+
+function doBan(e){
+	var oReq = new XMLHttpRequest();
+	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+	var username = nodePopUp.user;
+	var bBan = e.target.checked;
+	var nodeParent = e.target.parentNode;
+	oReq.open("post", gConfig.serverURL +"users/"+username+(bBan?"/ban":"/unban"), true);
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	var spinner = gNodes["spinner"].cloneNode(true);
+	var ckBox = nodeParent.replaceChild(spinner,e.target);
+	oReq.onload = function(){
+		nodeParent.replaceChild(ckBox, spinner);
+		if(oReq.status < 400) {
+			if (bBan)gMe.users.banIds.push(gUsers.byName[username].id);
 			else{
 				var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
 				if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
 			}
 			window.localStorage.setItem("gMe",JSON.stringify(gMe));
-			e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
+			setChild(nodePopUp.parentNode.parentNode, "up-controls", genUpControls(username));
 		}
 	}
 
 	oReq.send();
+}
+function doBlockCom(e){
+	var action = e.target.checked;
+	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+	updateBlockList("blockComments", nodePopUp.user, action);
+	var id = gUsers.byName[nodePopUp.user].id;
+	var nodesCmts = document.getElementsByClassName("comment");
+	for(var idx = 0; idx < nodesCmts.length; idx++){
+		if(nodesCmts[idx].userid == id){
+			if(action) nodesCmts[idx].innerHTML = "---";
+			else nodesCmts[idx].parentNode.replaceChild(genComment(gComments[nodesCmts[idx].id]), nodesCmts[idx]);
+		}
+	}
+}
+function doBlockPosts(e){
+	var action = e.target.checked;
+	var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+	updateBlockList("blockPosts", nodePopUp.user, action);
+	var id = gUsers.byName[nodePopUp.user].id;
+	var nodesPosts = document.getElementsByClassName("post");
+	for(var idx = 0; idx < nodesPosts.length; idx++){
+		if(nodesPosts[idx].rawData.createdBy == id)
+			nodesPosts[idx].hidden = action;
+	}
+}
+function updateBlockList(list, username, add){
+	var id = gUsers.byName[username].id;
+	if(add){
+		if ((typeof gConfig[list] === "undefined") || (gConfig[list] == null)) gConfig[list] = new Object();
+		gConfig[list][id] = true;
+		window.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+	}else try{
+		delete gConfig[list][id];
+		window.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+	}catch(e){};
 }
 function subscribe(e){
 	var oReq = new XMLHttpRequest();
@@ -186,7 +246,7 @@ function subscribe(e){
 			gMe = JSON.parse(oReq.response);
 			window.localStorage.setItem("gMe",JSON.stringify(gMe));
 			gUsers.byName[username].friend = !e.target.subscribed;
-			e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
+			setChild(e.target.parentNode.parentNode, "up-controls", genUpControls(username));
 		}
 	}
 
@@ -230,19 +290,34 @@ function setScreenNameView(e){
 	window.localStorage.setItem("screenname",e.target.value );
 
 }
-function drawSettings(){
+function makeContainer(){
 	var body = document.createElement("div");
 	body.className = "content";
 	body.id = "content";
 	document.getElementsByTagName("body")[0].appendChild(body);
 	var title =  document.createElement("div");
-	div.className = "pagetitle";
+	title.className = "pagetitle";
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
-	gConfig.cTxt = null;
-	body.appendChild( gNodes["controls-user"].cloneAll());
+	document.title = "FreeFeed: " + gConfig.timeline; 
+	var controls = gNodes["controls-user"].cloneAll();
+	if(Array.isArray(gMe.users.subscriptionRequests)){
+		controls.cNodes["sr-info"].cNodes["sr-info-a"].innerHTML = "You have "
+		+ gMe.users.subscriptionRequests.length 
+		+ " subscription requests to review.";
+		controls.cNodes["sr-info"].hidden = false;
+		gConfig.subReqsCount = gMe.users.subscriptionRequests.length;
+	} else gConfig.subReqsCount = 0;
+	body.appendChild(controls );
 	body.appendChild(title);
+	return body;
+}
+function drawSettings(){
+	var body = makeContainer();
 	var nodeSettings = gNodes["global-settings"].cloneAll();
 	body.appendChild(nodeSettings);
+	document.getElementById("my-screen-name").value = gMe.users.screenName;
+	if(typeof gMe.users.email !== "undefined" )document.getElementById("my-email").value = gMe.users.email;
+	document.getElementById("me-private").checked = (gMe.users.isPrivate == 1);
 	var mode = window.localStorage.getItem("screenname");
 	if (mode == null) mode = "screen";
 	var nodes = nodeSettings.getElementsByTagName("input");
@@ -251,15 +326,24 @@ function drawSettings(){
 		if((node.type == "radio" ) &&(node.name == "display_name") &&(node.value == mode))
 			node.checked = true;
 	};
+	var nodeLinkPreview =  document.getElementById("link-preview");
+	if(window.localStorage.getItem("show_link_preview") == "1")
+		nodeLinkPreview.checked = true;
+	else nodeLinkPreview.checked = false;
+
 	document.getElementById("rt-chkbox").checked = parseInt(window.localStorage.getItem("rt"));
-	var bump = window.localStorage.getItem("rtbump");
-	var nodeBump = document.getElementById("rt-bump");
-	for(var idx = 0; idx<nodeBump.childNodes.length; idx++){
-		if(nodeBump.childNodes[idx].value == bump){
-			nodeBump.selectedIndex = idx;
-			break;
-		}
-	}
+	var bump = (window.localStorage.getItem("rtbump") == 1);
+	document.getElementById("rt-params").hidden = !bump;
+	document.getElementById("rt-bump").checked = bump ;
+	var oRTParams = window.localStorage.getItem("rt_params");
+	if (oRTParams != null)
+		oRTParams = JSON.parse(oRTParams);
+	["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
+		var node = document.getElementById(id);
+		if(oRTParams)node.value = oRTParams[id];
+		node.parentNode.getElementsByTagName("span")[0].innerHTML = node.value + " minutes";
+	});
+	
 	addIcon("favicon.ico");
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
@@ -272,23 +356,29 @@ function drawSettings(){
 }
 function draw(content){
 	matrix = new CryptoPrivate(gCryptoPrivateCfg );
+	/*
 	var body = document.createElement("div");
 	body.className = "content";
 	body.id = "content";
 	document.getElementsByTagName("body")[0].appendChild(body);
-	loadGlobals(content);
 	var title =  document.createElement("div");
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
+	title.className = "pagetitle";
+	*/
+	var body = makeContainer();
+	loadGlobals(content);
 	gConfig.cTxt = null;
+	["blockPosts", "blockComments"].forEach(function(list){
+		gConfig[list]= JSON.parse(window.localStorage.getItem(list));
+	})
 	//var nodeRTControls = gNodes["rt-controls"].cloneAll();
 	if(typeof gMe === "undefined"){
 		var nodeGControls = gNodes["controls-anon"].cloneAll();
-	//	nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
-		body.appendChild(nodeGControls);
-
-		body.appendChild(title);
+		var controls = body.getElementsByClassName("controls-user");
+		body.replaceChild(nodeGControls, controls);
 	}else{
-		if ((typeof gMe.users.subscribers !== "undefined") && (typeof gMe.users.subscriptions !== "undefined")){
+		if ((typeof gMe.users.subscribers !== "undefined") 
+		&& (typeof gMe.users.subscriptions !== "undefined")){
 			gMe.subscribers.forEach(addUser);
 			var oSubscriptions = new Object();
 			gMe.subscriptions.forEach(function(sub){
@@ -308,10 +398,6 @@ function draw(content){
 			});
 		}
 
-		var nodeGControls = gNodes["controls-user"].cloneAll();
-	//	nodeGControls.replaceChild( nodeRTControls, nodeGControls.cNodes["rt"]);
-		body.appendChild(nodeGControls);
-		body.appendChild(title);
 		switch (gConfig.timeline.split("/")[0]){
 		case "filter":
 			if (gConfig.timeline.split("/")[1] == "direct"){
@@ -327,7 +413,7 @@ function draw(content){
 			genPostTo(nodeAddPost);
 			break;
 		default:
-			body.appendChild(genUpControls(gConfig.timeline));
+			setChild(body, "up-controls", genUpControls(gConfig.timeline));
 
 		}
 	}
@@ -387,7 +473,12 @@ function draw(content){
 		var singlePost = genPost(content.posts);
 		body.appendChild(singlePost);
 		var nodesHide = singlePost.getElementsByClassName("hide");
-		if (Array.isArray(nodesHide))nodesHide[0].hidden = true;
+		if (nodesHide.lenght)nodesHide[0].hidden = true;
+		document.title = "@" 
+			+ gUsers[singlePost.rawData.createdBy].username + ": "
+			+ singlePost.rawData.body.slice(0,20).trim()
+			+ (singlePost.rawData.body.length > 20?"\u2026":"" )
+			+ " (FreeFeed)";
 	}
 /*
 	var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
@@ -406,8 +497,28 @@ function draw(content){
 		gRt = new RtUpdate(gConfig.token, bump);
 		gRt.subscribe(gConfig.rt);
 	}
-
-
+	var nodes = document.getElementsByClassName("post");
+	for(var idx = 0; idx < nodes.length; idx++ ){
+		var nodePost = nodes[idx];
+		var nodeImgAtt = nodePost.cNodes["post-body"].cNodes["attachments"].cNodes["atts-img"];
+		if(nodeImgAtt.scrollWidth != nodeImgAtt.clientWidth)
+			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+	};
+	if(window.localStorage.getItem("show_link_preview") == "1"){
+		(function(a,b,c){
+			var d,e,f;
+			f="PIN_"+~~((new Date).getTime()/864e5),
+			a[f]||(a[f]=!0,a.setTimeout(function(){
+				d=b.getElementsByTagName("SCRIPT")[0],
+				e=b.createElement("SCRIPT"),
+				e.type="text/javascript",
+				e.async=!0,
+				e.src=c+"?"+f,
+				d.parentNode.insertBefore(e,d)
+			}
+			,10))
+		})(window,document,"//assets.pinterest.com/js/pinit_main.js");
+	}
 	document.body.removeChild(document.getElementById("splash"));
   (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -416,6 +527,62 @@ function draw(content){
 
   ga("create", "UA-0-1", "auto");
   ga("send", "pageview");
+
+}
+
+function drawRequests(){
+	var oReq = new XMLHttpRequest();
+	oReq.open("get", gConfig.serverURL +"users/whoami", true);
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	oReq.onload = function(){
+		if(oReq.status < 400) {
+			gMe = JSON.parse(oReq.response);
+			if (gMe.users) {
+				refreshgMe();
+				completeRequests();
+				return true;
+			}
+		}
+	}
+	oReq.send();
+}
+function completeRequests(){
+	var body = makeContainer();
+	if (Array.isArray(gMe.requests)) gMe.requests.forEach( addUser);
+	else body.getElementsByClassName("pagetitle")[0].innerHTML = "<h1>No requests</h1>";
+	
+	if(Array.isArray(gMe.users.subscriptionRequests)){
+		var nodeTPReq = document.createElement("h3");
+		nodeTPReq.innerHTML = "Pending requests";
+		nodeTPReq.id = "sr-header";
+		body.appendChild(nodeTPReq);
+		gMe.users.subscriptionRequests.forEach(function(req){
+			body.appendChild(genReqNode(gUsers[req]));
+		});
+	}
+	if(Array.isArray(gMe.users.pendingSubscriptionRequests)){
+		var nodeTReq = document.createElement("h3");
+		nodeTReq.innerHTML = "Sent requests";
+		body.appendChild(nodeTReq);
+		gMe.users.pendingSubscriptionRequests.forEach(function(req){
+			var node = genReqNode(gUsers[req]);
+			node.cNodes["sr-ctrl"].hidden = true;
+			body.appendChild(node);
+		});
+	}
+
+	addIcon("favicon.ico");
+	document.body.removeChild(document.getElementById("splash"));
+	function genReqNode(user){
+		var node = gNodes["sub-request"].cloneAll();
+		node.cNodes["sr-name"].innerHTML = "<a href="+gConfig.front+user.username+">"
+			+user.screenName
+			+"</a>"
+			+" @" + user.username; 
+		node.cNodes["sr-avatar"].src =  user.profilePictureMediumUrl ;
+		node.cNodes["sr-user"].value = user.username;
+		return node;
+	}
 
 }
 function genUpControls(username){
@@ -443,9 +610,19 @@ function genUpControls(username){
 		sub.subscribed = user.friend;
 		if (!user.friend && (user.isPrivate == 1 )){
 			sub.removeEventListener("click",subscribe);
-			if (Array.isArray(gMe.requests) && gMe.requests.some(function(a){return a.username == username})){
+			var oRequests = new Object();
+			if (Array.isArray(gMe.requests)){
+				gMe.requests.forEach(function(req){
+					oRequests[req.id] = req;
+				});
+			}
+			if(Array.isArray(gMe.users.subscriptionRequests)
+			&&gMe.users.subscriptionRequests.some(function(a){
+					return oRequests[a].username == username
+				})){
 				controls.cNodes["up-s"] = document.createElement("span");
-				controls.cNodes["up-s"] = "Subscription request sent";
+				controls.cNodes["up-s"].innerHTML = "Subscription request sent";
+				controls.replaceChild(controls.cNodes["up-s"], sub);
 			}else{
 				sub.innerHTML = "Request subscription";
 				sub.addEventListener("click", reqSubscription);
@@ -467,8 +644,11 @@ function genUpControls(username){
 		aBan.banned = gMe.users.banIds.some(function(a){
 			return a == user.id;
 		});
-		aBan.innerHTML = aBan.banned?"Un-block":"Block";
-		aBan.addEventListener("click", ban);
+		if (aBan.banned){
+			aBan.innerHTML = "Un-ban";
+			aBan.removeEventListener("click",genBlock);
+			aBan.addEventListener("click", doUnBan);
+		}
 	}
 	return controls;
 }
@@ -655,6 +835,111 @@ function drawPrivateComment(post) {
 		function spam(){reject()};
 	});
 }
+function embedPreview(oEmbedPrs, victim, target){
+	var oEmbedURL;
+	var m;
+	if((m = /^https:\/\/docs\.google\.com\/(document|spreadsheets|presentation|drawings)\/d\/([^\/]+)/.exec(victim)) !== null) {
+		new Promise(function(resolve,reject){
+			var oReq = new XMLHttpRequest();
+			oReq.onload = function(){
+				if(oReq.status < 400)
+					resolve(JSON.parse(oReq.response));
+				else reject(oReq.response);
+			}
+
+			oReq.open("get","https://www.googleapis.com/drive/v2/files/" + m[2] + "?key=AIzaSyA8TI6x9A8VdqKEGFSE42zSexn5HtUkaT8",true);
+			oReq.send();
+		}).then(function(info){
+			//var nodeiFrame = document.createElement("iframe");
+			//nodeiFrame.src = info.embedLink;
+			var nodeA = document.createElement("a");
+			var img = document.createElement("img");
+			var width = document.getElementById("content").clientWidth*3/4;
+			img.src = info.thumbnailLink.replace("=s220","=w"+ width+"-c-h"+ width/5 );// "=s"+document.getElementById("content").clientWidth/2+"-p");
+			var node = document.createElement("div");
+			node.className = "att-img";
+			nodeA.appendChild(img);
+			nodeA.href = victim;
+			node.appendChild(nodeA);
+			target.appendChild(node);
+			img.onerror=function(){nodeA.hidden = true;};
+		});
+	return;	
+	}else if (/^https?:\/\/(www\.)?pinterest.com\/pin\/.*/.exec(victim) !== null){
+		var node = document.createElement("div");
+		node.className = "att-img";
+		node.innerHTML = '<a data-pin-do="embedPin" href="' + victim + '"></a>';
+		target.appendChild(node);
+		return;
+	}
+	var bIsOEmbed = oEmbedPrs.some(function(o){
+		return o.endpoints.some(function(endp){
+			if(!endp.schemes)console.log(endp.url)
+			else if (endp.schemes.some(function (scheme){
+				return victim.match(scheme) != null; })){
+				oEmbedURL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20json%20where%20url%3D'"
+					+ encodeURIComponent(endp.url 
+						+ "?url=" + victim 
+						+ "&format=json"
+						+ "&maxwidth="+document.getElementById("content").clientWidth*3/4
+					)
+					+ "'&format=json";
+				return true;
+			}else return false;
+		});
+	});
+
+	if(bIsOEmbed){
+		new Promise(function(resolve,reject){
+			var oReq = new XMLHttpRequest();
+			oReq.onload = function(){
+				if(oReq.status < 400)
+					resolve(JSON.parse(oReq.response));
+				else reject(oReq.response);
+			}
+
+			oReq.open("get",oEmbedURL,true);
+			oReq.send();
+		}).then(function(qoEmbed){
+			if (!qoEmbed.query.count) return;
+			var oEmbed = qoEmbed.query.results.json;
+			if(oEmbed.type == "photo"){
+				target.appendChild(oEmbedImg(oEmbed.url,victim));
+			}else if (typeof oEmbed.html !== "undefined"){
+				if(oEmbed.html.indexOf("iframe") == 1){
+					var node = document.createElement("div");
+					node.innerHTML = oEmbed.html;
+					target.appendChild(node);
+				}else if(typeof oEmbed.thumbnail_url !== "undefined"){
+					target.appendChild(oEmbedImg(oEmbed.thumbnail_url,victim));
+				}else{
+					var iframe = document.createElement("iframe");	
+					iframe.sandbox = true;
+					iframe.srcdoc = oEmbed.html;
+					iframe.style.width = oEmbed.width;
+					iframe.style.height = oEmbed.height;
+					target.appendChild(iframe);
+				}
+			}
+		},doEmbedly );
+	}else doEmbedly();
+	function oEmbedImg(url,victim){
+		if(!url.match(/^['"]?https?/)) return document.createElement("img");
+		var img = document.createElement("img");
+		img.src = url;
+		//img.style.width = oEmbed.width;
+		//img.style.height = oEmbed.height;
+		var node = document.createElement("a");
+		node.appendChild(img);
+		return node;	
+	}
+	function doEmbedly(){
+		var aEmbed = document.createElement("a");
+		aEmbed.href = victim;
+		aEmbed.className = "embedly-card";
+		target.appendChild(aEmbed);
+	}
+}
 function genPost(post){
 	function spam(){nodePost = document.createElement("span");};
 	function ham(){
@@ -696,6 +981,10 @@ function genPost(post){
 		}else gotUser();
 	}
 	function gotUser(){
+		
+		if(( typeof gConfig["blockPosts"]!== "undefined")&& (gConfig["blockPosts"] != null)&& (gConfig["blockPosts"][user.id])){
+			nodePost.hidden = true  ;
+		}
 		nodePost.gotLock  = false;
 		if(typeof user !== "undefined"){
 			nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
@@ -706,20 +995,34 @@ function genPost(post){
 			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-lock"].innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
 		if(post.attachments){
 			var attsNode = postNBody.cNodes["attachments"];
-			for(var att in post.attachments){
-				var nodeAtt = gNodes["attachment"].cloneAll();
-				var oAtt = gAttachments[post.attachments[att]];
+			post.attachments.forEach(function(att){
+				var nodeAtt = document.createElement("div");
+				var oAtt = gAttachments[att];
 				switch(oAtt.mediaType){
 				case "image":
 					nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
+					attsNode.cNodes["atts-img"].appendChild(nodeAtt);
+					nodeAtt.className = "att-img";
 					break;
 				case "audio":
 					nodeAtt.innerHTML = '<audio style="height:40" preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
 					nodeAtt.className = "att-audio";
+					attsNode.cNodes["atts-audio"].appendChild(nodeAtt);
 					break;
+				default:
+					nodeAtt.innerHTML = '<a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					attsNode.appendChild(nodeAtt);
+
 				}
-				attsNode.appendChild(nodeAtt);
-			}
+			});		
+		}else if(postNBody.cNodes["post-cont"].getElementsByTagName("a").length
+		&&(window.localStorage.getItem("show_link_preview") == "1")){
+			gEmbed.p.then(function(oEmbedPr){
+				embedPreview(oEmbedPr
+					,postNBody.cNodes["post-cont"].getElementsByTagName("a")[0].href
+					,postNBody.cNodes["attachments"] 
+				);
+			});
 		}
 		var anchorDate = document.createElement("a");
 		if(typeof user !== "undefined") anchorDate.href = gConfig.front+user.username+"/"+post.id;
@@ -821,6 +1124,19 @@ function genTitle(nodePost){
 	return title;
 
 }
+function unfoldAttImgs(e){
+	var nodeAtts = e.target; do nodeAtts = nodeAtts.parentNode; while(nodeAtts.className != "attachments");
+	if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
+		nodeAtts.cNodes["atts-img"].style.display = "block";
+		nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';
+		nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "false";
+	}else{
+		nodeAtts.cNodes["atts-img"].style.display = "flex";
+		nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-down fa-2x"></i>';
+		nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "true";
+	}
+
+}
 function newPost(e){
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 	textField.disabled = true;
@@ -909,7 +1225,7 @@ function newPost(e){
 function sendAttachment(e){
 	e.target.disabled = true;
 	var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
-	var nodeSpinner = gNodes["attachment"].cloneAll();
+	var nodeSpinner = document.createElement("div");
 	nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
 	e.target.parentNode.parentNode.cNodes["attachments"].appendChild(nodeSpinner);
 	textField.pAtt = new Promise(function(resolve,reject){
@@ -919,7 +1235,8 @@ function sendAttachment(e){
 				e.target.value = "";
 				e.target.disabled = false;
 				var attachments = JSON.parse(this.response).attachments;
-				var nodeAtt = gNodes["attachment"].cloneAll();
+				var nodeAtt = document.createElement("div");
+				nodeAtt.className = "att-img";
 				nodeAtt.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src="'+attachments.thumbnailUrl+'"></a>';
 				nodeSpinner.parentNode.replaceChild(nodeAtt, nodeSpinner);
 				if (typeof(textField.attachments) === "undefined" ) textField.attachments = new Array();
@@ -1218,7 +1535,9 @@ function processText(e) {
 		e.target.style.height = e.target.scrollHeight + "px";
 	if (e.which == "13"){
 		var text = e.target.value;
-		if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		//if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);
 		e.target.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].dispatchEvent(new Event("click"));
 	}
 
@@ -1389,7 +1708,7 @@ function genPComment(cpost){
 	if(typeof gMe !== "undefined")
 		if(cUser.id == gMe.users.id)
 			nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
-	return nodeComment;
+	 return nodeComment;
 
 }
 */
@@ -1401,10 +1720,14 @@ function genComment(comment){
 	function gotUser(){
 		nodeComment.userid = cUser.id;
 		nodeSpan.innerHTML += " - " + cUser.link ;
-		if(typeof gMe !== "undefined")
+		if(typeof gMe !== "undefined"){
 			if(cUser.id == gMe.users.id)
 				nodeComment.cNodes["comment-body"].appendChild(gNodes["comment-controls"].cloneAll());
 			else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
+		}
+		if(( typeof gConfig["blockComments"]!== "undefined") && ( gConfig["blockComments"]!= null) && (gConfig["blockComments"][cUser.id]))
+			nodeComment.innerHTML = "---";
+
 	}
 	function spam(){nodeComment = document.createElement("span");};
 	nodeComment.cNodes["comment-body"].appendChild(nodeSpan);
@@ -1546,21 +1869,19 @@ function auth(check){
 		gMe = JSON.parse(txtgMe);
 		if (gMe.users) {
 			addUser(gMe.users);
-			new Promise(function(){
-				var oReq = new XMLHttpRequest();
-				oReq.open("get", gConfig.serverURL +"users/whoami", true);
-				oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
-				oReq.onload = function(){
-					if(oReq.status < 400) {
-						gMe = JSON.parse(oReq.response);
-						if (gMe.users) {
-							refreshgMe();
-							return true;
-						}
+			var oReq = new XMLHttpRequest();
+			oReq.open("get", gConfig.serverURL +"users/whoami", true);
+			oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+			oReq.onload = function(){
+				if(oReq.status < 400) {
+					gMe = JSON.parse(oReq.response);
+					if (gMe.users) {
+						refreshgMe();
+						return true;
 					}
 				}
-				setTimeout(function (){oReq.send()},300);
-			});
+			}
+			setTimeout(function (){oReq.send()},300);
 			return true;
 		}
 	}
@@ -1593,9 +1914,21 @@ function refreshgMe(){
 	delete gUsers[gMe.users.id];
 	addUser(gMe.users);
 	var links = document.getElementsByClassName("my-link");
-	if(Array.isArray(links))links.forEach(function(link){
-		link.innerHTML = gMe.users.screenName;
-	});
+	for(var idx = 0; idx< links.length; idx++)
+		links[idx].outerHTML = gMe.users.link;
+	var nodeSR = document.getElementById("sr-info");
+	if(!nodeSR)return;
+	if(Array.isArray(gMe.users.subscriptionRequests)){
+		nodeSR.cNodes["sr-info-a"].innerHTML = "You have "
+		+ gMe.users.subscriptionRequests.length 
+		+ " subscription requests to review.";
+		nodeSR.hidden = false;
+		gConfig.subReqsCount = gMe.users.subscriptionRequests.length;
+	}else{
+		gConfig.subReqsCount = 0;
+		nodeSR.hidden = true;
+	}
+	
 }
 function getauth(oFormElement){
 	var oReq = new XMLHttpRequest();
@@ -1616,7 +1949,7 @@ function getauth(oFormElement){
 }
 function logout(){
 	matrix.ready = 0;
-	matrix.logout();
+	try{matrix.logout();}catch(e){};
 	window.localStorage.removeItem("gMe");
 	deleteCookie(gConfig.tokenPrefix + "authToken");
 	location.reload();
@@ -1816,6 +2149,9 @@ function home(e){
 function goSettings(e){
     e.target.href = gConfig.front+"settings";
 }
+function goRequests(e){
+    e.target.href = gConfig.front+"requests";
+}
 
 function directs(e){
     e.target.href = gConfig.front+ "filter/direct";
@@ -1883,7 +2219,8 @@ function postDirect(e){
 	var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 	var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
 	if ((input != "") && (typeof gUsers.byName[input] !== "undefined")
-		&& gUsers.byName[input].friend && (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group"))
+	&& gUsers.byName[input].friend 
+	&& (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group"))
 		victim.cNodes["new-post-to"].feeds.push(input);
 	if (victim.cNodes["new-post-to"].feeds.length) newPost(e);
 	else alert("should have valid recipients");
@@ -2054,9 +2391,10 @@ function genUserPopup(e){
 	nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
 	document.getElementsByTagName("body")[0].appendChild(nodePopup);
 	if((typeof gMe !== "undefined") && (user.id != gMe.users.id) )
-		nodePopup.appendChild(genUpControls(user.username));
+		setChild(nodePopup, "up-controls", genUpControls(user.username));
 	nodePopup.style.top = e.pageY;
 	nodePopup.style.left = e.pageX;
+	nodePopup.style["z-index"] = 1;
 	if (typeof node.createdAt !== "undefined"){
 		var spanDate = document.createElement("span");
 		var txtdate = new Date(node.createdAt*1).toString();
@@ -2064,6 +2402,23 @@ function genUserPopup(e){
 		nodePopup.appendChild(spanDate);
 	}
 
+
+}
+function genBlock(e){
+	var node = e.target.parentNode;
+	var nodeBlock = gNodes["up-block"].cloneAll();
+	nodeBlock.className = "user-popup"; 
+	nodeBlock.user = node.user;
+	node.appendChild(nodeBlock);
+	nodeBlock.style.top =  e.target.offsetTop;
+	nodeBlock.style.left = e.target.offsetLeft;
+	nodeBlock.style["z-index"] = 2;
+	var chkboxes = nodeBlock.getElementsByTagName("input");
+	for(var idx = 0; idx < chkboxes.length; idx++){
+		var list = gConfig[chkboxes[idx].value];
+		if((typeof list !== "undefined") && (list != null) && (list[gUsers.byName[node.user].id]>-1))
+			chkboxes[idx].checked = true;
+	}
 
 }
 function upClose(e){
@@ -2076,6 +2431,37 @@ function destroy(e){
 	e.target.parentNode.removeChild(e.target);
 	//e.stopPropagation();
 
+}
+function updateProfile(e){
+	e.target.disabled = true;
+	document.getElementById("update-spinner").hidden = false;
+	gMe.users.screenName = document.getElementById("my-screen-name").value;
+	gMe.users.email = document.getElementById("my-email").value;
+	gMe.users.isPrivate = (document.getElementById("me-private").chacked?1:0);
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		var nodeMsg = document.getElementById("update-status");
+		e.target.disabled = false;
+		document.getElementById("update-spinner").hidden = true;
+		if(oReq.status < 400){
+			gMe = JSON.parse(oReq.response);
+			nodeMsg.className = "sr-info";
+			nodeMsg.innerHTML = "Updated";
+			refreshgMe();
+		}else {
+			nodeMsg.className = "msg-error";
+			nodeMsg.innerHTML = "Got error: ";
+			try{ 
+				nodeMsg.innerHTML += JSON.parse(oReq.response).err;
+			}catch(e) {nodeMsg.innerHTML += "unknown error";};
+
+		}
+	}
+
+	oReq.open("put",gConfig.serverURL + "users/" + gMe.users.id ,true);
+	oReq.setRequestHeader("Content-type","application/json");
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	oReq.send(JSON.stringify({"user":gMe.users}));
 }
 function realTimeSwitch(e){
 	if(e.target.checked )window.localStorage.setItem("rt",1);
@@ -2092,10 +2478,63 @@ function realTimeSwitch(e){
 		}
 	}
 }
-function setRTCooldown(e){
-	var bump = parseInt(e.target.value,10);
-	window.localStorage.setItem("rtbump",bump);
-	if(gRt.on)gRt.handlers.setBumpCooldown( bump);
+function setRTparams(e){
+	var value = e.target.value;
+	e.target.parentNode.getElementsByTagName("span")[0].innerHTML = value + " minutes";
+	var oRTParams = new Object();
+	["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
+		oRTParams[id] = document.getElementById(id).value;
+	});
+	window.localStorage.setItem("rt_params",JSON.stringify(oRTParams) );
+}
+function setRTBump(e){
+	var bump = e.target.checked;
+	window.localStorage.setItem("rtbump",bump?1:0);
+	document.getElementById("rt-params").hidden = !bump;
+}
+function linkPreviewSwitch(e){
+	if(e.target.checked )window.localStorage.setItem("show_link_preview",1);
+	else window.localStorage.setItem("show_link_preview",0);
+}
+function srAccept(e){
+	sendReqResp(e.target, "acceptRequest" );
+}
+function srReject(e){
+	sendReqResp(e.target, "rejectRequest" );
+}
+function sendReqResp(node, action){
+	node.parentNode.hidden = true;
+	var host = node.parentNode.parentNode;
+	var spinner = gNodes["spinner"].cloneNode(true);
+	host.appendChild(spinner);
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		if(oReq.status < 400){
+			host.parentNode.removeChild(host);
+			var nodeSR = document.getElementById("sr-info");
+			if(--gConfig.subReqsCount){
+				nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
+				+ gMe.users.subscriptionRequests.length 
+				+ " subscription requests to review.";
+			}else{
+				nodeSR.hidden = true;
+				var victim = document.getElementById("sr-header");
+				victim.parentNode.removeChild(victim);
+			}
+			
+		}else {
+			host.removeChild(spinner);
+			node.parentNode.hidden = false;
+		}
+	}
+
+	oReq.open("post",gConfig.serverURL
+		+ "users/" 
+		+ action + "/" 
+		+ host.cNodes["sr-user"].value
+	,true);
+	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	oReq.send();
 }
 function frfAutolinker( autolinker,match ){
 	switch (match.getType()){
@@ -2137,23 +2576,57 @@ function initDoc(){
 	gConfig.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
-	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
-	switch(gConfig.timeline){
-	case "home":
-	case "filter":
-	case "settings":
-		if(!auth()) return;
-		break;
-	default:
-		if(!auth(true)) gMe = undefined;
+	if(window.localStorage.getItem("show_link_preview") == "1"){
+		var nodeEmScript =  document.createElement("script");
+		(function(w, d){
+			var id='embedly-platform', n = 'script';
+			if (!d.getElementById(id)){
+				w.embedly = w.embedly || function() {(w.embedly.q = w.embedly.q || []).push(arguments);};
+				var e = d.createElement(n); e.id = id; e.async=1;
+				e.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://cdn.embedly.com/widgets/platform.js';
+				var s = d.getElementsByTagName(n)[0];
+				s.parentNode.insertBefore(e, s);
+			}
+		})(window, document);
+		embedly("defaults", {
+			cards: {
+				height: 200
+				//width: 700
+				//align: 'right',
+				//chrome: 0
+			}
+		});
+
+		gEmbed.p = new Promise(function(resolve,reject){
+			var oReq = new XMLHttpRequest();
+			oReq.onload = function(){
+				if(oReq.status < 400)
+					resolve(JSON.parse(oReq.response));
+				else reject(oReq.response);
+			}
+
+			oReq.open("get",gConfig.static + "providers.json",true);
+			oReq.send();
+					
+		});
 	}
+	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
+
+
+	if(["home", "filter", "settings", "requests"].some(function(a){
+		return a == gConfig.timeline;
+	})){
+		if(!auth()) return;
+	}else if(!auth(true)) gMe = undefined;
 	if(gConfig.timeline == "settings")return drawSettings();
+	if(gConfig.timeline == "requests")return drawRequests();
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		document.getElementById("loading").innerHTML = "Building page";
 		if(oReq.status < 400){
 			draw(JSON.parse(this.response));
 			addIcon("favicon.ico");
+			return;
 		}
 		else{
 			if (oReq.status==401)

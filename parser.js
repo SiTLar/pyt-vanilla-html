@@ -125,11 +125,11 @@ function addUser (user){
 		break;
 	case "screen_u":
 		if(user.screenName != user.username)
-			userTitle  = user.screenName + " <span class=username>(" + user.username + ")</span>";
-		else userTitle  = "<span class=username>"+user.username+"</span>";
+			userTitle  = user.screenName + " <div class=username>(" + user.username + ")</div>";
+		else userTitle  = "<div class=username>"+user.username+"</div>";
 		break;
 	case "username":
-		userTitle  = "<span class=username>"+user.username+"</span>";
+		userTitle  = "<div class=username>"+user.username+"</div>";
 	}
 	if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
 		className = (user.id==gMe.users.id?"my-link":"not-my-link");
@@ -271,11 +271,11 @@ function loadGlobals(data){
 					break;
 				case "screen_u":
 					if(user.screenName != user.username)
-						userTitle  = user.screenName + " <span class=username>("+user.username+")</span>";
-					else userTitle  = "<span class=username>"+user.username+"</span>";
+						userTitle  = user.screenName + " <div class=username>("+user.username+")</div>";
+					else userTitle  = "<div class=username>"+user.username+"</div>";
 					break;
 				case "username":
-					userTitle  = "<span class=username>"+user.username+"</span>";
+					userTitle  = "<div class=username>"+user.username+"</div>";
 				}
 				var className = "not-my-link";
 				if((typeof gMe !== "undefined")&&(typeof gMe.users !== "undefined"))
@@ -473,6 +473,7 @@ function draw(content){
 		var singlePost = genPost(content.posts);
 		body.appendChild(singlePost);
 		var nodesHide = singlePost.getElementsByClassName("hide");
+		singlePost.hidden = false;
 		if (nodesHide.lenght)nodesHide[0].hidden = true;
 		document.title = "@" 
 			+ gUsers[singlePost.rawData.createdBy].username + ": "

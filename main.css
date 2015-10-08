@@ -271,19 +271,12 @@ h1{
 .likes {
 	margin-bottom: 0.4em;
 }
-.p-timeline-user-like {
-	display: inline-block;
-}
-.likes ul{
-	float: left;
-	list-style: outside none none;
-	margin: 0 4px 4px 1.5em;
-	padding: 0;
-}
-.post-body .likes ul li {
+.post-body .likes span a {
 	display: inline;
 }
-
+.username{
+	display:inline;
+}
 .post-body .comma span:nth-child(1n+1)::after{
 	content: ",";
 	margin-right:.3em;

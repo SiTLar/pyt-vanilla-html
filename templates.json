@@ -9,7 +9,19 @@ var templates =  {"nodes": [
 		"children":[
 			{"c":"title"},
 			{"c":"post-cont"},
-			{"c":"attachments"},
+			{"c":"attachments",
+			"children":[
+				{"c":"atts-img"}
+				,{"c":"atts-unfold", "p":{"hidden":"true"},
+				"children":[
+					{"c":"unfold-action","t":"input", "p":{"type":"hidden", "value":"true"}}
+					,{"t":"a","e":{"click":"unfoldAttImgs"}, 
+					"children":[
+						,{"c":"fa fa-chevron-down fa-2x","t":"i"}
+					]}
+				]},
+				,{"c":"atts-audio"}
+			]},
 			{"c":"post-info",
 			"children":[
 				{"c":"post-controls",
@@ -41,19 +53,20 @@ var templates =  {"nodes": [
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-priv","t":"a","txt":"secrets","e":{"click":"ctrlPriv"}},
 		{"t":"span","txt":" &#8226; "},
-		{"c":"user-priv","t":"a","txt":"settings","e":{"click":"goSettings"}},
+		{"c":"user-priv","t":"a","txt":"settings","e":{"mousedown":"goSettings"}},
 		{"t":"span","txt":" &#8226; "},
 		{"c":"user-logout","t":"a","txt":"logout","e":{"click":"logout"}},
-		{"c":"rt"},
-		{"t":"hr"}
+		{"c":"sr-info","p":{"id":"sr-info","hidden":"true"},
+		"children":[
+			{"c":"sr-info-a","t":"a","e":{"mousedown":"goRequests"}}
+		]}
 	]
 	},
 	{"c":"controls-anon","t":"div",
 	"children":[
 		{"c":"user-signup","t":"a","txt":""},
-		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}},
-		{"c":"rt"},
-		{"t":"hr"}
+		{"t":"span","txt":" &#8226; "},
+		{"c":"user-login","t":"a","txt":"login","e":{"click":"auth"}}
 	]
 	},
 
@@ -80,7 +93,6 @@ var templates =  {"nodes": [
 		{"c":"spacer","t":"span","txt":"-"}
 		, {"c":"href","t":"a","txt":"Hide","e":{"click":"postHide"}}
 	]},
-	{"c":"attachment"},
 	{"c":"comment",
 	"children":[
 		{"c":"comment-date","e":{"mouseover":"calcCmtTime", "click":"genUserPopup"},
@@ -101,7 +113,7 @@ var templates =  {"nodes": [
 	]},
 	{"c":"edit",
 	"children":[
-		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
 		{"c":"edit-buttons",
 		"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"},
@@ -112,7 +124,7 @@ var templates =  {"nodes": [
 	{"c":"new-post",
 	"children":[
 		{"c":"new-post-to"},
-		{"c":"edit-txt-area","t":"textarea","e":{"keyup": "processText"}},
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown": "processText"}},
 
 		{"c":"attachments"},
 		{"c":"edit-buttons",
@@ -126,7 +138,7 @@ var templates =  {"nodes": [
 		{"t":"span", "txt":"Post to:"},
 		{"c":"new-post-feeds","t":"ul",
 		"children":[
-			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":"newPostRemoveFeed"} }	
+			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":"newPostRemoveFeed"} }
 		]},
 		{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":"newPostSelect"}  },
 		{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":"newPostAddFeed"} }
@@ -268,33 +280,64 @@ var templates =  {"nodes": [
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-d","t":"a", "txt":"Direct"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"up-b","t":"a", "txt":"Block"}
+		,{"c":"up-b","t":"a", "txt":"Block","e":{"click":"genBlock"}}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":"getUsername"}}
 
 	]}
-
-	,{"c":"rt-controls"
+	,{"c":"up-block","e":{"mouseleave":"destroy"}
 	,"children":[
-		{"c":"rt-chkbox","t":"input","p":{"type":"checkbox"}, "e":{"click":"realTimeSwitch"} }
-		,{"t":"span", "txt":"update feed in real-time"}
-		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"t":"span", "txt":"Bumping cooldown:"}
-		,{"c":"rt-bump", "t":"select","e":{"change":"setRTCooldown"} 
+		{"c":"up-close","e":{"click":"upClose"}
 		,"children":[
-			{"t":"option", "txt":"no bumping", "p":{"value":0}}
-			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
-			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
-		]} 
-	]} 
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "value":"blockPosts"}, "e":{"click":"doBlockPosts"} }
+			,{"t":"span", "txt":"Block&nbsp;posts"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "value":"blockComments"}, "e":{"click":"doBlockCom"} }
+			,{"t":"span", "txt":"Block&nbsp;comments"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "value":"banIds"}, "e":{"click":"doBan"} }
+			,{"t":"span", "txt":"Ban"}
+		]}
+	]}
 	,{"c":"global-settings"
 	,"children":[
-		{"t":"h3","txt":"Display names" }
+		{"t":"h3","txt":"Profile" }
+		,{"t":"p", "txt":"Screen name:"}
+		,{"c":"gs-input","t":"input","p":{"id":"my-screen-name"}}
+		,{"t":"p", "txt":"Email:"}
+		,{"c":"gs-input","t":"input","p":{"id":"my-email"}}
+		,{"t":"label"
+		,"children":[
+			,{"t":"input" ,"p":{"type":"checkbox", "id":"me-private"}}
+			,{"t":"span","txt":"Private feed (only let people I approve see my feed)" }
+		]}
+		,{"c":"prof-upd"
+		,"children":[
+			,{"t":"button","txt":"Update","e":{"click":"updateProfile"}}
+			,{"c":"spacer","t":"span","txt":"&nbsp;"}
+			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":"true"}
+			,"children":[
+				{"c":"fa fa-spinner fa-pulse","t":"i"}
+			]}
+		]}
+		,{"p":{"id":"update-status"}}
+		,{"t":"h3","txt":"Display names style" }
 		,{"c":"radio", "t":"label"
 		,"children":[
 			,{"t":"input"
 				,"p":{"type":"radio", "value":"screen", "name":"display_name"}
-				,"e":{"change":"setScreenNameView"} 
+				,"e":{"change":"setScreenNameView"}
 			}
 			,{"t":"span","txt":"Screen name"}
 		]}
@@ -305,7 +348,7 @@ var templates =  {"nodes": [
 				,"e":{"change":"setScreenNameView"}
 			}
 			,{"t":"span" ,"txt":"Screen name (username)"}
-		]} 
+		]}
 		,{"c":"radio", "t":"label"
 		,"children":[
 			,{"c":"radio", "t":"input"
@@ -313,14 +356,14 @@ var templates =  {"nodes": [
 				,"e":{"change":"setScreenNameView"}
 			}
 			,{"t":"span","txt":"Username"}
-		]} 
-		,{"t":"h3","txt":"Link previews","p":{"hidden":"true"} }
-		,{"t":"label","p":{"hidden":"true"} 
+		]}
+		,{"t":"h3","txt":"Link previews"}
+		,{"t":"label"
 		,"children":[
 			,{"t":"input"
-				,"p":{"hidden":"true","type":"checkbox"}, "e":{"click":"linkPrevoewSwitch" }
+				,"p":{"type":"checkbox", "id":"link-preview"}, "e":{"click":"linkPreviewSwitch" }
 			}
-			,{"t":"span","txt":"Show link preview","p":{"hidden":"true"} }
+			,{"t":"span","txt":"Show link preview"}
 		]} 
 		,{"t":"h3","txt":"Real-time Updates" }
 		,{"t":"label"
@@ -330,15 +373,60 @@ var templates =  {"nodes": [
 			}
 			,{"t":"span","txt":"Update feed in real-time"}
 		]}
-		,{"t":"span", "txt":"Bumping cooldown:"}
-		,{"t":"select","e":{"change":"setRTCooldown"}, "p":{"id":"rt-bump" }
+		,{"t":"label"
 		,"children":[
-			{"t":"option", "txt":"no bumping", "p":{"value":0}}
-			,{"t":"option", "txt":"5 minutes", "p":{"value":300}}
-			,{"t":"option", "txt":"20 minutes", "p":{"value":1200}}
+			,{"t":"input"
+				,"p":{"type":"checkbox", "id":"rt-bump"}, "e":{"click":"setRTBump" }
+			}
+			,{"t":"span","txt":"Bump posts with new comments"}
 		]} 
+		,{"c":"rt-params","p":{"id":"rt-params","hidden":"true"}
+		,"children":[
+			,{"t":"label"
+			,"children":[
+				{"t":"p", "txt":"Bumping interval:"}
+				,{"t":"input"
+					,"p":{"type":"range", "min":"1","max":"10", "value":"1","step":"1"
+						,"id":"rt-bump-int"}
+					, "e":{"change":"setRTparams"} 
+				}
+				,{"t":"span"}
+			]}
+			,{"t":"label"
+			,"children":[
+				{"t":"p", "txt":"Bumping cooldown:"}
+				,{"t":"input"
+					,"p":{"type":"range","min":"0", "max":"60", "value":"20","step":"1"
+						,"id":"rt-bump-cd"}
+					, "e":{"change":"setRTparams"} 
+				}
+				,{"t":"span"}
+			]}
+			,{"t":"label"
+			,"children":[
+				{"t":"p", "txt":"Bumping delay:"}
+				,{"t":"input"
+					,"p":{"type":"range","min":"0", "max":"10", "value":"0","step":"1"
+						,"id":"rt-bump-d"}
+					, "e":{"change":"setRTparams"} 
+				}
+				,{"t":"span"}
+			]}
+		]}
 
-	]} 
+	]}
+	,{"c":"sub-request"
+	,"children":[
+		{"c":"sr-avatar", "t":"img"}
+		,{"c":"sr-name"}
+		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-ctrl"
+		,"children":[
+			{"t":"a","txt":"Accept request", "e":{"click":"srAccept"}}
+			,{"c":"spacer","t":"span","txt":"&mdash;"}
+			,{"t":"a","txt":"Reject request", "e":{"click":"srReject"}}
+		]}
+	]}
 
 ]}
 

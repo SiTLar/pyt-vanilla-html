@@ -312,7 +312,24 @@ var templates =  {"nodes": [
 	]}
 	,{"c":"global-settings"
 	,"children":[
-		{"t":"h3","txt":"Profile" }
+		{"t":"h3","txt":"Theme"}
+		,{"c":"radio", "t":"label"
+		,"children":[
+			,{"t":"input"
+				,"p":{"type":"radio", "value":"main.css", "name":"display_theme"}
+				,"e":{"change":"setRadioOption"}
+			}
+			,{"t":"span","txt":"Expanded"}
+		]}
+		,{"c":"radio", "t":"label"
+		,"children":[
+			,{"c":"radio", "t":"input"
+				,"p":{"type":"radio", "value":"compact.css", "name":"display_theme"}
+				,"e":{"change":"setRadioOption"}
+			}
+			,{"t":"span","txt":"Compact"}
+		]}
+		,{"t":"h3","txt":"Profile" }
 		,{"t":"p", "txt":"Screen name:"}
 		,{"c":"gs-input","t":"input","p":{"id":"my-screen-name"}}
 		,{"t":"p", "txt":"Email:"}
@@ -337,7 +354,7 @@ var templates =  {"nodes": [
 		,"children":[
 			,{"t":"input"
 				,"p":{"type":"radio", "value":"screen", "name":"display_name"}
-				,"e":{"change":"setScreenNameView"}
+				,"e":{"change":"setRadioOption"}
 			}
 			,{"t":"span","txt":"Screen name"}
 		]}
@@ -345,7 +362,7 @@ var templates =  {"nodes": [
 		,"children":[
 			,{"c":"radio", "t":"input"
 				,"p":{"type":"radio", "value":"screen_u", "name":"display_name"}
-				,"e":{"change":"setScreenNameView"}
+				,"e":{"change":"setRadioOption"}
 			}
 			,{"t":"span" ,"txt":"Screen name (username)"}
 		]}
@@ -353,7 +370,7 @@ var templates =  {"nodes": [
 		,"children":[
 			,{"c":"radio", "t":"input"
 				,"p":{"type":"radio", "value":"username", "name":"display_name"}
-				,"e":{"change":"setScreenNameView"}
+				,"e":{"change":"setRadioOption"}
 			}
 			,{"t":"span","txt":"Username"}
 		]}

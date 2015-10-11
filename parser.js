@@ -953,7 +953,7 @@ function genPost(post){
 		gPrivTimeline.posts.push(nodePost);
 		gPrivTimeline.postsById[post.id] = nodePost;
 		nodePost.rawData.body = cpost.payload.data;
-		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.payload.data.replace(/\n/g,"").replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		postNBody.cNodes["post-cont"].innerHTML = autolinker.link(cpost.payload.data.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		if(typeof user === "undefined"){
 			if (gUsers.byName[cpost.payload.author]){
 				user = gUsers.byName[cpost.payload.author];
@@ -1738,7 +1738,7 @@ function genComment(comment){
 	}
 	function spam(){nodeComment = document.createElement("span");};
 	nodeComment.cNodes["comment-body"].appendChild(nodeSpan);
-	nodeSpan.innerHTML = autolinker.link(comment.body.replace(/\n/g,"").replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+	nodeSpan.innerHTML = autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 	nodeComment.id = comment.id;
 	nodeComment.createdAt = comment.createdAt;
 	if(typeof cUser !== "undefined"){

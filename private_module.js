@@ -108,7 +108,7 @@ CryptoPrivate.prototype = {
 
 					}else reject();
 				}
-				oReqS.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+				oReqS.setRequestHeader("X-Authentication-Token", gConfig.token);
 				oReqS.setRequestHeader("Content-type","application/json");
 				oReqS.send(JSON.stringify({"d":keyPuA}));
 			}

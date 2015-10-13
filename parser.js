@@ -117,7 +117,7 @@ function addUser (user){
 	if (typeof gUsers[user.id] !== "undefined" ) return;
 	var className = "not-my-link";
 	var userTitle;
-	var mode = window.localStorage.getItem("screenname");
+	var mode = window.localStorage.getItem("display_name");
 	if (mode == null) mode = "screen";
 	switch(mode){
 	case "screen":
@@ -263,7 +263,7 @@ function loadGlobals(data){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 				var userTitle;
 				var user = subscribers[sub.user];
-				var mode = window.localStorage.getItem("screenname");
+				var mode = window.localStorage.getItem("display_name");
 				if (mode == null) mode = "screen";
 				switch(mode){
 				case "screen":
@@ -286,8 +286,8 @@ function loadGlobals(data){
 		});
 	}
 }
-function setScreenNameView(e){
-	window.localStorage.setItem("screenname",e.target.value );
+function setRadioOption(e){
+	window.localStorage.setItem(e.target.name, e.target.value );
 
 }
 function makeContainer(){
@@ -318,13 +318,18 @@ function drawSettings(){
 	document.getElementById("my-screen-name").value = gMe.users.screenName;
 	if(typeof gMe.users.email !== "undefined" )document.getElementById("my-email").value = gMe.users.email;
 	document.getElementById("me-private").checked = (gMe.users.isPrivate == 1);
-	var mode = window.localStorage.getItem("screenname");
+	var mode = window.localStorage.getItem("display_name");
 	if (mode == null) mode = "screen";
+	var theme = window.localStorage.getItem("display_theme");
+	if (theme  == null) mode = "main.css";
 	var nodes = nodeSettings.getElementsByTagName("input");
 	for(var idx = 0; idx < nodes.length; idx++){
 		var node = nodes[idx];
-		if((node.type == "radio" ) &&(node.name == "display_name") &&(node.value == mode))
-			node.checked = true;
+		if(node.type == "radio" ){
+			if (( node.name == "display_name") &&(node.value == mode)
+			|| ( node.name == "display_theme") &&(node.value == theme))
+				node.checked = true;
+		}
 	};
 	var nodeLinkPreview =  document.getElementById("link-preview");
 	if(window.localStorage.getItem("show_link_preview") == "1")
@@ -982,7 +987,7 @@ function genPost(post){
 		}else gotUser();
 	}
 	function gotUser(){
-		
+		var urlMatch ;		
 		if(( typeof gConfig["blockPosts"]!== "undefined")&& (gConfig["blockPosts"] != null)&& (gConfig["blockPosts"][user.id])){
 			nodePost.hidden = true  ;
 		}
@@ -1016,11 +1021,12 @@ function genPost(post){
 
 				}
 			});		
-		}else if(postNBody.cNodes["post-cont"].getElementsByTagName("a").length
+		}else 
+		if(((urlMatch = post.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
 		&&(window.localStorage.getItem("show_link_preview") == "1")){
 			gEmbed.p.then(function(oEmbedPr){
 				embedPreview(oEmbedPr
-					,postNBody.cNodes["post-cont"].getElementsByTagName("a")[0].href
+					,urlMatch[0]
 					,postNBody.cNodes["attachments"] 
 				);
 			});
@@ -2577,6 +2583,14 @@ function initDoc(){
 	gConfig.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
+	var nameMode = window.localStorage.getItem("screenname");
+	if(nameMode){
+		window.localStorage.setItem("display_name", nameMode);
+		window.localStorage.removeItem("screenname");
+	}
+	var cssTheme = window.localStorage.getItem("display_theme");
+	if(cssTheme) document.getElementById("main-sytlesheet").href = gConfig.static + cssTheme;
+	 
 	if(window.localStorage.getItem("show_link_preview") == "1"){
 		var nodeEmScript =  document.createElement("script");
 		(function(w, d){

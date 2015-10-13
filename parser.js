@@ -507,7 +507,7 @@ function draw(content){
 	for(var idx = 0; idx < nodes.length; idx++ ){
 		var nodePost = nodes[idx];
 		var nodeImgAtt = nodePost.cNodes["post-body"].cNodes["attachments"].cNodes["atts-img"];
-		if(nodeImgAtt.scrollWidth != nodeImgAtt.clientWidth)
+		if(chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	};
 	if(window.localStorage.getItem("show_link_preview") == "1"){
@@ -535,7 +535,18 @@ function draw(content){
   ga("send", "pageview");
 
 }
-
+function chkOverflow(victim){
+	var test = victim.cloneNode(true);
+	test.style.opecity = 0;
+	test.position = "absolute";
+	victim.appendChild(test);
+	test.style.width = victim.clientWidth;
+	var height = test.clientHeight;
+	test.style.display = "block";
+	var ret = test.clientHeight;
+	victim.removeChild(test);
+	return ret;
+}
 function drawRequests(){
 	var oReq = new XMLHttpRequest();
 	oReq.open("get", gConfig.serverURL +"users/whoami", true);

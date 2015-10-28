@@ -622,8 +622,8 @@ function genUpControls(username){
 					oRequests[req.id] = req;
 				});
 			}
-			if(Array.isArray(gMe.users.subscriptionRequests)
-			&&gMe.users.subscriptionRequests.some(function(a){
+			if(Array.isArray(gMe.users.pendingSubscriptionRequests)
+			&&gMe.users.pendingSubscriptionRequests.some(function(a){
 					return oRequests[a].username == username
 				})){
 				controls.cNodes["up-s"] = document.createElement("span");

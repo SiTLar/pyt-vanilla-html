@@ -537,13 +537,13 @@ function draw(content){
 }
 function chkOverflow(victim){
 	var test = victim.cloneNode(true);
-	test.style.opecity = 0;
-	test.position = "absolute";
+	test.style.opacity = 0;
+	test.style.position = "absolute";
 	victim.appendChild(test);
 	test.style.width = victim.clientWidth;
 	var height = test.clientHeight;
 	test.style.display = "block";
-	var ret = test.clientHeight;
+	var ret = height < test.clientHeight;
 	victim.removeChild(test);
 	return ret;
 }

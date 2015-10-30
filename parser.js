@@ -300,7 +300,8 @@ function makeContainer(){
 	title.innerHTML = "<h1>" +gConfig.timeline+ "</h1>"
 	document.title = "FreeFeed: " + gConfig.timeline; 
 	var controls = gNodes["controls-user"].cloneAll();
-	if(Array.isArray(gMe.users.subscriptionRequests)){
+	if((typeof gMe !== "undefined") 
+		&& Array.isArray(gMe.users.subscriptionRequests)){
 		controls.cNodes["sr-info"].cNodes["sr-info-a"].innerHTML = "You have "
 		+ gMe.users.subscriptionRequests.length 
 		+ " subscription requests to review.";
@@ -379,7 +380,7 @@ function draw(content){
 	//var nodeRTControls = gNodes["rt-controls"].cloneAll();
 	if(typeof gMe === "undefined"){
 		var nodeGControls = gNodes["controls-anon"].cloneAll();
-		var controls = body.getElementsByClassName("controls-user");
+		var controls = body.getElementsByClassName("controls-user")[0];
 		body.replaceChild(nodeGControls, controls);
 	}else{
 		if ((typeof gMe.users.subscribers !== "undefined") 

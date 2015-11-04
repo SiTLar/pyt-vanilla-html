@@ -4,11 +4,12 @@ var cfg = {"srvurl":"http://moimosk.ru/cgi/secret?","authurl": gConfig.serverURL
 */
 var CryptoPrivate = function(cfg){
 	this.cfg = cfg;
+	this.storage = window.sessionStorage;
 	if(typeof cfg.authurl === "undefined" ) throw new Error("authurl is not defined");
-	var sSymKeys = window.sessionStorage.getItem("crypto_keys");
-	if (sSymKeys != "undefined")if (sSymKeys) var gSymKeys = JSON.parse(window.sessionStorage.getItem("crypto_keys"));
+	var sSymKeys = this.storage.getItem("crypto_keys");
+	if (sSymKeys != "undefined")if (sSymKeys) var gSymKeys = JSON.parse(this.storage.getItem("crypto_keys"));
 	if(!this.gSymKeys)this.loadKeys(gSymKeys);
-	var c_login = window.sessionStorage.getItem("crypto_login")
+	var c_login = this.storage.getItem("crypto_login")
 	if(c_login){
 		c_login = JSON.parse(c_login);	
 		this.password = atob(c_login.password);
@@ -49,25 +50,25 @@ CryptoPrivate.prototype = {
 	},
 	setPassword: function (pass){
 		this.password = openpgp.crypto.hash.sha256(pass);
-		window.sessionStorage.setItem("crypto_login", JSON.stringify({"password":btoa(this.password), "username":gMe.users.username}));
+		caller.storage.setItem("crypto_login", JSON.stringify({"password":btoa(this.password), "username":gMe.users.username}));
 	},
 	makeToken: function(){
 		var caller = this;
 		return new Promise(function(resolve,reject){
-			var token = window.sessionStorage.getItem("crypto_write_token");
+			var token = caller.storage.getItem("crypto_write_token");
 			if(token) return resolve( token);
 			caller.requestToken().then(function(){
-				token = window.sessionStorage.getItem("crypto_write_token");
+				token = caller.storage.getItem("crypto_write_token");
 				return resolve( token);
 			}, reject);
 		} );
 
 	},
 	logout: function(){
-		sessionStorage.removeItem("key_pub");
-		sessionStorage.removeItem("key_private");
-		sessionStorage.removeItem("crypto_write_token");
-		sessionStorage.removeItem("crypto_keys");
+		caller.storage.removeItem("key_pub");
+		caller.storage.removeItem("key_private");
+		caller.storage.removeItem("crypto_write_token");
+		caller.storage.removeItem("crypto_keys");
 		this.username = undefined;
 		this.password = undefined;
 		this.decipher = new Object();
@@ -77,8 +78,8 @@ CryptoPrivate.prototype = {
 	register: function(){
 		var caller = this;
 		var init  = openpgp.crypto.getPrefixRandom("aes256");
-		var keyPuA = window.sessionStorage.getItem("key_pub");
-		var keyPrA = window.sessionStorage.getItem("key_private");
+		var keyPuA = caller.storage.getItem("key_pub");
+		var keyPrA = caller.storage.getItem("key_private");
 		var my_passphrase = ""; // Key Pairs is always protected with a caller.password to safety.
 		return new Promise(function(resolve,reject){
 			if((typeof caller.password === "undefined")|| (typeof caller.username === "undefined")){
@@ -86,8 +87,8 @@ CryptoPrivate.prototype = {
 				return;
 			}
 			if (!keyPuA)openpgp.generateKeyPair({numBits: 1024, userId: caller.username, passphrase: my_passphrase,unlocked: true }).then (function (a){
-				window.sessionStorage.setItem("key_pub", a.publicKeyArmored);
-				window.sessionStorage.setItem("key_private", a.privateKeyArmored);
+				caller.storage.setItem("key_pub", a.publicKeyArmored);
+				caller.storage.setItem("key_private", a.privateKeyArmored);
 				keyPuA = a.publicKeyArmored;
 				keyPrA = a.privateKeyArmored;
 				go();
@@ -102,13 +103,13 @@ CryptoPrivate.prototype = {
 						var dkey = openpgp.key.readArmored(keyPrA);
 						openpgp.decryptMessage(dkey.keys[0],msgEnc)
 						.then(function(msg){
-							window.sessionStorage.setItem("crypto_write_token",msg);
+							caller.storage.setItem("crypto_write_token",msg);
 							caller.update().then( resolve()); 
 						});
 
 					}else reject();
 				}
-				oReqS.setRequestHeader("X-Authentication-Token", window.localStorage.getItem("token"));
+				oReqS.setRequestHeader("X-Authentication-Token", gConfig.token);
 				oReqS.setRequestHeader("Content-type","application/json");
 				oReqS.send(JSON.stringify({"d":keyPuA}));
 			}
@@ -158,7 +159,7 @@ CryptoPrivate.prototype = {
 	readMsg: function(msgEnc){
 		var caller = this;
 		return new Promise(function(resolve,reject){
-			var keyPrA = window.sessionStorage.getItem("key_private");
+			var keyPrA = caller.storage.getItem("key_private");
 			if(!keyPrA) {
 				getUserPriv().then(function(){caller.readMsg.then(resolve,reject)},reject);
 				return;
@@ -196,7 +197,7 @@ CryptoPrivate.prototype = {
 		if (typeof caller.decipher === "undefined") caller.decipher = new Object();
 		for(var pid in caller.gSymKeys)
 			caller.gSymKeys[pid].aKeys.forEach(function(key){ caller.decipher[key.id] = key.key; });
-		window.sessionStorage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys));
+		caller.storage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys));
 		caller.ready = 1;
 
 	},
@@ -220,7 +221,7 @@ CryptoPrivate.prototype = {
 						return;
 					}
 					secret = JSON.parse(secret);
-					window.sessionStorage.setItem("key_private", secret.prkey);
+					caller.storage.setItem("key_private", secret.prkey);
 					caller.loadKeys(secret.symkeys);
 					resolve();
 				}else reject(oReq.status);
@@ -233,7 +234,7 @@ CryptoPrivate.prototype = {
 	sign: function(data){
 		var caller = this;
 		return new Promise(function(resolve,reject){
-			var keyPrA = window.sessionStorage.getItem("key_private");
+			var keyPrA = caller.storage.getItem("key_private");
 			if(!keyPrA) {
 				caller.getUserPriv().then(function(){caller.requestToken( resolve,reject)},reject);
 				return;
@@ -298,7 +299,7 @@ CryptoPrivate.prototype = {
 	requestToken: function(){
 		var caller = this;
 		return new Promise(function(resolve,reject){
-			var keyPrA = window.sessionStorage.getItem("key_private");
+			var keyPrA = caller.storage.getItem("key_private");
 			if(!keyPrA) {
 				caller.getUserPriv().then(function(){caller.requestToken( resolve,reject)},reject);
 				return;
@@ -311,7 +312,7 @@ CryptoPrivate.prototype = {
 					var dkey = openpgp.key.readArmored(keyPrA);
 					openpgp.decryptMessage(dkey.keys[0],msgEnc
 						).then(function(msg){
-							window.sessionStorage.setItem("crypto_write_token",msg);
+							caller.storage.setItem("crypto_write_token",msg);
 							resolve();
 						},reject);
 				}else reject(oReq.status);
@@ -322,7 +323,7 @@ CryptoPrivate.prototype = {
 	 },
 	update: function(){
 		var caller = this;
-		var keyPrA = window.sessionStorage.getItem("key_private");
+		var keyPrA = caller.storage.getItem("key_private");
 		return new Promise(function(resolve,reject){
 			if((typeof caller.password === "undefined")|| (typeof caller.username === "undefined")){
 				reject();
@@ -336,17 +337,17 @@ CryptoPrivate.prototype = {
 						resolve();
 				}else reject();
 			}
-			var token = window.sessionStorage.getItem("crypto_write_token");
+			var token = caller.storage.getItem("crypto_write_token");
 			if(!token ) {
 				caller.requestToken().then(doReq,reject);
 			}else doReq();
 			function doReq(){
-				token = window.sessionStorage.getItem("crypto_write_token");
+				token = caller.storage.getItem("crypto_write_token");
 				oReq.setRequestHeader("X-Authentication-Token",token);
 				oReq.setRequestHeader("X-Authentication-User",caller.username);
 				oReq.setRequestHeader("Content-type","application/json");
 				oReq.send(JSON.stringify({"d": btoa(openpgp.crypto.cfb.encrypt( init,"aes256", JSON.stringify({"prkey":keyPrA,"symkeys":caller.gSymKeys }),caller.password ))}));
-				window.sessionStorage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys) );
+				caller.storage.setItem("crypto_keys",JSON.stringify(caller.gSymKeys) );
 			}
 		});
 

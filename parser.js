@@ -117,7 +117,7 @@ function addUser (user){
 	if (typeof gUsers[user.id] !== "undefined" ) return;
 	var className = "not-my-link";
 	var userTitle;
-	var mode = window.localStorage.getItem("display_name");
+	var mode = gConfig.localStorage.getItem("display_name");
 	if (mode == null) mode = "screen";
 	switch(mode){
 	case "screen":
@@ -168,7 +168,7 @@ function doUnBan(e){
 		if(oReq.status < 400) {
 			var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
 			if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
-			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+			gConfig.localStorage.setItem("gMe",JSON.stringify(gMe));
 			setChild(nodeHost.parentNode, "up-controls", genUpControls(username));
 		}
 	}
@@ -194,7 +194,7 @@ function doBan(e){
 				var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
 				if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
 			}
-			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+			gConfig.localStorage.setItem("gMe",JSON.stringify(gMe));
 			setChild(nodePopUp.parentNode.parentNode, "up-controls", genUpControls(username));
 		}
 	}
@@ -230,10 +230,10 @@ function updateBlockList(list, username, add){
 	if(add){
 		if ((typeof gConfig[list] === "undefined") || (gConfig[list] == null)) gConfig[list] = new Object();
 		gConfig[list][id] = true;
-		window.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+		gConfig.localStorage.setItem(list, JSON.stringify(gConfig[list]));
 	}else try{
 		delete gConfig[list][id];
-		window.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+		gConfig.localStorage.setItem(list, JSON.stringify(gConfig[list]));
 	}catch(e){};
 }
 function subscribe(e){
@@ -244,7 +244,7 @@ function subscribe(e){
 	oReq.onload = function(){
 		if(oReq.status < 400) {
 			gMe = JSON.parse(oReq.response);
-			window.localStorage.setItem("gMe",JSON.stringify(gMe));
+			gConfig.localStorage.setItem("gMe",JSON.stringify(gMe));
 			gUsers.byName[username].friend = !e.target.subscribed;
 			setChild(e.target.parentNode.parentNode, "up-controls", genUpControls(username));
 		}
@@ -263,7 +263,7 @@ function loadGlobals(data){
 			if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 				var userTitle;
 				var user = subscribers[sub.user];
-				var mode = window.localStorage.getItem("display_name");
+				var mode = gConfig.localStorage.getItem("display_name");
 				if (mode == null) mode = "screen";
 				switch(mode){
 				case "screen":
@@ -287,7 +287,7 @@ function loadGlobals(data){
 	}
 }
 function setRadioOption(e){
-	window.localStorage.setItem(e.target.name, e.target.value );
+	gConfig.localStorage.setItem(e.target.name, e.target.value );
 
 }
 function makeContainer(){
@@ -318,9 +318,9 @@ function drawSettings(){
 	document.getElementById("my-screen-name").value = gMe.users.screenName;
 	if(typeof gMe.users.email !== "undefined" )document.getElementById("my-email").value = gMe.users.email;
 	document.getElementById("me-private").checked = (gMe.users.isPrivate == 1);
-	var mode = window.localStorage.getItem("display_name");
+	var mode = gConfig.localStorage.getItem("display_name");
 	if (mode == null) mode = "screen";
-	var theme = window.localStorage.getItem("display_theme");
+	var theme = gConfig.localStorage.getItem("display_theme");
 	if (theme  == null) mode = "main.css";
 	var nodes = nodeSettings.getElementsByTagName("input");
 	for(var idx = 0; idx < nodes.length; idx++){
@@ -332,15 +332,15 @@ function drawSettings(){
 		}
 	};
 	var nodeLinkPreview =  document.getElementById("link-preview");
-	if(window.localStorage.getItem("show_link_preview") == "1")
+	if(gConfig.localStorage.getItem("show_link_preview") == "1")
 		nodeLinkPreview.checked = true;
 	else nodeLinkPreview.checked = false;
 
-	document.getElementById("rt-chkbox").checked = parseInt(window.localStorage.getItem("rt"));
-	var bump = (window.localStorage.getItem("rtbump") == 1);
+	document.getElementById("rt-chkbox").checked = parseInt(gConfig.localStorage.getItem("rt"));
+	var bump = (gConfig.localStorage.getItem("rtbump") == 1);
 	document.getElementById("rt-params").hidden = !bump;
 	document.getElementById("rt-bump").checked = bump ;
-	var oRTParams = window.localStorage.getItem("rt_params");
+	var oRTParams = gConfig.localStorage.getItem("rt_params");
 	if (oRTParams != null)
 		oRTParams = JSON.parse(oRTParams);
 	["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
@@ -361,6 +361,7 @@ function drawSettings(){
 }
 function draw(content){
 	matrix = new CryptoPrivate(gCryptoPrivateCfg );
+	matrix.storage = gConfig.sessionStorage;
 	/*
 	var body = document.createElement("div");
 	body.className = "content";
@@ -374,7 +375,7 @@ function draw(content){
 	loadGlobals(content);
 	gConfig.cTxt = null;
 	["blockPosts", "blockComments"].forEach(function(list){
-		gConfig[list]= JSON.parse(window.localStorage.getItem(list));
+		gConfig[list]= JSON.parse(gConfig.localStorage.getItem(list));
 	})
 	//var nodeRTControls = gNodes["rt-controls"].cloneAll();
 	if(typeof gMe === "undefined"){
@@ -488,7 +489,7 @@ function draw(content){
 	}
 /*
 	var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
-	nodeRTCtrl.cNodes["rt-chkbox"].checked = parseInt(window.localStorage.getItem("rt"));
+	nodeRTCtrl.cNodes["rt-chkbox"].checked = parseInt(gConfig.localStorage.getItem("rt"));
 	var nodeBump = nodeRTCtrl.cNodes["rt-bump"];
 	for(var idx = 0; idx<nodeBump.childNodes.length; idx++)
 		if(nodeBump.childNodes[idx].value == bump){
@@ -496,10 +497,10 @@ function draw(content){
 			break;
 		}
 	*/
-	var bump = window.localStorage.getItem("rtbump");
+	var bump = gConfig.localStorage.getItem("rtbump");
 	if(content.timelines) gConfig.rt = {"timeline":[content.timelines.id]};
 	else gConfig.rt = {"post":[content.posts.id]};
-	if(parseInt(window.localStorage.getItem("rt")) ){
+	if(parseInt(gConfig.localStorage.getItem("rt")) ){
 		gRt = new RtUpdate(gConfig.token, bump);
 		gRt.subscribe(gConfig.rt);
 	}
@@ -510,7 +511,7 @@ function draw(content){
 		if(chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	};
-	if(window.localStorage.getItem("show_link_preview") == "1"){
+	if(gConfig.localStorage.getItem("show_link_preview") == "1"){
 		(function(a,b,c){
 			var d,e,f;
 			f="PIN_"+~~((new Date).getTime()/864e5),
@@ -1034,7 +1035,7 @@ function genPost(post){
 			});		
 		}else 
 		if(((urlMatch = post.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
-		&&(window.localStorage.getItem("show_link_preview") == "1")){
+		&&(gConfig.localStorage.getItem("show_link_preview") == "1")){
 			gEmbed.p.then(function(oEmbedPr){
 				embedPreview(oEmbedPr
 					,urlMatch[0]
@@ -1875,14 +1876,7 @@ function genNodes(templates){
 function auth(check){
 	gConfig.token = getCookie(gConfig.tokenPrefix + "authToken");
 	var txtgMe = null;
-	try{txtgMe = window.localStorage.getItem("gMe");} catch(e){
-		window.localStorage ={
-			setItem: function(){return;}
-			,getItem: function(){return null;}
-			,removeItem: function(){return null;}
-		};
-		window.sessionStorage = window.localStorage;
-	}
+	txtgMe = gConfig.localStorage.getItem("gMe");
 	if (txtgMe && gConfig.token){
 		gMe = JSON.parse(txtgMe);
 		if (gMe.users) {
@@ -1928,7 +1922,7 @@ function auth(check){
 
 }
 function refreshgMe(){
-	window.localStorage.setItem("gMe",JSON.stringify(gMe));
+	gConfig.localStorage.setItem("gMe",JSON.stringify(gMe));
 	delete gUsers[gMe.users.id];
 	addUser(gMe.users);
 	var links = document.getElementsByClassName("my-link");
@@ -1946,7 +1940,6 @@ function refreshgMe(){
 		gConfig.subReqsCount = 0;
 		nodeSR.hidden = true;
 	}
-	
 }
 function getauth(oFormElement){
 	var oReq = new XMLHttpRequest();
@@ -1968,7 +1961,7 @@ function getauth(oFormElement){
 function logout(){
 	matrix.ready = 0;
 	try{matrix.logout();}catch(e){};
-	window.localStorage.removeItem("gMe");
+	gConfig.localStorage.removeItem("gMe");
 	deleteCookie(gConfig.tokenPrefix + "authToken");
 	location.reload();
 }
@@ -2482,8 +2475,8 @@ function updateProfile(e){
 	oReq.send(JSON.stringify({"user":gMe.users}));
 }
 function realTimeSwitch(e){
-	if(e.target.checked )window.localStorage.setItem("rt",1);
-	else window.localStorage.setItem("rt",0);
+	if(e.target.checked )gConfig.localStorage.setItem("rt",1);
+	else gConfig.localStorage.setItem("rt",0);
 	if(gConfig.timeline == "settings") return;
 	var bump = e.target.parentNode.cNodes["rt-bump"].value;
 	if(e.target.checked && !gRt.on){
@@ -2503,16 +2496,16 @@ function setRTparams(e){
 	["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
 		oRTParams[id] = document.getElementById(id).value;
 	});
-	window.localStorage.setItem("rt_params",JSON.stringify(oRTParams) );
+	gConfig.localStorage.setItem("rt_params",JSON.stringify(oRTParams) );
 }
 function setRTBump(e){
 	var bump = e.target.checked;
-	window.localStorage.setItem("rtbump",bump?1:0);
+	gConfig.localStorage.setItem("rtbump",bump?1:0);
 	document.getElementById("rt-params").hidden = !bump;
 }
 function linkPreviewSwitch(e){
-	if(e.target.checked )window.localStorage.setItem("show_link_preview",1);
-	else window.localStorage.setItem("show_link_preview",0);
+	if(e.target.checked )gConfig.localStorage.setItem("show_link_preview",1);
+	else gConfig.localStorage.setItem("show_link_preview",0);
 }
 function srAccept(e){
 	sendReqResp(e.target, "acceptRequest" );
@@ -2585,7 +2578,20 @@ function addIcon(ico){
 	linkFavicon.href = gConfig.static + ico;
 	document.getElementsByTagName('head')[0].appendChild(linkFavicon);
 }
+function setStorage(){
+	["localStorage", "sessionStorage"].forEach(function(storage){
+		gConfig[storage] = new Object();
+		["setItem", "getItem", "removeItem"].forEach(function(action){
+			gConfig[storage][action] = function(){
+				try{
+					return window[storage][action].apply(window[storage],arguments);
+				} catch(e){return null};
+			}
+		});
+	});
+}
 function initDoc(){
+	setStorage();
 	addIcon("throbber-16.gif");
 	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 	var locationSearch = document.location.search;
@@ -2594,15 +2600,15 @@ function initDoc(){
 	gConfig.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
 	var arrLocationPath = locationPath.split("/");
 	gConfig.timeline = arrLocationPath[0];
-	var nameMode = window.localStorage.getItem("screenname");
+	var nameMode = gConfig.localStorage.getItem("screenname");
 	if(nameMode){
-		window.localStorage.setItem("display_name", nameMode);
-		window.localStorage.removeItem("screenname");
+		gConfig.localStorage.setItem("display_name", nameMode);
+		gConfig.localStorage.removeItem("screenname");
 	}
-	var cssTheme = window.localStorage.getItem("display_theme");
+	var cssTheme = gConfig.localStorage.getItem("display_theme");
 	if(cssTheme) document.getElementById("main-sytlesheet").href = gConfig.static + cssTheme;
 	 
-	if(window.localStorage.getItem("show_link_preview") == "1"){
+	if(gConfig.localStorage.getItem("show_link_preview") == "1"){
 		var nodeEmScript =  document.createElement("script");
 		(function(w, d){
 			var id='embedly-platform', n = 'script';
@@ -2638,7 +2644,6 @@ function initDoc(){
 	}
 	genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 
-
 	if(["home", "filter", "settings", "requests"].some(function(a){
 		return a == gConfig.timeline;
 	})){
@@ -2655,20 +2660,11 @@ function initDoc(){
 			return;
 		}
 		else{
-			if (oReq.status==401)
-				{
-					deleteCookie("token");
-					try {localStorage.removeItem("gMe");}catch(e){
-
-						window.localStorage ={
-							setItem: function(){return;}
-							,getItem: function(){return null;}
-							,removeItem: function(){return null;}
-						};
-						window.sessionStorage = window.localStorage;
-					};
-					location.reload();
-				}
+			if (oReq.status==401) {
+				deleteCookie("token");
+				gConfig.localStorage.removeItem("gMe");
+				location.reload();
+			}
 			if(auth())
 				document.getElementsByTagName("body")[0].appendChild(gNodes["controls-user"].cloneAll());
 			var nodeError = document.createElement("div");
@@ -2700,5 +2696,6 @@ function initDoc(){
 
 	oReq.open("get",gConfig.xhrurl+locationSearch,true);
 	oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+	document.getElementById("loading").innerHTML = "Loading content";
 	oReq.send();
 }

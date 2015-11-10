@@ -1315,6 +1315,7 @@ function postEditedPost(e){
 	post.createdAt = nodePost.rawData.createdAt;
 	post.createdBy = nodePost.rawData.createdBy;
 	post.updatedAt = Date.now();
+	post.attachments = nodePost.rawData.attachments;
 	var postdata = new Object();
 	postdata.post = post;
 	e.target.parentNode.parentNode.cNodes["edit-txt-area"].disabled = true;

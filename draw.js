@@ -1,11 +1,8 @@
 "use strict";
-var Utils = require("./utils.js");
-var Autolinker = require("autolinker"); 
-//var Drawer = {
-var doc;
-var gNodes;
-var Drawer = {
-	init:function(d, n){doc = d; gNodes = n;}
+define("Drawer", ["./utils", "./Autolinker.min"],function(Utils, Autolinker){return {
+	doc: Object
+	,gNodes: Object
+	,init:function(d, n){doc = d; gNodes = n;}
 	,"writeAllLikes":function(id,nodeLikes){
 		var post = doc.getElementById(id).rawData;
 		nodeLikes.innerHTML = "";
@@ -95,6 +92,7 @@ var Drawer = {
 	}
 
 	,"draw":function(content){
+		var Drawer = this;
 		autolinker = new Autolinker({"truncate":20,  "replaceFn":Drawer.frfAutolinker } );
 		var body = doc.createElement("div");
 		body.className = "content";
@@ -300,6 +298,7 @@ var Drawer = {
 		});
 	}
 	,"updateDate":function(node){
+		var Drawer = this;
 		node.innerHTML =  Utils["relative_time"](node.date);
 		var txtdate = new Date(node.date).toString();
 		node.title = txtdate.slice(0, txtdate.indexOf("(")).trim();
@@ -307,6 +306,7 @@ var Drawer = {
 	}
 	 
 	,"genPost":function(post){
+		var Drawer = this;
 		function spam(){nodePost = doc.createElement("span");};
 		function ham(){
 			nodePost.feed = cpost.payload.feed;
@@ -458,8 +458,8 @@ var Drawer = {
 		var post = nodePost.rawData;
 		var user = gUsers[post.createdBy];
 		var title = user.link;
-		if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
-		else if(post.postedTo){
+		//if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
+		if(post.postedTo){
 			nodePost.gotLock  = true;
 			post.postedTo.forEach(function(id){ 
 				if (gFeeds[id].isPrivate == "0")
@@ -547,16 +547,6 @@ var Drawer = {
 	}
 
 
-	,"genCNodes":function(node, proto){
-		node.cNodes = new Object(); 
-		for(var idx = 0; idx <  node.childNodes.length; idx++){
-			Drawer.genCNodes(node.childNodes[idx], proto.childNodes[idx]);
-			node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
-		}
-		if (typeof(proto.e) !== "undefined" ) 
-			for(var action in proto.e)
-				node.addEventListener(action, Actions[proto.e[action]]);	
-	}
 
 	,"genDirectTo":function(victim){
 		var nodeDirectTo = gNodes["new-direct-to"].cloneAll();
@@ -588,7 +578,8 @@ var Drawer = {
 		nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
 		gConfig.regenPostTo = function (){return Drawer.genDirectTo(victim);};
 	}
-	,"genPostTo": function(victim){
+	,"genPostTo":function(victim){ 
+		var Drawer = this;
 		var nodePostTo = gNodes["new-post-to"].cloneAll(); 
 		victim.replaceChild(nodePostTo, victim.cNodes["new-post-to"]);
 		//console.log(victim);
@@ -633,6 +624,7 @@ var Drawer = {
 			nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
 		groups = doc.createElement("optgroup");
 		groups.label = "Private groups";
+		/*
 		for (var id in matrix.gSymKeys){
 			option = doc.createElement("option");
 			option.value = id;
@@ -640,6 +632,7 @@ var Drawer = {
 			option.innerHTML = StringView.makeFromBase64(matrix.gSymKeys[id].name);
 			groups.appendChild(option);
 		}
+		*/
 		if (groups.childNodes.length > 0 )
 			nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
 		
@@ -669,6 +662,4 @@ var Drawer = {
 			return true;
 		}
 	}
-}
-module.exports = Drawer;
-Drawer 
+};});

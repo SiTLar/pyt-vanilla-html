@@ -9,6 +9,7 @@ var shortid = require("shortid");
 	this.childNodes = new Array();
 	this.style = new Object();
 	this.eventHost = new Object();
+	//this.id = "eh-" + shortid.generate();
  };
 Element.prototype = {
  	constructor: Element
@@ -99,7 +100,7 @@ Element.prototype = {
 		},out);
 	}
 	,addEventListener: function(e, handler){
-		if (typeof this.id === "undefined") this.id = "eh-" + shortid.generate();
+		//if (typeof this.id === "undefined") this.id = "eh-" + shortid.generate();
 		if (typeof this.eventHost[this.id] === "undefined") 
 			this.eventHost[this.id] = new Object();
 		if (typeof this.eventHost[this.id][e] === "undefined") 

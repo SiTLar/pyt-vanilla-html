@@ -1,5 +1,5 @@
 "use strict";
-var Actions = {
+define("Actions",[],function() {return{
 	"newPost": function(e){
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 		textField.disabled = true;
@@ -824,5 +824,5 @@ var Actions = {
 		window.localStorage.setItem("rtbump",bump);
 		if(gRt.on)gRt.handlers.setBumpCooldown( bump);
 	}
-}
+}});
 

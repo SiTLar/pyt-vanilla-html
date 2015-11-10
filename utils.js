@@ -1,4 +1,4 @@
-module.exports = {
+define("Utils", function(){return {
 
 	/*source: http://stackoverflow.com/a/7516652 */
 	"relative_time": function(date) {
@@ -77,4 +77,4 @@ module.exports = {
 		gUsers.byName[user.username] = user;
 	}
 
-}
+};});

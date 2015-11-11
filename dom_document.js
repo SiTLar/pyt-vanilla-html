@@ -9,7 +9,6 @@ var shortid = require("shortid");
 	this.childNodes = new Array();
 	this.style = new Object();
 	this.eventHost = new Object();
-	//this.id = "eh-" + shortid.generate();
  };
 Element.prototype = {
  	constructor: Element
@@ -23,7 +22,6 @@ Element.prototype = {
 		if(newChild)this.childNodes.push(newChild);
 		newChild.parentNode = this;
 		if (this.childNodes.length == 1)this.firstChild = newChild;
-		this.transferEvents(newChild);
 		return newChild;
 	}
 	,insertBefore: function(newChild, child){
@@ -33,7 +31,6 @@ Element.prototype = {
 		this.childNodes.splice(index,0,newChild);
 		newChild.parentNode = this;
 		if (!index)this.firstChild = newChild;
-		this.transferEvents(newChild);
 		return newChild;
 	}
 	,removeChild: function(child){
@@ -50,7 +47,6 @@ Element.prototype = {
 		this.childNodes.splice(index,1,newChild);
 		newChild.parentNode = this;
 		if (!index)this.firstChild = newChild;
-		this.transferEvents(newChild);
 		return child;
 	}
 	,cloneNode: function(deep){
@@ -100,7 +96,7 @@ Element.prototype = {
 		},out);
 	}
 	,addEventListener: function(e, handler){
-		//if (typeof this.id === "undefined") this.id = "eh-" + shortid.generate();
+		if (typeof this.id === "undefined") this.id = "eh-" + shortid.generate();
 		if (typeof this.eventHost[this.id] === "undefined") 
 			this.eventHost[this.id] = new Object();
 		if (typeof this.eventHost[this.id][e] === "undefined") 
@@ -124,12 +120,14 @@ Element.prototype = {
 			return out + prop + ": " + that.style[prop] + "; ";
 		},"");	
 	}
-	,transferEvents: function(newChild){
+	,collectEventHandling: function(){
 		var that = this;
-		Object.keys(newChild.eventHost).forEach(function(key){
-			that.eventHost[key] = newChild.eventHost[key];
+		that.childNodes.forEach(function(child){
+			child.collectEventHandling();
+			Object.keys(child.eventHost).forEach(function(key){
+				that.eventHost[key] = child.eventHost[key]; 
+			});
 		});
-		newChild.eventHost =  that.eventHost;
 	}
 	,toString: function(){
 		var that = this;
@@ -168,11 +166,11 @@ Element.prototype = {
 	 	return new Element(tag);
 	} }
 	,toString : { value: function(){
+		this.collectEventHandling();
 		this.events.innerHTML = "gEvents = " + JSON.stringify(this.eventHost);
 		return Element.prototype.toString.call(this);
 	}}
 
-	,writeEventHandling : {value: function(){}}
  } );
  Document.prototype.constructor = Document;
  module.exports =  Document;

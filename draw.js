@@ -212,15 +212,6 @@ define("Drawer", ["./utils", "./Autolinker.min"],function(Utils, Autolinker){ret
 			body.appendChild(singlePost);
 			singlePost.getElementsByClassName("hide")[0].hidden = true;
 		} 
-		var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
-		nodeRTCtrl.cNodes["rt-chkbox"].checked = window.localStorage.getItem("rt");
-		var bump = window.localStorage.getItem("rtbump");
-		var nodeBump = nodeRTCtrl.cNodes["rt-bump"];
-		for(var idx = 0; idx<nodeBump.childNodes.length; idx++)
-			if(nodeBump.childNodes[idx].value == bump){
-				nodeBump.selectedIndex = idx;
-				break;
-			}
 		if(content.timelines) gConfig.rt = {"timeline":[content.timelines.id]};
 		else gConfig.rt = {"post":[content.posts.id]};
 		doc.body.removeChild(doc.getElementById("splash"));

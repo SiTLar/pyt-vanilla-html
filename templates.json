@@ -341,7 +341,7 @@ var templates =  {"nodes": [
 		]}
 		,{"c":"prof-upd"
 		,"children":[
-			,{"t":"button","txt":"Update","e":{"click":"updateProfile"}}
+			,{"t":"button","txt":"Update profile","e":{"click":"updateProfile"}}
 			,{"c":"spacer","t":"span","txt":"&nbsp;"}
 			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":"true"}
 			,"children":[

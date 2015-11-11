@@ -2450,7 +2450,9 @@ function updateProfile(e){
 	document.getElementById("update-spinner").hidden = false;
 	gMe.users.screenName = document.getElementById("my-screen-name").value;
 	gMe.users.email = document.getElementById("my-email").value;
-	gMe.users.isPrivate = (document.getElementById("me-private").chacked?1:0);
+	if (document.getElementById("me-private").checked == false)
+		gMe.users.isPrivate = false;
+	else gMe.users.isPrivate = true;
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
 		var nodeMsg = document.getElementById("update-status");
@@ -2459,7 +2461,7 @@ function updateProfile(e){
 		if(oReq.status < 400){
 			gMe = JSON.parse(oReq.response);
 			nodeMsg.className = "sr-info";
-			nodeMsg.innerHTML = "Updated";
+			nodeMsg.innerHTML = "Updated. Your feed is <span style='font-weight: bold;'>" + ((gMe.users.isPrivate == true)?"private.":"public.")+ "</span>";
 			refreshgMe();
 		}else {
 			nodeMsg.className = "msg-error";

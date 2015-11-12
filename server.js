@@ -20,7 +20,7 @@ var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noD
 eval(fs.readFileSync('templates.json')+'');
 eval(fs.readFileSync('config.json')+'');
 var head = fs.readFileSync('head.template');
-genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
+Utils.genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
 module.exports = function(req,res){
 	var document = new Document();
 	window.localStorage ={
@@ -108,41 +108,6 @@ function initDoc(req){
 		}
 	} else gConfig.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
 	return getContent(gConfig.xhrurl+locationSearch, token);
-}
-function genNodes(templates){
-	var document = new Document();
-	var nodes = new Array();
-	//oTemplates = JSON.parse(templates);
-	templates.forEach(function(template){
-		if (!template.t)template.t = "div";
-		var node = document.createElement(template.t); 
-		node.cloneAll = function(){
-			var newNode = this.cloneNode(true); 
-			genCNodes(newNode, this);
-			return newNode;
-		};
-		if(template.c)node.className = template.c; 
-		if(template.children)
-		genNodes(template.children).forEach(function(victim){
-			node.appendChild(victim);
-		});
-		if(template.txt) node.innerHTML = template.txt;
-		if(template.e) node.e = template.e;
-		if(template.p) for( var p in template.p) node[p] =  template.p[p];
-		nodes.push(node);
-	} );
-	return nodes;
-
-	function genCNodes(node, proto){
-		node.cNodes = new Object(); 
-		for(var idx = 0; idx <  node.childNodes.length; idx++){
-			genCNodes(node.childNodes[idx], proto.childNodes[idx]);
-			node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
-		}
-		if (typeof(proto.e) !== "undefined" ) 
-			for(var action in proto.e)
-				node.addEventListener(action, Actions[proto.e[action]]);	
-	}
 }
 function getContent(url, token){
 	var arrP = new Array();

@@ -1,14 +1,7 @@
-System.config({
-  baseURL: "/static/",
-  defaultJSExtensions: true,
-  transpiler: "babel",
-  paths: {},
-  bundles: {
-    "build.js": [
-      "lib/main.js",
-      "lib/utils.js",
-      "lib/Autolinker.min.js",
-      "lib/draw.js"
-    ]
-  }
-});
+module.exports = {
+	"target":"web"
+	,"entry": "./browser.js"
+	,"output":{
+		"filename":"vanilla.js"
+	}
+};

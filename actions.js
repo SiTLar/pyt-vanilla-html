@@ -18,7 +18,7 @@ define("Actions",[],function() {return{
 				if(oReq.status < 400){
 					var nodeAtt = document.createElement("div");
 					nodeAtt.className = "attachments";
-					textField.parentNode.replaceChild(nodeAtt, 
+					textField.parentNode.replaceChild(nodeAtt,
 						textField.parentNode.cNodes["attachments"]);
 					textField.parentNode.cNodes["attachments"] = nodeAtt;
 					textField.value = "";
@@ -38,31 +38,31 @@ define("Actions",[],function() {return{
 					e.target.disabled = false;
 					e.target.parentNode.removeChild(nodeSpinner );
 					var errmsg = "";
-					try{	
+					try{
 						var eresp = JSON.parse(oReq.response);
 						errmsg = eresp.err;
-					}catch(e){}
+					}catch(e){};
 					alert("Error #"+oReq.status+": "+oReq.statusText+" "+errmsg) ;
 				}
-			}
+			};
 			if(textField.attachments) post.attachments = textField.attachments;
 			postdata.post = post;
-			if(postTo.isPrivate){ 
+			if(postTo.isPrivate){
 				oReq.open("post",matrix.cfg.srvurl+"post", true);
-				oReq.setRequestHeader("x-content-type", "post"); 
+				oReq.setRequestHeader("x-content-type", "post");
 				oReq.setRequestHeader("Content-type","text/plain");
 				oReq.onload = onload;
 				var payload =  {
 					"feed":postTo.feeds[0],
-					"type":"post", 
+					"type":"post",
 					"author":gMe.users.username,
 					"data":textField.value,
-				}
+				};
 				matrix.sign(JSON.stringify(payload)).then(function(sign){
 					var token = matrix.mkOwnToken(sign);
 					if(!token) return console.log("Failed to make access token");
-					oReq.setRequestHeader("x-content-token", token); 
-					post = matrix.encrypt(postTo.feeds, 
+					oReq.setRequestHeader("x-content-token", token);
+					post = matrix.encrypt(postTo.feeds,
 						JSON.stringify({"payload":payload,"sign":sign}));
 					oReq.setRequestHeader("Content-type","application/json");
 					oReq.send(JSON.stringify({"d":post}));
@@ -71,7 +71,7 @@ define("Actions",[],function() {return{
 				oReq.open("post",gConfig.serverURL + "posts", true);
 				oReq.onload = onload;
 				oReq.setRequestHeader("Content-type","application/json");
-				oReq.setRequestHeader("X-Authentication-Token", 
+				oReq.setRequestHeader("X-Authentication-Token",
 					gConfig.token);
 				if (textField.value == ""){
 					textField.disabled = false;
@@ -88,7 +88,7 @@ define("Actions",[],function() {return{
 	,"sendAttachment": function(e){
 		e.target.disabled = true;
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
-		var nodeSpinner = gNodes["attachment"].cloneAll();
+		var nodeSpinner = document.createElement("div");
 		nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
 		e.target.parentNode.parentNode.cNodes["attachments"].appendChild(nodeSpinner);
 		textField.pAtt = new Promise(function(resolve,reject){
@@ -98,7 +98,8 @@ define("Actions",[],function() {return{
 					e.target.value = "";
 					e.target.disabled = false;
 					var attachments = JSON.parse(this.response).attachments;
-					var nodeAtt = gNodes["attachment"].cloneAll();
+					var nodeAtt = document.createElement("div");
+					nodeAtt.className = "att-img";
 					nodeAtt.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src="'+attachments.thumbnailUrl+'"></a>';
 					nodeSpinner.parentNode.replaceChild(nodeAtt, nodeSpinner);
 					if (typeof(textField.attachments) === "undefined" ) textField.attachments = new Array();
@@ -106,7 +107,7 @@ define("Actions",[],function() {return{
 					resolve();
 
 				}else reject(this.status);
-			}
+			};
 
 			oReq.open("post",gConfig.serverURL + "attachments", true);
 			oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
@@ -117,11 +118,11 @@ define("Actions",[],function() {return{
 		});
 	}
 	,"editPost": function(e) {
-		var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
-		var nodeEdit = genEditNode(postEditedPost,cancelEditPost);
-		nodeEdit.cNodes["edit-txt-area"].value = victim.rawData.body;
-		victim.cNodes["post-body"].replaceChild( nodeEdit, victim.cNodes["post-body"].cNodes["post-cont"]);
-	}
+	var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
+	var nodeEdit = genEditNode(postEditedPost,cancelEditPost);
+	nodeEdit.cNodes["edit-txt-area"].value = victim.rawData.body;
+	victim.cNodes["post-body"].replaceChild( nodeEdit, victim.cNodes["post-body"].cNodes["post-cont"]);
+}
 	,"cancelEditPost": function(e){
 		 var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 		 var postCNode = document.createElement("div");
@@ -151,36 +152,37 @@ define("Actions",[],function() {return{
 				nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 				nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 			}
-		}
+		};
 
 		var post = new Object();
 		post.createdAt = nodePost.rawData.createdAt;
 		post.createdBy = nodePost.rawData.createdBy;
 		post.updatedAt = Date.now();
+		post.attachments = nodePost.rawData.attachments;
 		var postdata = new Object();
 		postdata.post = post;
 		e.target.parentNode.parentNode.cNodes["edit-txt-area"].disabled = true;
 
 		e.target.parentNode.replaceChild(gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 		var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value;
-		if(nodePost.isPrivate){ 
+		if(nodePost.isPrivate){
 			oReq.open("put",matrix.cfg.srvurl+"edit", true);
-			oReq.setRequestHeader("x-content-type", "post"); 
+			oReq.setRequestHeader("x-content-type", "post");
 			oReq.setRequestHeader("Content-type","application/json");
 			//oReq.onload = onload;
 			var payload =  {
-				"feed":nodePost.feed, 
-				"type":"post", 
+				"feed":nodePost.feed,
+				"type":"post",
 				"author":gMe.users.username,
 				"data":text,
-			}
-			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodePost.sign)); 
+			};
+			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodePost.sign));
 			matrix.sign(JSON.stringify(payload)).then(function(sign){
 				var token = matrix.mkOwnToken(sign);
 				if(!token) return console.log("Failed to make access token");
-				oReq.setRequestHeader("x-content-token", token); 
-				oReq.setRequestHeader("x-content-id",nodePost.id); 
-				post = matrix.encrypt(nodePost.feed, 
+				oReq.setRequestHeader("x-content-token", token);
+				oReq.setRequestHeader("x-content-id",nodePost.id);
+				post = matrix.encrypt(nodePost.feed,
 					JSON.stringify({"payload":payload,"sign":sign}));
 				oReq.send(JSON.stringify({"d":post}));
 			},function(){console.log("Failed to sign")});
@@ -206,12 +208,12 @@ define("Actions",[],function() {return{
 				//victim.parentNode.removeChild(victim);
 				regenHides();
 			}
-		}
-		if(victim.isPrivate){ 
+		};
+		if(victim.isPrivate){
 			oReq.open("delete",matrix.cfg.srvurl+"delete",true);
-			oReq.setRequestHeader("x-content-id", victim.id); 
-			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(victim.sign)); 
-			oReq.setRequestHeader("x-content-type", "post"); 
+			oReq.setRequestHeader("x-content-id", victim.id);
+			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(victim.sign));
+			oReq.setRequestHeader("x-content-type", "post");
 			oReq.send();
 		}else{
 			oReq.open("delete",gConfig.serverURL + "posts/"+victim.id, true);
@@ -225,14 +227,14 @@ define("Actions",[],function() {return{
 		var nodeLikes = e.target.parentNode.parentNode.parentNode.cNodes["likes"];
 		var nodePost =nodeLikes; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
 		oReq.onload = function(){
-			if(this.status < 400){	
+			if(this.status < 400){
 				if(e.target.action){
 					var idx;
 					var likesUL;
 					if (!nodeLikes.childNodes.length){
 						nodeLikes.appendChild(gNodes["likes-smile"].cloneNode(true));
-						likesUL = document.createElement( "ul");
-						likesUL.className ="p-timeline-user-likes";
+						likesUL = document.createElement( "span");
+						likesUL.className ="comma";
 						var suffix = document.createElement("span");
 						suffix.id = e.target.parentNode.postId+"-unl";
 						suffix.innerHTML = " liked this";
@@ -241,11 +243,13 @@ define("Actions",[],function() {return{
 
 					}else {
 
-						for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
+					/*	for(idx = 0; idx < nodeLikes.childNodes.length; idx++)
 							if (nodeLikes.childNodes[idx].nodeName == "UL")break;
 						likesUL = nodeLikes.childNodes[idx];
+						*/
+						likesUL = nodeLikes.cNodes["comma"];
 					}
-					var nodeLike = document.createElement("li");
+					var nodeLike = document.createElement("span");
 					nodeLike.className = "p-timeline-user-like";
 					nodeLike.innerHTML = gUsers[gMe.users.id].link;
 					if(likesUL.childNodes.length)likesUL.insertBefore(nodeLike, likesUL.childNodes[0]);
@@ -257,11 +261,11 @@ define("Actions",[],function() {return{
 					nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(gMe.users.id), 1) ;
 					var myLike = e.target.parentNode.parentNode.parentNode.myLike;
 					likesUL = myLike.parentNode;
-					likesUL.removeChild(myLike);  	
-					Drawer["genLikes"](nodePost);
+					likesUL.removeChild(myLike);
+				genLikes(nodePost);
 
-				/*	
-					if (likesUL.childNodes.length < 2){ 
+				/*
+					if (likesUL.childNodes.length < 2){
 						var nodePI = nodeLikes.parentNode;
 						nodePI.cNodes["likes"] = document.createElement("div");
 						nodePI.cNodes["likes"].className = "likes";
@@ -270,46 +274,44 @@ define("Actions",[],function() {return{
 					*/
 				 }
 				e.target.innerHTML=e.target.action?"Un-like":"Like";
-				e.target.action = !e.target.action; 
+				e.target.action = !e.target.action;
 			}else e.target.innerHTML= !e.target.action?"Un-like":"Like";
 		}
-		
+
 
 			oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"like":"unlike"), true);
 			oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 			oReq.send();
 			e.target.innerHTML = "";
 			e.target.appendChild(gNodes["spinner"].cloneAll());
-			
-	}
 
+	}
 	,"unfoldLikes": function(id){
 		var post = document.getElementById(id).rawData;
 		var span  = document.getElementById(id+"-unl");
-		var nodeLikes = span.parentNode;
-		
+		var nodeLikes = span.parentNode.cNodes["comma"];
+
 		if (post.omittedLikes > 0){
 			var oReq = new XMLHttpRequest();
 			oReq.onload = function(){
 				if(oReq.status < 400){
-				nodeLikes.removeChild(span);
+					span.parentNode.removeChild(span);
 					var postUpd = JSON.parse(this.response);
 					post.likes = postUpd.posts.likes;
-					postUpd.users.forEach(addUser);
+					postUpd.users.forEach(Utils.addUser);
 					document.getElementById(id).rawData = post;
 					writeAllLikes(id, nodeLikes);
 				}else{
 					console.log(oReq.toString());
-				
-				}
-			}
+
+				};
+			};
 			oReq.open("get",gConfig.serverURL + "posts/"+post.id+"?maxComments=0&maxLikes=all", true);
 			oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 			oReq.send();
 
 		}else  writeAllLikes(id, nodeLikes);
 	}
-
 	,"getUsername": function(e){
 		var node = e.target; do node = node.parentNode; while(typeof node.user === "undefined");
 		if ( gConfig.cTxt == null ) return;
@@ -331,25 +333,6 @@ define("Actions",[],function() {return{
 		oReq.send();
 
 	}
-	,"ban": function(e){
-		var oReq = new XMLHttpRequest();
-		var username = e.target.parentNode.user;
-		oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.banned?"/unban":"/ban"), true);
-		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
-		oReq.onload = function(){
-			if(oReq.status < 400) {
-				if (!e.target.banned)gMe.users.banIds.push(gUsers.byName[username].id);
-				else{
-					var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
-					if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
-				}
-				window.localStorage.setItem("gMe",JSON.stringify(gMe));
-				e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
-			}
-		}
-
-		oReq.send();
-	}
 	,"subscribe": function(e){
 		var oReq = new XMLHttpRequest();
 		var username = e.target.parentNode.user;
@@ -358,21 +341,19 @@ define("Actions",[],function() {return{
 		oReq.onload = function(){
 			if(oReq.status < 400) {
 				gMe = JSON.parse(oReq.response);
-				window.localStorage.setItem("gMe",JSON.stringify(gMe));
+				gConfig.localStorage.setItem("gMe",JSON.stringify(gMe));
 				gUsers.byName[username].friend = !e.target.subscribed;
-				e.target.parentNode.parentNode.replaceChild(genUpControls(username), e.target.parentNode);
+				setChild(e.target.parentNode.parentNode, "up-controls", genUpControls(username));
 			}
 		}
 
 		oReq.send();
 	}
-
-
 	,"showHidden": function(e){
 		if(e.target.action){
-			if(!document.hiddenCount)return;	
+			if(!document.hiddenCount)return;
 			var nodeHiddenPosts = document.createElement("div");
-			nodeHiddenPosts.id = "hidden-posts"; 
+			nodeHiddenPosts.id = "hidden-posts";
 			document.hiddenPosts.forEach(function(oHidden){if(oHidden.is)nodeHiddenPosts.appendChild(genPost(oHidden.data));});
 			e.target.parentNode.parentNode.insertBefore(nodeHiddenPosts , e.target.parentNode.nextSibling);
 			e.target.innerHTML =  "Collapse "+ document.hiddenCount + " hidden entries";
@@ -382,28 +363,26 @@ define("Actions",[],function() {return{
 			if (document.hiddenCount) e.target.innerHTML = "Show "+ document.hiddenCount + " hidden entries";
 			else e.target.innerHTML = "";
 		}
-		e.target.action = !e.target.action; 
+		e.target.action = !e.target.action;
 	}
 	,"postHide": function(e){
 		var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 		var oReq = new XMLHttpRequest();
+		var action = e.target.action;
 		oReq.onload = function(){
-			if(this.status < 400){	
-				doHide(victim, e.target.action);
-			}
+			if(this.status < 400){
+				doHide(victim, action, "user");
+			};
 		}
-		
-
-			oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"hide":"unhide"), true);
+			oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(action?"hide":"unhide"), true);
 			oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
 			oReq.send();
-			
-
-		
 	}
 	,"doHide": function(victim, action){
 		var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
-		if(action != nodeHide.action) return; 
+		if(action != nodeHide.action) return;
+		victim.rawData.isHidden = action;
+		nodeHide.action = !action;
 		var nodeShow = document.getElementsByClassName("show-hidden")[0]
 		if (!nodeShow){
 			nodeShow = gNodes["show-hidden"].cloneAll();
@@ -412,7 +391,6 @@ define("Actions",[],function() {return{
 		}
 		var aShow =  nodeShow.cNodes["href"];
 		if(action){
-			victim.rawData.isHidden = true;
 			document.hiddenPosts[victim.rawData.idx].is  = true;
 			victim.parentNode.removeChild(victim);
 			document.hiddenCount++;
@@ -428,13 +406,11 @@ define("Actions",[],function() {return{
 			nodeHide.innerHTML = "Hide";
 			document.hiddenPosts[victim.rawData.idx].is = false;
 			document.hiddenCount--;
-			if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries"; 
+			if(document.hiddenCount) aShow.innerHTML = "Collapse "+ document.hiddenCount + " hidden entries";
 			else aShow.dispatchEvent(new Event("click"));
 		}
-		nodeHide.action = !action; 
 
 	}
-
 	,"addComment": function(e){
 		var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != "post-body");
 		if(postNBody.isBeenCommented === true)return;
@@ -454,8 +430,6 @@ define("Actions",[],function() {return{
 		nodeEdit.className = "comment-body";
 		victim.getElementsByClassName("edit-txt-area")[0].focus();
 	}
-
-
 	,"postEditComment": function(e){
 		var nodeComment = e.target; do nodeComment = nodeComment.parentNode; while(nodeComment.className != "comment");
 		var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
@@ -467,7 +441,7 @@ define("Actions",[],function() {return{
 			return;
 		}
 		var comment = gComments[nodeComment.id];
-		comment.body = textField.value ; 
+		comment.body = textField.value ;
 		comment.updatedAt = Date.now();
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
@@ -477,7 +451,7 @@ define("Actions",[],function() {return{
 				gComments[comment.id] = comment;
 
 			}
-		}
+		};
 
 		oReq.open("put",gConfig.serverURL + "comments/"+comment.id, true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
@@ -494,16 +468,18 @@ define("Actions",[],function() {return{
 	}
 	,"processText": function(e) {
 		gConfig.cTxt = e.target;
-		if (e.target.scrollHeight > e.target.clientHeight) 
+		if (e.target.scrollHeight > e.target.clientHeight)
 			e.target.style.height = e.target.scrollHeight + "px";
 		if (e.which == "13"){
 			var text = e.target.value;
-			if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			//if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);
 			e.target.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].dispatchEvent(new Event("click"));
 		}
-		
+
 	}
-	,"cancelNewComment": function(e){ 
+	,"cancelNewComment": function(e){
 		var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != "post-body");
 		postNBody.isBeenCommented = false;
 		if(typeof postNBody.bumpLater !== "undefined")setTimeout(postNBody.bumpLater, 1000);
@@ -527,10 +503,10 @@ define("Actions",[],function() {return{
 		var butDelete = document.createElement("button");
 		butDelete.innerHTML = "delete";
 		butDelete.node = node;
-		butDelete.onclick = function(){doDelete(butDelete);}
+		butDelete.onclick = function(){doDelete(butDelete);};
 		var butCancel0 = document.createElement("button");
 		butCancel0.innerHTML = "cancel";
-		butCancel0.onclick = function (){deleteCancel(nodeConfirm)}
+		butCancel0.onclick = function (){deleteCancel(nodeConfirm)};
 		var aButtons = [butDelete,butCancel0] ;
 		nodeConfirm.innerHTML = "<p>Sure delete?</p>";
 		aButtons.forEach(function(but){ but.className = "confirm-button";});
@@ -538,14 +514,13 @@ define("Actions",[],function() {return{
 		nodeConfirm.appendChild(aButtons[0]);
 		node.parentNode.insertBefore(nodeConfirm,node);
 		nodeConfirm.node = node;
-		node.hidden = true;	
+		node.hidden = true;
 
 	}
 	,"deleteCancel": function(nodeConfirm){
-		nodeConfirm.node.hidden = false;	
+		nodeConfirm.node.hidden = false;
 		nodeConfirm.parentNode.removeChild(nodeConfirm);
 	}
-
 	,"doDeleteComment": function(but){
 		var nodeComment = but.node;
 		var nodePost =nodeComment; do nodePost = nodePost.parentNode; while(nodePost.className != "post");
@@ -557,12 +532,12 @@ define("Actions",[],function() {return{
 				if(nodeComment.parentNode) nodeComment.parentNode.removeChild(nodeComment);
 				delete gComments[nodeComment.id];
 			}
-		}
-		if(nodePost.isPrivate){ 
+		};
+		if(nodePost.isPrivate){
 			oReq.open("delete",matrix.cfg.srvurl+"delete",true);
-			oReq.setRequestHeader("x-content-id", nodeComment.id); 
-			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodeComment.sign)); 
-			oReq.setRequestHeader("x-content-type", "comment"); 
+			oReq.setRequestHeader("x-content-id", nodeComment.id);
+			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodeComment.sign));
+			oReq.setRequestHeader("x-content-type", "comment");
 			oReq.send();
 		}else{
 			oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
@@ -571,7 +546,6 @@ define("Actions",[],function() {return{
 			oReq.send();
 		}
 	}
-
 	,"unfoldComm": function(id){
 		var post = document.getElementById(id).rawData;
 		var oReq = new XMLHttpRequest();
@@ -584,11 +558,11 @@ define("Actions",[],function() {return{
 				document.getElementById(id).rawData = post;
 				var nodePB = document.getElementById(id).cNodes["post-body"];
 				nodePB.isBeenCommented = false;
-				if(typeof nodePB.bumpLater !== "undefined")setTimeout(postPB.bumpLater, 1000); 
+				if(typeof nodePB.bumpLater !== "undefined")setTimeout(postPB.bumpLater, 1000);
 				nodePB.removeChild(nodePB.cNodes["comments"]);
 				nodePB.cNodes["comments"] = document.createElement("div");
 				nodePB.cNodes["comments"].className = "comments";
-				 
+
 				postUpd.comments.forEach(function(cmt){gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(genComment(cmt))});
 				nodePB.appendChild(nodePB.cNodes["comments"]);
 				addLastCmtButton(nodePB);
@@ -598,8 +572,8 @@ define("Actions",[],function() {return{
 				spUnfold.parentNode.removeChild(spUnfold);
 				console.log(oReq.toString());
 
-			}
-		}
+			};
+		};
 
 		oReq.open("get",gConfig.serverURL + "posts/"+post.id+"?maxComments=all&maxLikes=0", true);
 		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
@@ -607,33 +581,26 @@ define("Actions",[],function() {return{
 
 
 	}
-
-
 	,"calcCmtTime": function(e){
 		if (typeof(e.target.parentNode.parentNode.parentNode.createdAt) !== "undefined" ){
 			var absUxTime = e.target.parentNode.parentNode.parentNode.createdAt*1;
 			var txtdate = new Date(absUxTime ).toString();
-			
+
 			e.target.title =  relative_time(absUxTime) + " ("+ txtdate.slice(0, txtdate.indexOf("(")).trim()+ ")";
 		}
 	}
-
-
 	,"me": function(e){
 		e.target.href = gConfig.front+gMe["users"]["username"];
 	}
-
 	,"home": function(e){
 	    e.target.href = gConfig.front;
 	}
-
 	,"directs": function(e){
 	    e.target.href = gConfig.front+ "filter/direct";
 	}
 	,"my": function(e){
 	    e.target.href = gConfig.front+ "filter/discussions";
 	}
-
 	,"newDirectInp": function(e){
 		if (e.target.value){
 			var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
@@ -645,7 +612,7 @@ define("Actions",[],function() {return{
 				var oDest = e.target.dest;
 				var pos = oDest;
 				for(var idx = 0; idx < txt.length; idx++){
-					if (typeof pos[txt.charAt(idx)] !== "undefined") 
+					if (typeof pos[txt.charAt(idx)] !== "undefined")
 						pos = pos[txt.charAt(idx)];
 					else{
 						pos = null;
@@ -672,8 +639,101 @@ define("Actions",[],function() {return{
 			document.body.removeChild(e.target.tip);
 			e.target.tip = undefined;
 		}
-		
-		
+
+
+	}
+	,"doBan": function(e){
+		var oReq = new XMLHttpRequest();
+		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+		var username = nodePopUp.user;
+		var bBan = e.target.checked;
+		var nodeParent = e.target.parentNode;
+		oReq.open("post", gConfig.serverURL +"users/"+username+(bBan?"/ban":"/unban"), true);
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+		var spinner = gNodes["spinner"].cloneNode(true);
+		var ckBox = nodeParent.replaceChild(spinner,e.target);
+		oReq.onload = function(){
+			nodeParent.replaceChild(ckBox, spinner);
+			if(oReq.status < 400) {
+				if (bBan)gMe.users.banIds.push(gUsers.byName[username].id);
+				else{
+					var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
+					if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
+				}
+				gConfig.localStorage.setItem("gMe",JSON.stringify(gMe));
+				setChild(nodePopUp.parentNode.parentNode, "up-controls", genUpControls(username));
+			}
+		}
+
+		oReq.send();
+	}
+	,"doUnBan": function(e){
+		var oReq = new XMLHttpRequest();
+		var nodeHost = e.target; do nodeHost = nodeHost.parentNode; while(nodeHost.className != "up-controls");
+		var username = nodeHost.user;
+		oReq.open("post", gConfig.serverURL +"users/"+username+"/unban", true);
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+		oReq.onload = function(){
+			if(oReq.status < 400) {
+				var idx = gMe.users.banIds.indexOf(gUsers.byName[username].id);
+				if (idx != -1 ) gMe.users.banIds.splice(idx, 1);
+				gConfig.localStorage.setItem("gMe",JSON.stringify(gMe));
+				setChild(nodeHost.parentNode, "up-controls", genUpControls(username));
+			}
+		}
+
+		oReq.send();
+	}
+	,"doBlockCom": function(e){
+		var action = e.target.checked;
+		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+		updateBlockList("blockComments", nodePopUp.user, action);
+		var id = gUsers.byName[nodePopUp.user].id;
+		var nodesCmts = document.getElementsByClassName("comment");
+		for(var idx = 0; idx < nodesCmts.length; idx++){
+			if(nodesCmts[idx].userid == id){
+				if(action) nodesCmts[idx].innerHTML = "---";
+				else nodesCmts[idx].parentNode.replaceChild(genComment(gComments[nodesCmts[idx].id]), nodesCmts[idx]);
+			}
+		}
+	}
+	,"doBlockPosts": function(e){
+		var action = e.target.checked;
+		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+		updateBlockList("blockPosts", nodePopUp.user, action);
+		var id = gUsers.byName[nodePopUp.user].id;
+		var nodesPosts = document.getElementsByClassName("post");
+		for(var idx = 0; idx < nodesPosts.length; idx++){
+			if(nodesPosts[idx].rawData.createdBy == id)
+				nodesPosts[idx].hidden = action;
+		}
+	}
+	,"updateBlockList": function(list, username, add){
+		var id = gUsers.byName[username].id;
+		if(add){
+			if ((typeof gConfig[list] === "undefined") || (gConfig[list] == null)) gConfig[list] = new Object();
+			gConfig[list][id] = true;
+			gConfig.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+		}else try{
+			delete gConfig[list][id];
+			gConfig.localStorage.setItem(list, JSON.stringify(gConfig[list]));
+		}catch(e){};
+	}
+	,"setRadioOption": function(e){
+		gConfig.localStorage.setItem(e.target.name, e.target.value );
+	}
+	,"unfoldAttImgs": function (e){
+		var nodeAtts = e.target; do nodeAtts = nodeAtts.parentNode; while(nodeAtts.className != "attachments");
+		if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
+			nodeAtts.cNodes["atts-img"].style.display = "block";
+			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';
+			nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "false";
+		}else{
+			nodeAtts.cNodes["atts-img"].style.display = "flex";
+			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-down fa-2x"></i>';
+			nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "true";
+		}
+
 	}
 	,"ftClose": function(e){
 		var victim =e.target;while(victim.className != "friends-tip") victim = victim.parentNode;
@@ -689,18 +749,18 @@ define("Actions",[],function() {return{
 	,"postDirect": function(e){
 		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
 		var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
-		if ((input != "") && (typeof gUsers.byName[input] !== "undefined") 
-			&& gUsers.byName[input].friend && (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group")) 
+		if ((input != "") && (typeof gUsers.byName[input] !== "undefined")
+		&& gUsers.byName[input].friend 
+		&& (gUsers.byName[input].subscriber||gUsers.byName[input].type == "group"))
 			victim.cNodes["new-post-to"].feeds.push(input);
-		if (victim.cNodes["new-post-to"].feeds.length) newPost(e);	
+		if (victim.cNodes["new-post-to"].feeds.length) newPost(e);
 		else alert("should have valid recipients");
 	}
-
 	,"logout": function(){
 		matrix.ready = 0;
-		matrix.logout();
-		window.localStorage.removeItem("gMe");
-		deleteCookie("token");
+		try{matrix.logout();}catch(e){};
+		gConfig.localStorage.removeItem("gMe");
+		deleteCookie(gConfig.tokenPrefix + "authToken");
 		location.reload();
 	}
 	,"newPostRemoveFeed": function(e){
@@ -735,7 +795,7 @@ define("Actions",[],function() {return{
 		var nodeP = e.target.parentNode;
 		var option = nodeP.cNodes["new-direct-input"];
 		if (option.value == "") return;
-		if(typeof option.tip !== "undefined")document.body.removeChild(option.tip); 
+		if(typeof option.tip !== "undefined")document.body.removeChild(option.tip);
 		nodeP.feeds.push(option.value);
 		var li = document.createElement("li");
 		li.innerHTML = option.value;
@@ -777,14 +837,15 @@ define("Actions",[],function() {return{
 		if(document.getElementById("userPopup" + node.userid))return;
 		var nodePopup = gNodes["user-popup"].cloneAll(true);
 		document.getElementsByTagName("body")[0].appendChild(nodePopup);
-		nodePopup.id = "userPopup" + node.userid; 
+		nodePopup.id = "userPopup" + node.userid;
 		nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 		nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
 		document.getElementsByTagName("body")[0].appendChild(nodePopup);
 		if((typeof gMe !== "undefined") && (user.id != gMe.users.id) )
-			nodePopup.appendChild(genUpControls(user.username));
+			setChild(nodePopup, "up-controls", genUpControls(user.username));
 		nodePopup.style.top = e.pageY;
 		nodePopup.style.left = e.pageX;
+		nodePopup.style["z-index"] = 1;
 		if (typeof node.createdAt !== "undefined"){
 			var spanDate = document.createElement("span");
 			var txtdate = new Date(node.createdAt*1).toString();
@@ -806,23 +867,132 @@ define("Actions",[],function() {return{
 
 	}
 	,"realTimeSwitch": function(e){
+		if(e.target.checked )gConfig.localStorage.setItem("rt",1);
+		else gConfig.localStorage.setItem("rt",0);
+		if(gConfig.timeline == "settings") return;
 		var bump = e.target.parentNode.cNodes["rt-bump"].value;
 		if(e.target.checked && !gRt.on){
-			window.localStorage.setItem("rt",true);
 			gRt = new RtUpdate(gConfig.token,bump);
 			gRt.subscribe(gConfig.rt);
 		}else if(!e.target.checked){
-			window.localStorage.setItem("rt",false);
 			if(gRt.on){
 				gRt.close();
 				gRt = new Object();
 			}
 		}
 	}
-	,"setRTCooldown": function(e){
-		var bump = e.target.value;
-		window.localStorage.setItem("rtbump",bump);
-		if(gRt.on)gRt.handlers.setBumpCooldown( bump);
+	,"goSettings": function (e){
+	    e.target.href = gConfig.front+"settings";
 	}
-}});
+	,"goRequests": function (e){
+	    e.target.href = gConfig.front+"requests";
+	}
+	,"genBlock": function (e){
+		var node = e.target.parentNode;
+		var nodeBlock = gNodes["up-block"].cloneAll();
+		nodeBlock.className = "user-popup"; 
+		nodeBlock.user = node.user;
+		node.appendChild(nodeBlock);
+		nodeBlock.style.top =  e.target.offsetTop;
+		nodeBlock.style.left = e.target.offsetLeft;
+		nodeBlock.style["z-index"] = 2;
+		var chkboxes = nodeBlock.getElementsByTagName("input");
+		for(var idx = 0; idx < chkboxes.length; idx++){
+			var list = gConfig[chkboxes[idx].value];
+			if((typeof list !== "undefined") && (list != null) && (list[gUsers.byName[node.user].id]>-1))
+				chkboxes[idx].checked = true;
+		}
 
+	}
+	,"updateProfile": function (e){
+		e.target.disabled = true;
+		document.getElementById("update-spinner").hidden = false;
+		gMe.users.screenName = document.getElementById("my-screen-name").value;
+		gMe.users.email = document.getElementById("my-email").value;
+		if (document.getElementById("me-private").checked == false)
+			gMe.users.isPrivate = false;
+		else gMe.users.isPrivate = true;
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			var nodeMsg = document.getElementById("update-status");
+			e.target.disabled = false;
+			document.getElementById("update-spinner").hidden = true;
+			if(oReq.status < 400){
+				gMe = JSON.parse(oReq.response);
+				nodeMsg.className = "sr-info";
+				nodeMsg.innerHTML = "Updated. Your feed is <span style='font-weight: bold;'>" + ((gMe.users.isPrivate == true)?"private.":"public.")+ "</span>";
+				Utils.refreshgMe();
+			}else {
+				nodeMsg.className = "msg-error";
+				nodeMsg.innerHTML = "Got error: ";
+				try{ 
+					nodeMsg.innerHTML += JSON.parse(oReq.response).err;
+				}catch(e) {nodeMsg.innerHTML += "unknown error";};
+
+			}
+		}
+
+		oReq.open("put",gConfig.serverURL + "users/" + gMe.users.id ,true);
+		oReq.setRequestHeader("Content-type","application/json");
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+		oReq.send(JSON.stringify({"user":gMe.users}));
+	}
+	,"setRTparams": function (e){
+		var value = e.target.value;
+		e.target.parentNode.getElementsByTagName("span")[0].innerHTML = value + " minutes";
+		var oRTParams = new Object();
+		["rt-bump-int", "rt-bump-cd", "rt-bump-d"].forEach(function(id){
+			oRTParams[id] = document.getElementById(id).value;
+		});
+		gConfig.localStorage.setItem("rt_params",JSON.stringify(oRTParams) );
+	}
+	,"setRTBump": function (e){
+		var bump = e.target.checked;
+		gConfig.localStorage.setItem("rtbump",bump?1:0);
+		document.getElementById("rt-params").hidden = !bump;
+	}
+	,"linkPreviewSwitch": function (e){
+		if(e.target.checked )gConfig.localStorage.setItem("show_link_preview",1);
+		else gConfig.localStorage.setItem("show_link_preview",0);
+	}
+	,"srAccept": function (e){
+		sendReqResp(e.target, "acceptRequest" );
+	}
+	,"srReject": function (e){
+		sendReqResp(e.target, "rejectRequest" );
+	}
+	,"sendReqResp": function (node, action){
+		node.parentNode.hidden = true;
+		var host = node.parentNode.parentNode;
+		var spinner = gNodes["spinner"].cloneNode(true);
+		host.appendChild(spinner);
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(oReq.status < 400){
+				host.parentNode.removeChild(host);
+				var nodeSR = document.getElementById("sr-info");
+				if(--gConfig.subReqsCount){
+					nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
+					+ gMe.users.subscriptionRequests.length 
+					+ " subscription requests to review.";
+				}else{
+					nodeSR.hidden = true;
+					var victim = document.getElementById("sr-header");
+					victim.parentNode.removeChild(victim);
+				}
+				
+			}else {
+				host.removeChild(spinner);
+				node.parentNode.hidden = false;
+			}
+		}
+
+		oReq.open("post",gConfig.serverURL
+			+ "users/" 
+			+ action + "/" 
+			+ host.cNodes["sr-user"].value
+		,true);
+		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+		oReq.send();
+	}
+};});

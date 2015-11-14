@@ -1,6 +1,7 @@
 "use strict";
 define("SecretActions",[],function(){return{
-	"addPosts": function(drop, toAdd, offset){
+	,"init": function(view){this.cView = view;}
+	,"addPosts": function(drop, toAdd, offset){
 		var url = matrix.cfg.srvurl + "posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
@@ -95,7 +96,7 @@ define("SecretActions",[],function(){return{
 					"feed":cpost.payload.id,
 					"id":res.posts.id
 				};
-				gComments[res.posts.id] = comment;
+				cView.gComments[res.posts.id] = comment;
 				var nodeNewComment = genComment(comment);
 				nodeNewComment.sign = cpost.sign;
 
@@ -110,7 +111,7 @@ define("SecretActions",[],function(){return{
 			"id":nodePost.feed,
 			"type":"comment",
 			"data":textField.value,
-			"author":gMe.users.username,
+			"author":cView.gMe.users.username,
 			"postid":nodePost.id
 		};
 		oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodeComment.sign));
@@ -144,7 +145,7 @@ define("SecretActions",[],function(){return{
 				nodeComment = genComment(comment);
 				nodeComment.hidden = true;
 				nodeComment.sign = cpost.sign;
-				gComments[post.id] = comment;
+				cView.gComments[post.id] = comment;
 				if(comment.createdAt > nodePriv.rawData.updatedAt) nodePriv.rawData.updatedAt = comment.createdAt;
 				nodePriv.cNodes["post-body"].cNodes["comments"].insertBefore(nodeComment,nodePriv.cNodes["post-body"].cNodes["comments"].firstChild);
 				resolve();
@@ -167,7 +168,7 @@ define("SecretActions",[],function(){return{
 						"user":cpost.payload.author,
 						"id":res.posts.id
 						};
-				gComments[comment.id] = comment;
+				cView.gComments[comment.id] = comment;
 				textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 				if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
 				var nodeNewComment = genComment(comment);
@@ -183,7 +184,7 @@ define("SecretActions",[],function(){return{
 			"id":nodePost.feed,
 			"type":"comment",
 			"data":textField.value,
-			"author":gMe.users.username,
+			"author":cView.gMe.users.username,
 			"postid":nodePost.id
 		};
 		oReq.setRequestHeader("x-content-type", "comment");
@@ -218,7 +219,7 @@ define("SecretActions",[],function(){return{
 		oReq.onload = function(){
 			if(this.status < 400){
 				var comment = JSON.parse(this.response).comments;
-				gComments[comment.id] = comment;
+				cView.gComments[comment.id] = comment;
 				if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
 				if(!document.getElementById(comment.id))nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
 				else nodeComment.parentNode.removeChild(nodeComment);
@@ -226,14 +227,14 @@ define("SecretActions",[],function(){return{
 		};
 
 		oReq.open("post",gConfig.serverURL + "comments", true);
-		oReq.setRequestHeader("X-Authentication-Token", gConfig.token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.token);
 		oReq.setRequestHeader("Content-type","application/json");
 		var postdata = new Object();
 		postdata.comment = comment;
 		oReq.send(JSON.stringify(postdata));
 	}
 	,"ctrlPriv": function(){
-		if(typeof gMe === "undefined") return;
+		if(typeof cView.gMe === "undefined") return;
 		if (!matrix.ready){
 			if( document.getElementsByClassName("priv-dlg-login")[0])return;
 			document.body.appendChild(gNodes["priv-dlg-login"].cloneAll());
@@ -258,7 +259,7 @@ define("SecretActions",[],function(){return{
 			alert("Must have a password");
 			return;
 		}
-		matrix.username = gMe.users.username;
+		matrix.username = cView.gMe.users.username;
 		matrix.setPassword(inpPass.value);
 		matrix.getUserPriv().then(
 		function(){
@@ -268,9 +269,9 @@ define("SecretActions",[],function(){return{
 			document.body.appendChild(gNodes["private-control"].cloneAll());
 			privRegenGrps();
 			matrix.ready = 1;
-			var drop = Math.floor(gConfig.cSkip/3);
+			var drop = Math.floor(cView.cSkip/3);
 			var toAdd = drop + Math.floor(gConfig.offset/3);
-			if((!gPrivTimeline.done)&& (gConfig.timeline == "home")&& matrix.ready){
+			if((!gPrivTimeline.done)&& (cView.timeline == "home")&& matrix.ready){
 				gPrivTimeline.done = true;
 				new Promise(function (){addPosts(drop,toAdd,0);});
 			};

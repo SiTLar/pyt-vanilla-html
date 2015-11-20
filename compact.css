@@ -170,8 +170,8 @@ h1{
 	clear: both;
 }
 .post {
-	margin-bottom: 3.5em;
-	margin-top: 2em;
+	margin-bottom: 1.17em;
+	margin-top: 0.7em;
 	transition-property: height ;
 	transition-duration: 5s;
 	overflow:hidden;
@@ -180,7 +180,7 @@ h1{
 	content: '';
 	display: block;
 	border-bottom: 1px solid #e8e8e8;
-	margin: 0 64px;
+	margin: 0 10%;
 }
 .avatar{
 	float: left;
@@ -194,8 +194,8 @@ h1{
 .post-body {
 	color: #666;
 	line-height: 19px;
-	padding-bottom:1em;
-	margin-bottom: 1em;
+	padding-bottom:.3em;
+	margin-bottom: .3em;
 }
 @media (min-width: 400px) {
 	.post-body {

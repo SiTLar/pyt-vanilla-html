@@ -10,7 +10,7 @@ define("SecretActions",[],function(){return{
 				var cRemain = toAdd + drop;
 				if(typeof res.posts !=="undefined"){
 					for(var idx = 0; idx < res.posts.length; idx++  ){
-						var nodePost = genPost(res.posts[idx]);
+						var nodePost = cView.Drawer.genPost(res.posts[idx]);
 						if (nodePost){
 							nodePost.rawData.updatedAt = nodePost.rawData.createdAt;
 							if(!(--cRemain)) break;
@@ -97,7 +97,7 @@ define("SecretActions",[],function(){return{
 					"id":res.posts.id
 				};
 				cView.gComments[res.posts.id] = comment;
-				var nodeNewComment = genComment(comment);
+				var nodeNewComment = cView.Drawer.genComment(comment);
 				nodeNewComment.sign = cpost.sign;
 
 				nodeComment.parentNode.replaceChild(nodeNewComment,nodeComment);
@@ -142,7 +142,7 @@ define("SecretActions",[],function(){return{
 						"id":post.id,
 						"user":cpost.payload.author
 						};
-				nodeComment = genComment(comment);
+				nodeComment = cView.Drawer.genComment(comment);
 				nodeComment.hidden = true;
 				nodeComment.sign = cpost.sign;
 				cView.gComments[post.id] = comment;
@@ -170,8 +170,8 @@ define("SecretActions",[],function(){return{
 						};
 				cView.gComments[comment.id] = comment;
 				textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
-				if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
-				var nodeNewComment = genComment(comment);
+				if( nodeComment.parentNode.childNodes.length > 4 ) cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
+				var nodeNewComment = cView.Drawer.genComment(comment);
 				nodeNewComment.sign = cpost.sign;
 				nodeComment.parentNode.replaceChild(nodeNewComment,nodeComment);
 			}
@@ -220,8 +220,8 @@ define("SecretActions",[],function(){return{
 			if(this.status < 400){
 				var comment = JSON.parse(this.response).comments;
 				cView.gComments[comment.id] = comment;
-				if( nodeComment.parentNode.childNodes.length > 4 ) addLastCmtButton(nodePost.cNodes["post-body"]);
-				if(!document.getElementById(comment.id))nodeComment.parentNode.replaceChild(genComment(comment),nodeComment);
+				if( nodeComment.parentNode.childNodes.length > 4 ) cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
+				if(!document.getElementById(comment.id))nodeComment.parentNode.replaceChild(cView.Drawer.genComment(comment),nodeComment);
 				else nodeComment.parentNode.removeChild(nodeComment);
 			}
 		};

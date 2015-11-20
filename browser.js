@@ -5,6 +5,7 @@ var matrix  = new Object();
 var _Utils = require("./utils.js");
 var _Drawer =  require("./draw.js");
 var _Actions = require("./actions.js");
+var RtUpdate = require("./rt_network.js");
 document.addEventListener("DOMContentLoaded", initDoc);
 
 function initDoc(){
@@ -15,12 +16,28 @@ function initDoc(){
 		,"gComments": {}
 		,"gAttachments": {}
 		,"gFeeds": {}
+		,"gEmbed": {}
+		,"Events": {}
 		,"gRt": {}
+		,"rtSub" : {}
+		,"initRt": function(){
+			var cView = this;
+			var bump = cView.localStorage.getItem("rtbump");
+			cView.gRt = new RtUpdate(cView.token, bump);
+			cView.gRt.subscribe(cView.rtSub);
+		}
 	};
-	var Utils = new _Utils(document, cView);
-	var Drawer = new _Drawer(document, cView, gNodes, Utils);
-	var Actions = new _Actions(document, cView, gNodes, Utils, Drawer);
-	for(var k in Utils)console.log(k);
+	var Utils = new _Utils(cView);
+	var Drawer = new _Drawer(cView);
+	var Actions = new _Actions(cView);
+	var Autolinker = require("./Autolinker.min");
+	cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
+	cView.doc = document;
+	document.cView = cView;
+	cView.Utils = Utils;
+	cView.Drawer = Drawer;
+	cView.Actions = Actions;
+	cView.gNodes = gNodes;
 	Utils.setStorage();
 	Utils.addIcon("throbber-16.gif");
 	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
@@ -67,7 +84,7 @@ function initDoc(){
 			}
 		});
 
-		gEmbed.p = new Promise(function(resolve,reject){
+		cView.gEmbed.p = new Promise(function(resolve,reject){
 			var oReq = new XMLHttpRequest();
 			oReq.onload = function(){
 				if(oReq.status < 400)
@@ -90,7 +107,7 @@ function initDoc(){
 	if(cView.timeline == "requests")return Drawer.drawRequests();
 	var oReq = new XMLHttpRequest();
 	oReq.onload = function(){
-		document.getElementById("loading").innerHTML = "Building page";
+		document.getElementById("loading-msg").innerHTML = "Building page";
 		if(oReq.status < 400){
 			Drawer.draw(JSON.parse(this.response));
 			Utils.addIcon("favicon.ico");
@@ -133,6 +150,6 @@ function initDoc(){
 
 	oReq.open("get",cView.xhrurl+locationSearch,true);
 	oReq.setRequestHeader("X-Authentication-Token", cView.token);
-	document.getElementById("loading").innerHTML = "Loading content";
+	document.getElementById("loading-msg").innerHTML = "Loading content";
 	oReq.send();
 }

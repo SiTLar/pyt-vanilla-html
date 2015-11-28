@@ -125,6 +125,10 @@ h1{
 .up-controls{
 	clear:both;
 }
+.up-date{
+	clear:both;
+	display: block;
+}
 .user-popup label {
 	display:flex;
 	margin-top:1em;

@@ -1,14 +1,14 @@
 "use strict";
-var gNodes = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var matrix  = new Object();
 var _Utils = require("./utils.js");
 var _Drawer =  require("./draw.js");
 var _Actions = require("./actions.js");
+var _SecretActions = require("./secrets.js");
 var RtUpdate = require("./rt_network.js");
-document.addEventListener("DOMContentLoaded", initDoc);
+var gTemplates = require("json!./templates.json");
 
-function initDoc(){
+window.init = function (){
 	var cView = {
 		"gUsers": { "byName":{}}
 		,"gUsersQ": {}
@@ -17,8 +17,8 @@ function initDoc(){
 		,"gAttachments": {}
 		,"gFeeds": {}
 		,"gEmbed": {}
-		,"Events": {}
 		,"gRt": {}
+		,"gNodes": {}
 		,"rtSub" : {}
 		,"initRt": function(){
 			var cView = this;
@@ -29,22 +29,26 @@ function initDoc(){
 	};
 	var Utils = new _Utils(cView);
 	var Drawer = new _Drawer(cView);
-	var Actions = new _Actions(cView);
 	var Autolinker = require("./Autolinker.min");
 	cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
 	cView.doc = document;
 	document.cView = cView;
 	cView.Utils = Utils;
 	cView.Drawer = Drawer;
-	cView.Actions = Actions;
-	cView.gNodes = gNodes;
+	cView.Actions = new _Actions(cView);
+	cView.SecretActions = new _SecretActions(cView);
+	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
 	Utils.setStorage();
 	Utils.addIcon("throbber-16.gif");
+}
+window.browserDoc = function(){
+	var cView = document.cView;
+	var Utils = cView.Utils;
 	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
 	var locationSearch = document.location.search;
 	if (locationPath == "")locationPath = "home";
 	if (locationSearch == "")locationSearch = "?offset=0";
-	cView.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
+	cView.cSkip = parseInt(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
 	cView.timeline = arrLocationPath[0];
 	switch(cView.timeline){
@@ -53,15 +57,174 @@ function initDoc(){
 		if(!Utils.auth()) return;
 		break;
 	default:
-		if(!Utils.auth(true)) gMe = undefined;
+		if(!Utils.auth(true)) cView.gMe = undefined;
 	}
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
 		cView.localStorage.removeItem("screenname");
 	}
+	setLocalSettings();
+	if(["home", "filter", "settings", "requests"].some(function(a){
+		return a == cView.timeline;
+	})){
+		if(!Utils.auth()) return;
+	}else if(!Utils.auth(true)) cView.gMe = undefined;
+	if(cView.timeline == "settings"){
+		cView.Drawer.drawSettings();
+		return Utils.postInit();	
+	}
+	if(cView.timeline == "requests"){
+		cView.Drawer.drawRequests();
+		return Utils.postInit();	
+	}
+	var oReq = new XMLHttpRequest();
+	oReq.onload = function(){
+		document.getElementById("loading-msg").innerHTML = "Building page";
+		if(oReq.status < 400){
+			cView.Drawer.draw(JSON.parse(this.response));
+			cView.doc.body.removeChild(cView.doc.getElementById("splash"));
+			Utils.postInit();	
+			return;
+		}
+		else{
+			if (oReq.status==401) {
+				Utils.deleteCookie("token");
+				cView.localStorage.removeItem("gMe");
+				location.reload();
+			}
+			if(Utils.auth())
+				document.getElementsByTagName("body")[0].appendChild(cView.gNodes["controls-user"].cloneAll());
+			var nodeError = document.createElement("div");
+			nodeError.className = "error-node";
+			nodeError.innerHTML = "Error #"+ oReq.status + ": " + oReq.statusText;
+			try{
+				var res = JSON.parse(this.response);
+				nodeError.innerHTML += "<br>"+res.err;
+			}catch(e){};
+			document.getElementsByTagName("body")[0].appendChild(nodeError);
+			document.body.removeChild(document.getElementById("splash"));
+
+		}
+
+	};
+	if(arrLocationPath.length > 1){
+		if (locationPath == "filter/discussions") {
+			cView.timeline = locationPath;
+			cView.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
+		} else	if (locationPath == "filter/direct") {
+			cView.timeline = locationPath;
+			cView.xhrurl = gConfig.serverURL + "timelines/filter/directs";
+		}else{
+			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
+			locationSearch = "?maxComments=all";
+		}
+	} else
+		cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
+
+	oReq.open("get",cView.xhrurl+locationSearch,true);
+	oReq.setRequestHeader("X-Authentication-Token", cView.token);
+	document.getElementById("loading-msg").innerHTML = "Loading content";
+	oReq.send();
+}
+
+window.initDoc = function(){
+	init();
+	browserDoc();
+}
+
+window.srvDoc = function(){
+	var cView = document.cView;
+	var idx = 0;
+	var aidx = 0;
+	cView.token = cView.Utils.getCookie(gConfig.tokenPrefix + "authToken");
+	cView.Drawer.loadGlobals(cView.gContent);
+	regenCNodes(document.getElementsByTagName("body")[0]);
+	setLocalSettings();
+	document.posts = document.getElementById("posts");
+	document.hiddenCount = 0;
+	document.hiddenPosts = new Array();
+	if(cView.gContent.posts)cView.gContent.posts.forEach(function(post){ 
+		document.hiddenPosts.push({"data":post, "is": post.isHidden});
+		if(!post.isHidden) document.getElementById(post.id).rawData = post; 
+		else document.hiddenCount++;
+	});
+	setAttr(document.getElementsByClassName("avatar-h"),"userid");
+	setAttr(document.getElementsByTagName("a"),"action");
+	Object.keys(gEvents).forEach(function(id){
+		var node = document.getElementById(id);
+		var eh = gEvents[id];
+		Object.keys(eh).forEach(function(evt){
+			eh[evt].forEach(function(a){
+				node.addEventListener(evt, cView[a[0]][a[1]])
+			});
+		});
+	});
+	if(cView.gContent.comments)cView.gContent.comments.forEach(function(cmt){
+		var nodeComment = document.getElementById(cmt.id);	
+		if(nodeComment ){
+			nodeComment.createdAt = cmt.createdAt;
+			nodeComment.userid = cmt.createdBy;
+		}
+	});
+	var nodesDate = document.getElementsByClassName("post-date");
+	for(idx = 0; idx < nodesDate.length; idx++){
+		var victim = nodesDate[idx]; do victim = victim.parentNode; while(victim.className != "post");
+		var aNode = nodesDate[idx].getElementsByTagName("a")[0];
+		aNode.date = parseInt(victim.rawData.createdAt);
+		window.setTimeout(cView.Drawer.updateDate, 100, aNode, cView);
+
+	}
+	var nodesUsernames = document.getElementsByClassName("username");
+	var arrUsernames = new Array();
+	for(idx = 0; idx < nodesUsernames.length; idx++) 
+		arrUsernames.push(nodesUsernames[idx]);
+	arrUsernames.forEach(function(node){
+		node.parentNode.outerHTML = cView.gUsers.byName[node.innerHTML].link;
+	
+	});
+	if(cView.localStorage.getItem("show_link_preview") == "1"){
+		var nodesPosts = document.getElementsByClassName("username");
+		for(idx = 0; idx < nodesPosts.length; idx ++){
+			if((urlMatch = nodePost[idx].rawData.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null) {
+				cView.gEmbed.p.then(function(oEmbedPr){
+					Drawer.embedPreview(oEmbedPr
+						,urlMatch[0]
+						,nodePost[idx].cNodes["post-body"].cNodes["attachments"] 
+					);
+				});
+			}
+		}
+	}
+	cView.Utils.postInit();	
+}
+function regenCNodes(node){
+	node.cNodes = new Object();
+	for(var idx = 0; idx < node.childNodes.length; idx++){
+		regenCNodes(node.childNodes[idx]);
+		var cName = node.childNodes[idx].className; 
+		if(cName != "")node.cNodes[cName] = node.childNodes[idx];
+	}
+}
+function setAttr(nodes, name){
+	for(var idx = 0; idx < nodes.length; idx++){
+		var aidx = 0;
+		do{
+			if (nodes[idx].attributes[aidx].name == name){
+				nodes[idx][name] = nodes[idx].attributes[aidx].value;
+				if (nodes[idx][name] == "true") nodes[idx][name] = true;
+				if (nodes[idx][name] == "false") nodes[idx][name] = false;
+				break; 
+			}
+		}while(++aidx< nodes[idx].attributes.length);
+
+	}
+}
+function setLocalSettings(){
+	var cView = document.cView;
+	cView.mode = cView.localStorage.getItem("display_name");
 	var cssTheme = cView.localStorage.getItem("display_theme");
-	if(cssTheme) document.getElementById("main-sytlesheet").href = gConfig.static + cssTheme;
+	if(cssTheme) document.getElementById("main-stylesheet").href = gConfig.static + cssTheme;
 	 
 	if(cView.localStorage.getItem("show_link_preview") == "1"){
 		var nodeEmScript =  document.createElement("script");
@@ -97,59 +260,5 @@ function initDoc(){
 					
 		});
 	}
-	Utils.genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
-	if(["home", "filter", "settings", "requests"].some(function(a){
-		return a == cView.timeline;
-	})){
-		if(!Utils.auth()) return;
-	}else if(!Utils.auth(true)) gMe = undefined;
-	if(cView.timeline == "settings")return Drawer.drawSettings();
-	if(cView.timeline == "requests")return Drawer.drawRequests();
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		document.getElementById("loading-msg").innerHTML = "Building page";
-		if(oReq.status < 400){
-			Drawer.draw(JSON.parse(this.response));
-			Utils.addIcon("favicon.ico");
-			return;
-		}
-		else{
-			if (oReq.status==401) {
-				Utils.deleteCookie("token");
-				cView.localStorage.removeItem("gMe");
-				location.reload();
-			}
-			if(Utils.auth())
-				document.getElementsByTagName("body")[0].appendChild(gNodes["controls-user"].cloneAll());
-			var nodeError = document.createElement("div");
-			nodeError.className = "error-node";
-			nodeError.innerHTML = "Error #"+ oReq.status + ": " + oReq.statusText;
-			try{
-				var res = JSON.parse(this.response);
-				nodeError.innerHTML += "<br>"+res.err;
-			}catch(e){};
-			document.getElementsByTagName("body")[0].appendChild(nodeError);
-			document.body.removeChild(document.getElementById("splash"));
 
-		}
-
-	};
-	if(arrLocationPath.length > 1){
-		if (locationPath == "filter/discussions") {
-			cView.timeline = locationPath;
-			cView.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
-		} else	if (locationPath == "filter/direct") {
-			cView.timeline = locationPath;
-			cView.xhrurl = gConfig.serverURL + "timelines/filter/directs";
-		}else{
-			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
-			locationSearch = "?maxComments=all";
-		}
-	} else
-		cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
-
-	oReq.open("get",cView.xhrurl+locationSearch,true);
-	oReq.setRequestHeader("X-Authentication-Token", cView.token);
-	document.getElementById("loading-msg").innerHTML = "Loading content";
-	oReq.send();
 }

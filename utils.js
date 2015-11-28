@@ -96,11 +96,10 @@ _Utils.prototype = {
 	,"addUser": function(user){
 		var cView = this.cView;
 		if (typeof cView.gUsers[user.id] !== "undefined" ) return;
-		var className = "not-cView.Actions.my-link";
+		var className = "not-my-link";
 		var userTitle;
-		var mode = cView.localStorage.getItem("display_name");
-		if (mode == null) mode = "screen";
-		switch(mode){
+		if (cView.mode == null) cView.mode = "screen";
+		switch(cView.mode){
 		case "screen":
 			userTitle  = user.screenName;
 			break;
@@ -113,7 +112,7 @@ _Utils.prototype = {
 			userTitle  = "<div class=username>"+user.username+"</div>";
 		}
 		if((typeof cView.gMe !== "undefined")&&(typeof cView.gMe.users !== "undefined"))
-			className = (user.id==cView.gMe.users.id?"my-link":"not-cView.Actions.my-link");
+			className = (user.id==cView.gMe.users.id?"my-link":"not-my-link");
 		user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'
 		+ userTitle
 		+"</a>";
@@ -155,11 +154,14 @@ _Utils.prototype = {
 			if (typeof(proto.e) !== "undefined" )
 				for(var evt in proto.e){
 					var action = proto.e[evt];
+					/*
 					var name = action[0].substr(0,1)+"_"+action[1];
 					cView.Events[name] = function(e){
 						return cView[action[0]][action[1]](e);
 					};
 					node.addEventListener(evt,cView.Events[name] );
+					*/
+					node.addEventListener(evt,cView[action[0]][action[1]]);
 				}
 		}
 	}
@@ -195,6 +197,39 @@ _Utils.prototype = {
 		linkFavicon.href = gConfig.static + ico;
 		cView.doc.getElementsByTagName('head')[0].appendChild(linkFavicon);
 	}
+	,"postInit": function(){
+		var cView = this.cView;
+		(function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,cView.doc,"script","//www.google-analytics.com/analytics.js","ga");
+		ga("create", "UA-0-1", "auto");
+		ga("send", "pageview");
+
+		if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
+		if(cView.localStorage.getItem("show_link_preview") == "1"){
+			(function(a,b,c){
+				var d,e,f;
+				f="PIN_"+~~((new Date).getTime()/864e5),
+				a[f]||(a[f]=!0,a.setTimeout(function(){
+					d=b.getElementsByTagName("SCRIPT")[0],
+					e=b.createElement("SCRIPT"),
+					e.type="text/javascript",
+					e.async=!0,
+					e.src=c+"?"+f,
+					d.parentNode.insertBefore(e,d)
+				}
+				,10))
+			})(window,cView.doc,"//assets.pinterest.com/js/pinit_main.js");
+		}
+		var nodesAttImg = document.getElementsByClassName("atts-img");
+		for (var idx = 0; idx < nodesAttImg.length; idx++){
+			var nodeImgAtt = nodesAttImg[idx];
+			if(cView.Utils.chkOverflow(nodeImgAtt))
+				nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+		}
+		cView.Utils.addIcon("favicon.ico");
+	}
 	,"setStorage": function (){
 		var cView = this.cView;
 		["localStorage", "sessionStorage"].forEach(function(storage){
@@ -210,7 +245,7 @@ _Utils.prototype = {
 	}
 	,"auth": function (check){
 		var cView = this.cView;
-		var Utils = this;
+		var Utils = cView.Utils;
 		cView.token = Utils.getCookie(gConfig.tokenPrefix + "authToken");
 		var txtgMe = null;
 		txtgMe = cView.localStorage.getItem("gMe");
@@ -280,6 +315,18 @@ _Utils.prototype = {
 		default:
 			return true;
 		}
+	}
+	,"chkOverflow":function(victim){
+		var cView = this.cView;
+		var test = victim.cloneNode(true);
+		test.style.opacity = 0;
+		test.style.position = "absolute";
+		test.style.display = "block";
+		victim.parentNode.appendChild(test);
+		test.style.width = victim.clientWidth;
+		var ret = victim.clientHeight < test.clientHeight;
+		victim.parentNode.removeChild(test);
+		return ret;
 	}
 };
 return _Utils;

@@ -1,6 +1,10 @@
 "use strict";
-define("SecretActions",[],function(){return{
-	,"init": function(view){this.cView = view;}
+define("SecretActions",[],function(){
+function _SecretActions(v){
+	this.cView = v;
+};
+_SecretActions.prototype = {
+	constructor:_SecretActions
 	,"addPosts": function(drop, toAdd, offset){
 		var url = matrix.cfg.srvurl + "posts?offset="+offset+"&limit="+(toAdd*matrix.cfg.mul);
 		var oReq = new XMLHttpRequest();
@@ -421,4 +425,6 @@ define("SecretActions",[],function(){return{
 		var victim = e.target; while(victim.parentNode !=  document.body)victim = victim.parentNode;
 		document.body.removeChild(victim);
 	}
-};});
+};
+return _SecretActions;
+});

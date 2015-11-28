@@ -4,11 +4,27 @@ var shortid = require("shortid");
 
  var gIdCount = 0;
  var arrSkipKeys = ["tagName", "className","innerHTML"];
+ function EventHost(){};
+ EventHost.prototype = {
+ 	constructor: EventHost
+	,toString: function(){
+		var that = this;
+		var out = new Object();
+		Object.keys(that).forEach(function(id){
+			out[id] = new Object();
+			Object.keys(that[id]).forEach(function(ev){
+				out[id][ev] = new Array();
+				that[id][ev].forEach(function(eh){out[id][ev].push(eh())});
+			});
+		});
+		return JSON.stringify(out);
+	}
+ }
  function Element (tag){
 	this.tagName = tag;
 	this.childNodes = new Array();
 	this.style = new Object();
-	this.eventHost = new Object();
+	this.eventHost = new EventHost();
  };
 Element.prototype = {
  	constructor: Element
@@ -37,7 +53,7 @@ Element.prototype = {
 		var index  = this.childNodes.indexOf(child);
 		if (index < 0 )return null;
 		var oraph = this.childNodes.splice(index,1)[0];
-		if (this.childNodes.length > 0)this.firstChild = newChild;
+		if (this.childNodes.length > 0)this.firstChild = this.childNodes[0];
 		else this.firstChild = null;
 		return oraph;
 	}
@@ -109,7 +125,6 @@ Element.prototype = {
 			|| (typeof this.eventHost[this.id][e] === "undefined") 
 		)
 			return;
-			console.log(this.eventHost);
 		var index =  this.eventHost[this.id][e].indexOf(handler);
 		if (index < 0) return;
 		this.eventHost[this.id][e].splice(index,1);
@@ -151,6 +166,17 @@ Element.prototype = {
 			+ "</" + this.tagName + ">";
 	}
  }	
+Object.defineProperty( Element.prototype, "nextSibling"
+	,{
+		enumerable: false
+		,get: function(){
+			if ( typeof this.parentNode === "undefined") return null;
+			var idx = this.parentNode.childNodes.indexOf(this) + 1;
+			if (idx == this.parentNode.childNodes.length) return null;
+			else return this.parentNode.childNodes[idx];
+		}
+	}
+);
  var Document = function(){
 	Element.call(this, "html");
 	this.head = new Element("head");
@@ -167,7 +193,13 @@ Element.prototype = {
 	} }
 	,toString : { value: function(){
 		this.collectEventHandling();
-		this.events.innerHTML = "gEvents = " + JSON.stringify(this.eventHost);
+		this.events.innerHTML = "window.gEvents = " + this.eventHost.toString()+ ";\n";
+		if(typeof this.title !== "undefined"){
+			var title = this.createElement("title");
+			title.innerHTML = this.title;
+			this.head.appendChild(title);
+			delete this.title;
+		}
 		return Element.prototype.toString.call(this);
 	}}
 

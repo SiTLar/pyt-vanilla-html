@@ -94,9 +94,8 @@ _Drawer.prototype = {
 				if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 					var userTitle;
 					var user = subscribers[sub.user];
-					var mode = cView.localStorage.getItem("display_name");
-					if (mode == null) mode = "screen";
-					switch(mode){
+					if (cView.mode == null) cView.mode = "screen";
+					switch(cView.mode){
 					case "screen":
 						userTitle  = user.screenName;
 						break;
@@ -108,9 +107,9 @@ _Drawer.prototype = {
 					case "username":
 						userTitle  = "<div class=username>"+user.username+"</div>";
 					}
-					var className = "not-cView.Actions.my-link";
+					var className = "not-my-link";
 					if((typeof cView.gMe !== "undefined")&&(typeof cView.gMe.users !== "undefined"))
-						className = (user.id==cView.gMe.users.id?"my-link":"not-cView.Actions.my-link");
+						className = (user.id==cView.gMe.users.id?"my-link":"not-my-link");
 					cView.gFeeds[sub.id] = user;
 					cView.gFeeds[sub.id].link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ userTitle+"</a>";
 				}
@@ -181,17 +180,11 @@ _Drawer.prototype = {
 		
 		cView.Utils.addIcon("favicon.ico");
 		cView.doc.body.removeChild(cView.doc.getElementById("splash"));
-	  (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,cView.doc,"script","//www.google-analytics.com/analytics.js","ga");
 
-	  ga("create", "UA-0-1", "auto");
-	  ga("send", "pageview");
 	}
 	,"draw":function(content){
 		var cView = this.cView;
-		var Drawer = this;
+		var Drawer = cView.Drawer;
 
 		/*
 		matrix = new CryptoPrivate(gCryptoPrivateCfg );
@@ -263,17 +256,17 @@ _Drawer.prototype = {
 			var htmlForward;
 			var htmlBackward;
 			//var fLastPage = (content.posts.length != cView.offset);
-			var backward = cView.cSkip*1 - cView.offset*1;
-			var forward = cView.cSkip*1 + cView.offset*1;
+			var backward = cView.cSkip*1 - gConfig.offset*1;
+			var forward = cView.cSkip*1 + gConfig.offset*1;
 			if (cView.cSkip){
 				if (backward>=0) htmlBackward = htmlPrefix + "?offset="
-					+ backward*1+ "&limit="+cView.offset*1
+					+ backward*1+ "&limit="+gConfig.offset*1
 					+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
 				nodeMore.innerHTML = htmlBackward ;
 			}
 			/*if(!fLastPage)*/ if(content.posts){
 				htmlForward = htmlPrefix + "?offset="
-				+ forward*1 + "&limit="+cView.offset*1
+				+ forward*1 + "&limit="+gConfig.offset*1
 				+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
 				if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
 				nodeMore.innerHTML +=  htmlForward;
@@ -281,6 +274,7 @@ _Drawer.prototype = {
 			body.appendChild(nodeMore.cloneNode(true));
 			cView.doc.posts = cView.doc.createElement("div");
 			cView.doc.posts.className = "posts";
+			cView.doc.posts.id = "posts";
 			body.appendChild(cView.doc.posts);
 			cView.doc.hiddenPosts = new Array();
 			cView.doc.hiddenCount = 0;
@@ -303,7 +297,7 @@ _Drawer.prototype = {
 			if(cView.doc.hiddenCount) nodeShowHidden.cNodes["href"].innerHTML= "Show "+ cView.doc.hiddenCount + " hidden entries";
 			body.appendChild(nodeMore);
 			var drop = Math.floor(cView.cSkip/3);
-			var toAdd = drop + Math.floor(cView.offset/3);
+			var toAdd = drop + Math.floor(gConfig.offset/3);
 			/*
 			if((!gPrivTimeline.done)&& (cView.timeline == "home")&& matrix.ready){
 				gPrivTimeline.done = true;
@@ -334,51 +328,8 @@ _Drawer.prototype = {
 		*/
 		if(content.timelines) cView.rtSub = {"timeline":[content.timelines.id]};
 		else cView.rtSub = {"post":[content.posts.id]};
-		if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
-		var nodes = cView.doc.getElementsByClassName("post");
-		for(var idx = 0; idx < nodes.length; idx++ ){
-			var nodePost = nodes[idx];
-			var nodeImgAtt = nodePost.cNodes["post-body"].cNodes["attachments"].cNodes["atts-img"];
-			if(Drawer.chkOverflow(nodeImgAtt))
-				nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
-		};
-		if(cView.localStorage.getItem("show_link_preview") == "1"){
-			(function(a,b,c){
-				var d,e,f;
-				f="PIN_"+~~((new Date).getTime()/864e5),
-				a[f]||(a[f]=!0,a.setTimeout(function(){
-					d=b.getElementsByTagName("SCRIPT")[0],
-					e=b.createElement("SCRIPT"),
-					e.type="text/javascript",
-					e.async=!0,
-					e.src=c+"?"+f,
-					d.parentNode.insertBefore(e,d)
-				}
-				,10))
-			})(window,cView.doc,"//assets.pinterest.com/js/pinit_main.js");
-		}
-		cView.doc.body.removeChild(cView.doc.getElementById("splash"));
-	  (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
-	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	  })(window,cView.doc,"script","//www.google-analytics.com/analytics.js","ga");
 
-	  ga("create", "UA-0-1", "auto");
-	  ga("send", "pageview");
 
-	}
-	,"chkOverflow":function(victim){
-		var cView = this.cView;
-		var test = victim.cloneNode(true);
-		test.style.opacity = 0;
-		test.style.position = "absolute";
-		victim.appendChild(test);
-		test.style.width = victim.clientWidth;
-		var height = test.clientHeight;
-		test.style.display = "block";
-		var ret = height < test.clientHeight;
-		victim.removeChild(test);
-		return ret;
 	}
 	,"drawRequests":function(){
 		var cView = this.cView;
@@ -462,7 +413,7 @@ _Drawer.prototype = {
 			sub.innerHTML = user.friend?"Unsubscribe":"Subscribe";
 			sub.subscribed = user.friend;
 			if (!user.friend && (user.isPrivate == 1 )){
-				sub.removeEventListener("click",cView.Events["A_subscribe"]);
+				sub.removeEventListener("click",cView["Actions"]["subscribe"]);
 				var oRequests = new Object();
 				if (Array.isArray(cView.gMe.requests)){
 					cView.gMe.requests.forEach(function(req){
@@ -478,8 +429,7 @@ _Drawer.prototype = {
 					controls.replaceChild(controls.cNodes["up-s"], sub);
 				}else{
 					sub.innerHTML = "Request subscription";
-					cView.Events["A_reqSubscription"] = function (e) { return cView.Actions["reqSubscription"](e);};
-					sub.addEventListener("click", cView.Events["A_reqSubscription"] );
+					sub.addEventListener("click", cView["Actions"]["reqSubscription"] );
 				}
 			}
 			if(user.friend && user.subscriber){
@@ -500,9 +450,8 @@ _Drawer.prototype = {
 			});
 			if (aBan.banned){
 				aBan.innerHTML = "Un-ban";
-				aBan.removeEventListener("click",cView.Events["A_genBlock"]);
-				cView.Events["A_doUnBan"] = function (e){return cView.Actions["doUnBan"](e);};
-				aBan.addEventListener("click", cView.Events["A_doUnBan"]);
+				aBan.removeEventListener("click",cView["Actions"]["genBlock"]);
+				aBan.addEventListener("click", cView["Actions"]["doUnBan"]);
 			}
 		}
 		return controls;
@@ -584,7 +533,15 @@ _Drawer.prototype = {
 					var oAtt = cView.gAttachments[att];
 					switch(oAtt.mediaType){
 					case "image":
-						nodeAtt.innerHTML = '<a target="_blank" href="'+oAtt.url+'" border=none ><img src="'+oAtt.thumbnailUrl+'"></a>';
+						var nodeA = cView.doc.createElement("a");
+						nodeA.target = "_blank";
+						nodeA.href = oAtt.url;
+						nodeA.border = "none";
+						var nodeImg = cView.doc.createElement("img");
+						nodeImg.src = oAtt.thumbnailUrl;
+						nodeImg.addEventListener("load", cView.Actions.showUnfolder);
+						nodeA.appendChild(nodeImg);
+						nodeAtt.appendChild(nodeA);
 						attsNode.cNodes["atts-img"].appendChild(nodeAtt);
 						nodeAtt.className = "att-img";
 						break;
@@ -612,7 +569,7 @@ _Drawer.prototype = {
 			var anchorDate = cView.doc.createElement("a");
 			if(typeof user !== "undefined") anchorDate.href = gConfig.front+user.username+"/"+post.id;
 			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
-			anchorDate.date = post.createdAt*1;
+			anchorDate.date = parseInt(post.createdAt);
 			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
 
 			if(typeof cView.gMe !== "undefined"){
@@ -624,14 +581,17 @@ _Drawer.prototype = {
 					postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes["post-control-like"];
 					nodeControls.cNodes["post-control-like"].action = true;
 				}
+				nodeControls.className = "controls";
 				var nodeHide  = cView.gNodes["hide"].cloneAll();
 				nodeControls.appendChild(nodeHide);
 				var aHide = nodeHide.cNodes["href"]
-				aHide.className = "hide";
+				//aHide.className = "hide";
 				aHide.innerHTML = post.isHidden?"Un-hide":"Hide";
 				aHide.action = !post.isHidden;
 				postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
-				postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
+				postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["controls"] = nodeControls;
+				//postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
+				nodeControls.cNodes["hide"] = nodeHide;
 			}
 			if (post.likes)	Drawer.genLikes(nodePost );
 			if (post.comments){
@@ -640,7 +600,7 @@ _Drawer.prototype = {
 						postNBody.cNodes["comments"].appendChild(Drawer.genComment(cView.gComments[post.comments[0]]));
 					var nodeComment = cView.gNodes["comment"].cloneAll();
 					nodeComment.cNodes["comment-date"].innerHTML = "";
-					nodeComment.cNodes["comment-body"].innerHTML = "<a id="+post.id+'-unc  onclick="unfoldComm(\''+post.id +'\')" style="font-style: italic;">'+ post.omittedComments+" more comments</a>";
+					nodeComment.cNodes["comment-body"].innerHTML = "<a id="+post.id+'-unc  onclick="document.cView.Actions.unfoldComm(\''+post.id +'\')" style="font-style: italic;">'+ post.omittedComments+" more comments</a>";
 					postNBody.cNodes["comments"].appendChild(nodeComment);
 					if(post.comments[1])
 						postNBody.cNodes["comments"].appendChild(Drawer.genComment(cView.gComments[post.comments[1]]));
@@ -890,8 +850,7 @@ _Drawer.prototype = {
 		+'<i class="fa fa-square fa-inverse fa-stack-1x" style="left: 3px; top: 3px; font-size: 60%"></i>'
 		+'<i class="fa fa-plus fa-stack-1x" style="left: 3px; top: 3px; font-size: 60%"></i>';
 		aAddComment.innerHTML  = "Add comment";
-		cView.Events["A_addComment"] = function (e){return cView.Actions["addComment"](e);};
-		aAddComment.addEventListener("click",cView.Events["A_addComment"]);
+		aAddComment.addEventListener("click",cView["Actions"]["addComment"]);
 		postNBody.appendChild(aIcon);
 		postNBody.appendChild(aAddComment );
 		postNBody.lastCmtButton = true;
@@ -902,16 +861,15 @@ _Drawer.prototype = {
 		victim.replaceChild(nodeDirectTo, victim.cNodes["new-post-to"]);
 		victim.cNodes["new-post-to"] = nodeDirectTo;
 		nodeDirectTo.feeds = new Array();
-		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", cView.Events["A_newPost"]);
-		cView.Events["A_postDirect"] = function (e){return cView.Actions["postDirect"](e);};
-		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", cView.Events["A_postDirect"]);
+		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", cView["Actions"]["newPost"]);
+		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", cView["Actions"]["postDirect"]);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 		if(cView.doc.location.hash != ""){
 			victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 			nodeDirectTo.cNodes["new-direct-input"].value = cView.doc.location.hash.slice(1);
 		}
+		var oDest = new Object();
 		if ((typeof cView.gMe.users.subscribers !== "undefined") && (typeof cView.gMe.users.subscriptions !== "undefined")){
-			var oDest = new Object();
 			for (var username in cView.gUsers.byName){
 				if (!cView.gUsers.byName[username].friend || !(cView.gUsers.byName[username].subscriber || (cView.gUsers.byName[username].type == "group")))
 					continue;
@@ -943,8 +901,7 @@ _Drawer.prototype = {
 		var select = cView.doc.createElement("select");
 		select.className = "new-post-feed-select";
 		select.hidden = nodePostTo.cNodes["new-post-feed-select"].hidden;
-		cView.Events["A_newPostSelect"] = function (e){return cView.Actions["newPostSelect"](e);};
-		select.addEventListener("change",cView.Events["A_newPostSelect"]);
+		select.addEventListener("change",cView["Actions"]["newPostSelect"]);
 		nodePostTo.replaceChild(select, nodePostTo.cNodes["new-post-feed-select"]);
 		nodePostTo.cNodes["new-post-feed-select"] = select;
 		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);

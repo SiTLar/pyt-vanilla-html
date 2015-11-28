@@ -5,6 +5,10 @@ function _Actions(v){
 };
 _Actions.prototype = {
 	constructor:_Actions
+	,"auth": function(){
+		var cView = document.cView;
+		cView.Utils.auth();
+	}
 	,"newPost": function(e){
 		var cView = document.cView;
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
@@ -126,10 +130,10 @@ _Actions.prototype = {
 	}
 	,"editPost": function(e) {
 		var cView = document.cView;
-	var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
-	var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditedPost,cView.Actions.cancelEditPost);
-	nodeEdit.cNodes["edit-txt-area"].value = victim.rawData.body;
-	victim.cNodes["post-body"].replaceChild( nodeEdit, victim.cNodes["post-body"].cNodes["post-cont"]);
+		var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
+		var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditedPost,cView.Actions.cancelEditPost);
+		nodeEdit.cNodes["edit-txt-area"].value = victim.rawData.body;
+		victim.cNodes["post-body"].replaceChild( nodeEdit, victim.cNodes["post-body"].cNodes["post-cont"]);
 }
 	,"cancelEditPost": function(e){
 		var cView = document.cView;
@@ -401,7 +405,7 @@ _Actions.prototype = {
 	}
 	,"doHide": function(victim, action){
 		var cView = document.cView;
-		var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].nodeHide;
+		var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].cNodes["controls"].cNodes["hide"].cNodes["href"];
 		if(action != nodeHide.action) return;
 		victim.rawData.isHidden = action;
 		nodeHide.action = !action;
@@ -700,8 +704,7 @@ _Actions.prototype = {
 					var li = cView.doc.createElement("li");
 					li.className = "ft-i";
 					li.innerHTML = user;
-					cView.Events["A_selectFriend"] = function (e){return cView.Actions["selectFriend"](e);};
-					li.addEventListener("click",cView.Events["A_selectFriend"]);
+					li.addEventListener("click",cView["Actions"]["selectFriend"]);
 					nodeTip.cNodes["ft-list"].appendChild(li);
 				});
 				nodeTip.inp = e.target;
@@ -895,8 +898,7 @@ _Actions.prototype = {
 		li.className = "new-post-feed";
 		li.oValue = option.value;
 		li.idx = e.target.selectedIndex;
-		cView.Events["A_newDirectRemoveFeed"] = function (e){return cView.Actions["newDirectRemoveFeed"](e)};
-		li.addEventListener("click",cView.Events["A_newDirectRemoveFeed"]);
+		li.addEventListener("click",cView["Actions"]["newDirectRemoveFeed"]);
 		nodeP.cNodes["new-post-feeds"].appendChild(li);
 		option.value = "";
 	}
@@ -922,8 +924,7 @@ _Actions.prototype = {
 		li.className = "new-post-feed";
 		li.oValue = option.value;
 		li.idx = e.target.selectedIndex;
-		cView.Events["A_newPostRemoveFeed"] = function(e){return cView.Actions["newPostRemoveFeed"](e)};
-		li.addEventListener("click", cView.Events["A_newPostRemoveFeed"]);
+		li.addEventListener("click", cView["Actions"]["newPostRemoveFeed"]);
 		nodeP.cNodes["new-post-feeds"].appendChild(li);
 		nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 	}
@@ -945,6 +946,7 @@ _Actions.prototype = {
 		nodePopup.style["z-index"] = 1;
 		if (typeof node.createdAt !== "undefined"){
 			var spanDate = cView.doc.createElement("span");
+			spanDate.className = "up-date";
 			var txtdate = new Date(node.createdAt*1).toString();
 			spanDate.innerHTML = txtdate.slice(0, txtdate.indexOf("(")).trim();
 			nodePopup.appendChild(spanDate);
@@ -1123,6 +1125,14 @@ _Actions.prototype = {
 		oReq.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 		oReq.send("username="+cView.doc.getElementById("a-user").value+"&password="+cView.doc.getElementById("a-pass").value);
 	}
+	,"showUnfolder":function(e){
+		var cView = document.cView;
+		var nodeImgAtt = e.target; do nodeImgAtt = nodeImgAtt.parentNode; while(nodeImgAtt.className != "atts-img");
+		if(cView.Utils.chkOverflow(nodeImgAtt))
+			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+	
+	}
+
 };
 return _Actions;
 });

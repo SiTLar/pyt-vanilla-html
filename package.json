@@ -1,0 +1,35 @@
+{
+  "name": "freefeed-vanilla",
+  "version": "1.9.5",
+  "description": "The master branch is available at [http://moimosk.ru/frf/](http://moimosk.ru/frf/)",
+  "main": "vanilla.js",
+  "dependencies": {
+    "autolinker": "^0.22.0",
+    "exports-loader": "^0.6.2",
+    "expose-loader": "^0.7.1",
+    "json-loader": "^0.5.3",
+    "openpgp": "^1.3.0",
+    "script-loader": "^0.6.1",
+    "shortid": "^2.2.4",
+    "webpack": "^1.12.8",
+    "xhr2": "^0.1.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SiTLar/pyt-vanilla-html.git"
+  },
+  "keywords": [
+    "freefeed"
+  ],
+  "author": "SiTLar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SiTLar/pyt-vanilla-html/issues"
+  },
+  "homepage": "https://github.com/SiTLar/pyt-vanilla-html#readme"
+}

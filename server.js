@@ -1,113 +1,119 @@
-var Utils = require("./utils.js");
-var Document = require("./dom_document.js")
-var Actions = require("./actions_srv.js");
+"use strict";
+var _Utils = require("./utils.js");
+var _Drawer =  require("./draw.js");
+var _Actions = require("./actions.js");
+var _SecretActions = require("./secrets.js");
+//var RtUpdate = require("./rt_network.js");
+var gTemplates = require("json!./templates.json");
+var _Document = require("./dom_document.js")
+var Autolinker = require("./Autolinker.min");
 var fs = require("fs");
-var util = require('util');
 var url = require("url");
 var XMLHttpRequest =  require("xhr2");
-global.window = new Object();
-global.gUsers = new Object();
-global.gUsersQ = new Object();
-gUsers.byName = new Object();
-global.gNodes = new Object();
-global.gMe = undefined;//new Object();
-global.gComments = new Object();
-global.gAttachments  = new Object();
-global.gFeeds = new Object();
-global.autolinker = new Object();
-global.gRt = new Object();
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
-eval(fs.readFileSync('templates.json')+'');
-eval(fs.readFileSync('config.json')+'');
-var head = fs.readFileSync('head.template');
-Utils.genNodes(templates.nodes).forEach( function(node){ gNodes[node.className] = node; });
+require("script!./config_srv.json");
+var head = require("raw!./head.template");
+global.window = {"setTimeout":function(){}}
+var Actions_srv = new Object();
+for(var key in new _Actions()){ Actions_srv[key]=function(a){return function(){ return ["Actions",a]; }; }(key)};
+var SecretActions_srv = new Object();
+for(var key in new _SecretActions()){ SecretActions_srv[key]=function(a){return function(){ return ["SecretActions",a]; }; }(key)};
 module.exports = function(req,res){
-	var document = new Document();
-	window.localStorage ={
-		setItem: function(){return;}
-		,getItem: function(){return null;}
-		,removeItem: function(){return null;}
+
+	var document = new _Document();
+	var cView = {
+		"gUsers": { "byName":{}}
+		,"gUsersQ": {}
+		,"gMe": {}
+		,"gComments": {}
+		,"gAttachments": {}
+		,"gFeeds": {}
+		,"gNodes": {}
+		,"gEmbed": {}
+		,"gRt": {}
+		,"rtSub" : {}
+		,"mode": "username" 
+/*		,"initRt": function(){
+			var cView = this;
+			var bump = cView.localStorage.getItem("rtbump");
+			cView.gRt = new RtUpdate(cView.token, bump);
+			cView.gRt.subscribe(cView.rtSub);
+		}
+*/
 	};
-	window.sessionStorage = window.localStorage;
-	window.setTimeout = function(){};
-	global.gConfig = gConfig;
-	//initDoc(req)
-	new Promise(function(resolve,reject){resolve([JSON.parse(fs.readFileSync("data.json"))]);})
-	.then(function(vals){
-		require.ensure(["./draw"], function(require){
-			var Drawer = require("./draw");
-			var content = vals[0];
-			if(vals.length>1){
-				gMe = vals[1];
-				Utils["addUser"](gMe);
-			}
-			Drawer.init(document, gNodes);
-			Drawer.draw(content);
-			document.head.innerHTML += head;
-			var nodeInitS = document.createElement("script");
-			nodeInitS.innerHTML = "var gContent = " + JSON.stringify(content);
-			if(typeof gMe !== "undefined")nodeInitS.innerHTML += "\ngMe = " + JSON.stringify(gMe);
-			nodeInitS.innerHTML += "\nicecreamInit()";
-			document.body.appendChild(nodeInitS);
-		/*
-			res.writeHead(200);	
-			res.write(document.toString());
-			res.end();
-			fs.writeFileSync('docdump.js', util.inspect(document, { showHidden: true, depth: 12, colors: false }));
-		*/	
-			fs.writeFileSync("out.html", document.toString());
-			gMe = undefined;
-			gConfig.token = null;
-		});
-	},function(ret){
-		res.writeHead(500);	
-		res.end();
-		gConfig.token = null;
-	
-	});
-}
-function initDoc(req){
-	var token = null;
+	var Utils = new _Utils(cView);
+	var Drawer = new _Drawer(cView);
+	cView.doc = document;
+	document.cView = cView;
+	cView.Utils = Utils;
+	cView.Drawer = Drawer;
+	cView.Actions = Actions_srv;
+	cView.SecretActions = SecretActions_srv;
+	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
+	cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
+	Utils.setStorage();
 	var urlReq = url.parse(req.url, true);	
 	var locationPath = (urlReq.pathname).slice(gConfig.front.length);
 	var locationSearch = urlReq.search;
 	if (locationPath == "")locationPath = "home";
 	if (locationSearch == "")locationSearch = "?offset=0";
-	gConfig.cSkip = locationSearch.split("&")[0].split("=")[1]*1;
+	cView.cSkip = parseInt(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
-	gConfig.timeline = arrLocationPath[0];
+	cView.timeline = arrLocationPath[0];
 	if(req.headers.cookie) req.headers.cookie.split(";").some(function(c){
 		var cookie = c.split("=");
 		if(cookie[0].trim() == gConfig.tokenPrefix + "authToken" ){
-			token = decodeURIComponent(cookie[1]);
+			cView.token = decodeURIComponent(cookie[1]);
 			return true;
 		}
 	});
-	gConfig.token = token;
-	/*
-	switch(gConfig.timeline){
-	case "home":
-	case "filter":
-		if(!token) return;
-		break;
-	default:
-		if(!token) gMe = undefined;
-	}
-	*/
-
+	if(["home", "filter", "settings", "requests"].some(function(a){
+		return a == cView.timeline;
+	})){
+		if(!cView.token) {
+			res.writeHeader(403);
+			res.end();
+			return;
+		}
+	}else if(!cView.token) cView.gMe = undefined;
+	if(cView.timeline == "settings")return Drawer.drawSettings();
+	if(cView.timeline == "requests")return Drawer.drawRequests();
 	if(arrLocationPath.length > 1){
 		if (locationPath == "filter/discussions") {
-			gConfig.timeline = locationPath;
-			gConfig.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
+			cView.timeline = locationPath;
+			cView.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
 		} else	if (locationPath == "filter/direct") {
-			gConfig.timeline = locationPath;
-			gConfig.xhrurl = gConfig.serverURL + "timelines/filter/directs";
+			cView.timeline = locationPath;
+			cView.xhrurl = gConfig.serverURL + "timelines/filter/directs";
 		}else{
-			gConfig.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
+			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
 			locationSearch = "?maxComments=all";
 		}
-	} else gConfig.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
-	return getContent(gConfig.xhrurl+locationSearch, token);
+	} else cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
+
+	//initDoc(req)
+	//new Promise(function(resolve,reject){resolve([JSON.parse(fs.readFileSync("data.json"))]);})
+	getContent(cView.xhrurl+locationSearch, cView.token).then(function(vals){
+		var content = vals[0];
+		if(vals.length>1){
+			cView.gMe = vals[1];
+			Utils.addUser(cView.gMe);
+		}
+		Drawer.draw(content);
+		document.head.innerHTML += head;
+		var nodeInitS = document.createElement("script");
+		nodeInitS.innerHTML = "\ninit();\n";
+		nodeInitS.innerHTML += "document.cView.gContent = " + JSON.stringify(content)+ ";\n";
+		if(typeof cView.gMe !== "undefined")nodeInitS.innerHTML += "\ndocument.cView.gMe = " + JSON.stringify(cView.gMe)+ ";\n";
+		nodeInitS.innerHTML += "srvDoc();";
+		document.body.appendChild(nodeInitS);
+		res.writeHead(200);	
+		res.end(document.toString());
+	},function(ret){
+		res.writeHead(500);	
+		res.end();
+	
+	});
 }
 function getContent(url, token){
 	var arrP = new Array();
@@ -117,7 +123,7 @@ function getContent(url, token){
 			if(oReq.status < 400) 
 				resolve(JSON.parse(oReq.response));
 			else {
-				console.log(oReq.statusText);
+				//console.log(oReq.statusText);
 				reject();
 			}
 		};
@@ -135,13 +141,11 @@ function getContent(url, token){
 			if(oReq.status < 400) 
 				resolve(JSON.parse(oReq.response));
 			else {
-				console.log(oReq.statusText);
+				//console.log(oReq.statusText);
 				reject();
 			}
 		}
 		oReq.send();
 	}));
-
-	//console.log(util.inspect(arrP[0], { showHidden: true, depth: null }));
 	return Promise.all(arrP);
 }

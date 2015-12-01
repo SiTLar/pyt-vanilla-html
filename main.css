@@ -49,15 +49,15 @@ body {
 	74% {opacity:0}
 	75% {opacity:1}
 }
-.loading span:nth-child(1){
+.loading span:nth-child(2){
 	animation: loader0 3s infinite ;
 	animation-timing-function: steps(3, start);
 }
-.loading span:nth-child(2){
+.loading span:nth-child(3){
 	animation: loader1 3s infinite ;
 	animation-timing-function: steps(4, start);
 }
-.loading span:nth-child(3){
+.loading span:nth-child(4){
 	animation: loader2 3s infinite;
 	animation-timing-function: steps(4, start);
 }
@@ -123,6 +123,10 @@ h1{
 	margin: 0 0.5em;
 }
 .up-controls{
+	clear:both;
+}
+.up-date{
+	display: block;
 	clear:both;
 }
 .user-popup label {

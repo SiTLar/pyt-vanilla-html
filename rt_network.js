@@ -1,5 +1,5 @@
 "use strict";
-
+define("RtUpdate", ["./rt_actions"], function(RtHandler){
 var RtUpdate = function (token, bump){
 	var rt = this;
 	rt.token = token;
@@ -103,3 +103,6 @@ RtUpdate.prototype = {
 		}
 	}
 } 
+return RtUpdate;
+});
+

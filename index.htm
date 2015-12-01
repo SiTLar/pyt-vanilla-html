@@ -1,7 +1,7 @@
 <html>
 <head>
-	<title>freefeed lite</title>
-	<link rel="stylesheet" id="main-sytlesheet" type="text/css" href="/static/main.css?md5=99733895bebf0a3dec055a0941e3a190" media="screen"/>
+	<script type="text/javascript" src="/static/config.json" > </script>
+	<link rel="stylesheet" id="main-stylesheet" type="text/css" href="/static/main.css" media="screen"/>
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 	<script type="text/javascript" src="/static/templates.json?md5=dc0fe926b0d992496e6479cca686e0ba" > </script>
 	<script type="text/javascript" src="/static/config.json?md5=bed43ffe6a355bcfad0d81615b149733" ></script> 
@@ -13,13 +13,14 @@
 	<script type="text/javascript" src="/static/rt_actions.js?md5=2b602be001e1ed6486a4a851973be330" > </script>
 	<script type="text/javascript" src="/static/rt_network.js?md5=5104a13cca93f2b0b52e917818180b06" > </script>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<script type="text/javascript" src="/static/parser.js?md5=ac9f4df383da59caebd7f659f4ce6b41" > </script>
+	<script type="text/javascript" src="/static/vanilla.js" > </script>
+	<script> document.addEventListener("DOMContentLoaded", initDoc); </script>
 </head>
 
 <body >
 <div id="splash" > 
 <img src="/static/throbber-100.gif" style="display:block; top: 0px; right: 0px; left: 0px; margin: 10% auto 0px;"> 
-<div id=loading style="text-align:center; font-family:monospace; font-size:x-large; font-weight:bold; text-overflow: clip;" class="loading" >Initializing<span>.</span><span>.</span><span>.</span></div>
+<div id=loading style="text-align:center; font-family:monospace; font-size:x-large; font-weight:bold; text-overflow: clip;" class="loading" ><span id="loading-msg">Initializing</span><span>.</span><span>.</span><span>.</span></div>
 </div>
 </body>
 </html>

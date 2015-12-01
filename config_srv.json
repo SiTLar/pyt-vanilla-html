@@ -1,0 +1,9 @@
+var gConfig = {
+  "serverURL":"https://micropeppa.freefeed.net/v1/"
+, "front":"/cgi/icecream/"
+, "static":"https://moimosk.ru/static/"
+, "rtURL":"https://micropeppa.freefeed.net/socket.io/"
+, "offset":"30"
+, "likesFold":4
+, "tokenPrefix":"test_"
+}

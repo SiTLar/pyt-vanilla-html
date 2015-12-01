@@ -148,6 +148,7 @@ Element.prototype = {
 		var that = this;
 		var style =  this.writeStyle();
 		var attributes = Object.keys(that).reduce(function(total,key){
+			if((key == "hidden")&& !that[key]) return total;
 			if((typeof that[key] == "string")
 				&& !(arrSkipKeys.some(function(a){return a == key}))) 
 				return total + " " + key + '="' + that[key]+'"';

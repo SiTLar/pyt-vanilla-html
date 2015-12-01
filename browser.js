@@ -39,7 +39,7 @@ window.init = function (){
 	cView.SecretActions = new _SecretActions(cView);
 	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
 	Utils.setStorage();
-	Utils.addIcon("throbber-16.gif");
+	Utils.setIcon("throbber-16.gif");
 }
 window.browserDoc = function(){
 	var cView = document.cView;
@@ -137,18 +137,20 @@ window.srvDoc = function(){
 	var cView = document.cView;
 	var idx = 0;
 	var aidx = 0;
-	cView.token = cView.Utils.getCookie(gConfig.tokenPrefix + "authToken");
 	cView.Drawer.loadGlobals(cView.gContent);
 	regenCNodes(document.getElementsByTagName("body")[0]);
 	setLocalSettings();
 	document.posts = document.getElementById("posts");
 	document.hiddenCount = 0;
 	document.hiddenPosts = new Array();
-	if(cView.gContent.posts)cView.gContent.posts.forEach(function(post){ 
-		document.hiddenPosts.push({"data":post, "is": post.isHidden});
-		if(!post.isHidden) document.getElementById(post.id).rawData = post; 
-		else document.hiddenCount++;
-	});
+	if(Array.isArray(cView.gContent.posts))
+		cView.gContent.posts.forEach(function(post){ 
+			document.hiddenPosts.push({"data":post, "is": post.isHidden});
+			if(!post.isHidden) document.getElementById(post.id).rawData = post; 
+			else document.hiddenCount++;
+		});
+	else if(typeof cView.gContent.posts !== "undefined") 
+		document.getElementById(cView.gContent.posts.id).rawData = cView.gContent.posts; 
 	setAttr(document.getElementsByClassName("avatar-h"),"userid");
 	setAttr(document.getElementsByTagName("a"),"action");
 	Object.keys(gEvents).forEach(function(id){
@@ -183,17 +185,20 @@ window.srvDoc = function(){
 		node.parentNode.outerHTML = cView.gUsers.byName[node.innerHTML].link;
 	
 	});
+	var urlMatch;
 	if(cView.localStorage.getItem("show_link_preview") == "1"){
-		var nodesPosts = document.getElementsByClassName("username");
-		for(idx = 0; idx < nodesPosts.length; idx ++){
-			if((urlMatch = nodePost[idx].rawData.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null) {
+		var nodesPost = document.getElementsByClassName("post");
+		for(idx = 0; idx < nodesPost.length; idx ++){
+			if(((urlMatch = nodesPost[idx].rawData.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null) 
+			&& (!nodesPost[idx].rawData.attachments))
+			(function(url, nodePost){
 				cView.gEmbed.p.then(function(oEmbedPr){
-					Drawer.embedPreview(oEmbedPr
-						,urlMatch[0]
-						,nodePost[idx].cNodes["post-body"].cNodes["attachments"] 
+					cView.Drawer.embedPreview(oEmbedPr
+						,url[0]
+						,nodePost.cNodes["post-body"].cNodes["attachments"] 
 					);
 				});
-			}
+			})(urlMatch, nodesPost[idx]);
 		}
 	}
 	cView.Utils.postInit();	

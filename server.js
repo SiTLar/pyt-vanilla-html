@@ -53,6 +53,7 @@ module.exports = function(req,res){
 	cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
 	Utils.setStorage();
 	var urlReq = url.parse(req.url, true);	
+	document.location = urlReq;
 	var locationPath = (urlReq.pathname).slice(gConfig.front.length);
 	var locationSearch = urlReq.search;
 	if (locationPath == "")locationPath = "home";
@@ -67,45 +68,64 @@ module.exports = function(req,res){
 			return true;
 		}
 	});
+	document.head.innerHTML += head;
+	var nodeInitS = document.createElement("script");
+	nodeInitS.innerHTML = "\ninit();\nvar cView = document.cView;\nvar go = ";
+	
 	if(["home", "filter", "settings", "requests"].some(function(a){
 		return a == cView.timeline;
 	})){
 		if(!cView.token) {
 			res.writeHeader(403);
-			res.end();
+			nodeInitS.innerHTML += "cView.Utils.auth";
+			nodeInitS.innerHTML += "\ngo();"
+			document.body.appendChild(nodeInitS);
+			res.end(document.toString());
 			return;
 		}
 	}else if(!cView.token) cView.gMe = undefined;
-	if(cView.timeline == "settings")return Drawer.drawSettings();
-	if(cView.timeline == "requests")return Drawer.drawRequests();
-	if(arrLocationPath.length > 1){
-		if (locationPath == "filter/discussions") {
-			cView.timeline = locationPath;
-			cView.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
-		} else	if (locationPath == "filter/direct") {
-			cView.timeline = locationPath;
-			cView.xhrurl = gConfig.serverURL + "timelines/filter/directs";
-		}else{
-			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
-			locationSearch = "?maxComments=all";
-		}
-	} else cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
+	switch(cView.timeline){
+		case "settings":
+			nodeInitS.innerHTML += "cView.Drawer.drawSettings;";
+			cView.xhrurl = "";
+			locationSearch = ""; 
+			break;
+		case "requests":
+			nodeInitS.innerHTML += "cView.Drawer.drawRequests;";
+			cView.xhrurl = "";
+			locationSearch = ""; 
+			break;
+		default:
+			nodeInitS.innerHTML += "srvDoc;";
+			if(arrLocationPath.length > 1){
+				if (locationPath == "filter/discussions") {
+					cView.timeline = locationPath;
+					cView.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
+				} else	if (locationPath == "filter/direct") {
+					cView.timeline = locationPath;
+					cView.xhrurl = gConfig.serverURL + "timelines/filter/directs";
+				}else{
+					cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
+					locationSearch = "?maxComments=all";
+				}
+			} else cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
+	}
 
 	//initDoc(req)
 	//new Promise(function(resolve,reject){resolve([JSON.parse(fs.readFileSync("data.json"))]);})
 	getContent(cView.xhrurl+locationSearch, cView.token).then(function(vals){
 		var content = vals[0];
-		if(vals.length>1){
+		if(vals[1]){
 			cView.gMe = vals[1];
 			Utils.addUser(cView.gMe);
 		}
-		Drawer.draw(content);
-		document.head.innerHTML += head;
-		var nodeInitS = document.createElement("script");
-		nodeInitS.innerHTML = "\ninit();\n";
-		nodeInitS.innerHTML += "document.cView.gContent = " + JSON.stringify(content)+ ";\n";
-		if(typeof cView.gMe !== "undefined")nodeInitS.innerHTML += "\ndocument.cView.gMe = " + JSON.stringify(cView.gMe)+ ";\n";
-		nodeInitS.innerHTML += "srvDoc();";
+		if(content){
+			Drawer.draw(content);
+			nodeInitS.innerHTML += "document.cView.gContent = " + JSON.stringify(content)+ ";\n";
+		}
+		if(typeof cView.gMe !== "undefined")nodeInitS.innerHTML += "\ncView.gMe = " + JSON.stringify(cView.gMe)+ ";\n";
+		nodeInitS.innerHTML += '\ncView.token = cView.Utils.getCookie(gConfig.tokenPrefix + "authToken");';
+		nodeInitS.innerHTML += "\ngo();"
 		document.body.appendChild(nodeInitS);
 		res.writeHead(200);	
 		res.end(document.toString());
@@ -117,7 +137,7 @@ module.exports = function(req,res){
 }
 function getContent(url, token){
 	var arrP = new Array();
-	arrP.push(new Promise(function(resolve,reject){
+	if (url != "")arrP.push(new Promise(function(resolve,reject){
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			if(oReq.status < 400) 
@@ -132,6 +152,7 @@ function getContent(url, token){
 		if(token)oReq.setRequestHeader("X-Authentication-Token", token);
 		oReq.send();
 	}));
+	else arrP.push(new Promise(function(resolve){resolve(null);}));
 
 	if(token) arrP.push(new Promise(function(resolve,reject){
 		var oReq = new XMLHttpRequest();
@@ -147,5 +168,6 @@ function getContent(url, token){
 		}
 		oReq.send();
 	}));
+	else arrP.push(new Promise(function(resolve){resolve(null);}));
 	return Promise.all(arrP);
 }

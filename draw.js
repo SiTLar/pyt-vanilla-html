@@ -140,7 +140,7 @@ _Drawer.prototype = {
 		return body;
 	}
 	,"drawSettings":function(){
-		var cView = this.cView;
+		var cView = document.cView;
 		var body = cView.Drawer.makeContainer();
 		var nodeSettings = cView.gNodes["global-settings"].cloneAll();
 		body.appendChild(nodeSettings);
@@ -178,8 +178,9 @@ _Drawer.prototype = {
 			node.parentNode.getElementsByTagName("span")[0].innerHTML = node.value + " minutes";
 		});
 		
-		cView.Utils.addIcon("favicon.ico");
-		cView.doc.body.removeChild(cView.doc.getElementById("splash"));
+		cView.Utils.setIcon("favicon.ico");
+		try{cView.doc.body.removeChild(cView.doc.getElementById("splash"));}
+		catch(e){};
 
 	}
 	,"draw":function(content){
@@ -309,7 +310,7 @@ _Drawer.prototype = {
 			body.appendChild(singlePost);
 			var nodesHide = singlePost.getElementsByClassName("hide");
 			singlePost.hidden = false;
-			if (nodesHide.lenght)nodesHide[0].hidden = true;
+			if (nodesHide.length)nodesHide[0].hidden = true;
 			cView.doc.title = "@" 
 				+ cView.gUsers[singlePost.rawData.createdBy].username + ": "
 				+ singlePost.rawData.body.slice(0,20).trim()
@@ -332,7 +333,7 @@ _Drawer.prototype = {
 
 	}
 	,"drawRequests":function(){
-		var cView = this.cView;
+		var cView = document.cView;
 		var oReq = new XMLHttpRequest();
 		oReq.open("get", gConfig.serverURL +"users/whoami", true);
 		oReq.setRequestHeader("X-Authentication-Token", cView.token);
@@ -374,8 +375,9 @@ _Drawer.prototype = {
 			});
 		}
 
-		cView.Utils.addIcon("favicon.ico");
-		cView.doc.body.removeChild(cView.doc.getElementById("splash"));
+		cView.Utils.setIcon("favicon.ico");
+		try{cView.doc.body.removeChild(cView.doc.getElementById("splash"));}
+		catch(e){};
 		function genReqNode(user){
 			var node = cView.gNodes["sub-request"].cloneAll();
 			node.cNodes["sr-name"].innerHTML = "<a href="+gConfig.front+user.username+">"
@@ -678,7 +680,7 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var oEmbedURL;
 		var m;
-		if((m = /^https:\/\/docs\.google\.com\/(cView.doc|spreadsheets|presentationcView.Drawer.drawings)\/d\/([^\/]+)/.exec(victim)) !== null) {
+		if((m = /^https:\/\/docs\.google\.com\/(document|spreadsheets|presentation|drawings)\/d\/([^\/]+)/.exec(victim)) !== null) {
 			new Promise(function(resolve,reject){
 				var oReq = new XMLHttpRequest();
 				oReq.onload = function(){
@@ -864,7 +866,7 @@ _Drawer.prototype = {
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", cView["Actions"]["newPost"]);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", cView["Actions"]["postDirect"]);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
-		if(cView.doc.location.hash != ""){
+		if(cView.doc.location.hash && (cView.doc.location.hash != "")){
 			victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 			nodeDirectTo.cNodes["new-direct-input"].value = cView.doc.location.hash.slice(1);
 		}

@@ -238,6 +238,7 @@ _SecretActions.prototype = {
 		oReq.send(JSON.stringify(postdata));
 	}
 	,"ctrlPriv": function(){
+		return;
 		if(typeof cView.gMe === "undefined") return;
 		if (!matrix.ready){
 			if( document.getElementsByClassName("priv-dlg-login")[0])return;

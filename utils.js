@@ -186,7 +186,7 @@ _Utils.prototype = {
 			nodeSR.hidden = true;
 		}
 	}
-	,"addIcon": function (ico){
+	,"setIcon": function (ico){
 		var cView = this.cView;
 		var linkFavicon = cView.doc.getElementById("favicon");
 		if (linkFavicon) linkFavicon.parentNode.removeChild(linkFavicon);
@@ -228,7 +228,7 @@ _Utils.prototype = {
 			if(cView.Utils.chkOverflow(nodeImgAtt))
 				nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 		}
-		cView.Utils.addIcon("favicon.ico");
+		cView.Utils.setIcon("favicon.ico");
 	}
 	,"setStorage": function (){
 		var cView = this.cView;
@@ -244,7 +244,7 @@ _Utils.prototype = {
 		});
 	}
 	,"auth": function (check){
-		var cView = this.cView;
+		var cView = document.cView;
 		var Utils = cView.Utils;
 		cView.token = Utils.getCookie(gConfig.tokenPrefix + "authToken");
 		var txtgMe = null;
@@ -284,7 +284,7 @@ _Utils.prototype = {
 			}
 		}
 		if (check !== true ){
-			cView.Utils.addIcon("favicon.ico");
+			cView.Utils.setIcon("favicon.ico");
 			var nodeAuth = cView.doc.createElement("div");
 
 			nodeAuth.className = "nodeAuth";

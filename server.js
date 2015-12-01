@@ -70,33 +70,29 @@ module.exports = function(req,res){
 	});
 	document.head.innerHTML += head;
 	var nodeInitS = document.createElement("script");
-	nodeInitS.innerHTML = "\ninit();\nvar cView = document.cView;\nvar go = ";
+	nodeInitS.innerHTML = "\ninit();\nvar cView = document.cView;" 
+	+ '\ncView.timeline = "'+ cView.timeline+'";' ;
+
 	
 	if(["home", "filter", "settings", "requests"].some(function(a){
 		return a == cView.timeline;
 	})){
 		if(!cView.token) {
 			res.writeHeader(403);
-			nodeInitS.innerHTML += "cView.Utils.auth";
-			nodeInitS.innerHTML += "\ngo();"
+			nodeInitS.innerHTML += "\ncView.Utils.auth();";
 			document.body.appendChild(nodeInitS);
 			res.end(document.toString());
 			return;
 		}
 	}else if(!cView.token) cView.gMe = undefined;
+
 	switch(cView.timeline){
 		case "settings":
-			nodeInitS.innerHTML += "cView.Drawer.drawSettings;";
-			cView.xhrurl = "";
-			locationSearch = ""; 
-			break;
 		case "requests":
-			nodeInitS.innerHTML += "cView.Drawer.drawRequests;";
 			cView.xhrurl = "";
-			locationSearch = ""; 
+			locationSearch = "";
 			break;
 		default:
-			nodeInitS.innerHTML += "srvDoc;";
 			if(arrLocationPath.length > 1){
 				if (locationPath == "filter/discussions") {
 					cView.timeline = locationPath;
@@ -125,7 +121,7 @@ module.exports = function(req,res){
 		}
 		if(typeof cView.gMe !== "undefined")nodeInitS.innerHTML += "\ncView.gMe = " + JSON.stringify(cView.gMe)+ ";\n";
 		nodeInitS.innerHTML += '\ncView.token = cView.Utils.getCookie(gConfig.tokenPrefix + "authToken");';
-		nodeInitS.innerHTML += "\ngo();"
+		nodeInitS.innerHTML += "\nsrvDoc();"
 		document.body.appendChild(nodeInitS);
 		res.writeHead(200);	
 		res.end(document.toString());

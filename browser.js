@@ -48,7 +48,7 @@ window.browserDoc = function(){
 	var locationSearch = document.location.search;
 	if (locationPath == "")locationPath = "home";
 	if (locationSearch == "")locationSearch = "?offset=0";
-	cView.cSkip = parseInt(locationSearch.match(/offset=([0-9]*).*/)[1]);
+	cView.cSkip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
 	cView.timeline = arrLocationPath[0];
 	switch(cView.timeline){
@@ -137,9 +137,21 @@ window.srvDoc = function(){
 	var cView = document.cView;
 	var idx = 0;
 	var aidx = 0;
-	cView.Drawer.loadGlobals(cView.gContent);
+	if(typeof cView.gContent !== "undefined")
+		cView.Drawer.loadGlobals(cView.gContent);
 	regenCNodes(document.getElementsByTagName("body")[0]);
 	setLocalSettings();
+	
+	switch(cView.timeline){
+	case "settings":
+		return cView.Drawer.drawSettings();
+	case "requests":
+		return cView.Drawer.drawRequests();
+	default:
+	
+	
+	}
+
 	document.posts = document.getElementById("posts");
 	document.hiddenCount = 0;
 	document.hiddenPosts = new Array();
@@ -173,7 +185,7 @@ window.srvDoc = function(){
 	for(idx = 0; idx < nodesDate.length; idx++){
 		var victim = nodesDate[idx]; do victim = victim.parentNode; while(victim.className != "post");
 		var aNode = nodesDate[idx].getElementsByTagName("a")[0];
-		aNode.date = parseInt(victim.rawData.createdAt);
+		aNode.date = JSON.parse(victim.rawData.createdAt);
 		window.setTimeout(cView.Drawer.updateDate, 100, aNode, cView);
 
 	}

@@ -146,7 +146,7 @@ _Drawer.prototype = {
 		body.appendChild(nodeSettings);
 		cView.doc.getElementById("my-screen-name").value = cView.gMe.users.screenName;
 		if(typeof cView.gMe.users.email !== "undefined" )cView.doc.getElementById("my-email").value = cView.gMe.users.email;
-		cView.doc.getElementById("me-private").checked = (cView.gMe.users.isPrivate == 1);
+		cView.doc.getElementById("me-private").checked = JSON.parse(cView.gMe.users.isPrivate);
 		var mode = cView.localStorage.getItem("display_name");
 		if (mode == null) mode = "screen";
 		var theme = cView.localStorage.getItem("display_theme");
@@ -161,12 +161,12 @@ _Drawer.prototype = {
 			}
 		};
 		var nodeLinkPreview =  cView.doc.getElementById("link-preview");
-		if(cView.localStorage.getItem("show_link_preview") == "1")
+		if(JSON.parse(cView.localStorage.getItem("show_link_preview")))
 			nodeLinkPreview.checked = true;
 		else nodeLinkPreview.checked = false;
 
-		cView.doc.getElementById("rt-chkbox").checked = parseInt(cView.localStorage.getItem("rt"));
-		var bump = (cView.localStorage.getItem("rtbump") == 1);
+		cView.doc.getElementById("rt-chkbox").checked = JSON.parse(cView.localStorage.getItem("rt"));
+		var bump = JSON.parse(cView.localStorage.getItem("rtbump"));
 		cView.doc.getElementById("rt-params").hidden = !bump;
 		cView.doc.getElementById("rt-bump").checked = bump ;
 		var oRTParams = cView.localStorage.getItem("rt_params");
@@ -319,7 +319,7 @@ _Drawer.prototype = {
 		}
 	/*
 		var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
-		nodeRTCtrl.cNodes["rt-chkbox"].checked = parseInt(cView.localStorage.getItem("rt"));
+		nodeRTCtrl.cNodes["rt-chkbox"].checked = JSON.parse(cView.localStorage.getItem("rt"));
 		var nodeBump = nodeRTCtrl.cNodes["rt-bump"];
 		for(var idx = 0; idx<nodeBump.childNodes.length; idx++)
 			if(nodeBump.childNodes[idx].value == bump){
@@ -571,7 +571,7 @@ _Drawer.prototype = {
 			var anchorDate = cView.doc.createElement("a");
 			if(typeof user !== "undefined") anchorDate.href = gConfig.front+user.username+"/"+post.id;
 			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
-			anchorDate.date = parseInt(post.createdAt);
+			anchorDate.date = JSON.parse(post.createdAt);
 			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
 
 			if(typeof cView.gMe !== "undefined"){

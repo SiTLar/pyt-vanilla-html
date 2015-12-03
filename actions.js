@@ -66,7 +66,7 @@ _Actions.prototype = {
 					"feed":postTo.feeds[0],
 					"type":"post",
 					"author":cView.gMe.users.username,
-					"data":textField.value,
+					"data":textField.value
 				};
 				matrix.sign(JSON.stringify(payload)).then(function(sign){
 					var token = matrix.mkOwnToken(sign);
@@ -190,7 +190,7 @@ _Actions.prototype = {
 				"feed":nodePost.feed,
 				"type":"post",
 				"author":cView.gMe.users.username,
-				"data":text,
+				"data":text
 			};
 			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodePost.sign));
 			matrix.sign(JSON.stringify(payload)).then(function(sign){
@@ -771,39 +771,15 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var action = e.target.checked;
 		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
-		cView.Actions.updateBlockList("blockComments", nodePopUp.user, action);
-		var id = cView.gUsers.byName[nodePopUp.user].id;
-		var nodesCmts = cView.doc.getElementsByClassName("comment");
-		for(var idx = 0; idx < nodesCmts.length; idx++){
-			if(nodesCmts[idx].userid == id){
-				if(action) nodesCmts[idx].innerHTML = "---";
-				else nodesCmts[idx].parentNode.replaceChild(cView.Drawer.genComment(cView.gComments[nodesCmts[idx].id]), nodesCmts[idx]);
-			}
-		}
+		cView.Utils.updateBlockList("blockComments", nodePopUp.user, action);
+		cView.Drawer.blockComments(nodePopUp.user, action);
 	}
 	,"doBlockPosts": function(e){
 		var cView = document.cView;
 		var action = e.target.checked;
 		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
-		cView.Actions.updateBlockList("blockPosts", nodePopUp.user, action);
-		var id = cView.gUsers.byName[nodePopUp.user].id;
-		var nodesPosts = cView.doc.getElementsByClassName("post");
-		for(var idx = 0; idx < nodesPosts.length; idx++){
-			if(nodesPosts[idx].rawData.createdBy == id)
-				nodesPosts[idx].hidden = action;
-		}
-	}
-	,"updateBlockList": function(list, username, add){
-		var cView = document.cView;
-		var id = cView.gUsers.byName[username].id;
-		if(add){
-			if ((typeof cView[list] === "undefined") || (cView[list] == null)) cView[list] = new Object();
-			cView[list][id] = true;
-			cView.localStorage.setItem(list, JSON.stringify(cView[list]));
-		}else try{
-			delete cView[list][id];
-			cView.localStorage.setItem(list, JSON.stringify(cView[list]));
-		}catch(e){};
+		cView.Utils.updateBlockList("blockPosts", nodePopUp.user, action);
+		cView.Drawer.blockPosts(nodePopUp.user, action);
 	}
 	,"setRadioOption": function(e){
 		var cView = document.cView;
@@ -920,7 +896,8 @@ _Actions.prototype = {
 		option.disabled = true;
 		nodeP.feeds.push(option.value);
 		var li = cView.doc.createElement("li");
-		li.innerHTML = option.innerHTML;
+		if(option.value == cView.gMe.users.username)li.innerHTML = "My feed";
+		else li.innerHTML = "@" + option.value;
 		li.className = "new-post-feed";
 		li.oValue = option.value;
 		li.idx = e.target.selectedIndex;

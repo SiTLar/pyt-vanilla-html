@@ -77,11 +77,15 @@ _Utils.prototype = {
 	}
 	,"deleteCookie": function(name){
 		var cView = this.cView;
-		//var hostname = window.location.hostname.split(".");
-		//hostname.reverse();
+		var hostname = window.location.hostname.split(".");
+		hostname.reverse();
 		var cookie = name
 			+"=;expires=" + new Date(0).toUTCString()
-			//+"; domain="+ hostname[1] + "." + hostname[0]
+			+"; domain="+ hostname[1] + "." + hostname[0]
+			+"; path=/";
+		cView.doc.cookie = cookie; 
+		cookie = name
+			+"=;expires=" + new Date(0).toUTCString()
 			+"; path=/";
 		cView.doc.cookie = cookie; 
 	}
@@ -327,6 +331,18 @@ _Utils.prototype = {
 		var ret = victim.clientHeight < test.clientHeight;
 		victim.parentNode.removeChild(test);
 		return ret;
+	}
+	,"updateBlockList": function(list, username, add){
+		var cView = document.cView;
+		var id = cView.gUsers.byName[username].id;
+		if(add){
+			if ((typeof cView[list] === "undefined") || (cView[list] == null)) cView[list] = new Object();
+			cView[list][id] = true;
+			cView.localStorage.setItem(list, JSON.stringify(cView[list]));
+		}else try{
+			delete cView[list][id];
+			cView.localStorage.setItem(list, JSON.stringify(cView[list]));
+		}catch(e){};
 	}
 };
 return _Utils;

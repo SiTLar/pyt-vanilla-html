@@ -1,3 +1,4 @@
+var webpack = require('webpack');
 module.exports = {
 	"target":"web"
 	,"entry": "./browser.js"

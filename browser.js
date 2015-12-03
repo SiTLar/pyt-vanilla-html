@@ -7,7 +7,9 @@ var _Actions = require("./actions.js");
 var _SecretActions = require("./secrets.js");
 var RtUpdate = require("./rt_network.js");
 var gTemplates = require("json!./templates.json");
-
+/* @externs
+@interface
+*/
 window.init = function (){
 	var cView = {
 		"gUsers": { "byName":{}}
@@ -37,10 +39,17 @@ window.init = function (){
 	cView.Drawer = Drawer;
 	cView.Actions = new _Actions(cView);
 	cView.SecretActions = new _SecretActions(cView);
+	cView.cTxt = null;
 	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
 	Utils.setStorage();
+	["blockPosts", "blockComments"].forEach(function(list){
+		cView[list]= JSON.parse(cView.localStorage.getItem(list));
+	});
 	Utils.setIcon("throbber-16.gif");
 }
+/* @externs
+@interface
+*/
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;
@@ -51,14 +60,6 @@ window.browserDoc = function(){
 	cView.cSkip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
 	cView.timeline = arrLocationPath[0];
-	switch(cView.timeline){
-	case "home":
-	case "filter":
-		if(!Utils.auth()) return;
-		break;
-	default:
-		if(!Utils.auth(true)) cView.gMe = undefined;
-	}
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
@@ -128,11 +129,17 @@ window.browserDoc = function(){
 	oReq.send();
 }
 
+/* @externs
+@interface
+*/
 window.initDoc = function(){
 	init();
 	browserDoc();
 }
 
+/* @externs
+@interface
+*/
 window.srvDoc = function(){
 	var cView = document.cView;
 	var idx = 0;
@@ -213,6 +220,9 @@ window.srvDoc = function(){
 			})(urlMatch, nodesPost[idx]);
 		}
 	}
+	["blockPosts", "blockComments"].forEach(function(list){
+		cView[list].forEach(function(user){ cView.Drawer[list](user,true); });
+	});
 	cView.Utils.postInit();	
 }
 function regenCNodes(node){

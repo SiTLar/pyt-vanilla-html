@@ -1,3 +1,4 @@
+var webpack = require('webpack');
 
 module.exports = {
 	"target":"node"
@@ -6,4 +7,11 @@ module.exports = {
 		"libraryTarget":"commonjs2"
 		,"filename":"vanilla_srv.js"
 	}
+	,"plugins":[
+		new webpack.optimize.UglifyJsPlugin({
+		    mangle: {
+			except: ["cView", 'exports', 'require']
+		    }
+		})
+	]
 };

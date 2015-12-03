@@ -200,10 +200,6 @@ _Drawer.prototype = {
 		*/
 		var body = Drawer.makeContainer();
 		Drawer.loadGlobals(content);
-		cView.cTxt = null;
-		["blockPosts", "blockComments"].forEach(function(list){
-			cView[list]= JSON.parse(cView.localStorage.getItem(list));
-		})
 		//var nodeRTControls = cView.gNodes["rt-controls"].cloneAll();
 		if(typeof cView.gMe === "undefined"){
 			var nodeGControls = cView.gNodes["controls-anon"].cloneAll();
@@ -243,12 +239,18 @@ _Drawer.prototype = {
 			case cView.gMe.users.username:
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				body.appendChild(nodeAddPost);
-				Drawer.genPostTo(nodeAddPost);
+				Drawer.genPostTo(nodeAddPost, cView.gMe.users.username);
 				break;
 			default:
 				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(cView.timeline));
-
 			}
+			var feed = cView.gUsers.byName[cView.timeline];
+			if( (typeof feed !== "undefined") && (feed.type == "group") && feed.friend){
+				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
+				body.appendChild(nodeAddPost);
+				Drawer.genPostTo(nodeAddPost, feed.username);
+			}
+				
 		}
 		if(content.timelines){
 			var nodeMore = cView.doc.createElement("div");
@@ -888,29 +890,27 @@ _Drawer.prototype = {
 		nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
 		cView.regenPostTo = function (){return cView.Drawer.genDirectTo(victim);};
 	}
-	,"genPostTo":function(victim){
+	,"genPostTo":function(victim, init){
 		var cView = this.cView;
 		var nodePostTo = cView.gNodes["new-post-to"].cloneAll();
+		var idx = 1;
 		victim.replaceChild(nodePostTo, victim.cNodes["new-post-to"]);
 		victim.cNodes["new-post-to"] = nodePostTo;
 		nodePostTo.feeds = new Array();
-		nodePostTo.feeds.push(cView.gMe.users.username);
 		nodePostTo.parentNode.isPrivate  = false;
-		nodePostTo.cNodes["new-post-feeds"].firstChild.idx = 1;
-		nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = cView.gMe.users.username;
-		var option = cView.doc.createElement("option");
-		option.selected = true;
 		var select = cView.doc.createElement("select");
 		select.className = "new-post-feed-select";
 		select.hidden = nodePostTo.cNodes["new-post-feed-select"].hidden;
 		select.addEventListener("change",cView["Actions"]["newPostSelect"]);
 		nodePostTo.replaceChild(select, nodePostTo.cNodes["new-post-feed-select"]);
 		nodePostTo.cNodes["new-post-feed-select"] = select;
+		var option = cView.doc.createElement("option");
+		option.selected = true;
 		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
-		option = cView.doc.createElement("option");
-		option.disabled = true;
+		var option = cView.doc.createElement("option");
 		option.innerHTML = "My feed";
 		option.value = cView.gMe.users.username;
+		chkInit(init, option, idx);
 		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
 		var groups = cView.doc.createElement("optgroup");
 		groups.label = "Public groups";
@@ -921,9 +921,11 @@ _Drawer.prototype = {
 				if (typeof oSubscriptions[subid] === "undefined") return;
 				var sub = cView.gUsers[oSubscriptions[subid].user];
 				if((typeof sub !=="undefined") && (sub.type == "group")){
+					idx++;
 					option = cView.doc.createElement("option");
 					option.value = sub.username;
-					option.innerHTML = sub.screenName;
+					chkInit(init, option, idx);
+					option.innerHTML = sub.screenName + "("+ sub.username + ")";
 					groups.appendChild(option);
 				}
 			});
@@ -945,8 +947,37 @@ _Drawer.prototype = {
 		if (groups.childNodes.length > 0 )
 			nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
 
-		cView.regenPostTo = function (){return cView.Drawer.genPostTo(victim);};
+		function chkInit(init, option, idx){
+			if (init != option.value) return;
+			option.disabled = true;
+			nodePostTo.cNodes["new-post-feeds"].firstChild.idx = idx;
+			nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = init;
+			if(init != cView.gMe.users.username)
+				nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = "@" + init;
+			nodePostTo.feeds.push(init);
+		}
+		cView.regenPostTo = function (){return cView.Drawer.genPostTo(victim, init);};
 
+	}
+	,"blockPosts":function(name, action){
+		var cView = this.cView;	
+		var id = cView.gUsers.byName[name].id;
+		var nodesPosts = cView.doc.getElementsByClassName("post");
+		for(var idx = 0; idx < nodesPosts.length; idx++){
+			if(nodesPosts[idx].rawData.createdBy == id)
+				nodesPosts[idx].hidden = action;
+		}
+	}
+	,"blockComments":function(name, action){
+		var cView = this.cView;	
+		var id = cView.gUsers.byName[name].id;
+		var nodesCmts = cView.doc.getElementsByClassName("comment");
+		for(var idx = 0; idx < nodesCmts.length; idx++){
+			if(nodesCmts[idx].userid == id){
+				if(action) nodesCmts[idx].innerHTML = "---";
+				else nodesCmts[idx].parentNode.replaceChild(cView.Drawer.genComment(cView.gComments[nodesCmts[idx].id]), nodesCmts[idx]);
+			}
+		}
 	}
 };
 return _Drawer;

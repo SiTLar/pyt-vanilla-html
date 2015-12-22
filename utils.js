@@ -38,17 +38,19 @@ _Utils.prototype = {
 		return 'about ' + r;
 	}
 	/**********************************************/
-	,"loadScript": function(script){
-		var cView = this.cView;
-		return new Promise(function(resolve,reject){
-			var node = cView.doc.createElement("script");
-			node.type = "text/javascript";
-			node.onload = resolve;
-			node.onerror = reject;
-		//	node.async = "async";
-			node.src = gConfig.static + script;
-			cView.doc.getElementsByTagName("head")[0].appendChild(node);
-		});
+	,"ffReq": function(o, callback, fail ){
+		fail = typeof fail !== 'undefined' ? fail : function(){return;};
+		var method = typeof o.method  !== "undefined"? o.method : "get";
+		var oReq = new XMLHttpRequest();
+		oReq.open(method ,o.url , true);
+		if(typeof o.token !== "undefined" )
+			oReq.setRequestHeader("X-Authentication-Token",o.token);
+		oReq.onload = function(){
+			if(oReq.status < 400) callback(oReq.response);
+			else fail();
+		}
+		if (typeof o.data  !== "undefined")  oReq.send(data);
+		else  oReq.send();
 	}
 	,"setCookie": function(name, data){
 		var cView = this.cView;
@@ -102,6 +104,7 @@ _Utils.prototype = {
 		if (typeof cView.gUsers[user.id] !== "undefined" ) return;
 		var className = "not-my-link";
 		var userTitle;
+		if(typeof user.isPrivate !== "undefined")user.isPrivate = JSON.parse(user.isPrivate);
 		if (cView.mode == null) cView.mode = "screen";
 		switch(cView.mode){
 		case "screen":
@@ -115,8 +118,13 @@ _Utils.prototype = {
 		case "username":
 			userTitle  = "<div class=username>"+user.username+"</div>";
 		}
-		if((typeof cView.gMe !== "undefined")&&(typeof cView.gMe.users !== "undefined"))
-			className = (user.id==cView.gMe.users.id?"my-link":"not-my-link");
+		if(typeof cView.logins[user.id] !== "undefined"){
+			user.my = true;
+			className = "my-link-"+user.id;
+		}else{
+			user.my = false;
+			className = "not-my-link";
+		}
 		user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'
 		+ userTitle
 		+"</a>";
@@ -155,39 +163,55 @@ _Utils.prototype = {
 				genCNodes(node.childNodes[idx], proto.childNodes[idx]);
 				node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
 			}
-			if (typeof(proto.e) !== "undefined" )
-				for(var evt in proto.e){
-					var action = proto.e[evt];
-					/*
-					var name = action[0].substr(0,1)+"_"+action[1];
-					cView.Events[name] = function(e){
-						return cView[action[0]][action[1]](e);
-					};
-					node.addEventListener(evt,cView.Events[name] );
-					*/
-					node.addEventListener(evt,cView[action[0]][action[1]]);
-				}
+			if (typeof proto.e  == "undefined"  ) return;
+			Object.keys(proto.e).forEach(function(evt){
+				var action = proto.e[evt];
+				node.addEventListener(evt,cView[action[0]][action[1]]);
+			});
 		}
 	}
-	,"refreshgMe": function(){
+	,"refreshLogin": function(id){
 		var cView = this.cView;
-		cView.localStorage.setItem("gMe",JSON.stringify(cView.gMe));
-		delete cView.gUsers[cView.gMe.users.id];
-		this.addUser(cView.gMe.users);
-		var links = cView.doc.getElementsByClassName("my-link");
+		cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
+		delete cView.gUsers[id];
+		var user = cView.logins[id].data.users;
+		cView.Utils.addUser(user);
+		var links = cView.doc.getElementsByClassName("my-link-" + id);
 		for(var idx = 0; idx< links.length; idx++)
-			links[idx].outerHTML = cView.gMe.users.link;
+			links[idx].outerHTML = user.link;
 		var nodeSR = cView.doc.getElementById("sr-info");
 		if(!nodeSR)return;
-		if(Array.isArray(cView.gMe.users.subscriptionRequests)){
-			nodeSR.cNodes["sr-info-a"].innerHTML = "You have "
-			+ cView.gMe.users.subscriptionRequests.length 
+		if(Array.isArray(user.subscriptionRequests)){
+			cView.subReqsCount += user.subscriptionRequests.length;
+			nodeSR.cNodes["sr-info-a"].innerHTML ="You have"
+			+ cView.subReqsCount
 			+ " subscription requests to review.";
 			nodeSR.hidden = false;
-			cView.subReqsCount = cView.gMe.users.subscriptionRequests.length;
-		}else{
-			cView.subReqsCount = 0;
-			nodeSR.hidden = true;
+		}
+		var login = cView.logins[id].data;
+		if ((typeof user.subscribers !== "undefined") 
+		&& (typeof user.subscriptions !== "undefined")){
+			oSubscriptions = new Object();
+			login.oFriends = new Object();
+			login.subscribers.forEach(cView.Utils.addUser, cView.Utils);
+			login.subscriptions.forEach(function(sub){
+				if(sub.name == "Posts"){
+					oSubscriptions[sub.id] = sub.user;
+				}
+			});
+			user.subscribers.forEach(function(sub){
+				cView.Utils.addUser(sub);
+				cView.gUsers[sub.id].subscriber = true;
+			});
+			user.subscriptions.forEach(function(subid){
+				var userid = oSubscriptions[subid];
+				if (typeof userid !== "undefined") {
+					if (typeof cView.gUsers[userid] !== "undefined") {
+						cView.gUsers[userid].friend = true;
+						login.oFriends[userid] = true;
+					}
+				}
+			});
 		}
 	}
 	,"setIcon": function (ico){
@@ -254,24 +278,15 @@ _Utils.prototype = {
 		var txtgMe = null;
 		txtgMe = cView.localStorage.getItem("gMe");
 		if (txtgMe && cView.token){
-			cView.gMe = JSON.parse(txtgMe);
-			if (cView.gMe.users) {
-				Utils.addUser(cView.gMe.users);
-				var oReq = new XMLHttpRequest();
-				oReq.open("get", gConfig.serverURL +"users/whoami", true);
-				oReq.setRequestHeader("X-Authentication-Token", cView.token);
-				oReq.onload = function(){
-					if(oReq.status < 400) {
-						cView.gMe = JSON.parse(oReq.response);
-						if (cView.gMe.users) {
-							Utils.refreshgMe();
-							return true;
-						}
-					}
-				}
-				setTimeout(function (){oReq.send()},300);
+			cView.logins = JSON.parse(txtgMe);
+			if(cView.ids) cView.ids.forEach(function(id) {
+				var user = cView.logins[id].data;
+				if (cView.token == cView.logins[id].token)cView.mainId = id;
+				Utils.addUser(user);
+				setTimeout(function (){ Utils.getWhoami(id); },300);
 				return true;
-			}
+			});else cView.logins = new Object();
+
 		}
 
 		var oReq = new XMLHttpRequest();
@@ -280,11 +295,14 @@ _Utils.prototype = {
 			oReq.setRequestHeader("X-Authentication-Token", cView.token);
 			oReq.send();
 			if(oReq.status < 400) {
-				cView.gMe = JSON.parse(oReq.response);
-				if (cView.gMe.users) {
-					cView.Utils.refreshgMe();
-					return true;
-				}
+				var res = JSON.parse(oReq.response); 
+				var id = res.users.id;
+				cView.mainId = id;
+				cView.logins[id] = new Object();
+				cView.logins[id].token = cView.token;
+				cView.logins[id].data = res;
+				Utils.refreshLogin(id);
+				return true;
 			}
 		}
 		if (check !== true ){
@@ -343,6 +361,45 @@ _Utils.prototype = {
 			delete cView[list][id];
 			cView.localStorage.setItem(list, JSON.stringify(cView[list]));
 		}catch(e){};
+	}
+	,"getNode":function(node){
+		var arrPath =  Array.prototype.slice.call(arguments);
+		arrPath.shift();
+		arrPath.forEach(function(step){
+			var className = step[1];
+			switch(step[0]){
+			case "p":
+				do node = node.parentNode; 
+				while(node.className != className);
+				break;
+			case "c":
+				node = node.cNodes[className];
+				break;
+			}
+		});
+		return node;
+
+	}
+	,"getInputsByName": function(node){
+		var oInputs = new Object();
+		var nodes = node.getElementsByTagName("input");
+		for(var idx = 0; idx < nodes.length; idx++){
+			var input = nodes[idx];
+			oInputs[input.name] = input;
+		}
+		return oInputs;
+	}
+	,"getWhoami": function(id,callback){
+		var cView = this.cView;
+		var oParam = {
+			"url":gConfig.serverURL +"users/whoami"
+			,"token":cView.logins[id].token
+		};
+		cView.Utils.ffReq(oParam, function(res){
+			cView.logins[id].data = JSON.parse(res);
+			cView.Utils.refreshLogin(id);
+			if (typeof callback == "function") callback(res);
+		});
 	}
 };
 return _Utils;

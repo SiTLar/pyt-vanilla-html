@@ -38,7 +38,7 @@ _Drawer.prototype = {
 
 		/*
 		var l =  post.likes.length;
-		if(typeof cView.gMe !== "undefined"){
+		if(cView.ids){
 			for (var idx = 0; idx< l;idx++) {
 				var like = post.likes[idx];
 				if(like == cView.gMe.users.id){
@@ -70,7 +70,7 @@ _Drawer.prototype = {
 		postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 		//postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 		nodeLikes.className = "comma";
-		if(typeof cView.gMe !== "undefined"){
+		if(cView.ids){
 			if(post.likes[0] == cView.gMe.users.id){
 				postNBody.cNodes["post-info"].myLike = nodeLikes.childNodes[0];
 				if( postNBody.cNodes["post-info"].nodeLike) {
@@ -108,8 +108,13 @@ _Drawer.prototype = {
 						userTitle  = "<div class=username>"+user.username+"</div>";
 					}
 					var className = "not-my-link";
-					if((typeof cView.gMe !== "undefined")&&(typeof cView.gMe.users !== "undefined"))
-						className = (user.id==cView.gMe.users.id?"my-link":"not-my-link");
+					if(typeof cView.logins[user.id] !== "undefined"){
+						user.my = true;
+						className = "my-link-"+user.id;
+					}else{
+						user.my = false;
+						className = "not-my-link";
+					}
 					cView.gFeeds[sub.id] = user;
 					cView.gFeeds[sub.id].link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'+ userTitle+"</a>";
 				}
@@ -127,26 +132,58 @@ _Drawer.prototype = {
 		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
 		cView.doc.title = "FreeFeed: " + cView.timeline; 
 		var controls = cView.gNodes["controls-user"].cloneAll();
-		if((typeof cView.gMe !== "undefined") 
-			&& Array.isArray(cView.gMe.users.subscriptionRequests)){
+		var ids = cView.ids;
+		if(ids) cView.subReqsCount = ids.reduce(function(total, id){
+			var profile = cView.logins[id].data.users;
+			if (Array.isArray(profile.subscriptionRequests))
+				return total + profile.subscriptionRequests.length;
+			else return total;
+		},0); else cView.subReqsCount = 0;
+		if (cView.subReqsCount){
 			controls.cNodes["sr-info"].cNodes["sr-info-a"].innerHTML = "You have "
-			+ cView.gMe.users.subscriptionRequests.length 
+			+ cView.subReqsCount
 			+ " subscription requests to review.";
 			controls.cNodes["sr-info"].hidden = false;
-			cView.subReqsCount = cView.gMe.users.subscriptionRequests.length;
-		} else cView.subReqsCount = 0;
+		}
 		body.appendChild(controls );
 		body.appendChild(title);
 		return body;
+	}
+	,"genProfile": function(user){
+		var cView = document.cView;
+		var nodeProfile = cView.gNodes["settings-profile"].cloneAll();
+		nodeProfile.getElementsByClassName("sp-username")[0].innerHTML = "@" + user.username;
+		nodeProfile.cNodes["chng-avatar"].cNodes["avatar-img"].src = user.profilePictureMediumUrl; 
+		var nodes = nodeProfile.getElementsByTagName("input");
+		for(var idx = 0; idx < nodes.length; idx++){
+			var node = nodes[idx];
+			switch(node.name){
+			case "id": 
+				node.value = user.id;
+				break;
+			case "is-main":
+				node.checked = (cView.mainId == user.id);
+				break;
+			case "email": 
+				if(typeof user.email !== "undefined" )
+					node.value =  user.email;
+				break;
+			case "screen-name": 
+				node.value = user.screenName;
+				break;
+			case "is-private":
+				node.checked = JSON.parse(user.isPrivate);
+				break;
+			}
+		};
+		return nodeProfile;
 	}
 	,"drawSettings":function(){
 		var cView = document.cView;
 		var body = cView.Drawer.makeContainer();
 		var nodeSettings = cView.gNodes["global-settings"].cloneAll();
 		body.appendChild(nodeSettings);
-		cView.doc.getElementById("my-screen-name").value = cView.gMe.users.screenName;
-		if(typeof cView.gMe.users.email !== "undefined" )cView.doc.getElementById("my-email").value = cView.gMe.users.email;
-		cView.doc.getElementById("me-private").checked = JSON.parse(cView.gMe.users.isPrivate);
+		nodeSettings.getElementsByClassName("")
 		var mode = cView.localStorage.getItem("display_name");
 		if (mode == null) mode = "screen";
 		var theme = cView.localStorage.getItem("display_theme");
@@ -164,7 +201,6 @@ _Drawer.prototype = {
 		if(JSON.parse(cView.localStorage.getItem("show_link_preview")))
 			nodeLinkPreview.checked = true;
 		else nodeLinkPreview.checked = false;
-
 		cView.doc.getElementById("rt-chkbox").checked = JSON.parse(cView.localStorage.getItem("rt"));
 		var bump = JSON.parse(cView.localStorage.getItem("rtbump"));
 		cView.doc.getElementById("rt-params").hidden = !bump;
@@ -177,7 +213,11 @@ _Drawer.prototype = {
 			if(oRTParams)node.value = oRTParams[id];
 			node.parentNode.getElementsByTagName("span")[0].innerHTML = node.value + " minutes";
 		});
-		
+		cView.ids.forEach(function(id){
+			nodeSettings
+			.cNodes["settings-profiles"]
+			.appendChild(cView.Drawer.genProfile(cView.logins[id].data.users));
+		});
 		cView.Utils.setIcon("favicon.ico");
 		try{cView.doc.body.removeChild(cView.doc.getElementById("splash"));}
 		catch(e){};
@@ -201,31 +241,11 @@ _Drawer.prototype = {
 		var body = Drawer.makeContainer();
 		Drawer.loadGlobals(content);
 		//var nodeRTControls = cView.gNodes["rt-controls"].cloneAll();
-		if(typeof cView.gMe === "undefined"){
+		if(!cView.ids){
 			var nodeGControls = cView.gNodes["controls-anon"].cloneAll();
 			var controls = body.getElementsByClassName("controls-user")[0];
 			body.replaceChild(nodeGControls, controls);
 		}else{
-			if ((typeof cView.gMe.users.subscribers !== "undefined") 
-			&& (typeof cView.gMe.users.subscriptions !== "undefined")){
-				cView.gMe.subscribers.forEach(cView.Utils.addUser, cView.Utils);
-				var oSubscriptions = new Object();
-				cView.gMe.subscriptions.forEach(function(sub){
-					if(sub.name =="Posts"){
-						oSubscriptions[sub.id] = sub.user;
-					}
-				});
-				cView.gMe.users.subscribers.forEach(function(sub){
-					cView.Utils.addUser(sub);
-					cView.gUsers[sub.id].subscriber = true;
-				});
-				cView.gMe.users.subscriptions.forEach(function(subid){
-					if (typeof oSubscriptions[subid] !== "undefined") {
-						if (typeof cView.gUsers[oSubscriptions[subid]] !== "undefined")
-							cView.gUsers[oSubscriptions[subid]].friend = true;
-					}
-				});
-			}
 
 			switch (cView.timeline.split("/")[0]){
 			case "filter":
@@ -331,25 +351,18 @@ _Drawer.prototype = {
 		*/
 		if(content.timelines) cView.rtSub = {"timeline":[content.timelines.id]};
 		else cView.rtSub = {"post":[content.posts.id]};
-
-
 	}
 	,"drawRequests":function(){
 		var cView = document.cView;
-		var oReq = new XMLHttpRequest();
-		oReq.open("get", gConfig.serverURL +"users/whoami", true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
-		oReq.onload = function(){
-			if(oReq.status < 400) {
-				cView.gMe = JSON.parse(oReq.response);
-				if (cView.gMe.users) {
-					cView.Utils.refreshgMe();
-					cView.Drawer.completeRequests();
-					return true;
-				}
-			}
+		var count = cView.ids.length;
+		cView.ids.forEach(function(id){
+			cView.Utils.getWhoami(id, all);
+		
+		});
+		function all(){
+			if (--count)return;
+			cView.Drawer.completeRequests();
 		}
-		oReq.send();
 	}
 	,"completeRequests":function(){
 		var cView = this.cView;
@@ -392,73 +405,87 @@ _Drawer.prototype = {
 		}
 
 	}
+	,"genUserPopup": function(node, user){
+		var cView = this.cView;
+		var nodePopup = cView.gNodes["user-popup"].cloneAll(true);
+		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
+		nodePopup.id = "userPopup" + node.userid;
+		nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+		nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
+		if((typeof cView.gMe !== "undefined") && (user.id != cView.gMe.users.id) )
+			cView.Utils.setChild(nodePopup, "up-controls", cView.Drawer.genUpControls(user.username));
+		if (typeof node.createdAt !== "undefined"){
+			var spanDate = cView.doc.createElement("span");
+			spanDate.className = "up-date";
+			var txtdate = new Date(node.createdAt*1).toString();
+			spanDate.innerHTML = txtdate.slice(0, txtdate.indexOf("(")).trim();
+			nodePopup.appendChild(spanDate);
+		}
+		return nodePopup;
+	}
 	,"genUpControls":function(username){
 		var cView = this.cView;
 		var controls = cView.gNodes["up-controls"].cloneAll();
-		var sub = controls.cNodes["up-s"];
+		var subs = controls.cNodes["up-sbs"];
+		var cc = controls.cNodes["up-c-common"];
 		var user = cView.gUsers.byName[username];
-		if (typeof user !== "undifined") gen();
-		else new Promise(function(resolve, reject){
-			var oReq = new XMLHttpRequest();
-			oReq.onload = function(){
-				if(this.status < 400){
-					var oRes = JSON.parse(oReq.response);
-					cView.Utils.addUser(oRes.users);
-					user = cView.gUsers.byName[comment.user];
-					resolve();
-				}
-			};
-			oReq.open("get",gConfig.serverURL + "users/"+username, true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
-			oReq.send();
-		}).then(gen);
-		function gen() {
-			controls.user = username;
-			sub.innerHTML = user.friend?"Unsubscribe":"Subscribe";
+		controls.user = username;
+		cView.ids.forEach(genSubs);
+		if(user.friend && user.subscriber){
+			cc.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
+			cc.cNodes["up-d"].target = "_blank";
+		}else{
+			cc.cNodes["up-d"].hidden = true;
+			cc.cNodes["up-d"].nextSibling.hidden = true;
+		}
+		var aBan = cc.cNodes["up-b"];
+		if (user.type == "group"){
+			aBan.nextSibling.hidden = true;
+			aBan.hidden = true;
+			return;
+		}
+		aBan.banned = cView.gMe.users.banIds.some(function(a){
+			return a == user.id;
+		});
+		if (aBan.banned){
+			aBan.innerHTML = "Un-ban";
+			aBan.removeEventListener("click",cView["Actions"]["genBlock"]);
+			aBan.addEventListener("click", cView["Actions"]["doUnBan"]);
+		}
+		return controls;
+
+		function genSubs(id){
+			var login = cView.logins[id].data;
+			var friend = (typeof login.oFriends[user.id] !== "undefined");
+			var sub = cView.gNodes["up-s"].cloneAll();
+			sub.innerHTML = friend?"Unsubscribe":"Subscribe";
 			sub.subscribed = user.friend;
-			if (!user.friend && (user.isPrivate == 1 )){
-				sub.removeEventListener("click",cView["Actions"]["subscribe"]);
+			sub.loginId = id;
+			if (!friend && (user.isPrivate == 1 )){
+				sub.removeEventListener("click",cView["Actions"]["evtSubscribe"]);
 				var oRequests = new Object();
-				if (Array.isArray(cView.gMe.requests)){
-					cView.gMe.requests.forEach(function(req){
+				if (Array.isArray(login.requests)){
+					login.requests.forEach(function(req){
 						oRequests[req.id] = req;
 					});
 				}
-				if(Array.isArray(cView.gMe.users.pendingSubscriptionRequests)
-				&&cView.gMe.users.pendingSubscriptionRequests.some(function(a){
-						return oRequests[a].username == username
+				if(Array.isArray(login.users.pendingSubscriptionRequests)
+				&&login.users.pendingSubscriptionRequests.some(function(a){
+						return oRequests[a].username == username;
 					})){
-					controls.cNodes["up-s"] = cView.doc.createElement("span");
-					controls.cNodes["up-s"].innerHTML = "Subscription request sent";
-					controls.replaceChild(controls.cNodes["up-s"], sub);
+					sub = cView.doc.createElement("span");
+					sub.innerHTML = "Subscription request sent";
 				}else{
 					sub.innerHTML = "Request subscription";
 					sub.addEventListener("click", cView["Actions"]["reqSubscription"] );
 				}
 			}
-			if(user.friend && user.subscriber){
-				controls.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
-				controls.cNodes["up-d"].target = "_blank";
-			}else{
-				controls.cNodes["up-d"].hidden = true;
-				controls.cNodes["up-d"].nextSibling.hidden = true;
-			}
-			var aBan = controls.cNodes["up-b"];
-			if (user.type == "group"){
-				aBan.nextSibling.hidden = true;
-				aBan.hidden = true;
-				return;
-			}
-			aBan.banned = cView.gMe.users.banIds.some(function(a){
-				return a == user.id;
-			});
-			if (aBan.banned){
-				aBan.innerHTML = "Un-ban";
-				aBan.removeEventListener("click",cView["Actions"]["genBlock"]);
-				aBan.addEventListener("click", cView["Actions"]["doUnBan"]);
-			}
+			var envelop =  document.createElement("li");
+			envelop.innerHTML = "@"+login.users.username+": ";
+			envelop.appendChild(sub);
+			controls.cNodes["up-sbs"].getElementsByTagName("ul")[0].appendChild(envelop);
 		}
-		return controls;
+
 	}
 
 	,"regenHides":function(){
@@ -576,7 +603,7 @@ _Drawer.prototype = {
 			anchorDate.date = JSON.parse(post.createdAt);
 			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
 
-			if(typeof cView.gMe !== "undefined"){
+			if(cView.ids){
 				var nodeControls;
 				if (post.createdBy == cView.gMe.users.id){
 					nodeControls = cView.gNodes["controls-self"].cloneAll();
@@ -801,7 +828,7 @@ _Drawer.prototype = {
 		function gotUser(){
 			nodeComment.userid = cUser.id;
 			nodeSpan.innerHTML += " - " + cUser.link ;
-			if(typeof cView.gMe !== "undefined"){
+			if(cView.ids){
 				if(cUser.id == cView.gMe.users.id)
 					nodeComment.cNodes["comment-body"].appendChild(cView.gNodes["comment-controls"].cloneAll());
 				else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
@@ -978,6 +1005,19 @@ _Drawer.prototype = {
 				else nodesCmts[idx].parentNode.replaceChild(cView.Drawer.genComment(cView.gComments[nodesCmts[idx].id]), nodesCmts[idx]);
 			}
 		}
+	}
+	,"genMultiuser":function(ok, cancle){
+		var popup = cView.gNode["multiuser-dialog"].cloneAll();
+		cView.ids.forEach(function(id){
+			var unit = cView.gNode["multiuser-unit"].cloneAll();
+			unit.getElementsByTagName("span")[0].innerHTML = "@"+
+				cView.logins[id].data.users.username;
+			unit.getElementsByTagName("button")[0].addEventListener("click",ok);
+			unit.getElementsByTagName("a")[0].addEventListener("click",cancle);
+			unit.getElementsByTagName("input")[0].value = id;
+			popup.cNodes["units"].appendChild(unit);
+		});
+		return popup; 
 	}
 };
 return _Drawer;

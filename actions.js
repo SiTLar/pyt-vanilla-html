@@ -57,7 +57,7 @@ _Actions.prototype = {
 			};
 			if(textField.attachments) post.attachments = textField.attachments;
 			postdata.post = post;
-			if(postTo.isPrivate){
+		/*	if(postTo.isPrivate){
 				oReq.open("post",matrix.cfg.srvurl+"post", true);
 				oReq.setRequestHeader("x-content-type", "post");
 				oReq.setRequestHeader("Content-type","text/plain");
@@ -77,7 +77,7 @@ _Actions.prototype = {
 					oReq.setRequestHeader("Content-type","application/json");
 					oReq.send(JSON.stringify({"d":post}));
 				},function(){console.log("Failed to sign")});
-			}else{
+			}else*/{
 				oReq.open("post",gConfig.serverURL + "posts", true);
 				oReq.onload = onload;
 				oReq.setRequestHeader("Content-type","application/json");
@@ -181,6 +181,7 @@ _Actions.prototype = {
 
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 		var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value;
+	/*
 		if(nodePost.isPrivate){
 			oReq.open("put",matrix.cfg.srvurl+"edit", true);
 			oReq.setRequestHeader("x-content-type", "post");
@@ -202,7 +203,9 @@ _Actions.prototype = {
 					JSON.stringify({"payload":payload,"sign":sign}));
 				oReq.send(JSON.stringify({"d":post}));
 			},function(){console.log("Failed to sign")});
-		}else{
+		}else
+	*/
+		{
 			post.body =  text;
 			oReq.open("put",gConfig.serverURL + "posts/"+nodePost.id, true);
 			oReq.setRequestHeader("X-Authentication-Token", cView.token);
@@ -355,19 +358,24 @@ _Actions.prototype = {
 		oReq.send();
 
 	}
-	,"subscribe": function(e){
+	,"evtSubscribe": function(e){
 		var cView = document.cView;
+		var Utils = cView.Utils;
+		var traget = e.target;
+		var spinner = cView.gNodes["spinner"].cloneAll();
+		var nodeParent = target.parentNode;
+		nodeParent.replaceChild(spinner, target);
 		var oReq = new XMLHttpRequest();
-		var username = e.target.parentNode.user;
-		oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.subscribed?"/unsubscribe":"/subscribe"), true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		var username = nodeParent.user;
+		oReq.open("post", gConfig.serverURL +"users/"+username+(target.subscribed?"/unsubscribe":"/subscribe"), true);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[traget.loginId].token);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
-				cView.gMe = JSON.parse(oReq.response);
+				cView.logins[traget.loginId].data = JSON.parse(oReq.response); 
+				Utils.refreshLogin(traget.loginId);
 				cView.localStorage.setItem("gMe",JSON.stringify(cView.gMe));
-				cView.gUsers.byName[username].friend = !e.target.subscribed;
-				cView.Utils.setChild(e.target.parentNode.parentNode, "up-controls", cView.Drawer.genUpControls(username));
-			}
+				Utils.setChild(Utils.getNode(target, ["p","user-popup"]), "up-controls", cView.Drawer.genUpControls(username));
+			}else nodeParent.replaceChild( target, spinner);
 		}
 
 		oReq.send();
@@ -399,9 +407,9 @@ _Actions.prototype = {
 				cView.Actions.doHide(victim, action, "user");
 			};
 		}
-			oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(action?"hide":"unhide"), true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
-			oReq.send();
+		oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(action?"hide":"unhide"), true);
+		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.send();
 	}
 	,"doHide": function(victim, action){
 		var cView = document.cView;
@@ -905,31 +913,16 @@ _Actions.prototype = {
 		nodeP.cNodes["new-post-feeds"].appendChild(li);
 		nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 	}
-	,"genUserPopup": function(e){
+	,"evtUserPopup": function(e){
 		var cView = document.cView;
 		var node = e.target; while(typeof node.userid === "undefined")node = node.parentNode;
 		var user = cView.gUsers[node.userid];
 		if(cView.doc.getElementById("userPopup" + node.userid))return;
-		var nodePopup = cView.gNodes["user-popup"].cloneAll(true);
-		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
-		nodePopup.id = "userPopup" + node.userid;
-		nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
-		nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
-		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
-		if((typeof cView.gMe !== "undefined") && (user.id != cView.gMe.users.id) )
-			cView.Utils.setChild(nodePopup, "up-controls", cView.Drawer.genUpControls(user.username));
+		var nodePopup = cView.Drawer.genUserPopup(node, user);
 		nodePopup.style.top = e.pageY;
 		nodePopup.style.left = e.pageX;
 		nodePopup.style["z-index"] = 1;
-		if (typeof node.createdAt !== "undefined"){
-			var spanDate = cView.doc.createElement("span");
-			spanDate.className = "up-date";
-			var txtdate = new Date(node.createdAt*1).toString();
-			spanDate.innerHTML = txtdate.slice(0, txtdate.indexOf("(")).trim();
-			nodePopup.appendChild(spanDate);
-		}
-
-
+		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
 	}
 	,"upClose": function(e){
 		var cView = document.cView;
@@ -988,23 +981,20 @@ _Actions.prototype = {
 	}
 	,"updateProfile": function (e){
 		var cView = document.cView;
+		var nodeProfile = cView.Utils.getNode(e.target,["p","settings-profile"]);
 		e.target.disabled = true;
-		cView.doc.getElementById("update-spinner").hidden = false;
-		cView.gMe.users.screenName = cView.doc.getElementById("my-screen-name").value;
-		cView.gMe.users.email = cView.doc.getElementById("my-email").value;
-		if (cView.doc.getElementById("me-private").checked == false)
-			cView.gMe.users.isPrivate = false;
-		else cView.gMe.users.isPrivate = true;
+		nodeProfile.getElementsByClassName("spinner")[0].hidden = false;
+		var inputs = cView.Utils.getInputsByName(nodeProfile); 
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
-			var nodeMsg = cView.doc.getElementById("update-status");
+			var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];
 			e.target.disabled = false;
-			cView.doc.getElementById("update-spinner").hidden = true;
+			nodeProfile.getElementsByClassName("spinner")[0].hidden = true;
 			if(oReq.status < 400){
 				cView.gMe = JSON.parse(oReq.response);
 				nodeMsg.className = "sr-info";
-				nodeMsg.innerHTML = "Updated. Your feed is <span style='font-weight: bold;'>" + ((cView.gMe.users.isPrivate == true)?"private.":"public.")+ "</span>";
-				cView.Utils.refreshcView.gMe();
+				nodeMsg.innerHTML = "Updated. @"+ cView.gMe.users.username +"'s feed is <span style='font-weight: bold;'>" + ((cView.gMe.users.isPrivate == true)?"private.":"public.")+ "</span>";
+				cView.Utils.refreshgMe();
 			}else {
 				nodeMsg.className = "msg-error";
 				nodeMsg.innerHTML = "Got error: ";
@@ -1019,6 +1009,70 @@ _Actions.prototype = {
 		oReq.setRequestHeader("Content-type","application/json");
 		oReq.setRequestHeader("X-Authentication-Token", cView.token);
 		oReq.send(JSON.stringify({"user":cView.gMe.users}));
+	}
+	,"addAcc": function (e){
+		var cView = document.cView;
+		var nodePorfiles = cView.Utils.getNode(e.target, ["p","global-settings"],["c","settings-profiles"]);
+		nodePorfiles.appendChild(cView.gNodes["settings-login"].cloneAll());
+		document.getElementsByClassName("gs-add-acc")[0].hidden = true;
+	}
+	,"addProfileLogin": function (e){
+		var cView = document.cView;
+		e.target.disabled = true;
+		var nodeLogin = cView.Utils.getNode(e.target, ["p","settings-login"]);
+		nodeLogin.getElementsByClassName("spinner")[0].hidden = false;
+		var oReq = new XMLHttpRequest();
+		var inpsLogin = cView.Utils.getInputsByName(nodeLogin);
+		var userid = null;
+		oReq.onload = function(){
+			var res =  JSON.parse(oReq.response);
+			if(oReq.status < 400){
+				if(typeof cView.logins[res.users.id] !== "undefined"){
+					cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
+					nodeLogin.parentNode.removeChild(nodeLogin);
+					return; 
+				}
+				cView.logins[res.users.id] = new Object();
+				cView.logins[res.users.id].token =  res.authToken;
+				userid = res.users.id;
+				cView.Utils.getWhoami(res.users.id, finish);
+
+			}else cView.doc.getElementById("auth-msg").innerHTML = res.err;
+		};
+		oReq.open("post", gConfig.serverURL +"session", true);
+		oReq.setRequestHeader("X-Authentication-Token", null);
+		oReq.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		oReq.send("username="+inpsLogin["login-username"].value+"&password="+inpsLogin["login-password"].value);
+		function finish(){
+			cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
+			nodeLogin.parentNode.replaceChild(cView.Drawer.genProfile(cView.logins[userid].data.users),nodeLogin);
+
+		}
+	}
+	,"setMainProfile": function(e){
+		if(!e.trarget.checked){console.log("tudu!");return;}
+		else console.log("tada!");
+		var cView = document.cView;
+		var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);
+		var id = cView.Utils.getInputsByName(nodeProf)["id"].value;
+		cView.token = cView.logins[id].token;
+		cView.mainId = id;
+	}
+	,"logoutAcc": function(e){
+		var cView = document.cView;
+		var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);
+		var id = cView.Utils.getInputsByName(nodeProf)["id"].value;
+		delete cView.logins[id];
+		nodeProf.parentNode.removeChild(nodeProf);
+		if(id == cView.mainId){
+			nodeProf = cView.doc.getElementsByClassName("settings-profile")[0];
+			var inputs = cView.Utils.getInputsByName(nodeProf);
+			id = inputs["id"].value;
+			inputs[""].checked = true;
+			cView.mainId = id;
+			cView.token = cView.logins[id].token; 
+
+		}
 	}
 	,"setRTparams": function (e){
 		var cView = document.cView;
@@ -1108,6 +1162,42 @@ _Actions.prototype = {
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	
+	}
+	,"chngAvatar":function(e){
+		var cView = document.cView;
+		var Utils = cView.Utils;
+		var files = e.target.parentNode.cNodes["edit-buttons-upload"].files; 
+		if (!files.length)return;
+		e.target.disabled = true;
+		var nodeImg = e.target.parentNode.parentNode.cNodes["avatar-img"]
+		nodeImg.src = gConfig.static+"throbber-100.gif";
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(oReq.status < 400)getNewWhoami();
+		}
+		var id = Utils.getInputsByName( Utils.getNode(e.target,["p","settings-profile"]))["id"].value;
+		var token = cView.logins[id].token;
+		oReq.open("post",gConfig.serverURL + "users/updateProfilePicture", true);
+		oReq.setRequestHeader("X-Authentication-Token", token);
+		var data = new FormData();
+		data.append( "file",files[0]) ;
+		oReq.send(data);
+		function getNewWhoami() {
+			e.target.value = "";
+			e.target.disabled = false;
+			var oReq = new XMLHttpRequest();
+			oReq.onload = function(){
+				if(oReq.status < 400){
+					cView.logins[id].data = JSON.parse(oReq.response);
+					Utils.refreshLogin(id);
+					nodeImg.src = cView.logins[id].data.users.profilePictureMediumUrl;
+				}
+			}
+
+			oReq.open("get", gConfig.serverURL +"users/whoami", true);
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.send();
+		}
 	}
 
 };

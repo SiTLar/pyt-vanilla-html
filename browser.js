@@ -14,13 +14,14 @@ window.init = function (){
 	var cView = {
 		"gUsers": { "byName":{}}
 		,"gUsersQ": {}
-		,"gMe": {}
 		,"gComments": {}
 		,"gAttachments": {}
 		,"gFeeds": {}
 		,"gEmbed": {}
 		,"gRt": {}
 		,"gNodes": {}
+		,"logins": {}
+		,"mainId": ""
 		,"rtSub" : {}
 		,"initRt": function(){
 			var cView = this;
@@ -29,6 +30,24 @@ window.init = function (){
 			cView.gRt.subscribe(cView.rtSub);
 		}
 	};
+	Object.defineProperty( cView, "gMe" ,{
+		"enumerable": false
+		,"get": function(){
+			var ids = Object.keys(this.logins);
+			if(ids.length == 1)return this.logins[ids[0]].data;
+			if((this.mainId == "")||(ids.length == 0))return null;
+			return this.logins[this.mainId].data;
+		}
+	});
+	Object.defineProperty( cView, "ids" ,{
+		"enumerable": false
+		,"get": function(){
+			if (typeof this.logins == "undefined") return null;
+			var ids = Object.keys(this.logins);
+			if (typeof this.logins[ids[0]].token == "undefined") return null;
+			return ids;
+		}
+	})
 	var Utils = new _Utils(cView);
 	var Drawer = new _Drawer(cView);
 	var Autolinker = require("./Autolinker.min");

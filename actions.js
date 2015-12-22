@@ -361,20 +361,19 @@ _Actions.prototype = {
 	,"evtSubscribe": function(e){
 		var cView = document.cView;
 		var Utils = cView.Utils;
-		var traget = e.target;
+		var target = e.target;
 		var spinner = cView.gNodes["spinner"].cloneAll();
 		var nodeParent = target.parentNode;
 		nodeParent.replaceChild(spinner, target);
 		var oReq = new XMLHttpRequest();
-		var username = nodeParent.user;
+		var username = Utils.getNode(nodeParent,["p","up-controls"]).user;
 		oReq.open("post", gConfig.serverURL +"users/"+username+(target.subscribed?"/unsubscribe":"/subscribe"), true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.logins[traget.loginId].token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[target.loginId].token);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
-				cView.logins[traget.loginId].data = JSON.parse(oReq.response); 
-				Utils.refreshLogin(traget.loginId);
-				cView.localStorage.setItem("gMe",JSON.stringify(cView.gMe));
-				Utils.setChild(Utils.getNode(target, ["p","user-popup"]), "up-controls", cView.Drawer.genUpControls(username));
+				cView.logins[target.loginId].data = JSON.parse(oReq.response); 
+				Utils.refreshLogin(target.loginId);
+				Utils.setChild(Utils.getNode(nodeParent, ["p","user-popup"]), "up-controls", cView.Drawer.genUpControls(username));
 			}else nodeParent.replaceChild( target, spinner);
 		}
 
@@ -1050,7 +1049,7 @@ _Actions.prototype = {
 		}
 	}
 	,"setMainProfile": function(e){
-		if(!e.trarget.checked){console.log("tudu!");return;}
+		if(!e.target.checked){console.log("tudu!");return;}
 		else console.log("tada!");
 		var cView = document.cView;
 		var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);

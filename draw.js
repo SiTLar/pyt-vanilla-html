@@ -459,7 +459,7 @@ _Drawer.prototype = {
 			var friend = (typeof login.oFriends[user.id] !== "undefined");
 			var sub = cView.gNodes["up-s"].cloneAll();
 			sub.innerHTML = friend?"Unsubscribe":"Subscribe";
-			sub.subscribed = user.friend;
+			sub.subscribed = friend;
 			sub.loginId = id;
 			if (!friend && (user.isPrivate == 1 )){
 				sub.removeEventListener("click",cView["Actions"]["evtSubscribe"]);

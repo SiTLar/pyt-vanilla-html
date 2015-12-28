@@ -1115,7 +1115,7 @@ _Actions.prototype = {
 				var nodeSR = cView.doc.getElementById("sr-info");
 				if(--cView.subReqsCount){
 					nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
-					+ cView.gMe.users.subscriptionRequests.length 
+					+ cView.subReqsCount
 					+ " subscription requests to review.";
 				}else{
 					nodeSR.hidden = true;
@@ -1134,7 +1134,7 @@ _Actions.prototype = {
 			+ action + "/" 
 			+ host.cNodes["sr-user"].value
 		,true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.setRequestHeader("X-Authentication-Token", cView[host.cNodes["sr-id"].value].token);
 		oReq.send();
 	}
 	,"getauth": function (e){

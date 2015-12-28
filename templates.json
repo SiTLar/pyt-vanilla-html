@@ -486,6 +486,7 @@
 		{"c":"sr-avatar", "t":"img"}
 		,{"c":"sr-name"}
 		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-id", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-ctrl"
 		,"children":[
 			{"t":"a","txt":"Accept request", "e":{"click":["Actions","srAccept"]}}

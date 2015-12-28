@@ -246,22 +246,24 @@ _Drawer.prototype = {
 			var controls = body.getElementsByClassName("controls-user")[0];
 			body.replaceChild(nodeGControls, controls);
 		}else{
+			var names = new Array();
+			cView.ids.forEach(function(id){names.push(cView.gUsers[id].username)});
+			names.push("home");
 
-			switch (cView.timeline.split("/")[0]){
-			case "filter":
+			var view = cView.timeline.split("/")[0];
+			if(names.indexOf(view) != -1){
+				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
+				body.appendChild(nodeAddPost);
+				Drawer.genPostTo(nodeAddPost, cView.gMe.users.username);
+				break;
+			}else if (view == filter){
 				if (cView.timeline.split("/")[1] == "direct"){
 					var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 					body.appendChild(nodeAddPost);
 					Drawer.genDirectTo(nodeAddPost);
 					break;
 				}
-			case "home":
-			case cView.gMe.users.username:
-				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
-				body.appendChild(nodeAddPost);
-				Drawer.genPostTo(nodeAddPost, cView.gMe.users.username);
-				break;
-			default:
+			}else{
 				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(cView.timeline));
 			}
 			var feed = cView.gUsers.byName[cView.timeline];
@@ -367,33 +369,44 @@ _Drawer.prototype = {
 	,"completeRequests":function(){
 		var cView = this.cView;
 		var body = cView.Drawer.makeContainer();
-		if (Array.isArray(cView.gMe.requests)) cView.gMe.requests.forEach( cView.Utils.addUser, cView.Utils);
-		else body.getElementsByClassName("pagetitle")[0].innerHTML = "<h1>No requests</h1>";
-		
-		if(Array.isArray(cView.gMe.users.subscriptionRequests)){
-			var nodeTPReq = cView.doc.createElement("h3");
-			nodeTPReq.innerHTML = "Pending requests";
-			nodeTPReq.id = "sr-header";
-			body.appendChild(nodeTPReq);
-			cView.gMe.users.subscriptionRequests.forEach(function(req){
-				body.appendChild(genReqNode(cView.gUsers[req]));
-			});
-		}
-		if(Array.isArray(cView.gMe.users.pendingSubscriptionRequests)){
-			var nodeTReq = cView.doc.createElement("h3");
-			nodeTReq.innerHTML = "Sent requests";
-			body.appendChild(nodeTReq);
-			cView.gMe.users.pendingSubscriptionRequests.forEach(function(req){
-				var node = genReqNode(cView.gUsers[req]);
-				node.cNodes["sr-ctrl"].hidden = true;
-				body.appendChild(node);
-			});
-		}
+		var count = 0;
+		cView.ids.forEach(function(id){
+			var login = cView.logins[id].data;
+			if(!Array.isArray(login))return;
+			count++;
+			var nodeH = cView.doc.createElement("h2");
+			nodeH.innerHTML = "@"+login.users.username+" requests";
+			body.appendChild(nodeH);
+			login.requests.forEach( cView.Utils.addUser, cView.Utils);
+			if(Array.isArray(login.users.subscriptionRequests)){
+				var nodeTPReq = cView.doc.createElement("h3");
+				nodeTPReq.innerHTML = "Pending requests";
+				nodeTPReq.id = "sr-header";
+				body.appendChild(nodeTPReq);
+				login.users.subscriptionRequests.forEach(function(req){
+					body.appendChild(genReqNode(cView.gUsers[req]), id);
+				});
+			}
+			if(Array.isArray(login.users.pendingSubscriptionRequests)){
+				var nodeTReq = cView.doc.createElement("h3");
+				nodeTReq.innerHTML = "Sent requests";
+				body.appendChild(nodeTReq);
+				login.users.pendingSubscriptionRequests.forEach(function(req){
+					var node = genReqNode(cView.gUsers[req], id);
+					node.cNodes["sr-ctrl"].hidden = true;
+					body.appendChild(node);
+				});
+			}
 
+
+		
+		});
+		if (!count)body.getElementsByClassName("pagetitle")[0].innerHTML = "<h1>No requests</h1>";
+		
 		cView.Utils.setIcon("favicon.ico");
 		try{cView.doc.body.removeChild(cView.doc.getElementById("splash"));}
 		catch(e){};
-		function genReqNode(user){
+		function genReqNode(user, loginid){
 			var node = cView.gNodes["sub-request"].cloneAll();
 			node.cNodes["sr-name"].innerHTML = "<a href="+gConfig.front+user.username+">"
 				+user.screenName
@@ -401,6 +414,7 @@ _Drawer.prototype = {
 				+" @" + user.username; 
 			node.cNodes["sr-avatar"].src =  user.profilePictureMediumUrl ;
 			node.cNodes["sr-user"].value = user.username;
+			node.cNodes["sr-id"].value = loginid;
 			return node;
 		}
 
@@ -412,7 +426,7 @@ _Drawer.prototype = {
 		nodePopup.id = "userPopup" + node.userid;
 		nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 		nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
-		if((typeof cView.gMe !== "undefined") && (user.id != cView.gMe.users.id) )
+		if((typeof cView.gMe !== "undefined") && (cView.ids.indexOf(user.id) != -1)
 			cView.Utils.setChild(nodePopup, "up-controls", cView.Drawer.genUpControls(user.username));
 		if (typeof node.createdAt !== "undefined"){
 			var spanDate = cView.doc.createElement("span");
@@ -444,8 +458,9 @@ _Drawer.prototype = {
 			aBan.hidden = true;
 			return;
 		}
-		aBan.banned = cView.gMe.users.banIds.some(function(a){
-			return a == user.id;
+		aBan.banned = cView.ids.some(function(id){
+			var login = cView.logins[id].data;
+			return login.users.banIds.indexOf( user.id) != -1;
 		});
 		if (aBan.banned){
 			aBan.innerHTML = "Un-ban";
@@ -605,7 +620,7 @@ _Drawer.prototype = {
 
 			if(cView.ids){
 				var nodeControls;
-				if (post.createdBy == cView.gMe.users.id){
+				if (cView.ids.indexOf(post.createdBy) != -1){
 					nodeControls = cView.gNodes["controls-self"].cloneAll();
 				}else {
 					nodeControls = cView.gNodes["controls-others"].cloneAll();
@@ -829,7 +844,7 @@ _Drawer.prototype = {
 			nodeComment.userid = cUser.id;
 			nodeSpan.innerHTML += " - " + cUser.link ;
 			if(cView.ids){
-				if(cUser.id == cView.gMe.users.id)
+				if(cView.ids.indexOf(cUser.id) != -1)
 					nodeComment.cNodes["comment-body"].appendChild(cView.gNodes["comment-controls"].cloneAll());
 				else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
 			}
@@ -917,7 +932,7 @@ _Drawer.prototype = {
 		nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
 		cView.regenPostTo = function (){return cView.Drawer.genDirectTo(victim);};
 	}
-	,"genPostTo":function(victim, init){
+	,"genPostTo":function(victim, init, login){
 		var cView = this.cView;
 		var nodePostTo = cView.gNodes["new-post-to"].cloneAll();
 		var idx = 1;
@@ -936,15 +951,15 @@ _Drawer.prototype = {
 		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
 		var option = cView.doc.createElement("option");
 		option.innerHTML = "My feed";
-		option.value = cView.gMe.users.username;
+		option.value = login.users.username;
 		chkInit(init, option, idx);
 		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
 		var groups = cView.doc.createElement("optgroup");
 		groups.label = "Public groups";
-		if (typeof cView.gMe.users.subscriptions !== "undefined"){
+		if (typeof login.users.subscriptions !== "undefined"){
 			var oSubscriptions = new Object();
-			cView.gMe.subscriptions.forEach(function(sub){if (sub.name == "Posts")oSubscriptions[sub.id] = sub; });
-			cView.gMe.users.subscriptions.forEach(function(subid){
+			login.subscriptions.forEach(function(sub){if (sub.name == "Posts")oSubscriptions[sub.id] = sub; });
+			login.users.subscriptions.forEach(function(subid){
 				if (typeof oSubscriptions[subid] === "undefined") return;
 				var sub = cView.gUsers[oSubscriptions[subid].user];
 				if((typeof sub !=="undefined") && (sub.type == "group")){
@@ -979,7 +994,7 @@ _Drawer.prototype = {
 			option.disabled = true;
 			nodePostTo.cNodes["new-post-feeds"].firstChild.idx = idx;
 			nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = init;
-			if(init != cView.gMe.users.username)
+			if(init != login.users.username)
 				nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = "@" + init;
 			nodePostTo.feeds.push(init);
 		}
@@ -998,7 +1013,7 @@ _Drawer.prototype = {
 	,"blockComments":function(name, action){
 		var cView = this.cView;	
 		var id = cView.gUsers.byName[name].id;
-		var nodesCmts = cView.doc.getElementsByClassName("comment");
+		var nodeSCmts = cView.doc.getElementsByClassName("comment");
 		for(var idx = 0; idx < nodesCmts.length; idx++){
 			if(nodesCmts[idx].userid == id){
 				if(action) nodesCmts[idx].innerHTML = "---";

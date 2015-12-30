@@ -1,3 +1,4 @@
+"use strict";
 define("Utils", [], function(){
 function _Utils(view){
 	this.cView = view;

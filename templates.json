@@ -109,12 +109,23 @@
 		,"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"}
 			,{"c":"edit-buttons-cancel","t":"a","txt":"Cancel"}
+			,{"c":"select-user", "t":"span", "p":{"hidden":true}
+			,"children":[
+				{"t":"span","txt":"comment with:"}
+				,{"c":"select-user-ctrl", "t":"select"}
+			]}
 		]}
 
 	]}
 	,{"c":"new-post"
 	,"children":[
-		{"c":"new-post-to"}
+		{"c":"add-sender"
+			,"t":"a"
+			,"txt":"&#10010; Add sender"
+			,"p":{"hidden":true}
+			,"e":{"click":["Actions","addSender"]} 
+		}
+		,{"c":"post-to"}
 		,{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
 		,{"c":"attachments"}
 		,{"c":"edit-buttons"
@@ -125,20 +136,24 @@
 	]}
 	,{"c":"new-post-to"
 	,"children":[
-		{"t":"span", "txt":"Post to:"}
+		{"c":"mu-login", "t":"span"}
+		,{"t":"span", "txt":"Post to:"}
 		,{"c":"new-post-feeds","t":"ul"
 		,"children":[
 			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":["Actions","newPostRemoveFeed"]} }
 		]}
 		,{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":["Actions","newPostSelect"]}  }
 		,{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":["Actions","newPostAddFeed"]} }
+		,{"c":"rm-sender", "t":"a", "txt":"&#10008;Remove sender", "p":{"hidden":true}, "e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"new-direct-to"
 	,"children":[
-		{"t":"span", "txt":"Direct message to:"}
+		{"c":"mu-login", "t":"span"}
+		,{"t":"span", "txt":"Direct message to:"}
 		,{"c":"new-post-feeds","t":"ul"}
 		,{"c":"new-direct-input", "t": "input","e":{"input":["Actions","newDirectInp"], "keyup":["Actions","newDirectInp"]}  }
 		,{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":["Actions","newDirectAddFeed"]} }
+		,{"c":"rm-sender","t":"a","txt":"Remove sender", "e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"friends-tip","e":{"mouseleave":["Actions","ftClose"],"click":["Actions","ftClose"] }
 	,"children":[
@@ -516,7 +531,30 @@
 			,{"t":"span" }
 		]}
 	]}
-
-
+	,{"c":"add-sender-dialog","p":{"id":"add_sender"}
+	,"children":[
+		{"c":"up-close","e":{"click":["Actions","upClose"]}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"units"}
+	]}
+	,{"c":"add-sender-unit"
+	,"children":[
+		{"c":"up-avatar"
+		,"children":[
+			{"c":"avatar-img", "t":"img"}
+		]}
+		,{"c":"asu-info"
+		,"children":[
+			{"c":"username"}
+			,{"c":"screen-name"}
+		]}
+		
+	
+	]}
 ]}
 

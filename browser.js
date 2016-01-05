@@ -29,25 +29,19 @@ window.init = function (){
 			cView.gRt = new RtUpdate(cView.token, bump);
 			cView.gRt.subscribe(cView.rtSub);
 		}
-	};
-	Object.defineProperty( cView, "gMe" ,{
-		"enumerable": false
-		,"get": function(){
+		,get "gMe"(){
 			var ids = Object.keys(this.logins);
 			if(ids.length == 1)return this.logins[ids[0]].data;
 			if((this.mainId == "")||(ids.length == 0))return null;
 			return this.logins[this.mainId].data;
 		}
-	});
-	Object.defineProperty( cView, "ids" ,{
-		"enumerable": false
-		,"get": function(){
+		,get "ids"(){
 			if (typeof this.logins == "undefined") return null;
 			var ids = Object.keys(this.logins);
 			if (typeof this.logins[ids[0]].token == "undefined") return null;
 			return ids;
 		}
-	})
+	};
 	var Utils = new _Utils(cView);
 	var Drawer = new _Drawer(cView);
 	var Autolinker = require("./Autolinker.min");
@@ -242,10 +236,18 @@ window.srvDoc = function(){
 	["blockPosts", "blockComments"].forEach(function(list){
 		cView[list].forEach(function(user){ cView.Drawer[list](user,true); });
 	});
+	document.getElementsByClassName("add-sender")[0].ids = [cView.gMe.users.id];
+	document.getElementsByClassName("new-post-to")[0].userid = cView.gMe.users.id;
 	cView.Utils.postInit();	
 }
 function regenCNodes(node){
+	var cView = document.cView;
 	node.cNodes = new Object();
+	node.getNode = function(){
+		var args = cView.Utils.args2Arr.apply(this,arguments);
+		args.unshift(node);
+		return cView.Utils.getNode.apply(node, args);
+	};
 	for(var idx = 0; idx < node.childNodes.length; idx++){
 		regenCNodes(node.childNodes[idx]);
 		var cName = node.childNodes[idx].className; 

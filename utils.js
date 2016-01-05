@@ -2,6 +2,16 @@ define("Utils", [], function(){
 function _Utils(view){
 	this.cView = view;
 };
+function args2Arr() {
+	//.length is just an integer, this doesn't leak
+	//the arguments object itself
+	var args = new Array(arguments.length);
+	for(var i = 0; i < args.length; ++i) {
+	//i is always valid index in the arguments object
+		args[i] = arguments[i];
+	}
+	return args;
+}
 _Utils.prototype = {
 	constructor:_Utils
 	/*source: http://stackoverflow.com/a/7516652 */
@@ -38,6 +48,7 @@ _Utils.prototype = {
 		return 'about ' + r;
 	}
 	/**********************************************/
+	,"args2Arr": function(){return args2Arr.apply(this,arguments);}
 	,"ffReq": function(o, callback, fail ){
 		fail = typeof fail !== 'undefined' ? fail : function(){return;};
 		var method = typeof o.method  !== "undefined"? o.method : "get";
@@ -159,6 +170,11 @@ _Utils.prototype = {
 		return nodes;
 		function genCNodes(node, proto){
 			node.cNodes = new Object();
+			node.getNode = function(){
+				var args = args2Arr.apply(this,arguments);
+				args.unshift(node);
+				return cView.Utils.getNode.apply(node, args);
+			};
 			for(var idx = 0; idx <  node.childNodes.length; idx++){
 				genCNodes(node.childNodes[idx], proto.childNodes[idx]);
 				node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
@@ -363,7 +379,7 @@ _Utils.prototype = {
 		}catch(e){};
 	}
 	,"getNode":function(node){
-		var arrPath =  Array.prototype.slice.call(arguments);
+		var arrPath =  args2Arr.apply(this,arguments);
 		arrPath.shift();
 		arrPath.forEach(function(step){
 			var className = step[1];

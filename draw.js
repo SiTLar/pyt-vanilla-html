@@ -254,14 +254,12 @@ _Drawer.prototype = {
 			if(names.indexOf(view) != -1){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				body.appendChild(nodeAddPost);
-				Drawer.genPostTo(nodeAddPost, cView.gMe.users.username);
-				break;
-			}else if (view == filter){
+				Drawer.genPostTo(nodeAddPost, cView.gMe.users.username, cView.gMe);
+			}else if (view == "filter"){
 				if (cView.timeline.split("/")[1] == "direct"){
 					var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 					body.appendChild(nodeAddPost);
 					Drawer.genDirectTo(nodeAddPost);
-					break;
 				}
 			}else{
 				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(cView.timeline));
@@ -270,7 +268,7 @@ _Drawer.prototype = {
 			if( (typeof feed !== "undefined") && (feed.type == "group") && feed.friend){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				body.appendChild(nodeAddPost);
-				Drawer.genPostTo(nodeAddPost, feed.username);
+				Drawer.genPostTo(nodeAddPost, feed.username, cView.gMe);
 			}
 				
 		}
@@ -425,8 +423,8 @@ _Drawer.prototype = {
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
 		nodePopup.id = "userPopup" + node.userid;
 		nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
-		nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
-		if((typeof cView.gMe !== "undefined") && (cView.ids.indexOf(user.id) != -1)
+		nodePopup.cNodes["up-info"].innerHTML  ="<span>@" + user.username + "</span><br>"+ user.link;
+		if((typeof cView.gMe !== "undefined") && (cView.ids.indexOf(user.id) == -1))
 			cView.Utils.setChild(nodePopup, "up-controls", cView.Drawer.genUpControls(user.username));
 		if (typeof node.createdAt !== "undefined"){
 			var spanDate = cView.doc.createElement("span");
@@ -901,9 +899,10 @@ _Drawer.prototype = {
 		postNBody.appendChild(aAddComment );
 		postNBody.lastCmtButton = true;
 	}
-	,"genDirectTo":function(victim){
+	,"genDirectTo":function(victim, login){
 		var cView = this.cView;
 		var nodeDirectTo = cView.gNodes["new-direct-to"].cloneAll();
+		if(cView.ids.length > 1 ) nodeDirectTo.cNodes["username"] =  "@" + login.users.username;
 		victim.replaceChild(nodeDirectTo, victim.cNodes["new-post-to"]);
 		victim.cNodes["new-post-to"] = nodeDirectTo;
 		nodeDirectTo.feeds = new Array();
@@ -930,14 +929,26 @@ _Drawer.prototype = {
 			}
 		}
 		nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
-		cView.regenPostTo = function (){return cView.Drawer.genDirectTo(victim);};
+		cView.updPostTo = function (login,clean){
+			if(clean == true) {
+				var victims = document.getElementsByClassName("new-post-to");
+				while(victims.length)victims[0].parentNode.removeChild(victims[0]);
+			}
+			return cView.Drawer.genDirectTo(victim, login);
+		};
 	}
 	,"genPostTo":function(victim, init, login){
 		var cView = this.cView;
 		var nodePostTo = cView.gNodes["new-post-to"].cloneAll();
 		var idx = 1;
-		victim.replaceChild(nodePostTo, victim.cNodes["new-post-to"]);
-		victim.cNodes["new-post-to"] = nodePostTo;
+		if(cView.ids.length > 1 ){
+			nodePostTo.cNodes["mu-login"].innerHTML = login.users.link;
+			nodePostTo.cNodes["mu-login"].hidden = false;
+			victim.cNodes["add-sender"].hidden = false;
+			if (typeof victim.cNodes["add-sender"].ids === "undefined")
+				victim.cNodes["add-sender"].ids = [cView.gMe.users.id];
+		}
+		victim.cNodes["post-to"].appendChild(nodePostTo);
 		nodePostTo.feeds = new Array();
 		nodePostTo.parentNode.isPrivate  = false;
 		var select = cView.doc.createElement("select");
@@ -989,6 +1000,17 @@ _Drawer.prototype = {
 		if (groups.childNodes.length > 0 )
 			nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
 
+		cView.updPostTo = function (login,clean){
+			if(clean == true) {
+				var victims = document.getElementsByClassName("new-post-to");
+				while(victims.length)victims[0].parentNode.removeChild(victims[0]);
+			}
+			return cView.Drawer.genPostTo(victim, init,login);
+		};
+		var rmSenders = victim.getElementsByClassName("rm-sender");
+		if(rmSenders.length > 1)
+			for (idx = 0; idx < rmSenders.length; idx++)rmSenders[idx].hidden = false;
+		nodePostTo.userid = login.users.id;
 		function chkInit(init, option, idx){
 			if (init != option.value) return;
 			option.disabled = true;
@@ -998,7 +1020,6 @@ _Drawer.prototype = {
 				nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = "@" + init;
 			nodePostTo.feeds.push(init);
 		}
-		cView.regenPostTo = function (){return cView.Drawer.genPostTo(victim, init);};
 
 	}
 	,"blockPosts":function(name, action){
@@ -1033,6 +1054,20 @@ _Drawer.prototype = {
 			popup.cNodes["units"].appendChild(unit);
 		});
 		return popup; 
+	}
+	,"genAddSender":function(cb){
+		var cView = this.cView;
+		var popup = cView.gNodes["add-sender-dialog"].cloneAll();
+		cView.ids.forEach(function(id){
+			var login = cView.logins[id].data;
+			var unit = cView.gNodes["add-sender-unit"].cloneAll();
+			unit.getNode(["c","up-avatar"],["c","avatar-img"]).src = login.users.profilePictureMediumUrl;
+			unit.getNode(["c","asu-info"],["c","username"]).innerHTML = "@" + login.users.username;
+			unit.getNode(["c","asu-info"],["c","screen-name"]).innerHTML = login.users.screenName;
+			unit.addEventListener("click", function(){cb(id)});
+			popup.cNodes["units"].appendChild(unit);
+		});
+		return popup;
 	}
 };
 return _Drawer;

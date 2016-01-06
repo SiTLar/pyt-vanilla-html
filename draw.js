@@ -146,7 +146,7 @@ _Drawer.prototype = {
 		body.appendChild(nodeSettings);
 		cView.doc.getElementById("my-screen-name").value = cView.gMe.users.screenName;
 		if(typeof cView.gMe.users.email !== "undefined" )cView.doc.getElementById("my-email").value = cView.gMe.users.email;
-		cView.doc.getElementById("me-private").checked = JSON.parse(cView.gMe.users.isPrivate);
+		cView.doc.getElementById("me-private").checked = cView.gMe.users.isPrivate == "1";
 		var mode = cView.localStorage.getItem("display_name");
 		if (mode == null) mode = "screen";
 		var theme = cView.localStorage.getItem("display_theme");

@@ -993,8 +993,8 @@ _Actions.prototype = {
 		cView.gMe.users.screenName = cView.doc.getElementById("my-screen-name").value;
 		cView.gMe.users.email = cView.doc.getElementById("my-email").value;
 		if (cView.doc.getElementById("me-private").checked == false)
-			cView.gMe.users.isPrivate = false;
-		else cView.gMe.users.isPrivate = true;
+			cView.gMe.users.isPrivate = "0";
+		else cView.gMe.users.isPrivate = "1";
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			var nodeMsg = cView.doc.getElementById("update-status");
@@ -1003,7 +1003,7 @@ _Actions.prototype = {
 			if(oReq.status < 400){
 				cView.gMe = JSON.parse(oReq.response);
 				nodeMsg.className = "sr-info";
-				nodeMsg.innerHTML = "Updated. Your feed is <span style='font-weight: bold;'>" + ((cView.gMe.users.isPrivate == true)?"private.":"public.")+ "</span>";
+				nodeMsg.innerHTML = "Updated. Your feed is <span style='font-weight: bold;'>" + ((cView.gMe.users.isPrivate == "1")?"private.":"public.")+ "</span>";
 				cView.Utils.refreshcView.gMe();
 			}else {
 				nodeMsg.className = "msg-error";

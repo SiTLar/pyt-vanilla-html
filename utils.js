@@ -195,20 +195,11 @@ _Utils.prototype = {
 		var links = cView.doc.getElementsByClassName("my-link-" + id);
 		for(var idx = 0; idx< links.length; idx++)
 			links[idx].outerHTML = user.link;
-		var nodeSR = cView.doc.getElementById("sr-info");
-		if(!nodeSR)return;
-		if(Array.isArray(user.subscriptionRequests)){
-			cView.subReqsCount += user.subscriptionRequests.length;
-			nodeSR.cNodes["sr-info-a"].innerHTML ="You have"
-			+ cView.subReqsCount
-			+ " subscription requests to review.";
-			nodeSR.hidden = false;
-		}
 		var login = cView.logins[id].data;
+		login.oFriends = new Object();
 		if ((typeof user.subscribers !== "undefined") 
 		&& (typeof user.subscriptions !== "undefined")){
 			oSubscriptions = new Object();
-			login.oFriends = new Object();
 			login.subscribers.forEach(cView.Utils.addUser, cView.Utils);
 			login.subscriptions.forEach(function(sub){
 				if(sub.name == "Posts"){
@@ -228,6 +219,15 @@ _Utils.prototype = {
 					}
 				}
 			});
+		}
+		var nodeSR = cView.doc.getElementById("sr-info");
+		if(!nodeSR)return;
+		if(Array.isArray(user.subscriptionRequests)){
+			cView.subReqsCount += user.subscriptionRequests.length;
+			nodeSR.cNodes["sr-info-a"].innerHTML ="You have"
+			+ cView.subReqsCount
+			+ " subscription requests to review.";
+			nodeSR.hidden = false;
 		}
 	}
 	,"setIcon": function (ico){

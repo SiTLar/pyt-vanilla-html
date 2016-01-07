@@ -184,7 +184,7 @@ h1{
 	content: '';
 	display: block;
 	border-bottom: 1px solid #e8e8e8;
-	margin: 0 64px;
+	margin: 0 10%;
 }
 .avatar{
 	float: left;

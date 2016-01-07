@@ -83,7 +83,7 @@ window.browserDoc = function(){
 		return a == cView.timeline;
 	})){
 		if(!Utils.auth()) return;
-	}else if(!Utils.auth(true)) cView.gMe = undefined;
+	}else if(!Utils.auth(true)) cView.logins = [undefined];
 	if(cView.timeline == "settings"){
 		cView.Drawer.drawSettings();
 		return Utils.postInit();	

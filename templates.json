@@ -460,7 +460,7 @@
 		,{"t":"p", "txt":"Screen name:"}
 		,{"c":"gs-input","t":"input","p":{"name":"screen-name"}}
 		,{"t":"p", "txt":"Email:"}
-		,{"c":"gs-input","t":"input","p":{"name":"my-email"}}
+		,{"c":"gs-input","t":"input","p":{"name":"email"}}
 		,{"t":"label"
 		,"children":[
 			{"t":"input" ,"p":{"type":"checkbox" ,"name":"is-private"}}

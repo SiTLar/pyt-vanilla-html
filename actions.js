@@ -1008,16 +1008,21 @@ _Actions.prototype = {
 		e.target.disabled = true;
 		nodeProfile.getElementsByClassName("spinner")[0].hidden = false;
 		var inputs = cView.Utils.getInputsByName(nodeProfile); 
+		var id = inputs["id"].value; 
+		var oUser = cView.logins[id].data.users;
+		oUser.screenName = inputs["screen-name"].value;
+		oUser.email = inputs["email"].value;
+		oUser.isPrivate = inputs["is-private"].checked?"1":"0";
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];
 			e.target.disabled = false;
 			nodeProfile.getElementsByClassName("spinner")[0].hidden = true;
 			if(oReq.status < 400){
-				cView.gMe = JSON.parse(oReq.response);
+				cView.logins[id].data = JSON.parse(oReq.response);
 				nodeMsg.className = "sr-info";
-				nodeMsg.innerHTML = "Updated. @"+ cView.gMe.users.username +"'s feed is <span style='font-weight: bold;'>" + ((cView.gMe.users.isPrivate == true)?"private.":"public.")+ "</span>";
-				cView.Utils.refreshgMe();
+				nodeMsg.innerHTML = "Updated. @"+ oUser.username +"'s feed is <span style='font-weight: bold;'>" + ((oUser.isPrivate == "1")?"private":"public")+ ".</span>";
+				cView.Utils.refreshLogin(id);
 			}else {
 				nodeMsg.className = "msg-error";
 				nodeMsg.innerHTML = "Got error: ";
@@ -1028,10 +1033,10 @@ _Actions.prototype = {
 			}
 		}
 
-		oReq.open("put",gConfig.serverURL + "users/" + cView.gMe.users.id ,true);
+		oReq.open("put",gConfig.serverURL + "users/" + id ,true);
 		oReq.setRequestHeader("Content-type","application/json");
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
-		oReq.send(JSON.stringify({"user":cView.gMe.users}));
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[id].token);
+		oReq.send(JSON.stringify({"user":oUser}));
 	}
 	,"addAcc": function (e){
 		var cView = document.cView;

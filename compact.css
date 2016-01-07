@@ -497,3 +497,56 @@ span.comment-controls::before {
 	border-color: #bce8f1;
 	color: #31708f;
 }
+.global-settings button{
+	margin: .5em 0;
+}
+.settings-profile{
+	margin-top:0.5em;
+	border-bottom: solid thin #e8e8e8;
+} 
+.sp-username{
+	font-weight: bold;
+}
+.up-controls div, ul{
+	display: inline-block;
+	margin:0;
+	padding:0;
+}
+.up-c-common{
+	vertical-align: top;
+}
+.up-sbs li {
+	display: block;
+}
+.rm-sender{
+	float:right;
+}
+.mu-login{
+	font-size:large;
+	font-weight:bold;
+	margin-right:1em;
+}
+.add-sender{
+	float:right;
+	margin-bottom: 0.5em;
+}
+.asu-info{
+	margin-left:3px;
+	margin-bottom: 0.5em;
+}
+.add-sender-unit{
+	margin-bottom:.5em;
+	display: flex;
+	padding: 2px;
+	border:#fff solid thin;
+}
+.add-sender-unit:hover {
+	border:#d00 solid thin;
+}
+.avatar-img{
+	width:2em;
+	height:2em;
+}
+.select-user{
+	margin-left:3em;
+}

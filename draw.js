@@ -84,6 +84,7 @@ _Drawer.prototype = {
 	}
 	,"loadGlobals":function(data){
 		var cView = this.cView;
+		if(cView.ids)cView.ids.forEach(function(id){cView.Utils.addUser(cView.logins[id].data.users);});
 		if(data.attachments)data.attachments.forEach(function(attachment){ cView.gAttachments[attachment.id] = attachment; });
 		if(data.comments)data.comments.forEach(function(comment){ cView.gComments[comment.id] = comment; });
 		if(data.users)data.users.forEach(cView.Utils.addUser, cView.Utils);
@@ -153,7 +154,7 @@ _Drawer.prototype = {
 		var cView = document.cView;
 		var nodeProfile = cView.gNodes["settings-profile"].cloneAll();
 		nodeProfile.getElementsByClassName("sp-username")[0].innerHTML = "@" + user.username;
-		nodeProfile.cNodes["chng-avatar"].cNodes["avatar-img"].src = user.profilePictureMediumUrl; 
+		nodeProfile.cNodes["chng-avatar"].cNodes["sp-avatar-img"].src = user.profilePictureMediumUrl; 
 		var nodes = nodeProfile.getElementsByTagName("input");
 		for(var idx = 0; idx < nodes.length; idx++){
 			var node = nodes[idx];
@@ -259,7 +260,7 @@ _Drawer.prototype = {
 				if (cView.timeline.split("/")[1] == "direct"){
 					var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 					body.appendChild(nodeAddPost);
-					Drawer.genDirectTo(nodeAddPost);
+					Drawer.genDirectTo(nodeAddPost, cView.gMe);
 				}
 			}else{
 				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(cView.timeline));
@@ -902,9 +903,16 @@ _Drawer.prototype = {
 	,"genDirectTo":function(victim, login){
 		var cView = this.cView;
 		var nodeDirectTo = cView.gNodes["new-direct-to"].cloneAll();
-		if(cView.ids.length > 1 ) nodeDirectTo.cNodes["username"] =  "@" + login.users.username;
-		victim.replaceChild(nodeDirectTo, victim.cNodes["new-post-to"]);
-		victim.cNodes["new-post-to"] = nodeDirectTo;
+		nodeDirectTo.userid = login.users.id;
+		if(cView.ids.length > 1 ){
+			nodeDirectTo.cNodes["mu-login"].innerHTML = login.users.link;
+			nodeDirectTo.cNodes["mu-login"].hidden = false;
+			victim.cNodes["add-sender"].hidden = false;
+			if (typeof victim.cNodes["add-sender"].ids === "undefined")
+				victim.cNodes["add-sender"].ids = [cView.gMe.users.id];
+		}
+		victim.cNodes["post-to"].appendChild(nodeDirectTo);
+		nodeDirectTo.className = "new-post-to";
 		nodeDirectTo.feeds = new Array();
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", cView["Actions"]["newPost"]);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", cView["Actions"]["postDirect"]);
@@ -914,7 +922,7 @@ _Drawer.prototype = {
 			nodeDirectTo.cNodes["new-direct-input"].value = cView.doc.location.hash.slice(1);
 		}
 		var oDest = new Object();
-		if ((typeof cView.gMe.users.subscribers !== "undefined") && (typeof cView.gMe.users.subscriptions !== "undefined")){
+		if ((typeof login.users.subscribers !== "undefined") && (typeof login.users.subscriptions !== "undefined")){
 			for (var username in cView.gUsers.byName){
 				if (!cView.gUsers.byName[username].friend || !(cView.gUsers.byName[username].subscriber || (cView.gUsers.byName[username].type == "group")))
 					continue;
@@ -936,6 +944,9 @@ _Drawer.prototype = {
 			}
 			return cView.Drawer.genDirectTo(victim, login);
 		};
+		var rmSenders = victim.getElementsByClassName("rm-sender");
+		if(rmSenders.length > 1)
+			for (idx = 0; idx < rmSenders.length; idx++)rmSenders[idx].hidden = false;
 	}
 	,"genPostTo":function(victim, init, login){
 		var cView = this.cView;

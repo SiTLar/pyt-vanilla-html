@@ -153,7 +153,7 @@
 		,{"c":"new-post-feeds","t":"ul"}
 		,{"c":"new-direct-input", "t": "input","e":{"input":["Actions","newDirectInp"], "keyup":["Actions","newDirectInp"]}  }
 		,{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":["Actions","newDirectAddFeed"]} }
-		,{"c":"rm-sender","t":"a","txt":"Remove sender", "e":{"click":["Actions","newPostRmSender"]} }
+		,{"c":"rm-sender","t":"a","txt":"&#10008;Remove sender", "p":{"hidden":true},"e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"friends-tip","e":{"mouseleave":["Actions","ftClose"],"click":["Actions","ftClose"] }
 	,"children":[
@@ -449,7 +449,7 @@
 		]}
 		,{"c":"chng-avatar"
 		,"children":[
-			{"c":"avatar-img", "t":"img"}
+			{"c":"sp-avatar-img", "t":"img"}
 			,{
 			"children":[
 				{"c":"edit-buttons-upload","t":"input", "txt":"Change Avatar" ,"p":{"type":"file","accept":"image/*" }}

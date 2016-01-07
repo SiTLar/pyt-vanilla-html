@@ -20,7 +20,7 @@ window.init = function (){
 		,"gEmbed": {}
 		,"gRt": {}
 		,"gNodes": {}
-		,"logins": {}
+		,"logins": []
 		,"mainId": ""
 		,"rtSub" : {}
 		,"initRt": function(){
@@ -36,9 +36,8 @@ window.init = function (){
 			return this.logins[this.mainId].data;
 		}
 		,get "ids"(){
-			if (typeof this.logins == "undefined") return null;
 			var ids = Object.keys(this.logins);
-			if (typeof this.logins[ids[0]].token == "undefined") return null;
+			if (!ids.length) return null;
 			return ids;
 		}
 	};
@@ -83,7 +82,7 @@ window.browserDoc = function(){
 		return a == cView.timeline;
 	})){
 		if(!Utils.auth()) return;
-	}else if(!Utils.auth(true)) cView.logins = [undefined];
+	}else if(!Utils.auth(true)) cView.logins = [];
 	if(cView.timeline == "settings"){
 		cView.Drawer.drawSettings();
 		return Utils.postInit();	

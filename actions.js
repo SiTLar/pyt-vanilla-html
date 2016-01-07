@@ -366,18 +366,18 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var Utils = cView.Utils;
 		var target = e.target;
-		var spinner = cView.gNodes["spinner"].cloneAll();
 		var nodeParent = target.parentNode;
+		var spinner = cView.gNodes["spinner"].cloneAll();
 		nodeParent.replaceChild(spinner, target);
 		var oReq = new XMLHttpRequest();
-		var username = nodeParent.getNode(["p","up-controls"]).user;
+		var username = cView.Utils.getNode(nodeParentr,["p","up-controls"]).user;
 		oReq.open("post", gConfig.serverURL +"users/"+username+(target.subscribed?"/unsubscribe":"/subscribe"), true);
 		oReq.setRequestHeader("X-Authentication-Token", cView.logins[target.loginId].token);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
 				cView.logins[target.loginId].data = JSON.parse(oReq.response); 
 				Utils.refreshLogin(target.loginId);
-				Utils.setChild(nodeParent.getNode(["p","user-popup"]), "up-controls", cView.Drawer.genUpControls(username));
+				Utils.setChild(cView.Utils.getNode(nodeParentr,["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(username));
 			}else nodeParent.replaceChild( target, spinner);
 		}
 
@@ -846,13 +846,17 @@ _Actions.prototype = {
 	,"postDirect": function(e){
 		var cView = document.cView;
 		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
-		var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
-		if ((input != "") && (typeof cView.gUsers.byName[input] !== "undefined")
-		&& cView.gUsers.byName[input].friend 
-		&& (cView.gUsers.byName[input].subscriber||cView.gUsers.byName[input].type == "group"))
-			victim.cNodes["new-post-to"].feeds.push(input);
-		if (victim.cNodes["new-post-to"].feeds.length) cView.Actions.newPost(e);
-		else alert("should have valid recipients");
+		var nodesSenders = victim.getElementsByClassName("new-post-to");	
+		for (var idx = 0; idx<nodesSenders.length; idx++){
+			var nodeSender = nodesSenders[idx];
+			var input = nodeSender.cNodes["new-direct-input"].value;
+			if ((input != "") && (typeof cView.gUsers.byName[input] !== "undefined")
+			&& cView.gUsers.byName[input].friend 
+			&& (cView.gUsers.byName[input].subscriber||cView.gUsers.byName[input].type == "group"))
+				nodeSender.feeds.push(input);
+			if (nodeSender.feeds.length) cView.Actions.newPost(e);
+			else alert("should have valid recipients");
+		}
 	}
 	,"logout": function(){
 		var cView = document.cView;

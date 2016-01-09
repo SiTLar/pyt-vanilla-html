@@ -18,7 +18,7 @@ _Url2link.prototype = {
 	constructor:_Url2link
 	,"trunc": 0
 	,"url":{
-		"regex": /(^|\s)((?:https?:\/\/)?(?:[^\s\/$.?#]+\.)+[^\s\/$.?#]{2,}[^\s]*)/
+		"regex": /(^|\s)((?:https?:\/\/)?(?:[^\s\/~!@#$^&*()_?:;|\\]+\.)+(?:[^\s\/~!@#$^&*()_?:;|\\]){2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*)*)/
 		,"flags": "i"
 		,"newtab": true
 		,"action":function(match,host){

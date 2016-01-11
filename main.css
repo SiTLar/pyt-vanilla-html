@@ -141,7 +141,6 @@ h1{
 	border: thin solid gray;
 	padding: 0.5em;
 	margin:1em;
-	max-width:350px;
 	min-height:60px;
 }
 .control-button-post{

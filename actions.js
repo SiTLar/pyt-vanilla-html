@@ -46,7 +46,7 @@ _Actions.prototype = {
 					delete textField.pAtt;
 					delete textField.attachments;
 					postTo.feeds = new Array();
-					cView.updPostTo(cView.gMe, true);
+					cView.updPostTo(cView.gMe, true, cView.gMe.users.username);
 					e.target.disabled = false;
 					textField.style.height  = "4em";
 					try{ e.target.parentNode.removeChild(nodeSpinner); }
@@ -1262,7 +1262,7 @@ _Actions.prototype = {
 		var nodePopup = cView.Drawer.genAddSender(function(id){
 			if ((typeof id !== "undefined")&&(e.target.ids.indexOf(id) == -1 ) ){
 				e.target.ids.push(id);
-				cView.updPostTo(cView.logins[id].data);
+				cView.updPostTo(cView.logins[id].data,false, cView.logins[id].data.users.username);
 				var victim = document.getElementById("add_sender");
 				victim.parentNode.removeChild(victim);
 			}

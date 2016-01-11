@@ -125,6 +125,7 @@ h1{
 .up-controls{
 	clear:both;
 }
+
 .up-date{
 	display: block;
 	clear:both;
@@ -512,6 +513,7 @@ span.comment-controls::before {
 	display: inline-block;
 	margin:0;
 	padding:0;
+	vertical-align:middle;
 }
 .up-c-common{
 	vertical-align: top;
@@ -529,7 +531,7 @@ span.comment-controls::before {
 }
 .add-sender{
 	float:right;
-	margin-bottom: 0.5em;
+	margin-bottom: 1.5em;
 }
 .asu-info{
 	margin-left:3px;

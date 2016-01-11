@@ -121,7 +121,7 @@
 	,"children":[
 		{"c":"add-sender"
 			,"t":"a"
-			,"txt":"&#10010; Add sender"
+			,"txt":"&#10133; Add sender"
 			,"p":{"hidden":true}
 			,"e":{"click":["Actions","addSender"]} 
 		}
@@ -144,7 +144,7 @@
 		]}
 		,{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":["Actions","newPostSelect"]}  }
 		,{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":["Actions","newPostAddFeed"]} }
-		,{"c":"rm-sender", "t":"a", "txt":"&#10008;Remove sender", "p":{"hidden":true}, "e":{"click":["Actions","newPostRmSender"]} }
+		,{"c":"rm-sender", "t":"a", "txt":"&cross;Remove sender", "p":{"hidden":true}, "e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"new-direct-to"
 	,"children":[
@@ -284,7 +284,7 @@
 		,"children":[
 			{"t":"ul"}
 		]}
-		,{"c":"spacer","t":"span","txt":"&mdash;"}
+		,{"c":"spacer","t":"span","txt":"&bigstar;"}
 		,{"c":"up-m","t":"a", "txt":"@","e":{"click":["Actions","getUsername"]}}
 
 	]}
@@ -453,7 +453,7 @@
 			{"c":"sp-avatar-img", "t":"img"}
 			,{
 			"children":[
-				{"c":"edit-buttons-upload","t":"input", "txt":"Change Avatar" ,"p":{"type":"file","accept":"image/*" }}
+				{"c":"edit-buttons-upload","t":"input", "p":{"type":"file","accept":"image/*" }}
 				,{"t":"a", "txt":"Update Avatar", "e":{"click":["Actions","chngAvatar"] }}
 			]}
 		]}

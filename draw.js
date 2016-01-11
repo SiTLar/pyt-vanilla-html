@@ -944,6 +944,7 @@ _Drawer.prototype = {
 		nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
 		cView.updPostTo = function (login,clean){
 			if(clean == true) {
+				document.getElementsByClassName("add-sender")[0].ids = new Array();
 				var victims = document.getElementsByClassName("new-post-to");
 				while(victims.length)victims[0].parentNode.removeChild(victims[0]);
 			}
@@ -1016,8 +1017,9 @@ _Drawer.prototype = {
 		if (groups.childNodes.length > 0 )
 			nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
 
-		cView.updPostTo = function (login,clean){
+		cView.updPostTo = function (login,clean, init){
 			if(clean == true) {
+				document.getElementsByClassName("add-sender")[0].ids = new Array();
 				var victims = document.getElementsByClassName("new-post-to");
 				while(victims.length)victims[0].parentNode.removeChild(victims[0]);
 			}

@@ -190,7 +190,7 @@ _Utils.prototype = {
 	,"refreshLogin": function(id){
 		var cView = this.cView;
 		cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
-		if(Array.isArray(cView.gUsers[id].subscriptionRequests))
+		if((typeof cView.gUsers[id] !== "undefined") && Array.isArray(cView.gUsers[id].subscriptionRequests))
 			cView.subReqsCount -= cView.gUsers[id].subscriptionRequests.length;
 		delete cView.gUsers[id];
 		var user = cView.logins[id].data.users;
@@ -299,7 +299,7 @@ _Utils.prototype = {
 		txtgMe = cView.localStorage.getItem("gMe");
 		if (txtgMe && cView.token){
 			cView.logins = JSON.parse(txtgMe);
-			if(cView.ids) cView.ids.forEach(function(id) {
+			if(cView.ids && (typeof cView.logins[cView.ids[0]].token !== "undefined"))cView.ids.forEach(function(id) {
 				var user = cView.logins[id].data;
 				if (cView.token == cView.logins[id].token)cView.mainId = id;
 				Utils.addUser(user.users);

@@ -50,7 +50,7 @@ _Utils.prototype = {
 	/**********************************************/
 	,"args2Arr": function(){return args2Arr.apply(this,arguments);}
 	,"ffReq": function(o, callback, fail ){
-		fail = typeof fail !== 'undefined' ? fail : function(){return;};
+		fail = typeof fail !== "undefined" ? fail : function(){return;};
 		var method = typeof o.method  !== "undefined"? o.method : "get";
 		var oReq = new XMLHttpRequest();
 		oReq.open(method ,o.url , true);
@@ -109,6 +109,7 @@ _Utils.prototype = {
 			node.replaceChild(newNode, node.cNodes[name]);
 		else node.appendChild(newNode);
 		node.cNodes[name] = newNode;
+		return newNode;
 	}
 	,"addUser": function(user){
 		var cView = this.cView;
@@ -189,6 +190,8 @@ _Utils.prototype = {
 	,"refreshLogin": function(id){
 		var cView = this.cView;
 		cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
+		if(Array.isArray(cView.gUsers[id].subscriptionRequests))
+			cView.subReqsCount -= cView.gUsers[id].subscriptionRequests.length;
 		delete cView.gUsers[id];
 		var user = cView.logins[id].data.users;
 		cView.Utils.addUser(user);
@@ -221,14 +224,15 @@ _Utils.prototype = {
 			});
 		}
 		var nodeSR = cView.doc.getElementById("sr-info");
-		if(!nodeSR)return;
+		if (!nodeSR)return;
 		if(Array.isArray(user.subscriptionRequests)){
 			cView.subReqsCount += user.subscriptionRequests.length;
-			nodeSR.cNodes["sr-info-a"].innerHTML ="You have"
+			nodeSR.cNodes["sr-info-a"].innerHTML ="You have "
 			+ cView.subReqsCount
 			+ " subscription requests to review.";
 			nodeSR.hidden = false;
 		}
+		if(!cView.subReqsCount)nodeSR.hidden = true;
 	}
 	,"setIcon": function (ico){
 		var cView = this.cView;
@@ -298,7 +302,8 @@ _Utils.prototype = {
 			if(cView.ids) cView.ids.forEach(function(id) {
 				var user = cView.logins[id].data;
 				if (cView.token == cView.logins[id].token)cView.mainId = id;
-				Utils.addUser(user);
+				Utils.addUser(user.users);
+				Utils.refreshLogin(id);
 				setTimeout(function (){ Utils.getWhoami(id); },300);
 				return true;
 			});else cView.logins = new Object();

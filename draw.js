@@ -84,7 +84,10 @@ _Drawer.prototype = {
 	}
 	,"loadGlobals":function(data){
 		var cView = this.cView;
-		if(cView.ids)cView.ids.forEach(function(id){cView.Utils.addUser(cView.logins[id].data.users);});
+		if(cView.ids)cView.ids.forEach(function(id){
+			cView.Utils.addUser(cView.logins[id].data.users);
+		}); 
+
 		if(data.attachments)data.attachments.forEach(function(attachment){ cView.gAttachments[attachment.id] = attachment; });
 		if(data.comments)data.comments.forEach(function(comment){ cView.gComments[comment.id] = comment; });
 		if(data.users)data.users.forEach(cView.Utils.addUser, cView.Utils);
@@ -248,7 +251,13 @@ _Drawer.prototype = {
 			body.replaceChild(nodeGControls, controls);
 		}else{
 			var names = new Array();
-			cView.ids.forEach(function(id){names.push(cView.gUsers[id].username)});
+			//Object.keys(cView.gUsers).forEach(key => {console.log(key)} );
+			cView.ids.forEach(function(id){
+			//	var user = cView.gUsers[id];
+			//	console.log(id+":"+ cView.logins[id].data.users.username );
+			//	console.log(cView.gUsers[id].username);
+				names.push(cView.gUsers[id].username);
+			});
 			names.push("home");
 
 			var view = cView.timeline.split("/")[0];
@@ -371,7 +380,7 @@ _Drawer.prototype = {
 		var count = 0;
 		cView.ids.forEach(function(id){
 			var login = cView.logins[id].data;
-			if(!Array.isArray(login))return;
+			if(!Array.isArray(login.requests))return;
 			count++;
 			var nodeH = cView.doc.createElement("h2");
 			nodeH.innerHTML = "@"+login.users.username+" requests";
@@ -383,7 +392,7 @@ _Drawer.prototype = {
 				nodeTPReq.id = "sr-header";
 				body.appendChild(nodeTPReq);
 				login.users.subscriptionRequests.forEach(function(req){
-					body.appendChild(genReqNode(cView.gUsers[req]), id);
+					body.appendChild(genReqNode(cView.gUsers[req], id));
 				});
 			}
 			if(Array.isArray(login.users.pendingSubscriptionRequests)){
@@ -440,43 +449,23 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var controls = cView.gNodes["up-controls"].cloneAll();
 		var subs = controls.cNodes["up-sbs"];
-		var cc = controls.cNodes["up-c-common"];
 		var user = cView.gUsers.byName[username];
 		controls.user = username;
-		cView.ids.forEach(genSubs);
-		if(user.friend && user.subscriber){
-			cc.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
-			cc.cNodes["up-d"].target = "_blank";
-		}else{
-			cc.cNodes["up-d"].hidden = true;
-			cc.cNodes["up-d"].nextSibling.hidden = true;
-		}
-		var aBan = cc.cNodes["up-b"];
-		if (user.type == "group"){
-			aBan.nextSibling.hidden = true;
-			aBan.hidden = true;
-			return;
-		}
-		aBan.banned = cView.ids.some(function(id){
-			var login = cView.logins[id].data;
-			return login.users.banIds.indexOf( user.id) != -1;
-		});
-		if (aBan.banned){
-			aBan.innerHTML = "Un-ban";
-			aBan.removeEventListener("click",cView["Actions"]["genBlock"]);
-			aBan.addEventListener("click", cView["Actions"]["doUnBan"]);
-		}
+		var isMulti = cView.ids.length > 1;
+		cView.ids.forEach(perLogin);
 		return controls;
 
-		function genSubs(id){
+		function perLogin(id){
 			var login = cView.logins[id].data;
 			var friend = (typeof login.oFriends[user.id] !== "undefined");
-			var sub = cView.gNodes["up-s"].cloneAll();
-			sub.innerHTML = friend?"Unsubscribe":"Subscribe";
-			sub.subscribed = friend;
-			sub.loginId = id;
+			var envelop =  cView.gNodes["up-c-mu"].cloneAll();
+			envelop.loginId = id;
+			if (isMulti) envelop.cNodes["username"].innerHTML = "@"+login.users.username+": ";
+			var nodeSub = envelop.cNodes["up-s"];
+			nodeSub.innerHTML = friend?"Unsubscribe":"Subscribe";
+			nodeSub.subscribed = friend;
 			if (!friend && (user.isPrivate == 1 )){
-				sub.removeEventListener("click",cView["Actions"]["evtSubscribe"]);
+				nodeSub.removeEventListener("click",cView["Actions"]["evtSubscribe"]);
 				var oRequests = new Object();
 				if (Array.isArray(login.requests)){
 					login.requests.forEach(function(req){
@@ -487,16 +476,32 @@ _Drawer.prototype = {
 				&&login.users.pendingSubscriptionRequests.some(function(a){
 						return oRequests[a].username == username;
 					})){
-					sub = cView.doc.createElement("span");
-					sub.innerHTML = "Subscription request sent";
+					nodeSub = cView.Utils.setChild(envelop, "up-s", cView.doc.createElement("span")); 
+					nodeSub.innerHTML = "Subscription request sent";
 				}else{
-					sub.innerHTML = "Request subscription";
-					sub.addEventListener("click", cView["Actions"]["reqSubscription"] );
+					nodeSub.innerHTML = "Request subscription";
+					nodeSub.addEventListener("click", cView["Actions"]["reqSubscription"] );
 				}
 			}
-			var envelop =  document.createElement("li");
-			envelop.innerHTML = "@"+login.users.username+": ";
-			envelop.appendChild(sub);
+			if(friend && login.users.subscribers.some(function(sub){ return sub.id == user.id;})){
+				envelop.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
+				envelop.cNodes["up-d"].target = "_blank";
+			}else{
+				envelop.cNodes["up-d"].hidden = true;
+				envelop.cNodes["up-d"].nextSibling.hidden = true;
+			}
+			var aBan = envelop.cNodes["up-b"];
+			if (user.type == "group"){
+				aBan.nextSibling.hidden = true;
+				aBan.hidden = true;
+				return;
+			}
+			aBan.banned  = login.users.banIds.indexOf( user.id) != -1;
+			if (aBan.banned){
+				aBan.innerHTML = "Un-ban";
+				aBan.removeEventListener("click",cView["Actions"]["genBlock"]);
+				aBan.addEventListener("click", cView["Actions"]["doUnBan"]);
+			}
 			controls.cNodes["up-sbs"].getElementsByTagName("ul")[0].appendChild(envelop);
 		}
 
@@ -924,7 +929,7 @@ _Drawer.prototype = {
 		var oDest = new Object();
 		if ((typeof login.users.subscribers !== "undefined") && (typeof login.users.subscriptions !== "undefined")){
 			for (var username in cView.gUsers.byName){
-				if (!cView.gUsers.byName[username].friend || !(cView.gUsers.byName[username].subscriber || (cView.gUsers.byName[username].type == "group")))
+				if (!login.oFriends[cView.gUsers.byName[username].id] || !(cView.gUsers.byName[username].subscriber || (cView.gUsers.byName[username].type == "group")))
 					continue;
 				var pos = oDest;
 				for(var idx = 0; idx < username.length; idx++){
@@ -1045,7 +1050,7 @@ _Drawer.prototype = {
 	,"blockComments":function(name, action){
 		var cView = this.cView;	
 		var id = cView.gUsers.byName[name].id;
-		var nodeSCmts = cView.doc.getElementsByClassName("comment");
+		var nodesCmts = cView.doc.getElementsByClassName("comment");
 		for(var idx = 0; idx < nodesCmts.length; idx++){
 			if(nodesCmts[idx].userid == id){
 				if(action) nodesCmts[idx].innerHTML = "---";

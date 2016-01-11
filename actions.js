@@ -1278,6 +1278,8 @@ _Actions.prototype = {
 	}
 	,"newPostRmSender":function(e){
 		var host = e.target.getNode(["p","post-to"]);
+		var ids = document.getElementsByClassName("add-sender")[0].ids;
+		ids.splice(ids.indexOf(e.target.parentNode.userid),1);
 		host.removeChild(e.target.parentNode);
 		var rmSenders = host.getElementsByClassName("rm-sender");
 		if(rmSenders.length = 1)rmSenders[0].hidden = true;

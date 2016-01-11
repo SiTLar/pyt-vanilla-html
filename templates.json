@@ -284,8 +284,11 @@
 		,"children":[
 			{"t":"ul"}
 		]}
-		,{"c":"spacer","t":"span","txt":"&bigstar;"}
-		,{"c":"up-m","t":"a", "txt":"@","e":{"click":["Actions","getUsername"]}}
+		,{"c":"up-c"
+		,"children":[
+			{"c":"spacer","t":"span","txt":"&bigstar;"}
+			,{"c":"up-m","t":"a", "txt":"@","e":{"click":["Actions","getUsername"]}}
+		]}
 
 	]}
 	,{"c":"up-c-mu","t":"li"

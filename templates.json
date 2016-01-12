@@ -3,7 +3,7 @@
 	,"children":[
 		{"c":"avatar"
 		,"children":[
-			{"c":"avatar-h","t":"a","e":{"click":["Actions","genUserPopup"]}}
+			{"c":"avatar-h","t":"a","e":{"click":["Actions","evtUserPopup"]}}
 		]}
 		,{"c":"post-body"
 		,"children":[
@@ -12,9 +12,9 @@
 			,{"c":"attachments"
 			,"children":[
 				{"c":"atts-img"}
-				,{"c":"atts-unfold", "p":{"hidden":"true"}
+				,{"c":"atts-unfold", "p":{"hidden":true}
 				,"children":[
-					{"c":"unfold-action","t":"input", "p":{"type":"hidden", "value":"true"}}
+					{"c":"unfold-action","t":"input", "p":{"type":"hidden", "value":true}}
 					,{"t":"a","e":{"click":["Actions","unfoldAttImgs"]}
 					,"children":[
 						{"c":"fa fa-chevron-down fa-2x","t":"i"}
@@ -53,7 +53,7 @@
 		,{"c":"user-priv","t":"a","txt":"settings","e":{"mousedown":["Actions","goSettings"]}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-logout","t":"a","txt":"logout","e":{"click":["Actions","logout"]}}
-		,{"c":"sr-info","p":{"id":"sr-info","hidden":"true"}
+		,{"c":"sr-info","p":{"id":"sr-info","hidden":true}
 		,"children":[
 			{"c":"sr-info-a","t":"a","e":{"mousedown":["Actions","goRequests"]}}
 		]}
@@ -87,7 +87,7 @@
 	]}
 	,{"c":"comment"
 	,"children":[
-		{"c":"comment-date","e":{"mouseover":["Actions","calcCmtTime"], "click":["Actions","genUserPopup"]}
+		{"c":"comment-date","e":{"mouseover":["Actions","calcCmtTime"], "click":["Actions","evtUserPopup"]}
 		,"children":[
 			{"c":"date","t":"a"
 				,"children":[
@@ -109,12 +109,23 @@
 		,"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"}
 			,{"c":"edit-buttons-cancel","t":"a","txt":"Cancel"}
+			,{"c":"select-user", "t":"span", "p":{"hidden":true}
+			,"children":[
+				{"t":"span","txt":"comment with:"}
+				,{"c":"select-user-ctrl", "t":"select"}
+			]}
 		]}
 
 	]}
 	,{"c":"new-post"
 	,"children":[
-		{"c":"new-post-to"}
+		{"c":"add-sender"
+			,"t":"a"
+			,"txt":"&#10133; Add sender"
+			,"p":{"hidden":true}
+			,"e":{"click":["Actions","addSender"]} 
+		}
+		,{"c":"post-to"}
 		,{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
 		,{"c":"attachments"}
 		,{"c":"edit-buttons"
@@ -125,20 +136,24 @@
 	]}
 	,{"c":"new-post-to"
 	,"children":[
-		{"t":"span", "txt":"Post to:"}
+		{"c":"mu-login", "t":"span"}
+		,{"t":"span", "txt":"Post to:"}
 		,{"c":"new-post-feeds","t":"ul"
 		,"children":[
 			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":["Actions","newPostRemoveFeed"]} }
 		]}
 		,{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":["Actions","newPostSelect"]}  }
 		,{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":["Actions","newPostAddFeed"]} }
+		,{"c":"rm-sender", "t":"a", "txt":"&cross;Remove sender", "p":{"hidden":true}, "e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"new-direct-to"
 	,"children":[
-		{"t":"span", "txt":"Direct message to:"}
+		{"c":"mu-login", "t":"span"}
+		,{"t":"span", "txt":"Direct message to:"}
 		,{"c":"new-post-feeds","t":"ul"}
 		,{"c":"new-direct-input", "t": "input","e":{"input":["Actions","newDirectInp"], "keyup":["Actions","newDirectInp"]}  }
 		,{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":["Actions","newDirectAddFeed"]} }
+		,{"c":"rm-sender","t":"a","txt":"&#10008;Remove sender", "p":{"hidden":true},"e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"friends-tip","e":{"mouseleave":["Actions","ftClose"],"click":["Actions","ftClose"] }
 	,"children":[
@@ -237,7 +252,7 @@
 		,{"t":"span","txt":"Username&nbsp;"}
 		,{"c":"priv-inv-name" , "t":"input","e":{"change":["Secrets","privActivateButton"]}}
 		,{"c":"priv-submit", "t":"button", "p":{"disabled":true}, "txt":"go!", "e":{"click":["Secrets","ctrlPrivShare"]}}
-		,{"c":"priv-key-input", "t":"textarea", "p":{"readonly":"true"}}
+		,{"c":"priv-key-input", "t":"textarea", "p":{"readonly":true}}
 
 	]}
 	,{"c":"priv-new-user"
@@ -265,14 +280,25 @@
 	]}
 	,{"c":"up-controls"
 	,"children":[
-		{"c":"up-s","t":"a", "e":{"click":["Actions","subscribe"]}}
+		{"c":"up-sbs"
+		,"children":[
+			{"t":"ul"}
+		]}
+		,{"c":"up-c"
+		,"children":[
+			{"c":"spacer","t":"span","txt":"&bigstar;"}
+			,{"c":"up-m","t":"a", "txt":"@","e":{"click":["Actions","getUsername"]}}
+		]}
+
+	]}
+	,{"c":"up-c-mu","t":"li"
+	,"children":[
+		{"c":"username","t":"span"}
+		,{"c":"up-s","t":"a", "e":{"click":["Actions","evtSubscribe"]}}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-d","t":"a", "txt":"Direct"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-b","t":"a", "txt":"Block","e":{"click":["Actions","genBlock"]}}
-		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"up-m","t":"a", "txt":"@","e":{"click":["Actions","getUsername"]}}
-
 	]}
 	,{"c":"up-block","e":{"mouseleave":["Actions","destroy"]}
 	,"children":[
@@ -301,7 +327,18 @@
 	]}
 	,{"c":"global-settings"
 	,"children":[
-		{"t":"h3","txt":"Theme"}
+		{"t":"h3","txt":"Profiles" }
+		,{"c":"settings-profiles"}
+		,{"c":"gs-add-acc"
+		,"children":[
+			{"t":"a", "e":{"click":["Actions","addAcc"]}
+			,"children":[
+				{"c":"fa fa-plus","t":"i"}
+				,{"t":"span", "txt":"&nbsp;Add account"}
+			]}
+
+		]}
+		,{"t":"h3","txt":"Theme"}
 		,{"c":"radio", "t":"label"
 		,"children":[
 			{"t":"input"
@@ -318,26 +355,6 @@
 			}
 			,{"t":"span","txt":"Compact"}
 		]}
-		,{"t":"h3","txt":"Profile" }
-		,{"t":"p", "txt":"Screen name:"}
-		,{"c":"gs-input","t":"input","p":{"id":"my-screen-name"}}
-		,{"t":"p", "txt":"Email:"}
-		,{"c":"gs-input","t":"input","p":{"id":"my-email"}}
-		,{"t":"label"
-		,"children":[
-			{"t":"input" ,"p":{"type":"checkbox", "id":"me-private"}}
-			,{"t":"span","txt":"Private feed (only let people I approve see my feed)" }
-		]}
-		,{"c":"prof-upd"
-		,"children":[
-			{"t":"button","txt":"Update profile","e":{"click":["Actions","updateProfile"]}}
-			,{"c":"spacer","t":"span","txt":"&nbsp;"}
-			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":"true"}
-			,"children":[
-				{"c":"fa fa-spinner fa-pulse","t":"i"}
-			]}
-		]}
-		,{"p":{"id":"update-status"}}
 		,{"t":"h3","txt":"Display names style" }
 		,{"c":"radio", "t":"label"
 		,"children":[
@@ -386,7 +403,7 @@
 			}
 			,{"t":"span","txt":"Bump posts with new comments"}
 		]} 
-		,{"c":"rt-params","p":{"id":"rt-params","hidden":"true"}
+		,{"c":"rt-params","p":{"id":"rt-params","hidden":true}
 		,"children":[
 			{"t":"label"
 			,"children":[
@@ -421,11 +438,74 @@
 		]}
 
 	]}
+	,{"c":"settings-profile" 
+	,"children":[
+		{
+		"children":[
+			{"c":"sp-username","t":"span"}
+			,{"t":"label"
+			,"children":[
+				{"t":"input" ,"p":{"type":"radio" ,"name":"is-main"}
+					,"e":{"change":["Actions","setMainProfile"]}
+				}
+				,{"t":"span","txt":"Main profile: this one does likes & logs in to other frontends." }
+			]}
+		]}
+		,{"c":"chng-avatar"
+		,"children":[
+			{"c":"sp-avatar-img", "t":"img"}
+			,{
+			"children":[
+				{"c":"edit-buttons-upload","t":"input", "p":{"type":"file","accept":"image/*" }}
+				,{"t":"a", "txt":"Update Avatar", "e":{"click":["Actions","chngAvatar"] }}
+			]}
+		]}
+		,{"c":"gs-input","t":"input","p":{"name":"id", "type":"hidden"}}
+		,{"t":"p", "txt":"Screen name:"}
+		,{"c":"gs-input","t":"input","p":{"name":"screen-name"}}
+		,{"t":"p", "txt":"Email:"}
+		,{"c":"gs-input","t":"input","p":{"name":"email"}}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox" ,"name":"is-private"}}
+			,{"t":"span","txt":"Private feed (only let people I approve see my feed)" }
+		]}
+		,{"c":"prof-upd"
+		,"children":[
+			{"t":"button" ,"e":{"click":["Actions","updateProfile"]},"txt":"Update profile"}
+			,{"c":"spacer","t":"span","txt":"&nbsp;"}
+			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":true}
+			,"children":[
+				{"c":"fa fa-spinner fa-pulse","t":"i"}
+			]}
+			,{"c":"spacer","t":"span","txt":"&nbsp;"}
+			,{"t":"button" ,"e":{"click":["Actions","logoutAcc"]},"txt":"Logout this profile"}
+		]}
+		,{"c":"update-status" }
+	]}
+	,{"c":"settings-login"
+	,"children":[
+		{"t":"p","txt":"Please log in to another account"}
+		,{"t":"p", "txt":"Username:"}
+		,{"c":"gs-input","t":"input","p":{"name":"login-username"}}
+		,{"t":"p", "txt":"Password:"}
+		,{"c":"gs-input","t":"input","p":{"type":"password", "name":"login-password"}}
+		,{
+		"children":[
+			{"c":"gs-p-login","t":"button", "txt":"Login", "e":{"click":["Actions","addProfileLogin"] }}
+			,{"c":"spacer","t":"span","txt":"&nbsp;"}
+			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":true}
+			,"children":[
+				{"c":"fa fa-spinner fa-pulse","t":"i"}
+			]}
+		]}
+	]}
 	,{"c":"sub-request"
 	,"children":[
 		{"c":"sr-avatar", "t":"img"}
 		,{"c":"sr-name"}
 		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-id", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-ctrl"
 		,"children":[
 			{"t":"a","txt":"Accept request", "e":{"click":["Actions","srAccept"]}}
@@ -433,6 +513,52 @@
 			,{"t":"a","txt":"Reject request", "e":{"click":["Actions","srReject"]}}
 		]}
 	]}
-
+	,{"c":"multiuser-dialog"
+	,"children":[
+		{"c":"close"
+		,"children":[
+			{"c":"a-close", "t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"t":"p", "txt":"Complete action with"}
+		,{"c":"units"}
+		,{"t":"button", "txt":"OK"}
+		,{"c":"edit-buttons-cancel","t":"a","txt":"Cancel"}
+	]}
+	,{"c":"multiuser-unit"
+	,"children":[
+		{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox","checked":true }}
+			,{"t":"span" }
+		]}
+	]}
+	,{"c":"add-sender-dialog","p":{"id":"add_sender"}
+	,"children":[
+		{"c":"up-close","e":{"click":["Actions","upClose"]}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"c":"units"}
+	]}
+	,{"c":"add-sender-unit"
+	,"children":[
+		{"c":"up-avatar"
+		,"children":[
+			{"c":"avatar-img", "t":"img"}
+		]}
+		,{"c":"asu-info"
+		,"children":[
+			{"c":"username"}
+			,{"c":"screen-name"}
+		]}
+		
+	
+	]}
 ]}
 

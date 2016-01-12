@@ -15,12 +15,22 @@ _Actions.prototype = {
 		textField.disabled = true;
 		e.target.disabled = true;
 		var nodeSpinner = e.target.parentNode.appendChild(cView.gNodes["spinner"].cloneNode(true));
-		if(textField.pAtt)textField.pAtt.then(send);
-		else send();
-		function send(){
+		var post = new Object();
+		var postsTo = e.target.parentNode.parentNode.getElementsByClassName("new-post-to");
+		var arrPostsTo = new Array(postsTo.length);
+		for (var idx = 0; idx < postsTo.length; idx++)arrPostsTo[idx] = postsTo[idx];
+		if(arrPostsTo.some(function(postTo){ return postTo.feeds.length == 0; })) {
+			alert("should have valid recipients");
+			textField.disabled = false;
+			e.target.disabled = false;
+			e.target.parentNode.removeChild(nodeSpinner );
+			return;
+		}
+		if(textField.pAtt)textField.pAtt.then(function(){ arrPostsTo.forEach(send);});
+		else arrPostsTo.forEach(send);
+
+		function send(postTo){
 			var postdata = new Object();
-			var post = new Object();
-			var postTo = e.target.parentNode.parentNode.cNodes["new-post-to"];
 			postdata.meta = new Object();
 			postdata.meta.feeds = postTo.feeds ;
 			var oReq = new XMLHttpRequest();
@@ -36,19 +46,20 @@ _Actions.prototype = {
 					delete textField.pAtt;
 					delete textField.attachments;
 					postTo.feeds = new Array();
-					cView.regenPostTo();
+					cView.updPostTo(cView.gMe, true, cView.gMe.users.username);
 					e.target.disabled = false;
 					textField.style.height  = "4em";
-					e.target.parentNode.removeChild(nodeSpinner);
+					try{ e.target.parentNode.removeChild(nodeSpinner); }
+					catch(e){};
 					var res = JSON.parse(oReq.response);
 					cView.Drawer.loadGlobals(res);
 					if(!cView.doc.getElementById(res.posts.id))cView.doc.posts.insertBefore(cView.Drawer.genPost(res.posts), cView.doc.posts.childNodes[0]);
 				}else{
 					textField.disabled = false;
 					e.target.disabled = false;
-					e.target.parentNode.removeChild(nodeSpinner );
 					var errmsg = "";
 					try{
+						e.target.parentNode.removeChild(nodeSpinner );
 						var eresp = JSON.parse(oReq.response);
 						errmsg = eresp.err;
 					}catch(e){};
@@ -57,7 +68,7 @@ _Actions.prototype = {
 			};
 			if(textField.attachments) post.attachments = textField.attachments;
 			postdata.post = post;
-			if(postTo.isPrivate){
+		/*	if(postTo.isPrivate){
 				oReq.open("post",matrix.cfg.srvurl+"post", true);
 				oReq.setRequestHeader("x-content-type", "post");
 				oReq.setRequestHeader("Content-type","text/plain");
@@ -77,16 +88,17 @@ _Actions.prototype = {
 					oReq.setRequestHeader("Content-type","application/json");
 					oReq.send(JSON.stringify({"d":post}));
 				},function(){console.log("Failed to sign")});
-			}else{
+			}else*/{
 				oReq.open("post",gConfig.serverURL + "posts", true);
 				oReq.onload = onload;
 				oReq.setRequestHeader("Content-type","application/json");
 				oReq.setRequestHeader("X-Authentication-Token",
-					cView.token);
+					cView.logins[postTo.userid].token);
 				if (textField.value == ""){
 					textField.disabled = false;
 					e.target.disabled = false;
-					e.target.parentNode.removeChild(nodeSpinner );
+					try{e.target.parentNode.removeChild(nodeSpinner );}
+					catch(e){};
 					alert("you should provide some text");
 					return;
 				}
@@ -181,6 +193,7 @@ _Actions.prototype = {
 
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 		var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value;
+	/*
 		if(nodePost.isPrivate){
 			oReq.open("put",matrix.cfg.srvurl+"edit", true);
 			oReq.setRequestHeader("x-content-type", "post");
@@ -202,10 +215,12 @@ _Actions.prototype = {
 					JSON.stringify({"payload":payload,"sign":sign}));
 				oReq.send(JSON.stringify({"d":post}));
 			},function(){console.log("Failed to sign")});
-		}else{
+		}else
+	*/
+		{
 			post.body =  text;
 			oReq.open("put",gConfig.serverURL + "posts/"+nodePost.id, true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
+			oReq.setRequestHeader("X-Authentication-Token", cView.logins[nodePost.rawData.createdBy].token);
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.send(JSON.stringify(postdata));
 		}
@@ -235,7 +250,7 @@ _Actions.prototype = {
 			oReq.send();
 		}else{
 			oReq.open("delete",gConfig.serverURL + "posts/"+victim.id, true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
+			oReq.setRequestHeader("X-Authentication-Token", cView.logins[victim.rawData.createdBy].token);
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.send();
 		}
@@ -341,9 +356,9 @@ _Actions.prototype = {
 	,"reqSubscription": function(e){
 		var cView = document.cView;
 		var oReq = new XMLHttpRequest();
-		var username = e.target.parentNode.user;
+		var username = cView.Utils.getNode(e.target,["p","up-controls"]).user;
 		oReq.open("post", gConfig.serverURL +"users/"+username+"/sendRequest/", true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[e.target.getNode(["p","up-c-mu"]).loginId].token);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
 				var span = cView.doc.createElement("span");
@@ -355,19 +370,24 @@ _Actions.prototype = {
 		oReq.send();
 
 	}
-	,"subscribe": function(e){
+	,"evtSubscribe": function(e){
 		var cView = document.cView;
+		var Utils = cView.Utils;
+		var target = e.target;
+		var nodeParent = target.parentNode;
+		var spinner = cView.gNodes["spinner"].cloneAll();
+		nodeParent.replaceChild(spinner, target);
 		var oReq = new XMLHttpRequest();
-		var username = e.target.parentNode.user;
-		oReq.open("post", gConfig.serverURL +"users/"+username+(e.target.subscribed?"/unsubscribe":"/subscribe"), true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		var nodeUC = cView.Utils.getNode(nodeParent,["p","up-controls"]);
+		var username = nodeUC.user;
+		oReq.open("post", gConfig.serverURL +"users/"+username+(target.subscribed?"/unsubscribe":"/subscribe"), true);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[target.getNode(["p","up-c-mu"]).loginId].token);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
-				cView.gMe = JSON.parse(oReq.response);
-				cView.localStorage.setItem("gMe",JSON.stringify(cView.gMe));
-				cView.gUsers.byName[username].friend = !e.target.subscribed;
-				cView.Utils.setChild(e.target.parentNode.parentNode, "up-controls", cView.Drawer.genUpControls(username));
-			}
+				cView.logins[target.loginId].data = JSON.parse(oReq.response); 
+				Utils.refreshLogin(target.loginId);
+				Utils.setChild(cView.Utils.getNode(nodeParent,["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(username));
+			}else nodeParent.replaceChild( target, spinner);
 		}
 
 		oReq.send();
@@ -399,9 +419,9 @@ _Actions.prototype = {
 				cView.Actions.doHide(victim, action, "user");
 			};
 		}
-			oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(action?"hide":"unhide"), true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
-			oReq.send();
+		oReq.open("post",gConfig.serverURL + "posts/"+ victim.id+"/"+(action?"hide":"unhide"), true);
+		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.send();
 	}
 	,"doHide": function(victim, action){
 		var cView = document.cView;
@@ -444,6 +464,16 @@ _Actions.prototype = {
 		postNBody.isBeenCommented = true;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
 		nodeComment.cNodes["comment-body"].appendChild(cView.Drawer.genEditNode(cView.Actions.postNewComment,cView.Actions.cancelNewComment));
+		if(cView.ids.length > 1 ){
+			nodeComment.getElementsByClassName("select-user")[0].hidden = false;
+			var nodeSelectUsr = nodeComment.getElementsByClassName("select-user-ctrl")[0];
+			cView.ids.forEach(function(id){
+				var option = document.createElement("option");
+				option.innerHTML = "@"+cView.logins[id].data.users.username;
+				option.value = id;
+				nodeSelectUsr.appendChild(option);
+			});
+		}
 		nodeComment.userid = cView.gMe.users.id;
 		postNBody.cNodes["comments"].appendChild(nodeComment);
 		nodeComment.getElementsByClassName("edit-txt-area")[0].focus();
@@ -483,7 +513,7 @@ _Actions.prototype = {
 		};
 
 		oReq.open("put",gConfig.serverURL + "comments/"+comment.id, true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[nodeComment.userid].token);
 		oReq.setRequestHeader("Content-type","application/json");
 		var postdata = new Object();
 		postdata.comment = comment;
@@ -561,9 +591,19 @@ _Actions.prototype = {
 				else nodeComment.parentNode.removeChild(nodeComment);
 			}
 		};
+		var token;
+		if (cView.ids.length == 1) token = cView.token;
+		else{
+			var nodesSelectUsr = nodeComment.getElementsByClassName("select-user-ctrl")[0].childNodes;
+			for(var idx = 0; idx < nodesSelectUsr.length; idx++)
+				if (nodesSelectUsr[idx].selected){
+					token = cView.logins[nodesSelectUsr[idx].value].token;
+					break;
+				}
+		}
 
 		oReq.open("post",gConfig.serverURL + "comments", true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.setRequestHeader("X-Authentication-Token", token);
 		oReq.setRequestHeader("Content-type","application/json");
 		var postdata = new Object();
 		postdata.comment = comment;
@@ -615,7 +655,7 @@ _Actions.prototype = {
 			oReq.send();
 		}else{
 			oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
+			oReq.setRequestHeader("X-Authentication-Token", cView.logins[nodeComment.userid].token);
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.send();
 		}
@@ -700,7 +740,7 @@ _Actions.prototype = {
 						break;
 					}
 				}
-				if(pos)pos.arr.forEach(function(user){
+				if(pos && pos.arr)pos.arr.forEach(function(user){
 					var li = cView.doc.createElement("li");
 					li.className = "ft-i";
 					li.innerHTML = user;
@@ -726,25 +766,29 @@ _Actions.prototype = {
 	,"doBan": function(e){
 		var cView = document.cView;
 		var oReq = new XMLHttpRequest();
-		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
-		var username = nodePopUp.user;
+		//var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
+		var nodeUC = e.target.getNode(["p","up-controls"]);
+		var username = nodeUC.user;
 		var bBan = e.target.checked;
 		var nodeParent = e.target.parentNode;
+		var loginId = e.target.getNode(["p","up-c-mu"]).loginId;
 		oReq.open("post", gConfig.serverURL +"users/"+username+(bBan?"/ban":"/unban"), true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[loginId].token);
 		var spinner = cView.gNodes["spinner"].cloneNode(true);
-		var ckBox = nodeParent.replaceChild(spinner,e.target);
+		nodeParent.replaceChild(spinner,e.target);
 		oReq.onload = function(){
-			nodeParent.replaceChild(ckBox, spinner);
 			if(oReq.status < 400) {
-				if (bBan)cView.gMe.users.banIds.push(cView.gUsers.byName[username].id);
+				var banIds = cView.logins[loginId].data.users.banIds;
+				if (bBan)banIds.push(cView.gUsers.byName[username].id);
 				else{
-					var idx = cView.gMe.users.banIds.indexOf(cView.gUsers.byName[username].id);
-					if (idx != -1 ) cView.gMe.users.banIds.splice(idx, 1);
+					var idx = banIds.indexOf(cView.gUsers.byName[username].id);
+					if (idx != -1 ) banIds.splice(idx, 1);
 				}
-				cView.localStorage.setItem("gMe",JSON.stringify(cView.gMe));
-				cView.Utils.setChild(nodePopUp.parentNode.parentNode, "up-controls", cView.Drawer.genUpControls(username));
+				cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
 			}
+			if (typeof nodeUC.parentNode !== "undefined" )
+				cView.Utils.setChild(nodeUC.parentNode, "up-controls", cView.Drawer.genUpControls(username));
+
 		}
 
 		oReq.send();
@@ -752,17 +796,22 @@ _Actions.prototype = {
 	,"doUnBan": function(e){
 		var cView = document.cView;
 		var oReq = new XMLHttpRequest();
-		var nodeHost = e.target; do nodeHost = nodeHost.parentNode; while(nodeHost.className != "up-controls");
+		var nodeHost = e.target.getNode(["p","up-controls"]);
+		var loginId = e.target.getNode(["p","up-c-mu"]).loginId;
 		var username = nodeHost.user;
 		oReq.open("post", gConfig.serverURL +"users/"+username+"/unban", true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[loginId].token);
+		var spinner = cView.gNodes["spinner"].cloneNode(true);
+		e.target.parentNode.replaceChild(spinner,e.target);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
-				var idx = cView.gMe.users.banIds.indexOf(cView.gUsers.byName[username].id);
-				if (idx != -1 ) cView.gMe.users.banIds.splice(idx, 1);
-				cView.localStorage.setItem("gMe",JSON.stringify(cView.gMe));
-				cView.Utils.setChild(nodeHost.parentNode, "up-controls", cView.Drawer.genUpControls(username));
+				var banIds = cView.logins[loginId].data.users.banIds;
+				var idx = banIds.indexOf(cView.gUsers.byName[username].id);
+				if (idx != -1 ) banIds.splice(idx, 1);
+				cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
 			}
+			if (typeof nodeHost.parentNode !== "undefined" )
+				cView.Utils.setChild(nodeHost.parentNode, "up-controls", cView.Drawer.genUpControls(username));
 		}
 
 		oReq.send();
@@ -770,16 +819,16 @@ _Actions.prototype = {
 	,"doBlockCom": function(e){
 		var cView = document.cView;
 		var action = e.target.checked;
-		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
-		cView.Utils.updateBlockList("blockComments", nodePopUp.user, action);
-		cView.Drawer.blockComments(nodePopUp.user, action);
+		var nodeUC = e.target.getNode(["p","up-controls"]);
+		cView.Utils.updateBlockList("blockComments", nodeUC.user, action);
+		cView.Drawer.blockComments(nodeUC.user, action);
 	}
 	,"doBlockPosts": function(e){
 		var cView = document.cView;
 		var action = e.target.checked;
-		var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
-		cView.Utils.updateBlockList("blockPosts", nodePopUp.user, action);
-		cView.Drawer.blockPosts(nodePopUp.user, action);
+		var nodeUC = e.target.getNode(["p","up-controls"]);
+		cView.Utils.updateBlockList("blockPosts", nodeUC.user, action);
+		cView.Drawer.blockPosts(nodeUC.user, action);
 	}
 	,"setRadioOption": function(e){
 		var cView = document.cView;
@@ -815,13 +864,20 @@ _Actions.prototype = {
 	,"postDirect": function(e){
 		var cView = document.cView;
 		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
-		var input = victim.cNodes["new-post-to"].cNodes["new-direct-input"].value;
-		if ((input != "") && (typeof cView.gUsers.byName[input] !== "undefined")
-		&& cView.gUsers.byName[input].friend 
-		&& (cView.gUsers.byName[input].subscriber||cView.gUsers.byName[input].type == "group"))
-			victim.cNodes["new-post-to"].feeds.push(input);
-		if (victim.cNodes["new-post-to"].feeds.length) cView.Actions.newPost(e);
-		else alert("should have valid recipients");
+		var nodesSenders = victim.getElementsByClassName("new-post-to");	
+		for (var idx = 0; idx<nodesSenders.length; idx++){
+			var nodeSender = nodesSenders[idx];
+			var input = nodeSender.cNodes["new-direct-input"].value;
+			if ((input != "") && (typeof cView.gUsers.byName[input] !== "undefined")
+			&& cView.gUsers.byName[input].friend 
+			&& (cView.gUsers.byName[input].subscriber||cView.gUsers.byName[input].type == "group"))
+				nodeSender.feeds.push(input);
+			/*
+			if (nodeSender.feeds.length) cView.Actions.newPost(e);
+			else alert("should have valid recipients");
+			*/
+		}
+		cView.Actions.newPost(e);
 	}
 	,"logout": function(){
 		var cView = document.cView;
@@ -905,31 +961,16 @@ _Actions.prototype = {
 		nodeP.cNodes["new-post-feeds"].appendChild(li);
 		nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
 	}
-	,"genUserPopup": function(e){
+	,"evtUserPopup": function(e){
 		var cView = document.cView;
 		var node = e.target; while(typeof node.userid === "undefined")node = node.parentNode;
 		var user = cView.gUsers[node.userid];
 		if(cView.doc.getElementById("userPopup" + node.userid))return;
-		var nodePopup = cView.gNodes["user-popup"].cloneAll(true);
-		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
-		nodePopup.id = "userPopup" + node.userid;
-		nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
-		nodePopup.cNodes["up-info"].innerHTML  = user.link + "<br><span>@" + user.username + "</span>"
-		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
-		if((typeof cView.gMe !== "undefined") && (user.id != cView.gMe.users.id) )
-			cView.Utils.setChild(nodePopup, "up-controls", cView.Drawer.genUpControls(user.username));
+		var nodePopup = cView.Drawer.genUserPopup(node, user);
 		nodePopup.style.top = e.pageY;
 		nodePopup.style.left = e.pageX;
 		nodePopup.style["z-index"] = 1;
-		if (typeof node.createdAt !== "undefined"){
-			var spanDate = cView.doc.createElement("span");
-			spanDate.className = "up-date";
-			var txtdate = new Date(node.createdAt*1).toString();
-			spanDate.innerHTML = txtdate.slice(0, txtdate.indexOf("(")).trim();
-			nodePopup.appendChild(spanDate);
-		}
-
-
+		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
 	}
 	,"upClose": function(e){
 		var cView = document.cView;
@@ -971,6 +1012,7 @@ _Actions.prototype = {
 	,"genBlock": function (e){
 		var cView = document.cView;
 		var node = e.target.parentNode;
+		var nodeUC = e.target.getNode(["p","up-controls"]);
 		var nodeBlock = cView.gNodes["up-block"].cloneAll();
 		nodeBlock.className = "user-popup"; 
 		nodeBlock.user = node.user;
@@ -981,30 +1023,32 @@ _Actions.prototype = {
 		var chkboxes = nodeBlock.getElementsByTagName("input");
 		for(var idx = 0; idx < chkboxes.length; idx++){
 			var list = cView[chkboxes[idx].value];
-			if((typeof list !== "undefined") && (list != null) && (list[cView.gUsers.byName[node.user].id]>-1))
+			if((typeof list !== "undefined") && (list != null) && (list[cView.gUsers.byName[nodeUC.user].id]>-1))
 				chkboxes[idx].checked = true;
 		}
 
 	}
 	,"updateProfile": function (e){
 		var cView = document.cView;
+		var nodeProfile = cView.Utils.getNode(e.target,["p","settings-profile"]);
 		e.target.disabled = true;
-		cView.doc.getElementById("update-spinner").hidden = false;
-		cView.gMe.users.screenName = cView.doc.getElementById("my-screen-name").value;
-		cView.gMe.users.email = cView.doc.getElementById("my-email").value;
-		if (cView.doc.getElementById("me-private").checked == false)
-			cView.gMe.users.isPrivate = "0";
-		else cView.gMe.users.isPrivate = "1";
+		nodeProfile.getElementsByClassName("spinner")[0].hidden = false;
+		var inputs = cView.Utils.getInputsByName(nodeProfile); 
+		var id = inputs["id"].value; 
+		var oUser = cView.logins[id].data.users;
+		oUser.screenName = inputs["screen-name"].value;
+		oUser.email = inputs["email"].value;
+		oUser.isPrivate = inputs["is-private"].checked?"1":"0";
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
-			var nodeMsg = cView.doc.getElementById("update-status");
+			var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];
 			e.target.disabled = false;
-			cView.doc.getElementById("update-spinner").hidden = true;
+			nodeProfile.getElementsByClassName("spinner")[0].hidden = true;
 			if(oReq.status < 400){
-				cView.gMe = JSON.parse(oReq.response);
+				cView.logins[id].data = JSON.parse(oReq.response);
 				nodeMsg.className = "sr-info";
-				nodeMsg.innerHTML = "Updated. Your feed is <span style='font-weight: bold;'>" + ((cView.gMe.users.isPrivate == "1")?"private.":"public.")+ "</span>";
-				cView.Utils.refreshcView.gMe();
+				nodeMsg.innerHTML = "Updated. @"+ oUser.username +"'s feed is <span style='font-weight: bold;'>" + ((oUser.isPrivate == "1")?"private":"public")+ ".</span>";
+				cView.Utils.refreshLogin(id);
 			}else {
 				nodeMsg.className = "msg-error";
 				nodeMsg.innerHTML = "Got error: ";
@@ -1015,10 +1059,77 @@ _Actions.prototype = {
 			}
 		}
 
-		oReq.open("put",gConfig.serverURL + "users/" + cView.gMe.users.id ,true);
+		oReq.open("put",gConfig.serverURL + "users/" + id ,true);
 		oReq.setRequestHeader("Content-type","application/json");
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
-		oReq.send(JSON.stringify({"user":cView.gMe.users}));
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[id].token);
+		oReq.send(JSON.stringify({"user":oUser}));
+	}
+	,"addAcc": function (e){
+		var cView = document.cView;
+		var nodePorfiles = cView.Utils.getNode(e.target, ["p","global-settings"],["c","settings-profiles"]);
+		nodePorfiles.appendChild(cView.gNodes["settings-login"].cloneAll());
+		document.getElementsByClassName("gs-add-acc")[0].hidden = true;
+	}
+	,"addProfileLogin": function (e){
+		var cView = document.cView;
+		e.target.disabled = true;
+		var nodeLogin = cView.Utils.getNode(e.target, ["p","settings-login"]);
+		nodeLogin.getElementsByClassName("spinner")[0].hidden = false;
+		var oReq = new XMLHttpRequest();
+		var inpsLogin = cView.Utils.getInputsByName(nodeLogin);
+		var userid = null;
+		oReq.onload = function(){
+			var res =  JSON.parse(oReq.response);
+			if(oReq.status < 400){
+				if(typeof cView.logins[res.users.id] !== "undefined"){
+					cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
+					nodeLogin.parentNode.removeChild(nodeLogin);
+					return; 
+				}
+				cView.logins[res.users.id] = new Object();
+				cView.logins[res.users.id].token =  res.authToken;
+				userid = res.users.id;
+				cView.Utils.getWhoami(res.users.id, finish);
+
+			}else cView.doc.getElementById("auth-msg").innerHTML = res.err;
+		};
+		oReq.open("post", gConfig.serverURL +"session", true);
+		oReq.setRequestHeader("X-Authentication-Token", null);
+		oReq.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		oReq.send("username="+inpsLogin["login-username"].value+"&password="+inpsLogin["login-password"].value);
+		function finish(){
+			cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
+			nodeLogin.parentNode.replaceChild(cView.Drawer.genProfile(cView.logins[userid].data.users),nodeLogin);
+
+		}
+	}
+	,"setMainProfile": function(e){
+		if(!e.target.checked)return;
+		var cView = document.cView;
+		//var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);
+		var nodeProf = e.target.getNode(["p","settings-profile"]);
+		var id = cView.Utils.getInputsByName(nodeProf)["id"].value;
+		cView.token = cView.logins[id].token;
+		cView.mainId = id;
+		cView.Utils.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
+	}
+	,"logoutAcc": function(e){
+		var cView = document.cView;
+		var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);
+		var id = cView.Utils.getInputsByName(nodeProf)["id"].value;
+		delete cView.logins[id];
+		cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
+		nodeProf.parentNode.removeChild(nodeProf);
+		if(id == cView.mainId){
+			nodeProf = cView.doc.getElementsByClassName("settings-profile")[0];
+			if (typeof nodeProf === "undefined") return cView.Actions.logout(e);
+			var inputs = cView.Utils.getInputsByName(nodeProf);
+			id = inputs["id"].value;
+			inputs["is-main"].checked = true;
+			cView.mainId = id;
+			cView.token = cView.logins[id].token; 
+			cView.Utils.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
+		}
 	}
 	,"setRTparams": function (e){
 		var cView = document.cView;
@@ -1062,7 +1173,7 @@ _Actions.prototype = {
 				var nodeSR = cView.doc.getElementById("sr-info");
 				if(--cView.subReqsCount){
 					nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
-					+ cView.gMe.users.subscriptionRequests.length 
+					+ cView.subReqsCount
 					+ " subscription requests to review.";
 				}else{
 					nodeSR.hidden = true;
@@ -1081,7 +1192,7 @@ _Actions.prototype = {
 			+ action + "/" 
 			+ host.cNodes["sr-user"].value
 		,true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[host.cNodes["sr-id"].value].token);
 		oReq.send();
 	}
 	,"getauth": function (e){
@@ -1108,6 +1219,70 @@ _Actions.prototype = {
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	
+	}
+	,"chngAvatar":function(e){
+		var cView = document.cView;
+		var Utils = cView.Utils;
+		var files = e.target.parentNode.cNodes["edit-buttons-upload"].files; 
+		if (!files.length)return;
+		e.target.disabled = true;
+		var nodeImg = e.target.parentNode.parentNode.cNodes["avatar-img"]
+		nodeImg.src = gConfig.static+"throbber-100.gif";
+		var oReq = new XMLHttpRequest();
+		oReq.onload = function(){
+			if(oReq.status < 400)getNewWhoami();
+		}
+		var id = Utils.getInputsByName( Utils.getNode(e.target,["p","settings-profile"]))["id"].value;
+		var token = cView.logins[id].token;
+		oReq.open("post",gConfig.serverURL + "users/updateProfilePicture", true);
+		oReq.setRequestHeader("X-Authentication-Token", token);
+		var data = new FormData();
+		data.append( "file",files[0]) ;
+		oReq.send(data);
+		function getNewWhoami() {
+			e.target.value = "";
+			e.target.disabled = false;
+			var oReq = new XMLHttpRequest();
+			oReq.onload = function(){
+				if(oReq.status < 400){
+					cView.logins[id].data = JSON.parse(oReq.response);
+					Utils.refreshLogin(id);
+					nodeImg.src = cView.logins[id].data.users.profilePictureMediumUrl;
+				}
+			}
+
+			oReq.open("get", gConfig.serverURL +"users/whoami", true);
+			oReq.setRequestHeader("X-Authentication-Token", token);
+			oReq.send();
+		}
+	}
+	,"addSender": function(e){
+		var cView = document.cView;
+		if(document.getElementById("add_sender"))return
+		var nodePopup = cView.Drawer.genAddSender(function(id){
+			if ((typeof id !== "undefined")&&(e.target.ids.indexOf(id) == -1 ) ){
+				e.target.ids.push(id);
+				cView.updPostTo(cView.logins[id].data,false, cView.logins[id].data.users.username);
+				var victim = document.getElementById("add_sender");
+				victim.parentNode.removeChild(victim);
+			}
+		});
+		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
+		nodePopup.className = "user-popup";
+		nodePopup.style.top = e.pageY;
+		nodePopup.style.left = e.pageX - nodePopup.clientWidth;
+		nodePopup.style["z-index"] = 1;
+	}
+	,"setSender":function(e){
+		e.target.getNode(["p","add-sender-dialog"]).id = e.target.id;
+	}
+	,"newPostRmSender":function(e){
+		var host = e.target.getNode(["p","post-to"]);
+		var ids = document.getElementsByClassName("add-sender")[0].ids;
+		ids.splice(ids.indexOf(e.target.parentNode.userid),1);
+		host.removeChild(e.target.parentNode);
+		var rmSenders = host.getElementsByClassName("rm-sender");
+		if(rmSenders.length = 1)rmSenders[0].hidden = true;
 	}
 
 };

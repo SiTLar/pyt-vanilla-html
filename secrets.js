@@ -362,7 +362,7 @@ _SecretActions.prototype = {
 			nodePCtrl.cNodes["priv-groups"] = nodeGrps;
 			loadPrivs();
 		}
-		gConfig.regenPostTo();
+		cView.updPostTo();
 
 	}
 	,"ctrlPrivShowInvite": function(){

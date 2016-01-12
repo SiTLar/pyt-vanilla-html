@@ -14,19 +14,31 @@ window.init = function (){
 	var cView = {
 		"gUsers": { "byName":{}}
 		,"gUsersQ": {}
-		,"gMe": {}
 		,"gComments": {}
 		,"gAttachments": {}
 		,"gFeeds": {}
 		,"gEmbed": {}
 		,"gRt": {}
 		,"gNodes": {}
+		,"logins": []
+		,"mainId": ""
 		,"rtSub" : {}
 		,"initRt": function(){
 			var cView = this;
 			var bump = cView.localStorage.getItem("rtbump");
 			cView.gRt = new RtUpdate(cView.token, bump);
 			cView.gRt.subscribe(cView.rtSub);
+		}
+		,get "gMe"(){
+			var ids = Object.keys(this.logins);
+			if(ids.length == 1)return this.logins[ids[0]].data;
+			if((this.mainId == "")||(ids.length == 0))return null;
+			return this.logins[this.mainId].data;
+		}
+		,get "ids"(){
+			var ids = Object.keys(this.logins);
+			if (!ids.length) return null;
+			return ids;
 		}
 	};
 	var Utils = new _Utils(cView);
@@ -72,7 +84,7 @@ window.browserDoc = function(){
 		return a == cView.timeline;
 	})){
 		if(!Utils.auth()) return;
-	}else if(!Utils.auth(true)) cView.gMe = undefined;
+	}else if(!Utils.auth(true)) cView.logins = [];
 	if(cView.timeline == "settings"){
 		cView.Drawer.drawSettings();
 		return Utils.postInit();	
@@ -225,10 +237,18 @@ window.srvDoc = function(){
 	["blockPosts", "blockComments"].forEach(function(list){
 		cView[list].forEach(function(user){ cView.Drawer[list](user,true); });
 	});
+	document.getElementsByClassName("add-sender")[0].ids = [cView.gMe.users.id];
+	document.getElementsByClassName("new-post-to")[0].userid = cView.gMe.users.id;
 	cView.Utils.postInit();	
 }
 function regenCNodes(node){
+	var cView = document.cView;
 	node.cNodes = new Object();
+	node.getNode = function(){
+		var args = cView.Utils.args2Arr.apply(this,arguments);
+		args.unshift(node);
+		return cView.Utils.getNode.apply(node, args);
+	};
 	for(var idx = 0; idx < node.childNodes.length; idx++){
 		regenCNodes(node.childNodes[idx]);
 		var cName = node.childNodes[idx].className; 

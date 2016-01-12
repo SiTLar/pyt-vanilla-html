@@ -1086,6 +1086,23 @@ _Drawer.prototype = {
 		});
 		return popup;
 	}
+	,"genAddComment": function(){
+		var cView = this.cView;
+		var nodeComment = cView.gNodes["comment"].cloneAll();
+		nodeComment.cNodes["comment-body"].appendChild(cView.Drawer.genEditNode(cView.Actions.postNewComment,cView.Actions.cancelNewComment));
+		if(cView.ids.length > 1 ){
+			nodeComment.getElementsByClassName("select-user")[0].hidden = false;
+			var nodeSelectUsr = nodeComment.getElementsByClassName("select-user-ctrl")[0];
+			cView.ids.forEach(function(id){
+				var option = document.createElement("option");
+				option.innerHTML = "@"+cView.logins[id].data.users.username;
+				option.value = id;
+				nodeSelectUsr.appendChild(option);
+			});
+		}
+		nodeComment.userid = cView.gMe.users.id;
+		return nodeComment;
+	}
 };
 return _Drawer;
 });

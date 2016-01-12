@@ -462,19 +462,7 @@ _Actions.prototype = {
 		var postNBody = e.target; do postNBody = postNBody.parentNode; while(postNBody.className != "post-body");
 		if(postNBody.isBeenCommented === true)return;
 		postNBody.isBeenCommented = true;
-		var nodeComment = cView.gNodes["comment"].cloneAll();
-		nodeComment.cNodes["comment-body"].appendChild(cView.Drawer.genEditNode(cView.Actions.postNewComment,cView.Actions.cancelNewComment));
-		if(cView.ids.length > 1 ){
-			nodeComment.getElementsByClassName("select-user")[0].hidden = false;
-			var nodeSelectUsr = nodeComment.getElementsByClassName("select-user-ctrl")[0];
-			cView.ids.forEach(function(id){
-				var option = document.createElement("option");
-				option.innerHTML = "@"+cView.logins[id].data.users.username;
-				option.value = id;
-				nodeSelectUsr.appendChild(option);
-			});
-		}
-		nodeComment.userid = cView.gMe.users.id;
+		var nodeComment = cView.Drawer.genAddComment();
 		postNBody.cNodes["comments"].appendChild(nodeComment);
 		nodeComment.getElementsByClassName("edit-txt-area")[0].focus();
 	}
@@ -672,7 +660,9 @@ _Actions.prototype = {
 				cView.Drawer.loadGlobals(postUpd);
 				cView.doc.getElementById(id).rawData = post;
 				var nodePB = cView.doc.getElementById(id).cNodes["post-body"];
-				nodePB.isBeenCommented = false;
+				var text = "";
+				if (nodePB.isBeenCommented == true)
+					text = nodePB.getElementsByTagName("textarea")[0].value;	
 				if(typeof nodePB.bumpLater !== "undefined")setTimeout(postPB.bumpLater, 1000);
 				nodePB.removeChild(nodePB.cNodes["comments"]);
 				nodePB.cNodes["comments"] = cView.doc.createElement("div");
@@ -680,6 +670,11 @@ _Actions.prototype = {
 
 				postUpd.comments.forEach(function(cmt){cView.gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(cView.Drawer.genComment(cmt))});
 				nodePB.appendChild(nodePB.cNodes["comments"]);
+				if (nodePB.isBeenCommented == true){ 
+					var nodeComment = cView.Drawer.genAddComment();
+					nodePB.cNodes["comments"].appendChild(nodeComment);
+					nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
+				}
 				cView.Drawer.addLastCmtButton(nodePB);
 				nodePB.cNodes["comments"].cnt = postUpd.comments.length;
 

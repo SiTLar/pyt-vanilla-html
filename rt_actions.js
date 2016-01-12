@@ -25,6 +25,8 @@ RtHandler.prototype = {
 		var cView = document.cView;
 		node.style.opacity = 0;
 		node.style.position = "absolute";
+		var victim = document.getElementById(node.id);
+		if(victim) victim.parentNode.removeChild(victim);
 		if(!nodePos)document.posts.appendChild(node);
 		else nodePos.parentNode.insertBefore(node,nodePos);
 		node.style.width = node.parentNode.clientWidth;
@@ -58,7 +60,7 @@ RtHandler.prototype = {
 	,unshiftPost: function(data){
 		var that = this;
 		var cView = document.cView;
-		if(cView.skip)return;
+		if(cView.cSkip)return;
 		if (cView.gMe && Array.isArray(cView.gMe.users.banIds)
 			&& (cView.gMe.users.banIds.indexOf(data.posts.createdBy) > -1))
 			return;
@@ -69,7 +71,7 @@ RtHandler.prototype = {
 	}
 	,bumpPost: function(nodePost){
 		var cView = document.cView;
-		if(cView.skip)return;
+		if(cView.cSkip)return;
 		var that = this;
 		if(nodePost.cNodes["post-body"].isBeenCommented)
 			nodePost.cNodes["post-body"].bumpLater = function(){ that.bumpPost(nodePost);}
@@ -84,7 +86,7 @@ RtHandler.prototype = {
 	,injectPost: function(id){
 		var that = this;
 		var cView = document.cView;
-		if(cView.skip)return;
+		if(cView.cSkip)return;
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function (){
 			if(oReq.status < 400){
@@ -92,6 +94,7 @@ RtHandler.prototype = {
 			}
 		}
 		oReq.open("get",gConfig.serverURL+"posts/"+id, true);
+		oReq.setRequestHeader("X-Authentication-Token", cView.token);
 		oReq.send();	
 	}
 	,"comment:new": function(data){
@@ -163,7 +166,7 @@ RtHandler.prototype = {
 	,"post:new" : function(data){
 		var that = this;
 		var cView = document.cView;
-		if(cView.skip)return;
+		if(cView.cSkip)return;
 		if(document.getElementById(data.posts.id)) return;
 		that.unshiftPost(data);
 	}
@@ -174,7 +177,7 @@ RtHandler.prototype = {
 		nodePost.cNodes["post-body"].cNodes["post-cont"].innerHTML = autolinker.link(data.posts.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodePost.rawData.body = data.posts.body;
 	}
-	, "post:cView.Actions.destroy" : function(data){
+	, "post:destroy" : function(data){
 		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) return;
 		nodePost.parentNode.removeChild(nodePost);

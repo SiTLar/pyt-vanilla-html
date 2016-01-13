@@ -18,7 +18,7 @@ _Url2link.prototype = {
 	constructor:_Url2link
 	,"trunc": 0
 	,"url":{
-		"regex": /(^|\s)((?:https?:\/\/)?(?:[^\s\/~!@#$^&*()_?:;|\\]+\.)+(?:[^\s\/~!@#$^&*()_?:;|\\]){2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*)*)/
+		"regex": /((?:https?:\/\/)?(?:[^\s\/~!@#$^&*()_?:;|\\]+\.)+(?:[^\s\/~!@#$^&*()_?:;|\\]\.){2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*)*)/
 		,"flags": "i"
 		,"newtab": true
 		,"action":function(match,host){
@@ -36,7 +36,7 @@ _Url2link.prototype = {
 		}
 	}
 	,"uname":{
-		"regex": /(^|\s)@([a-z0-9]{3,})/
+		"regex": /@([a-z0-9]{3,})/
 		,"newtab": true
 		,"flags":"i"
 		,"action":function(match, host){
@@ -50,7 +50,7 @@ _Url2link.prototype = {
 		["url","uname"].forEach(function (t){
 			var conv = that[t];
 			var oMatch;
-			regex = new RegExp(conv.regex.source, conv.flags+"g");
+			regex = new RegExp("(^|\\s)"+conv.regex.source, conv.flags+"g");
 			while((oMatch = regex.exec(text) )!== null)
 				matches.push({
 					"type":t

@@ -177,6 +177,16 @@ Object.defineProperty( Element.prototype, "nextSibling"
 			else return this.parentNode.childNodes[idx];
 		}
 	}
+Object.defineProperty( Element.prototype, "previousSibling"
+	,{
+		enumerable: false
+		,get: function(){
+			if ( typeof this.parentNode === "undefined") return null;
+			var idx = this.parentNode.childNodes.indexOf(this) - 1;
+			if (idx < 0 ) return null;
+			else return this.parentNode.childNodes[idx];
+		}
+	}
 );
  var Document = function(){
 	Element.call(this, "html");

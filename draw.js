@@ -483,17 +483,20 @@ _Drawer.prototype = {
 					nodeSub.addEventListener("click", cView["Actions"]["reqSubscription"] );
 				}
 			}
-			if(friend && login.users.subscribers.some(function(sub){ return sub.id == user.id;})){
+			controls.cNodes["up-sbs"].getElementsByTagName("ul")[0].appendChild(envelop);
+			if(friend 
+			&& ((user.type == "group") 
+				|| login.users.subscribers.some(function(sub){ return sub.id == user.id;}))){
 				envelop.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
 				envelop.cNodes["up-d"].target = "_blank";
 			}else{
 				envelop.cNodes["up-d"].hidden = true;
-				envelop.cNodes["up-d"].nextSibling.hidden = true;
+				envelop.cNodes["up-d"].previousSibling.hidden = true;
 			}
 			var aBan = envelop.cNodes["up-b"];
 			if (user.type == "group"){
-				aBan.nextSibling.hidden = true;
 				aBan.hidden = true;
+				envelop.cNodes["up-b"].previousSibling.hidden = true;
 				return;
 			}
 			aBan.banned  = login.users.banIds.indexOf( user.id) != -1;
@@ -502,7 +505,6 @@ _Drawer.prototype = {
 				aBan.removeEventListener("click",cView["Actions"]["genBlock"]);
 				aBan.addEventListener("click", cView["Actions"]["doUnBan"]);
 			}
-			controls.cNodes["up-sbs"].getElementsByTagName("ul")[0].appendChild(envelop);
 		}
 
 	}

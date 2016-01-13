@@ -58,11 +58,12 @@ _Drawer.prototype = {
 			nodeCLike.innerHTML = cView.gUsers[like].link;
 			nodeLikes.appendChild(nodeCLike);
 		});
-		var suffix = cView.doc.createElement("span");
-		suffix.id = post.id+"-unl"
-		if (post.omittedLikes)
-			suffix.innerHTML = 'and <a onclick="unfoldLikes(\''+post.id+'\')">'+ post.omittedLikes +" other people</a> ";
-		suffix.innerHTML += "liked this";
+		var suffix = cView.gNodes["likes-suffix"].cloneAll();
+
+		if (post.omittedLikes){
+			suffix.cNodes["likes-omitted"].hidden = false;
+			suffix.getElementsByTagName("a")[0].innerHTML = post.omittedLikes + " other people "
+		}
 		suffix.className = "nocomma";
 		postNBody.cNodes["post-info"].cNodes["likes"].appendChild(nodeLikes);
 		postNBody.cNodes["post-info"].cNodes["likes"].cNodes = new Object();

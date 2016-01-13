@@ -320,28 +320,27 @@ _Actions.prototype = {
 			e.target.appendChild(cView.gNodes["spinner"].cloneAll());
 
 	}
-	,"unfoldLikes": function(id){
+	,"unfoldLikes": function(e){
 		var cView = document.cView;
-		var post = cView.doc.getElementById(id).rawData;
-		var span  = cView.doc.getElementById(id+"-unl");
+		var nodePost= e.target.getNode(["p","post"]);
+		var span = e.target.getNode(["p","nocomma"]);
 		var nodeLikes = span.parentNode.cNodes["comma"];
 
-		if (post.omittedLikes > 0){
+		if (nodePost.rawData.omittedLikes > 0){
 			var oReq = new XMLHttpRequest();
 			oReq.onload = function(){
 				if(oReq.status < 400){
 					span.parentNode.removeChild(span);
 					var postUpd = JSON.parse(this.response);
-					post.likes = postUpd.posts.likes;
-					postUpd.users.forEach(cView.Utils.addUser);
-					cView.doc.getElementById(id).rawData = post;
-					cView.Drawer.writeAllLikes(id, nodeLikes);
+					postUpd.users.forEach(cView.Utils.addUser, cView.Utils);
+					nodePost.rawData.likes = postUpd.posts.likes;
+					cView.Drawer.writeAllLikes(nodePost.id, nodeLikes);
 				}else{
 					console.log(oReq.toString());
 
 				};
 			};
-			oReq.open("get",gConfig.serverURL + "posts/"+post.id+"?maxComments=0&maxLikes=all", true);
+			oReq.open("get",gConfig.serverURL + "posts/"+nodePost.id+"?maxComments=0&maxLikes=all", true);
 			oReq.setRequestHeader("X-Authentication-Token", cView.token);
 			oReq.send();
 

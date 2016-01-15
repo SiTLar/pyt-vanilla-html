@@ -1,5 +1,4 @@
-
+*.swp
 config.json
-
-config.json
-
+node_modules
+vanilla*.js

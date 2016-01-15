@@ -1,4 +1,5 @@
 "use strict";
+var tlds = require("raw!val!./loadtlds");
 define("Url2link", [], function(){
 function _Url2link(cfg){
 	var that = this;
@@ -19,14 +20,35 @@ _Url2link.prototype = {
 	,"trunc": 0
 	,"bra": "([{*%$'\""
 	,"ket": ")]}*%$'\""
+	,"email": {
+		"regex": /(([-\w!#$%&'*+/=?^`{|}~\\]*\.)*([-\w!#$%&'*+/=?^`{|}~\\])+@(?:[^\s\/~!@#$^&*()_?:;|\\]+\.)+(?:[^\s\/~!@#$^&*()_?:;|\\\.]){2,})/
+		,"flags": "i"
+		,"newtab":false
+		,"action":function(match,host){
+			var regex = /.*@(?:[^\s\/~!@#$^&*()_?:;|\\]+\.)+((?:[^\s\/~!@#$^&*()_?:;|\\\.]){2,})/;
+			var parts = regex.exec(match); 
+			if(typeof tlds[parts[1].toLocaleLowerCase()] === "undefined") return match;
+			else return '<a href="mailto:' + match + '" >' + match + '</a>'; 
+
+		}
+	}
+	,"text":{
+		"regex":/([\W\w])/
+		,"action":function(match){
+			return match;
+		}
+	
+	}
 	,"url":{
 		"regex": /((?:https?:\/\/)?(?:[^\s\/~!@#$^&*()_?:;|\\]+\.)+(?:[^\s\/~!@#$^&*()_?:;|\\\.]){2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*)*)/
 		,"flags": "i"
 		,"newtab": true
 		,"action":function(match,host){
-			var regex = /https?:\/\//g;
+			var regex = /(https?:\/\/)?(?:[^\s\/~!@#$^&*()_?:;|\\]+\.)+((?:[^\s\/~!@#$^&*()_?:;|\\\.]){2,})(?:\.)?(?::[0-9]+)?(?:\/[^\s]*)*/
 			var text;
-			if(regex.exec(match)) text = match.slice(regex.lastIndex)
+			var parts = regex.exec(match); 
+			if(typeof tlds[parts[2].toLocaleLowerCase()] === "undefined") return match;
+			if(typeof parts[1] !== "undefined"  ) text = match.slice(parts[1].length);
 			else {
 				text = match;
 				match = "http://"+match;
@@ -45,18 +67,39 @@ _Url2link.prototype = {
 			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="' + gConfig.front+match+'" >@' +match + '</a>' ;
 		}
 	}
-	,"link": function(text){
+	,"link": function(input){
 		var that = this;
 		var matches = new Array();
-		var out = new Array();
-		["url","uname"].forEach(function (t){
+		var out = new Array({"type":"text", "prefix":"", "val":input});
+
+		["email","url","uname"].forEach(function(type){
+			var newOut = new Array();
+			out.forEach(function(el){
+				if (el.type == "text") 
+					newOut = newOut.concat(digest(type, el.val));
+				else newOut = newOut.concat(el);
+			});
+			out = newOut;
+		});
+		
+		
+		function digest(t, text){
 			var conv = that[t];
+			var prevIdx = 0;
 			var idxEnd;
 			var idxBra;
 			var oMatch;
 			var val;
+			var output = new Array();
 			var regex = new RegExp("(^|\\s|.)"+conv.regex.source, conv.flags+"g");
 			while((oMatch = regex.exec(text) )!== null){
+				if( text.slice(prevIdx, oMatch.index) != "" ){
+					output.push({
+						"type":"text"
+						,"prefix":""
+						,"val": text.slice(prevIdx, oMatch.index)
+					});
+				}
 				idxEnd = regex.lastIndex;
 				val = oMatch[2];
 				if((oMatch[1] != "")
@@ -69,16 +112,22 @@ _Url2link.prototype = {
 					else idxEnd = regex.lastIndex;
 				}
 				
-				matches.push({
+				output.push({
 					"type":t
 					,"prefix":oMatch[1]
 					,"val":val
-					,"start":oMatch.index
-					,"end":idxEnd
 				});
+				prevIdx = regex.lastIndex;
+
 			}
-		});
-		matches.sort(function(a,b){return a.start - b.start;});
+			output.push({
+				"type":"text"
+				,"prefix":""
+				,"val": text.slice(prevIdx)
+			});
+			return output;
+		}
+	/*	matches.sort(function(a,b){return a.start - b.start;});
 		var lastPos = 0;
 		matches.forEach(function(m){
 			out.push(text.slice(lastPos,m.start));
@@ -87,6 +136,10 @@ _Url2link.prototype = {
 		});
 		out.push(text.slice(lastPos));
 		return out.join("");
+	*/
+		return out.reduce(function(prev,curr){
+			return prev + curr.prefix +that[curr.type].action( curr.val, that);
+		},"");
 	}
 };
 return _Url2link;

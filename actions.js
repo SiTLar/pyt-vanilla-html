@@ -151,7 +151,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		 var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 		 var postCNode = cView.doc.createElement("div");
-		 postCNode.innerHTML = victim.rawData.body;
+		 postCNode.innerHTML = cView.autolinker.link(victim.rawData.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		 postCNode.className = "post-cont";
 		 victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		 victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;

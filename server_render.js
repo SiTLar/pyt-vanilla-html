@@ -53,7 +53,9 @@ module.exports = function(req,res){
 	cView.Actions = Actions_srv;
 	cView.SecretActions = SecretActions_srv;
 	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
-	cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
+	var Url2link =  require("./url2link");
+	cView.autolinker = new Url2link({"truncate":25});
+	//cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
 	Utils.setStorage();
 	var urlReq = url.parse(req.url, true);	
 	document.location = urlReq;

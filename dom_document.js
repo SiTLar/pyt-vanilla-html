@@ -166,28 +166,20 @@ Element.prototype = {
 			,"")
 			+ "</" + this.tagName + ">";
 	}
- }	
-Object.defineProperty( Element.prototype, "nextSibling"
-	,{
-		enumerable: false
-		,get: function(){
-			if ( typeof this.parentNode === "undefined") return null;
-			var idx = this.parentNode.childNodes.indexOf(this) + 1;
-			if (idx == this.parentNode.childNodes.length) return null;
-			else return this.parentNode.childNodes[idx];
-		}
+	,get "nextSibling"(){
+		if ( typeof this.parentNode === "undefined") return null;
+		var idx = this.parentNode.childNodes.indexOf(this) + 1;
+		if (idx == this.parentNode.childNodes.length) return null;
+		else return this.parentNode.childNodes[idx];
 	}
-Object.defineProperty( Element.prototype, "previousSibling"
-	,{
-		enumerable: false
-		,get: function(){
-			if ( typeof this.parentNode === "undefined") return null;
-			var idx = this.parentNode.childNodes.indexOf(this) - 1;
-			if (idx < 0 ) return null;
-			else return this.parentNode.childNodes[idx];
-		}
+	,get "previousSibling"(){
+		if ( typeof this.parentNode === "undefined") return null;
+		var idx = this.parentNode.childNodes.indexOf(this) - 1;
+		if (idx < 0 ) return null;
+		else return this.parentNode.childNodes[idx];
 	}
-);
+ };	
+
  var Document = function(){
 	Element.call(this, "html");
 	this.head = new Element("head");

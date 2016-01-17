@@ -32,7 +32,16 @@
 				,{"c":"likes"}
 			]}
 			,{"c":"comments"}
-		] }
+		]}
+	]}
+	,{"c":"likes-suffix", "t":"span"
+	,"children":[
+		{"c":"likes-omitted", "t":"span", "p":{"hidden":true}
+		,"children":[
+			{"t":"span", "txt":"and "}
+			,{"t":"a", "e":{"click":["Actions","unfoldLikes"]}}
+		]}
+		,{"t":"span", "txt":"liked this"}
 	]}
 	,{"c":"private"
 	,"children":[

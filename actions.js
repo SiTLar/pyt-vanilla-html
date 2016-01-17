@@ -151,7 +151,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		 var victim = e.target; do victim = victim.parentNode; while(victim.className != "post");
 		 var postCNode = cView.doc.createElement("div");
-		 postCNode.innerHTML = victim.rawData.body;
+		 postCNode.innerHTML = cView.autolinker.link(victim.rawData.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		 postCNode.className = "post-cont";
 		 victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		 victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
@@ -174,7 +174,7 @@ _Actions.prototype = {
 					nodePost.sign = cpost.sign;
 				}
 				*/
-				postCNode.innerHTML = cView.autolinker.link(post.body.replace(/\n/g,"").replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+				postCNode.innerHTML = cView.autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 				postCNode.className = "post-cont";
 				nodePost.rawData = post;
 				nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
@@ -320,28 +320,27 @@ _Actions.prototype = {
 			e.target.appendChild(cView.gNodes["spinner"].cloneAll());
 
 	}
-	,"unfoldLikes": function(id){
+	,"unfoldLikes": function(e){
 		var cView = document.cView;
-		var post = cView.doc.getElementById(id).rawData;
-		var span  = cView.doc.getElementById(id+"-unl");
+		var nodePost= e.target.getNode(["p","post"]);
+		var span = e.target.getNode(["p","nocomma"]);
 		var nodeLikes = span.parentNode.cNodes["comma"];
 
-		if (post.omittedLikes > 0){
+		if (nodePost.rawData.omittedLikes > 0){
 			var oReq = new XMLHttpRequest();
 			oReq.onload = function(){
 				if(oReq.status < 400){
 					span.parentNode.removeChild(span);
 					var postUpd = JSON.parse(this.response);
-					post.likes = postUpd.posts.likes;
-					postUpd.users.forEach(cView.Utils.addUser);
-					cView.doc.getElementById(id).rawData = post;
-					cView.Drawer.writeAllLikes(id, nodeLikes);
+					postUpd.users.forEach(cView.Utils.addUser, cView.Utils);
+					nodePost.rawData.likes = postUpd.posts.likes;
+					cView.Drawer.writeAllLikes(nodePost.id, nodeLikes);
 				}else{
 					console.log(oReq.toString());
 
 				};
 			};
-			oReq.open("get",gConfig.serverURL + "posts/"+post.id+"?maxComments=0&maxLikes=all", true);
+			oReq.open("get",gConfig.serverURL + "posts/"+nodePost.id+"?maxComments=0&maxLikes=all", true);
 			oReq.setRequestHeader("X-Authentication-Token", cView.token);
 			oReq.send();
 
@@ -495,7 +494,7 @@ _Actions.prototype = {
 			if(this.status < 400){
 				var comment = JSON.parse(this.response).comments;
 				nodeComment.parentNode.replaceChild(cView.Drawer.genComment(comment),nodeComment);
-				cView.gComments[comment.id] = comment;
+				cView.gComments[comment.id] = cView.autolinker.link(comment.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 
 			}
 		};

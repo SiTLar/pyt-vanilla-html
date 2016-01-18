@@ -730,7 +730,7 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var oEmbedURL;
 		var m;
-		if((m = /^https:\/\/docs\.google\.com\/(document|spreadsheets|presentation|drawings)\/d\/([^\/]+)/.exec(victim)) !== null) {
+		if((m = /^https:\/\/(?:docs\.google\.com\/(?:document|spreadsheets|presentation|drawings)|drive\.google\.com\/file)\/d\/([^\/]+)/.exec(victim)) !== null) {
 			new Promise(function(resolve,reject){
 				var oReq = new XMLHttpRequest();
 				oReq.onload = function(){
@@ -739,7 +739,7 @@ _Drawer.prototype = {
 					else reject(oReq.response);
 				}
 
-				oReq.open("get","https://www.googleapis.com/drive/v2/files/" + m[2] + "?key=AIzaSyA8TI6x9A8VdqKEGFSE42zSexn5HtUkaT8",true);
+				oReq.open("get","https://www.googleapis.com/drive/v2/files/" + m[1] + "?key=AIzaSyA8TI6x9A8VdqKEGFSE42zSexn5HtUkaT8",true);
 				oReq.send();
 			}).then(function(info){
 				//var nodeiFrame = cView.doc.createElement("iframe");

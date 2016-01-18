@@ -1074,7 +1074,7 @@ _Actions.prototype = {
 		var userid = null;
 		oReq.onload = function(){
 			var res =  JSON.parse(oReq.response);
-			var nodeMsg =  nodeLogin.getNode(["c","msg-error"]);
+			var nodeMsg = nodeLogin.cNodes["msg-error"];
 			if(oReq.status < 400){
 				nodeMsg.hidden = true;
 				if(typeof cView.logins[res.users.id] !== "undefined"){
@@ -1090,6 +1090,8 @@ _Actions.prototype = {
 			}else {
 				nodeMsg.hidden = false;
 				nodeMsg.innerHTML = res.err;
+				nodeLogin.getElementsByClassName("spinner")[0].hidden = true;
+				e.target.disabled = false;
 			}
 		};
 		oReq.open("post", gConfig.serverURL +"session", true);

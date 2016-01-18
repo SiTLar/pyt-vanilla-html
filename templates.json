@@ -302,7 +302,7 @@
 	]}
 	,{"c":"up-c-mu","t":"li"
 	,"children":[
-		{"c":"username","t":"span"}
+		{"c":"uname","t":"span"}
 		,{"c":"up-s","t":"a", "e":{"click":["Actions","evtSubscribe"]}}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-d","t":"a", "txt":"Direct"}
@@ -508,6 +508,7 @@
 				{"c":"fa fa-spinner fa-pulse","t":"i"}
 			]}
 		]}
+		,{"c":"msg-error", "p":{"hidden":true}}
 	]}
 	,{"c":"sub-request"
 	,"children":[

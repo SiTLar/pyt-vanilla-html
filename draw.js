@@ -460,7 +460,7 @@ _Drawer.prototype = {
 			var friend = (typeof login.oFriends[user.id] !== "undefined");
 			var envelop =  cView.gNodes["up-c-mu"].cloneAll();
 			envelop.loginId = id;
-			if (isMulti) envelop.cNodes["username"].innerHTML = "@"+login.users.username+": ";
+			if (isMulti) envelop.cNodes["uname"].innerHTML = "@"+login.users.username+": ";
 			var nodeSub = envelop.cNodes["up-s"];
 			nodeSub.innerHTML = friend?"Unsubscribe":"Subscribe";
 			nodeSub.subscribed = friend;

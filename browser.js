@@ -158,10 +158,10 @@ window.srvDoc = function(){
 	var cView = document.cView;
 	var idx = 0;
 	var aidx = 0;
+	setLocalSettings();
 	if(typeof cView.gContent !== "undefined")
 		cView.Drawer.loadGlobals(cView.gContent);
 	regenCNodes(document.getElementsByTagName("body")[0]);
-	setLocalSettings();
 	
 	switch(cView.timeline){
 	case "settings":
@@ -210,12 +210,13 @@ window.srvDoc = function(){
 		window.setTimeout(cView.Drawer.updateDate, 100, aNode, cView);
 
 	}
-	var nodesUsernames = document.getElementsByClassName("username");
 	var arrUsernames = new Array();
+	var nodesUsernames = document.getElementsByClassName("username");
 	for(idx = 0; idx < nodesUsernames.length; idx++) 
 		arrUsernames.push(nodesUsernames[idx]);
 	arrUsernames.forEach(function(node){
-		node.parentNode.outerHTML = cView.gUsers.byName[node.innerHTML].link;
+		if(typeof cView.gUsers.byName[node.innerHTML] !== "undefined")
+			node.parentNode.outerHTML = cView.gUsers.byName[node.innerHTML].link;
 	
 	});
 	var urlMatch;
@@ -235,10 +236,14 @@ window.srvDoc = function(){
 		}
 	}
 	["blockPosts", "blockComments"].forEach(function(list){
-		cView[list].forEach(function(user){ cView.Drawer[list](user,true); });
+		if(Array.isArray(cView[list]))
+			cView[list].forEach(function(user){ cView.Drawer[list](user,true); });
 	});
-	document.getElementsByClassName("add-sender")[0].ids = [cView.gMe.users.id];
-	document.getElementsByClassName("new-post-to")[0].userid = cView.gMe.users.id;
+	var nodeAddSender = document.getElementsByClassName("add-sender")[0];
+	if(nodeAddSender != null) nodeAddSender.ids = [cView.mainId];
+	var nodeNewPostTo =  document.getElementsByClassName("new-post-to")[0];
+	if(nodeNewPostTo != null) nodeNewPostTo.userid = cView.mainId;
+
 	cView.Utils.postInit();	
 }
 function regenCNodes(node){

@@ -7,11 +7,13 @@ module.exports = {
 		"libraryTarget":"commonjs2"
 		,"filename":"vanilla_srv.js"
 	}
-	,"plugins":[
+/*	,"plugins":[
 		new webpack.optimize.UglifyJsPlugin({
 		    mangle: {
 			except: ["cView", 'exports', 'require']
 		    }
 		})
 	]
+
+*/
 };

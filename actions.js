@@ -1074,7 +1074,9 @@ _Actions.prototype = {
 		var userid = null;
 		oReq.onload = function(){
 			var res =  JSON.parse(oReq.response);
+			var nodeMsg =  nodeLogin.getNode(["c","msg-error"]);
 			if(oReq.status < 400){
+				nodeMsg.hidden = true;
 				if(typeof cView.logins[res.users.id] !== "undefined"){
 					cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
 					nodeLogin.parentNode.removeChild(nodeLogin);
@@ -1085,7 +1087,10 @@ _Actions.prototype = {
 				userid = res.users.id;
 				cView.Utils.getWhoami(res.users.id, finish);
 
-			}else cView.doc.getElementById("auth-msg").innerHTML = res.err;
+			}else {
+				nodeMsg.hidden = false;
+				nodeMsg.innerHTML = res.err;
+			}
 		};
 		oReq.open("post", gConfig.serverURL +"session", true);
 		oReq.setRequestHeader("X-Authentication-Token", null);

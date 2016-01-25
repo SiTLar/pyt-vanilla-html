@@ -11,7 +11,21 @@ function _Url2link(cfg){
 			break;
 		default:
 			Object.keys(cfg[key]).forEach(function(k){
-				that[key][k] = cfg[key][k];
+				if (k == "actions"){
+					if(!Array.isArray(cfg[key][k])) 
+						that[key][k] = [cfg[key][k]];
+					else cfg[key][k].forEach(function(act){
+						switch(act[0]){
+						case "pre":
+							that[key][k].unshift(act[1]);
+							break;
+						case "post":
+							that[key][k].push(act[1]);
+							break;
+						}
+					});
+				}
+				else that[key][k] = cfg[key][k];
 			});
 		}
 	});
@@ -19,8 +33,6 @@ function _Url2link(cfg){
 _Url2link.prototype = {
 	constructor:_Url2link
 	,"trunc": 0
-	,"bra": "([{*%$'\""
-	,"ket": ")]}*%$'\""
 	,"email": {
 		"regex": /((?:[-\w!#$%&'*+/=?^`{|}~\\]*\.)*([-\w!#$%&'*+/=?^`{|}~\\])+@(?:[^\s"\/~!@#$^&*()_?:;|\\]+\.)+(?:[^\s"\/~!@#$^&*()_?:;|\\\.,]){2,})/
 		,"flags": "i"
@@ -32,19 +44,19 @@ _Url2link.prototype = {
 			else return false;
 		}
 		,"newtab":false
-		,"action":function(match,host){
+		,"actions":[function(match,host){
 			return '<a href="mailto:' + match + '" >' + match + '</a>'; 
-		}
+		}]
 	}
 	,"text":{
 		"regex":/([\W\w])/
-		,"action":function(match){
+		,"actions":[function(match){
 			return match;
-		}
+		}]
 	
 	}
 	,"url":{
-		"regex": /((?:https?:\/\/)?(?:[^\s\/"~!@#$^&*()_?:;|\\,]+\.)+[^\s\/"~!@#$^&*()_?:;|\\\.,]{2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*)*)/
+		"regex": /(?:https?:\/\/)?(?:[^\s\/'"<>~!@#$^&*()_?:;|\\,]+\.)+[^\s\/'"<>~!@#$^&*()_?:;|\\\.,]{2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*?)*?(?=[.,(){}\[\]<>"]?(?:\s|$))/
 		,"flags": "i"
 		,"newtab": true
 		,"check":function(text){
@@ -54,7 +66,7 @@ _Url2link.prototype = {
 				return true;
 			else return false;
 		}
-		,"action":function(match,host){
+		,"actions":[function(match,host){
 			var text;
 			var regex = /^https?:\/\//
 			var scheme = regex.exec(match); 
@@ -68,33 +80,20 @@ _Url2link.prototype = {
 			if (text.slice(-1) == "/")text = text.slice(0,-1);
 			text = (host.trunc &&(text.length > host.trunc))? text.substr(0,host.trunc)+"...":text;
 			return '<a ' +(host["url"].newtab?'target="_blank"':"") +' href="'+match+'">' + text + "</a>";
-		}
+		}]
 	}
 	,"uname":{
 		"regex": /@([a-z0-9]{3,})/
 		,"newtab": true
 		,"flags":"i"
-		,"action":function(match, host){
+		,"actions":[function(match, host){
 			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="' + gConfig.front+match+'" >@' +match + '</a>' ;
-		}
+		}]
 	}
 	,"link": function(input){
 		var that = this;
 		var matches = new Array();
 		var out = new Array({"type":"text", "prefix":"", "val":input, "start":0});
-		var bracketsMap = new Array();
-		var brackets = new Array(that.bra.length);
-		brackets.fill(0);
-		for(var idx = 0; idx < input.length; idx++ ){
-			var idxBra = that.bra.indexOf(input.charAt(idx));
-			var idxKet = that.ket.indexOf(input.charAt(idx));
-			if((idxBra == idxKet)&&(idxBra != -1)) brackets[idxBra]= brackets[idxBra]?0:1;
-			else {
-				if(idxBra != -1) brackets[idxBra]++;
-				if(idxKet != -1) brackets[idxKet]--;
-			}
-			if((idxBra != -1)|| (idxKet != -1))bracketsMap.push({"idx":idx,"a":brackets.slice()});
-		}
 		
 		["email","url","uname"].forEach(function(type){
 			var newOut = new Array();
@@ -114,67 +113,23 @@ _Url2link.prototype = {
 			var head = new Object();
 			var tail = new Object();
 			var output = new Array();
-			var regex = new RegExp("(^|\\s|.)"+conv.regex.source, conv.flags+"g");
+			var regex = new RegExp(conv.regex.source, conv.flags+"g");
 			while((oMatch = regex.exec(text) )!== null){
 				var absStart = oMatch.index + start;
 				if( text.slice(prevIdx, oMatch.index) != "" )
-					output.push(textobj(text.slice(prevIdx, oMatch.index), absStart));
+					output.push(textobj(text.slice(prevIdx, oMatch.index)));
 				prevIdx = regex.lastIndex;
+				var el = {
+					"val":oMatch[0]
+				}
 
-				var startBr = binarySearch(bracketsMap,absStart+oMatch[1].length);
-				var endBr = binarySearch(bracketsMap,regex.lastIndex+start);
-				val = oMatch[2];
-				head = {"prefix":oMatch[1]
-					,"start":start 
-					,"val":val
-				}
-				var brOK = true;
-				if( (startBr!=endBr)&& (bracketsMap[startBr].idx >= absStart)){
-					if(startBr)startBr--;
-					var arrSBr = bracketsMap[startBr].a;
-					do{
-						brOK = true;
-						var arrEBr = bracketsMap[endBr--].a;
-						for(var idx = 0; idx < arrSBr.length; idx++)
-							if(arrSBr[idx] != arrEBr[idx]){
-								brOK = false;
-								break;
-							}
-					}while(!(brOK || (startBr == endBr)) );
-					//if(startBr != endBr){
-					//if(!brOK)
-					head.val =val.slice(0, bracketsMap[++endBr].idx - start )
-					
-						
-					tail = {"prefix":""
-						,"start":bracketsMap[endBr].idx
-						,"val":val.slice(bracketsMap[endBr].idx - start)
-					}
-					//}
-				}
-				[head,tail].forEach(function(el){
-					if(typeof el.start === "undefined" )return;
-					if(el.val == "")return;
-					if(!el.val.match(new RegExp(regex.source))
-					||((typeof conv.check === "function") 
-						&& !conv.check(el.val))) el.type = "text";
-					else el.type = t;
-					output.push(el);
-				});
-				/*
-				if((oMatch[1] != "")
-				&&((idxBra = that.bra.indexOf(oMatch[1])) != -1)){
-					idxEnd = oMatch[2].lastIndexOf(that.ket.charAt(idxBra));
-					if (idxEnd != -1){
-						val =  oMatch[2].slice(0,idxEnd++);
-						idxEnd += oMatch.index;
-					}
-					else idxEnd = regex.lastIndex;
-				}
-				*/
-
+				if(el.val == "")continue;
+				if ((typeof conv.check === "function") 
+					&& !conv.check(el.val)) el.type = "text";
+				else el.type = t;
+				output.push(el);
 			}
-			output.push(textobj(text.slice(prevIdx), prevIdx+start));
+			output.push(textobj(text.slice(prevIdx)));
 			return output;
 		}
 
@@ -196,11 +151,9 @@ _Url2link.prototype = {
 			}
 			return hi;
 		}
-		function textobj(text, idx){
+		function textobj(text){
 			return {
 				"type":"text"
-				,"start": idx
-				,"prefix":""
 				,"val":text
 			};
 		}
@@ -215,7 +168,12 @@ _Url2link.prototype = {
 		return out.join("");
 	*/
 		return out.reduce(function(prev,curr){
-			return prev + curr.prefix +that[curr.type].action( curr.val, that);
+			return prev 
+				+that[curr.type]
+					.actions
+					.reduce(function(prev,action){ 
+						return action(prev, that);
+					}, curr.val);
 		},"");
 	}
 };

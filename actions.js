@@ -102,7 +102,7 @@ _Actions.prototype = {
 					alert("you should provide some text");
 					return;
 				}
-				post.body = textField.value;
+				post.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 				oReq.send(JSON.stringify(postdata));
 			}
 		}
@@ -192,7 +192,8 @@ _Actions.prototype = {
 		e.target.parentNode.parentNode.cNodes["edit-txt-area"].disabled = true;
 
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
-		var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value;
+		var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value
+			.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 	/*
 		if(nodePost.isPrivate){
 			oReq.open("put",matrix.cfg.srvurl+"edit", true);
@@ -487,15 +488,14 @@ _Actions.prototype = {
 			return;
 		}
 		var comment = cView.gComments[nodeComment.id];
-		comment.body = textField.value ;
+		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 		comment.updatedAt = Date.now();
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			if(this.status < 400){
 				var comment = JSON.parse(this.response).comments;
 				nodeComment.parentNode.replaceChild(cView.Drawer.genComment(comment),nodeComment);
-				cView.gComments[comment.id] = cView.autolinker.link(comment.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
-
+				cView.gComments[comment.id] = comment;
 			}
 		};
 
@@ -504,7 +504,7 @@ _Actions.prototype = {
 		oReq.setRequestHeader("Content-type","application/json");
 		var postdata = new Object();
 		postdata.comment = comment;
-		postdata.users = new Array(cView.gMe);
+	//	postdata.users = new Array(cView.gMe);
 		oReq.send(JSON.stringify(postdata));
 
 	}
@@ -562,7 +562,7 @@ _Actions.prototype = {
 		}
 		textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 		var comment = new Object();
-		comment.body = textField.value;
+		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 		comment.postId = nodePost.id;
 		comment.createdAt = null;
 		comment.createdBy = null;
@@ -1033,6 +1033,7 @@ _Actions.prototype = {
 		oUser.screenName = inputs["screen-name"].value;
 		oUser.email = inputs["email"].value;
 		oUser.isPrivate = inputs["is-private"].checked?"1":"0";
+			oUser.description = nodeProfile.cNodes["gs-descr"].value;
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];

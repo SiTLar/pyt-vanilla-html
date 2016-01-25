@@ -45,7 +45,13 @@ window.init = function (){
 	var Drawer = new _Drawer(cView);
 	//var Autolinker = require("./Autolinker.min");
 	var Url2link =  require("./url2link");
-	cView.autolinker = new Url2link({"truncate":25});
+	cView.autolinker = new Url2link({ "truncate":25
+		,"url":{
+			"actions":[
+				["pre",Utils.setFrontUrl]
+			]
+		}
+	});
 	//cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
 	cView.doc = document;
 	document.cView = cView;

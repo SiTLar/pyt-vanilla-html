@@ -425,6 +425,10 @@ _Utils.prototype = {
 			if (typeof callback == "function") callback(res);
 		});
 	}
+	,"setFrontUrl": function(url){
+		return url.replace(/((beta|m)\.)?freefeed.net\/(?=.*)/,
+			gConfig.front.slice(8));
+	}
 };
 return _Utils;
 });

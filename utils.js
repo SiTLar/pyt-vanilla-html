@@ -390,6 +390,7 @@ _Utils.prototype = {
 		var arrPath =  args2Arr.apply(this,arguments);
 		arrPath.shift();
 		arrPath.forEach(function(step){
+			if (node.className == step[1])return;
 			var className = step[1];
 			switch(step[0]){
 			case "p":

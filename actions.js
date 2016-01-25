@@ -380,12 +380,13 @@ _Actions.prototype = {
 		var oReq = new XMLHttpRequest();
 		var nodeUC = cView.Utils.getNode(nodeParent,["p","up-controls"]);
 		var username = nodeUC.user;
+		var loginId = nodeParent.getNode(["p","up-c-mu"]).loginId;
 		oReq.open("post", gConfig.serverURL +"users/"+username+(target.subscribed?"/unsubscribe":"/subscribe"), true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.logins[target.getNode(["p","up-c-mu"]).loginId].token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[loginId].token);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
-				cView.logins[target.loginId].data = JSON.parse(oReq.response); 
-				Utils.refreshLogin(target.loginId);
+				cView.logins[loginId].data = JSON.parse(oReq.response); 
+				Utils.refreshLogin(loginId);
 				Utils.setChild(cView.Utils.getNode(nodeParent,["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(username));
 			}else nodeParent.replaceChild( target, spinner);
 		}

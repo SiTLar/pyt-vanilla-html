@@ -55,6 +55,7 @@ window.init = function (){
 	//cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
 	cView.doc = document;
 	document.cView = cView;
+	cView.cView = cView;
 	cView.Utils = Utils;
 	cView.Drawer = Drawer;
 	cView.Actions = new _Actions(cView);
@@ -86,11 +87,10 @@ window.browserDoc = function(){
 		cView.localStorage.removeItem("screenname");
 	}
 	setLocalSettings();
-	if(["home", "filter", "settings", "requests"].some(function(a){
-		return a == cView.timeline;
-	})){
+	if(["home", "filter", "settings", "requests"].indexOf(cView.timeline) != -1){
 		if(!Utils.auth()) return;
 	}else if(!Utils.auth(true)) cView.logins = [];
+
 	if(cView.timeline == "settings"){
 		cView.Drawer.drawSettings();
 		return Utils.postInit();	
@@ -130,18 +130,19 @@ window.browserDoc = function(){
 
 	};
 	if(arrLocationPath.length > 1){
-		if (locationPath == "filter/discussions") {
+		if("subscriptions" == arrLocationPath[1]){
+			cView.xhrurl = gConfig.serverURL + "users/" + locationPath;
 			cView.timeline = locationPath;
-			cView.xhrurl = gConfig.serverURL + "timelines/filter/discussions";
-		} else	if (locationPath == "filter/direct") {
+		}
+		else if((["likes","comments"].indexOf(arrLocationPath[1]) != -1)
+			|| ("filter" == arrLocationPath[0])){
+			cView.xhrurl = gConfig.serverURL + "timelines/" + locationPath;
 			cView.timeline = locationPath;
-			cView.xhrurl = gConfig.serverURL + "timelines/filter/directs";
 		}else{
 			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
 			locationSearch = "?maxComments=all";
 		}
-	} else
-		cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
+	} else cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
 
 	oReq.open("get",cView.xhrurl+locationSearch,true);
 	oReq.setRequestHeader("X-Authentication-Token", cView.token);

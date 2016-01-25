@@ -1287,7 +1287,25 @@ _Actions.prototype = {
 		var rmSenders = host.getElementsByClassName("rm-sender");
 		if(rmSenders.length = 1)rmSenders[0].hidden = true;
 	}
-
+	,"unfoldUserDet":function(e){
+		document.getElementsByClassName("ud-info")[0].style.display = "block";
+		document.getElementsByClassName("ud-fold")[0].hidden = false;
+		document.getElementsByClassName("ud-unfold")[0].style.display = "none";
+	}
+	,"foldUserDet":function(e){
+		document.getElementsByClassName("ud-info")[0].style.display = "none";
+		document.getElementsByClassName("ud-fold")[0].hidden = true;
+		document.getElementsByClassName("ud-unfold")[0].style.display = "block";
+	}
+	,"goUserSubs": function(e){
+		e.target.getNode(["p","uds-subs"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/subscriptions";
+	}
+	,"goUserComments": function(e){
+		e.target.getNode(["p","uds-com"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/comments";
+	}
+	,"goUserLikes": function(e){
+		e.target.getNode(["p","uds-likes"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/likes";
+	}
 };
 return _Actions;
 });

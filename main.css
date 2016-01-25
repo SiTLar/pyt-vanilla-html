@@ -211,6 +211,12 @@ h1{
 	.post:after {
 		margin: 0;
 	}
+	.ud-info{
+		display:block;
+	}
+	.ud-unfold{
+		display:none;
+	}
 }
 .post-body a {
 	color: #555599;
@@ -452,6 +458,9 @@ span.comment-controls::before {
 	cursor: pointer;
 	margin-top: 0.7em;
 }
+.new-post{
+	clear:both;
+}
 .new-post-to{
 	margin-top: 1.5em;
 	margin-bottom: 0.3em;
@@ -552,3 +561,51 @@ span.comment-controls::before {
 .select-user{
 	margin-left:3em;
 }
+.gs-descr{
+	margin-bottom: 0.5em;
+	max-width: 100%;
+	min-width: 100%;
+	padding: 3px;
+	width: 100%;
+}
+.ud-avatar-img, .ud-text{
+	float:left;
+}
+.ud-text{
+	margin-left:1em;
+}
+.ud-title{
+	font-weight:bold;
+}
+.ud-stats a{
+	display:block;
+}
+.ud-stats{
+	float:right;
+}
+@media (max-width: 399px) {
+	.ud-info{
+		display:none ;
+	}
+	.ud-unfold{
+		display:block;
+	}
+}
+
+.subs-cont  {
+	display:flex;
+	text-align: center;
+	word-wrap: break-word;
+	flex-wrap: wrap;
+}
+
+.sub-item *{
+	display:block;	
+	margin: 0 auto;
+}
+.sub-item {
+	font-size: small;
+	margin: 1em auto;
+	width: 110px;
+}
+

@@ -132,10 +132,6 @@ _Drawer.prototype = {
 		body.className = "content";
 		body.id = "content";
 		cView.doc.getElementsByTagName("body")[0].appendChild(body);
-		var title =  cView.doc.createElement("div");
-		title.className = "pagetitle";
-		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
-		cView.doc.title = "FreeFeed: " + cView.timeline; 
 		var controls = cView.gNodes["controls-user"].cloneAll();
 		var ids = cView.ids;
 		if(ids) cView.subReqsCount = ids.reduce(function(total, id){
@@ -151,14 +147,43 @@ _Drawer.prototype = {
 			controls.cNodes["sr-info"].hidden = false;
 		}
 		body.appendChild(controls );
+		var title =  cView.doc.createElement("div");
+		title.className = "pagetitle";
+		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
+		cView.doc.title = "FreeFeed: " + cView.timeline; 
 		body.appendChild(title);
 		return body;
+	}
+	,"genUserDetails":function(username){
+		var cView = this.cView;
+		var user = cView.gUsers.byName[username];
+		var nodeUD = cView.gNodes["user-detailes"].cloneAll();
+		var nodeInfo = nodeUD.cNodes["ud-info"];
+		nodeInfo.cNodes["ud-username"].value = user.username;
+		nodeInfo.cNodes["ud-avatar-img"].src = user.profilePictureMediumUrl;
+		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
+		if(typeof user.description !== "undefined")
+			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = cView.autolinker.link(user.description.replace(/&/g,"&amp;"));
+		if(typeof user.statistics !== "undefined"){
+			var stats = {
+				"uds-subs":user.statistics.subscriptions
+				,"uds-likes":user.statistics.likes
+				,"uds-com":user.statistics.comments
+			}
+			Object.keys(stats).forEach(function(key){
+				nodeInfo.getNode(["c","ud-stats"],["c",key],["c","val"]).innerHTML = stats[key];
+			});
+		}
+		return nodeUD;
+		
 	}
 	,"genProfile": function(user){
 		var cView = document.cView;
 		var nodeProfile = cView.gNodes["settings-profile"].cloneAll();
 		nodeProfile.getElementsByClassName("sp-username")[0].innerHTML = "@" + user.username;
 		nodeProfile.cNodes["chng-avatar"].cNodes["sp-avatar-img"].src = user.profilePictureMediumUrl; 
+		if (typeof user.description !== "undefined")
+			nodeProfile.cNodes["gs-descr"].value = user.description;
 		var nodes = nodeProfile.getElementsByTagName("input");
 		for(var idx = 0; idx < nodes.length; idx++){
 			var node = nodes[idx];
@@ -242,9 +267,19 @@ _Drawer.prototype = {
 		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
 		title.className = "pagetitle";
 		*/
-		var body = Drawer.makeContainer();
 		Drawer.loadGlobals(content);
+		var body = Drawer.makeContainer();
 		//var nodeRTControls = cView.gNodes["rt-controls"].cloneAll();
+		var view = cView.timeline.split("/")[0];
+		var filter = cView.timeline.split("/")[1];
+		if(typeof filter !== "undefined"){
+			switch(filter){
+			case "subscriptions":
+				return body.appendChild(Drawer.genSubs(content));
+			}
+		}
+		if(typeof cView.gUsers.byName[view] !== "undefined")
+			body.appendChild(cView.Drawer.genUserDetails(view));
 		if(!cView.ids){
 			var nodeGControls = cView.gNodes["controls-anon"].cloneAll();
 			var controls = body.getElementsByClassName("controls-user")[0];
@@ -260,7 +295,6 @@ _Drawer.prototype = {
 			});
 			names.push("home");
 
-			var view = cView.timeline.split("/")[0];
 			if(names.indexOf(view) != -1){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				body.appendChild(nodeAddPost);
@@ -271,9 +305,9 @@ _Drawer.prototype = {
 					body.appendChild(nodeAddPost);
 					Drawer.genDirectTo(nodeAddPost, cView.gMe);
 				}
-			}else{
-				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(cView.timeline));
-			}
+			}else if(typeof cView.gUsers.byName[view] !== "undefined")
+				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(view));
+			
 			var feed = cView.gUsers.byName[cView.timeline];
 			if( (typeof feed !== "undefined") && (feed.type == "group") && feed.friend){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
@@ -426,6 +460,22 @@ _Drawer.prototype = {
 			return node;
 		}
 
+	}
+	,"genSubs": function(content){
+		var cView = this.cView;
+		var out = cView.doc.createElement("div");
+		out.className = "subs-cont";
+		content.subscriptions.forEach(function(sub){
+			var node = cView.gNodes["sub-item"].cloneAll();
+			var a = node.cNodes["link"];
+			if(sub.name != "Posts")return;
+			var user = cView.gUsers[sub.user];
+			a.href = gConfig.front+ user.username;
+			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
+			a.cNodes["usr-title"].innerHTML = user.title;
+			out.appendChild(node);
+		});
+		return out;
 	}
 	,"genUserPopup": function(node, user){
 		var cView = this.cView;

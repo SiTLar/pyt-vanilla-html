@@ -309,6 +309,31 @@
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-b","t":"a", "txt":"Block","e":{"click":["Actions","genBlock"]}}
 	]}
+	,{"c":"up-more","e":{"mouseleave":["Actions","destroy"]}
+	,"children":[
+		{"c":"up-close","e":{"click":["Actions","upClose"]}
+		,"children":[
+			{"t":"a"
+			,"children":[
+				{"c":"fa fa-times","t":"i"}
+			]}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "value":"blockPosts"}, "e":{"click":["Actions","doBlockPosts"]} }
+			,{"t":"span", "txt":"Block&nbsp;posts"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "value":"blockComments"}, "e":{"click":["Actions","doBlockCom"]} }
+			,{"t":"span", "txt":"Block&nbsp;comments"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "value":"banIds"}, "e":{"click":["Actions","doBan"]} }
+			,{"t":"span", "txt":"Ban"}
+		]}
+	]}
 	,{"c":"up-block","e":{"mouseleave":["Actions","destroy"]}
 	,"children":[
 		{"c":"up-close","e":{"click":["Actions","upClose"]}
@@ -474,6 +499,8 @@
 		,{"c":"gs-input","t":"input","p":{"name":"screen-name"}}
 		,{"t":"p", "txt":"Email:"}
 		,{"c":"gs-input","t":"input","p":{"name":"email"}}
+		,{"t":"p", "txt":"Description"}
+		,{"c":"gs-descr","t":"textarea"}
 		,{"t":"label"
 		,"children":[
 			{"t":"input" ,"p":{"type":"checkbox" ,"name":"is-private"}}
@@ -569,6 +596,54 @@
 		]}
 		
 	
+	]}
+	,{"c":"user-detailes"
+	,"children":[
+		{"c":"ud-unfold","t":"p"
+		,"children":[
+			{"t":"a","txt":"Show user info&nbsp;&#x25Be;", "e":{"click":["Actions","unfoldUserDet"]}}
+		]}
+		,{"c":"ud-fold","t":"p", "p":{"hidden":true} 
+		,"children":[
+			{"t":"a","txt":"Hide user info&nbsp;&#x25B4;", "e":{"click":["Actions","foldUserDet"]}}
+		]}
+		,{"c":"ud-info"
+		,"children":[
+			{"c":"ud-username", "t":"input", "p":{"type":"hidden"}}
+			,{"c":"ud-avatar-img", "t":"img"}
+			,{"c":"ud-text"
+			,"children":[
+				{"c":"ud-title"}
+				,{"c":"ud-desc"}
+			]}
+			,{"c":"ud-stats"
+			,"children":[
+				{"c":"uds-subs", "t":"a" , "e":{"mousedown":["Actions","goUserSubs"]} 
+				,"children":[
+					 {"c":"val", "t":"span"}
+					 ,{"t":"span", "txt":"&nbsp;subscriptions"}
+				]}
+				,{"c":"uds-com", "t":"a", "e":{"mousedown":["Actions","goUserComments"]} 
+				,"children":[
+					 {"c":"val", "t":"span"}
+					 ,{"t":"span", "txt":"&nbsp;comments"}
+				]}
+				,{"c":"uds-likes", "t":"a" , "e":{"mousedown":["Actions","goUserLikes"]} 
+				,"children":[
+					 {"c":"val", "t":"span"}
+					 ,{"t":"span", "txt":"&nbsp;likes"}
+				]}
+			]}
+		]}
+	]}
+	,{"c":"sub-item"
+	,"children":[
+		{"c":"link", "t":"a"
+		,"children":[
+			{"c":"usr-avatar", "t":"img"}
+			,{"c":"usr-title", "t":"span"}
+
+		]}
 	]}
 ]}
 

@@ -592,11 +592,12 @@ span.comment-controls::before {
 	}
 }
 
-.subs-cont  {
+.subs-cont > div {
 	display:flex;
 	text-align: center;
 	word-wrap: break-word;
 	flex-wrap: wrap;
+	border-top: solid thin #ccc;
 }
 
 .sub-item *{

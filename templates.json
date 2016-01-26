@@ -636,6 +636,13 @@
 			]}
 		]}
 	]}
+	,{"c":"subs-cont"
+	,"children":[
+		{"t":"h3","txt":"users"}
+		,{"c":"sc-users"}
+		,{"t":"h3","txt":"groups"}
+		,{"c":"sc-grps"}
+	]}
 	,{"c":"sub-item"
 	,"children":[
 		{"c":"link", "t":"a"

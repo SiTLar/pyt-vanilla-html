@@ -463,17 +463,18 @@ _Drawer.prototype = {
 	}
 	,"genSubs": function(content){
 		var cView = this.cView;
-		var out = cView.doc.createElement("div");
-		out.className = "subs-cont";
+		var out = cView.gNodes["subs-cont"].cloneAll();
 		content.subscriptions.forEach(function(sub){
 			var node = cView.gNodes["sub-item"].cloneAll();
 			var a = node.cNodes["link"];
 			if(sub.name != "Posts")return;
 			var user = cView.gUsers[sub.user];
+
 			a.href = gConfig.front+ user.username;
 			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
 			a.cNodes["usr-title"].innerHTML = user.title;
-			out.appendChild(node);
+			if(user.type == "user")out.cNodes["sc-users"].appendChild(node);
+			else out.cNodes["sc-grps"].appendChild(node);
 		});
 		return out;
 	}

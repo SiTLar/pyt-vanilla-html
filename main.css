@@ -315,8 +315,7 @@ span.comment-controls::after {
 	content: ")";
 }
 span.comment-controls::before {
-	content: "(";
-	margin-left: 0.3em;
+	content: "\00A0\2022\00A0(";
 }
 .comments {
 	clear: both;
@@ -609,4 +608,6 @@ span.comment-controls::before {
 	margin: 1em auto;
 	width: 110px;
 }
-
+.block-links a{
+	display:block;
+}

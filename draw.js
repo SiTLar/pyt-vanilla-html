@@ -629,6 +629,7 @@ _Drawer.prototype = {
 			}
 			if(nodePost.gotLock == true)
 				postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-lock"].innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
+
 			if(post.attachments){
 				var attsNode = postNBody.cNodes["attachments"];
 				post.attachments.forEach(function(att){
@@ -675,6 +676,10 @@ _Drawer.prototype = {
 			anchorDate.date = JSON.parse(post.createdAt);
 			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
 
+			if((typeof post.commentsDisabled !== "undefined")
+			&& JSON.parse(post.commentsDisabled)){
+				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","cmts-lock-msg"]).hidden = false;
+			} else post.commentsDisabled = false;
 			if(cView.ids){
 				var nodeControls;
 				if (cView.ids.indexOf(post.createdBy) != -1){
@@ -685,16 +690,13 @@ _Drawer.prototype = {
 					nodeControls.cNodes["post-control-like"].action = true;
 				}
 				nodeControls.className = "controls";
-				var nodeHide  = cView.gNodes["hide"].cloneAll();
-				nodeControls.appendChild(nodeHide);
-				var aHide = nodeHide.cNodes["href"]
+				var aHide = nodeControls.cNodes["hide"];
 				//aHide.className = "hide";
 				aHide.innerHTML = post.isHidden?"Un-hide":"Hide";
 				aHide.action = !post.isHidden;
 				postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
 				postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["controls"] = nodeControls;
 				//postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
-				nodeControls.cNodes["hide"] = nodeHide;
 			}
 			if (post.likes)	Drawer.genLikes(nodePost );
 			if (post.comments){
@@ -716,12 +718,14 @@ _Drawer.prototype = {
 		}
 		var nodePost = cView.gNodes["post"].cloneAll();
 		var postNBody = nodePost.cNodes["post-body"];
+
 		var user = undefined;
 		if(post.createdBy) user = cView.gUsers[post.createdBy];
 		nodePost.homed = false;
 		nodePost.rawData = post;
 		nodePost.id = post.id;
 		nodePost.isPrivate = false;
+		nodePost.commentsModerated = false;
 
 		//var cpost = matrix.decrypt(post.body);
 		var cpost = {};
@@ -895,14 +899,14 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
 		var cUser = cView.gUsers[comment.createdBy];
-		var nodeSpan = cView.doc.createElement("span");
+		var nodeSpan = nodeComment.getNode(["c","comment-body"],["c","cmt-content"]);
 		nodeComment.userid = null;
 		function gotUser(){
 			nodeComment.userid = cUser.id;
 			nodeSpan.innerHTML += " - " + cUser.link ;
 			if(cView.ids){
 				if(cView.ids.indexOf(cUser.id) != -1)
-					nodeComment.cNodes["comment-body"].appendChild(cView.gNodes["comment-controls"].cloneAll());
+					cView.Utils.setChild(nodeComment.cNodes["comment-body"],"comment-controls",cView.gNodes["comment-controls"].cloneAll());
 				else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
 			}
 			if(( typeof cView["blockComments"]!== "undefined") && ( cView["blockComments"]!= null) && (cView["blockComments"][cUser.id]))
@@ -910,7 +914,6 @@ _Drawer.prototype = {
 
 		}
 		function spam(){nodeComment = cView.doc.createElement("span");};
-		nodeComment.cNodes["comment-body"].appendChild(nodeSpan);
 		nodeSpan.innerHTML = cView.autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodeComment.id = comment.id;
 		nodeComment.createdAt = comment.createdAt;

@@ -426,7 +426,7 @@ _Actions.prototype = {
 	}
 	,"doHide": function(victim, action){
 		var cView = document.cView;
-		var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].cNodes["controls"].cNodes["hide"].cNodes["href"];
+		var nodeHide = victim.getNode(["c","post-body"],["c","post-info"],["c","post-controls"],["c","controls"],["c","hide"]);
 		if(action != nodeHide.action) return;
 		victim.rawData.isHidden = action;
 		nodeHide.action = !action;
@@ -642,8 +642,14 @@ _Actions.prototype = {
 			oReq.setRequestHeader("x-content-type", "comment");
 			oReq.send();
 		}else{
+			var token;
+			if( typeof cView.logins[nodeComment.userid] != "undefined") 
+				token = cView.logins[nodeComment.userid].token;
+			else if (typeof cView.logins[nodePost.rawData.createdBy] != "undefined" )
+				token = cView.logins[nodePost.rawData.createdBy].token;
+			else return;
 			oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.logins[nodeComment.userid].token);
+			oReq.setRequestHeader("X-Authentication-Token", token);
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.send();
 		}
@@ -1305,6 +1311,66 @@ _Actions.prototype = {
 	}
 	,"goUserLikes": function(e){
 		e.target.getNode(["p","uds-likes"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/likes";
+	}
+	,"morePostCtrls":function(e){
+		var cView = document.cView;
+		var node = e.target.parentNode;
+		var nodePost = e.target.getNode(["p","post"]);
+		var nodeMore = cView.gNodes["adv-cmts"].cloneAll();
+		nodeMore.className = "user-popup"; 
+		nodeMore.user = node.user;
+		node.appendChild(nodeMore);
+		nodeMore.style.top =  e.target.offsetTop;
+		nodeMore.style.left = e.target.offsetLeft;
+		nodeMore.style["z-index"] = 2;
+		var nodeDisCmt = nodeMore.getElementsByClassName("disable-cmts")[0];
+		var nodeModCmt = nodeMore.getElementsByClassName("moderate-cmts")[0];
+
+		if((typeof nodePost.rawData.commentsDisabled !== "undefined")
+		&& JSON.parse(nodePost.rawData.commentsDisabled)){
+			nodeDisCmt.innerHTML = "Enable comments";
+			nodeDisCmt.action = false;
+		}else nodeDisCmt.action = true;
+
+		if(nodePost.commentsModerated){
+			nodeModCmt.innerHTML = "Stop moderating comments";
+			nodeModCmt.action = false;
+		}else nodeModCmt.action = true;
+
+	}
+	,"showDelete": function(e){
+		var cView = document.cView;
+		var action = e.target.action;
+		e.target.getNode(["p","post"]).commentsModerated = action;
+		var comments = e.target.getNode(["p","post-body"],["c","comments"]).getElementsByClassName("comment");
+		for(var idx = 0; idx < comments.length; idx++){
+			var comment = comments[idx];
+			if (cView.ids.indexOf(comment.userid) != -1)continue;
+			comment.getNode(["c","comment-body"],["c","comment-controls"]).hidden = !action;
+		}
+		e.target.innerHTML = action?"Stop moderating comments":"Moderate comments";
+		e.target.action = !action;
+
+	}
+	,"switchCmts": function(e){
+		var cView = document.cView;
+		var nodePost = e.target.getNode(["p","post"]);
+		var post = nodePost.rawData;
+		var spinner = cView.gNodes["spinner"].cloneAll(); 
+		var parentNode = e.target.parentNode;
+		var ctrl = parentNode.replaceChild(spinner, e.target);
+		var oParam = {
+			"url":gConfig.serverURL +"posts/" + post.id + (e.target.action?"/disableComments":"/enableComments")
+			,"token":cView.logins[post.createdBy].token
+			,"method":"post"
+		}
+		cView.Utils.ffReq(oParam, function(res){
+			post.commentsDisabled = ctrl.action;
+			ctrl.innerHTML = ctrl.action?"Enable comments":"Disable commnents";
+			nodePost.getElementsByClassName("cmts-lock-msg")[0].hidden = !ctrl.action;
+			ctrl.action = !ctrl.action;
+			parentNode.replaceChild(ctrl, spinner);	
+		});
 	}
 };
 return _Actions;

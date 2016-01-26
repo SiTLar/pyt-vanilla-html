@@ -183,11 +183,13 @@ RtHandler.prototype = {
 		nodePost.parentNode.removeChild(nodePost);
 	}
 	, "post:hide" : function(data){
+		var cView = document.cView;
 		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) return;
 		cView.Actions.doHide(nodePost, true, "rt");
 	}
 	, "post:unhide" : function(data){
+		var cView = document.cView;
 		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) 
 			document.hiddenPosts.forEach(function (item){

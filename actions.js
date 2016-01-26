@@ -894,7 +894,7 @@ _Actions.prototype = {
 		}
 		e.target.parentNode.removeChild(e.target);
 		if(nodeP.feeds.length == 0)
-			nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
+			nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = true;
 	}
 	,"newDirectRemoveFeed": function(e){
 		var cView = document.cView;
@@ -954,7 +954,7 @@ _Actions.prototype = {
 		li.idx = e.target.selectedIndex;
 		li.addEventListener("click", cView["Actions"]["newPostRemoveFeed"]);
 		nodeP.cNodes["new-post-feeds"].appendChild(li);
-		nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
+		nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 	}
 	,"evtUserPopup": function(e){
 		var cView = document.cView;

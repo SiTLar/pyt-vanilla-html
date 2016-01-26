@@ -1006,6 +1006,7 @@ _Drawer.prototype = {
 		var rmSenders = victim.getElementsByClassName("rm-sender");
 		if(rmSenders.length > 1)
 			for (idx = 0; idx < rmSenders.length; idx++)rmSenders[idx].hidden = false;
+		victim.getNode(["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 	}
 	,"genPostTo":function(victim, init, login){
 		var cView = this.cView;
@@ -1091,6 +1092,7 @@ _Drawer.prototype = {
 				nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = "@" + init;
 			nodePostTo.feeds.push(init);
 		}
+		victim.getNode(["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 
 	}
 	,"blockPosts":function(name, action){

@@ -699,9 +699,9 @@ _Drawer.prototype = {
 			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
 
 			if((typeof post.commentsDisabled !== "undefined")
-			&& JSON.parse(post.commentsDisabled)){
+			&& (post.commentsDisabled == "1")){
 				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","cmts-lock-msg"]).hidden = false;
-			} else post.commentsDisabled = false;
+			} else post.commentsDisabled = "0";
 			if(cView.ids){
 				var nodeControls;
 				if (cView.ids.indexOf(post.createdBy) != -1){
@@ -710,6 +710,11 @@ _Drawer.prototype = {
 					nodeControls = cView.gNodes["controls-others"].cloneAll();
 					postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes["post-control-like"];
 					nodeControls.cNodes["post-control-like"].action = true;
+					if(post.commentsDisabled == "1"){
+						var nodeCmtControl = nodeControls.getElementsByClassName("post-control-comment")[0];
+						nodeCmtControl.style.display = "none";
+						nodeCmtControl.nextSibling.style.display = "none";
+					}
 				}
 				nodeControls.className = "controls";
 				var aHide = nodeControls.cNodes["hide"];

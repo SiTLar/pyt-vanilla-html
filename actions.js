@@ -1368,7 +1368,7 @@ _Actions.prototype = {
 			,"method":"post"
 		}
 		cView.Utils.ffReq(oParam, function(res){
-			post.commentsDisabled = ctrl.action;
+			post.commentsDisabled = ctrl.action?"1":"0";
 			ctrl.innerHTML = ctrl.action?"Enable comments":"Disable commnents";
 			nodePost.getElementsByClassName("cmts-lock-msg")[0].hidden = !ctrl.action;
 			ctrl.action = !ctrl.action;

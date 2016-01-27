@@ -83,11 +83,12 @@ _Url2link.prototype = {
 		}]
 	}
 	,"uname":{
-		"regex": /@([a-z0-9]{3,})/
+		"regex": /@[a-z0-9]{3,}/
 		,"newtab": true
 		,"flags":"i"
 		,"actions":[function(match, host){
-			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="' + gConfig.front+match+'" >@' +match + '</a>' ;
+			var uname = match.slice(1);
+			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="' + gConfig.front+uname+'" >@' +uname + '</a>' ;
 		}]
 	}
 	,"link": function(input){

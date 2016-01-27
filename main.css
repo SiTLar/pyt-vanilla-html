@@ -315,7 +315,7 @@ span.comment-controls::after {
 	content: ")";
 }
 span.comment-controls::before {
-	content: "\00A0\2022\00A0(";
+	content: " \2022\00A0(";
 }
 .comments {
 	clear: both;

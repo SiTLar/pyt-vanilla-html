@@ -26,9 +26,9 @@ RtHandler.prototype = {
 		node.style.opacity = 0;
 		node.style.position = "absolute";
 		var victim = document.getElementById(node.id);
-		if(victim) victim.parentNode.removeChild(victim);
 		if(!nodePos)document.posts.appendChild(node);
 		else nodePos.parentNode.insertBefore(node,nodePos);
+		if(victim) victim.parentNode.removeChild(victim);
 		node.style.width = node.parentNode.clientWidth;
 		var height = node.clientHeight;
 		node.style.width = "auto";

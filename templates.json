@@ -583,16 +583,19 @@
 	,"children":[
 		{"c":"ud-unfold","t":"p"
 		,"children":[
-			{"t":"a","txt":"Show user info&nbsp;&#x25Be;", "e":{"click":["Actions","unfoldUserDet"]}}
+			{"t":"a","txt":"Show info&nbsp;&#x25Be;", "e":{"click":["Actions","unfoldUserDet"]}}
 		]}
 		,{"c":"ud-fold","t":"p", "p":{"hidden":true} 
 		,"children":[
-			{"t":"a","txt":"Hide user info&nbsp;&#x25B4;", "e":{"click":["Actions","foldUserDet"]}}
+			{"t":"a","txt":"Hide info&nbsp;&#x25B4;", "e":{"click":["Actions","foldUserDet"]}}
 		]}
 		,{"c":"ud-info"
 		,"children":[
 			{"c":"ud-username", "t":"input", "p":{"type":"hidden"}}
-			,{"c":"ud-avatar-img", "t":"img"}
+			,{"c":"ud-avatar"
+			,"children":[
+				{"c":"ud-avatar-img", "t":"img"}
+			]}
 			,{"c":"ud-text"
 			,"children":[
 				{"c":"ud-title"}

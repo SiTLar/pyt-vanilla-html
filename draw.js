@@ -161,19 +161,23 @@ _Drawer.prototype = {
 		var nodeUD = cView.gNodes["user-detailes"].cloneAll();
 		var nodeInfo = nodeUD.cNodes["ud-info"];
 		nodeInfo.cNodes["ud-username"].value = user.username;
-		nodeInfo.cNodes["ud-avatar-img"].src = user.profilePictureMediumUrl;
+		nodeInfo.getNode(["c","ud-avatar"],["c","ud-avatar-img"]).src = user.profilePictureMediumUrl;
 		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
 		if(typeof user.description !== "undefined")
-			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = cView.autolinker.link(user.description.replace(/&/g,"&amp;"));
+			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = cView.autolinker.link(user.description.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		if(typeof user.statistics !== "undefined"){
 			var stats = {
 				"uds-subs":user.statistics.subscriptions
-				,"uds-subsc":user.statistics.subscribers
+				,"uds-subsc":user.statistics.subscribers > 0? user.statistics.subscribers:""
 				,"uds-likes":user.statistics.likes
 				,"uds-com":user.statistics.comments
 			}
 			Object.keys(stats).forEach(function(key){
 				nodeInfo.getNode(["c","ud-stats"],["c",key],["c","val"]).innerHTML = stats[key];
+			});
+			if (user.type == "group") 
+				["uds-subs","uds-likes","uds-com"].forEach(function(key){
+				nodeInfo.getNode(["c","ud-stats"],["c",key]).style.display = "none";
 			});
 		}
 		return nodeUD;

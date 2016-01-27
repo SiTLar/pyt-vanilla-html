@@ -1294,7 +1294,7 @@ _Actions.prototype = {
 		if(rmSenders.length = 1)rmSenders[0].hidden = true;
 	}
 	,"unfoldUserDet":function(e){
-		document.getElementsByClassName("ud-info")[0].style.display = "block";
+		document.getElementsByClassName("ud-info")[0].style.display = "flex";
 		document.getElementsByClassName("ud-fold")[0].hidden = false;
 		document.getElementsByClassName("ud-unfold")[0].style.display = "none";
 	}

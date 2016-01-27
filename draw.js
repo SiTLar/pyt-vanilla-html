@@ -92,9 +92,10 @@ _Drawer.prototype = {
 		if(data.attachments)data.attachments.forEach(function(attachment){ cView.gAttachments[attachment.id] = attachment; });
 		if(data.comments)data.comments.forEach(function(comment){ cView.gComments[comment.id] = comment; });
 		if(data.users)data.users.forEach(cView.Utils.addUser, cView.Utils);
+		if(data.subscribers) data.subscribers.forEach(cView.Utils.addUser, cView.Utils);
 		if(data.subscribers && data.subscriptions ){
 			var subscribers = new Object();
-			data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;cView.Utils.addUser(sub);});
+			data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
 			data.subscriptions.forEach(function(sub){
 				if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 					var userTitle;
@@ -167,6 +168,7 @@ _Drawer.prototype = {
 		if(typeof user.statistics !== "undefined"){
 			var stats = {
 				"uds-subs":user.statistics.subscriptions
+				,"uds-subsc":user.statistics.subscribers
 				,"uds-likes":user.statistics.likes
 				,"uds-com":user.statistics.comments
 			}
@@ -276,6 +278,8 @@ _Drawer.prototype = {
 			switch(filter){
 			case "subscriptions":
 				return body.appendChild(Drawer.genSubs(content));
+			case "subscribers":
+				return body.appendChild(Drawer.genSubsc(content));
 			}
 		}
 		if(typeof cView.gUsers.byName[view] !== "undefined")
@@ -477,6 +481,24 @@ _Drawer.prototype = {
 			else out.cNodes["sc-grps"].appendChild(node);
 		});
 		return out;
+	}
+	,"genSubsc": function(content){
+		var cView = this.cView;
+		var out0 = cView.doc.createElement("div");
+		var out = cView.doc.createElement("div");
+		out0.appendChild(out);
+		out0.className = "subs-cont";
+		content.subscribers.forEach(function(sub){
+			var node = cView.gNodes["sub-item"].cloneAll();
+			var user = cView.gUsers[sub.id];
+
+			var a = node.cNodes["link"];
+			a.href = gConfig.front+ user.username;
+			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
+			a.cNodes["usr-title"].innerHTML = user.title;
+			out.appendChild(node);
+		});
+		return out0;
 	}
 	,"genUserPopup": function(node, user){
 		var cView = this.cView;

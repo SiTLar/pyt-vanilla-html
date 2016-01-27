@@ -1306,6 +1306,9 @@ _Actions.prototype = {
 	,"goUserSubs": function(e){
 		e.target.getNode(["p","uds-subs"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/subscriptions";
 	}
+	,"goUserSubsc": function(e){
+		e.target.getNode(["p","uds-subsc"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/subscribers";
+	}
 	,"goUserComments": function(e){
 		e.target.getNode(["p","uds-com"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/comments";
 	}

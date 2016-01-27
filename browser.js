@@ -130,7 +130,7 @@ window.browserDoc = function(){
 
 	};
 	if(arrLocationPath.length > 1){
-		if("subscriptions" == arrLocationPath[1]){
+		if(["subscribers","subscriptions"].indexOf(arrLocationPath[1]) != -1){
 			cView.xhrurl = gConfig.serverURL + "users/" + locationPath;
 			cView.timeline = locationPath;
 		}

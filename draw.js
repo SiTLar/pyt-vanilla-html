@@ -92,9 +92,10 @@ _Drawer.prototype = {
 		if(data.attachments)data.attachments.forEach(function(attachment){ cView.gAttachments[attachment.id] = attachment; });
 		if(data.comments)data.comments.forEach(function(comment){ cView.gComments[comment.id] = comment; });
 		if(data.users)data.users.forEach(cView.Utils.addUser, cView.Utils);
+		if(data.subscribers) data.subscribers.forEach(cView.Utils.addUser, cView.Utils);
 		if(data.subscribers && data.subscriptions ){
 			var subscribers = new Object();
-			data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;cView.Utils.addUser(sub);});
+			data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
 			data.subscriptions.forEach(function(sub){
 				if(["Posts", "Directs"].some(function(a){ return a == sub.name })){
 					var userTitle;
@@ -132,10 +133,6 @@ _Drawer.prototype = {
 		body.className = "content";
 		body.id = "content";
 		cView.doc.getElementsByTagName("body")[0].appendChild(body);
-		var title =  cView.doc.createElement("div");
-		title.className = "pagetitle";
-		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
-		cView.doc.title = "FreeFeed: " + cView.timeline; 
 		var controls = cView.gNodes["controls-user"].cloneAll();
 		var ids = cView.ids;
 		if(ids) cView.subReqsCount = ids.reduce(function(total, id){
@@ -151,14 +148,48 @@ _Drawer.prototype = {
 			controls.cNodes["sr-info"].hidden = false;
 		}
 		body.appendChild(controls );
+		var title =  cView.doc.createElement("div");
+		title.className = "pagetitle";
+		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
+		cView.doc.title = "FreeFeed: " + cView.timeline; 
 		body.appendChild(title);
 		return body;
+	}
+	,"genUserDetails":function(username){
+		var cView = this.cView;
+		var user = cView.gUsers.byName[username];
+		var nodeUD = cView.gNodes["user-detailes"].cloneAll();
+		var nodeInfo = nodeUD.cNodes["ud-info"];
+		nodeInfo.cNodes["ud-username"].value = user.username;
+		nodeInfo.getNode(["c","ud-avatar"],["c","ud-avatar-img"]).src = user.profilePictureMediumUrl;
+		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
+		if(typeof user.description !== "undefined")
+			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = cView.autolinker.link(user.description.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		if(typeof user.statistics !== "undefined"){
+			var stats = {
+				"uds-subs":user.statistics.subscriptions
+				,"uds-subsc":user.statistics.subscribers > 0? user.statistics.subscribers:""
+				,"uds-likes":user.statistics.likes
+				,"uds-com":user.statistics.comments
+			}
+			Object.keys(stats).forEach(function(key){
+				nodeInfo.getNode(["c","ud-stats"],["c",key],["c","val"]).innerHTML = stats[key];
+			});
+			if (user.type == "group") 
+				["uds-subs","uds-likes","uds-com"].forEach(function(key){
+				nodeInfo.getNode(["c","ud-stats"],["c",key]).style.display = "none";
+			});
+		}
+		return nodeUD;
+		
 	}
 	,"genProfile": function(user){
 		var cView = document.cView;
 		var nodeProfile = cView.gNodes["settings-profile"].cloneAll();
 		nodeProfile.getElementsByClassName("sp-username")[0].innerHTML = "@" + user.username;
 		nodeProfile.cNodes["chng-avatar"].cNodes["sp-avatar-img"].src = user.profilePictureMediumUrl; 
+		if (typeof user.description !== "undefined")
+			nodeProfile.cNodes["gs-descr"].value = user.description;
 		var nodes = nodeProfile.getElementsByTagName("input");
 		for(var idx = 0; idx < nodes.length; idx++){
 			var node = nodes[idx];
@@ -242,9 +273,21 @@ _Drawer.prototype = {
 		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
 		title.className = "pagetitle";
 		*/
-		var body = Drawer.makeContainer();
 		Drawer.loadGlobals(content);
+		var body = Drawer.makeContainer();
 		//var nodeRTControls = cView.gNodes["rt-controls"].cloneAll();
+		var view = cView.timeline.split("/")[0];
+		var filter = cView.timeline.split("/")[1];
+		if(typeof filter !== "undefined"){
+			switch(filter){
+			case "subscriptions":
+				return body.appendChild(Drawer.genSubs(content));
+			case "subscribers":
+				return body.appendChild(Drawer.genSubsc(content));
+			}
+		}
+		if(typeof cView.gUsers.byName[view] !== "undefined")
+			body.appendChild(cView.Drawer.genUserDetails(view));
 		if(!cView.ids){
 			var nodeGControls = cView.gNodes["controls-anon"].cloneAll();
 			var controls = body.getElementsByClassName("controls-user")[0];
@@ -260,7 +303,6 @@ _Drawer.prototype = {
 			});
 			names.push("home");
 
-			var view = cView.timeline.split("/")[0];
 			if(names.indexOf(view) != -1){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				body.appendChild(nodeAddPost);
@@ -271,9 +313,9 @@ _Drawer.prototype = {
 					body.appendChild(nodeAddPost);
 					Drawer.genDirectTo(nodeAddPost, cView.gMe);
 				}
-			}else{
-				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(cView.timeline));
-			}
+			}else if(typeof cView.gUsers.byName[view] !== "undefined")
+				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(view));
+			
 			var feed = cView.gUsers.byName[cView.timeline];
 			if( (typeof feed !== "undefined") && (feed.type == "group") && feed.friend){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
@@ -427,6 +469,41 @@ _Drawer.prototype = {
 		}
 
 	}
+	,"genSubs": function(content){
+		var cView = this.cView;
+		var out = cView.gNodes["subs-cont"].cloneAll();
+		content.subscriptions.forEach(function(sub){
+			var node = cView.gNodes["sub-item"].cloneAll();
+			var a = node.cNodes["link"];
+			if(sub.name != "Posts")return;
+			var user = cView.gUsers[sub.user];
+
+			a.href = gConfig.front+ user.username;
+			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
+			a.cNodes["usr-title"].innerHTML = user.title;
+			if(user.type == "user")out.cNodes["sc-users"].appendChild(node);
+			else out.cNodes["sc-grps"].appendChild(node);
+		});
+		return out;
+	}
+	,"genSubsc": function(content){
+		var cView = this.cView;
+		var out0 = cView.doc.createElement("div");
+		var out = cView.doc.createElement("div");
+		out0.appendChild(out);
+		out0.className = "subs-cont";
+		content.subscribers.forEach(function(sub){
+			var node = cView.gNodes["sub-item"].cloneAll();
+			var user = cView.gUsers[sub.id];
+
+			var a = node.cNodes["link"];
+			a.href = gConfig.front+ user.username;
+			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
+			a.cNodes["usr-title"].innerHTML = user.title;
+			out.appendChild(node);
+		});
+		return out0;
+	}
 	,"genUserPopup": function(node, user){
 		var cView = this.cView;
 		var nodePopup = cView.gNodes["user-popup"].cloneAll(true);
@@ -460,7 +537,7 @@ _Drawer.prototype = {
 			var friend = (typeof login.oFriends[user.id] !== "undefined");
 			var envelop =  cView.gNodes["up-c-mu"].cloneAll();
 			envelop.loginId = id;
-			if (isMulti) envelop.cNodes["username"].innerHTML = "@"+login.users.username+": ";
+			if (isMulti) envelop.cNodes["uname"].innerHTML = "@"+login.users.username+": ";
 			var nodeSub = envelop.cNodes["up-s"];
 			nodeSub.innerHTML = friend?"Unsubscribe":"Subscribe";
 			nodeSub.subscribed = friend;
@@ -578,6 +655,7 @@ _Drawer.prototype = {
 			}
 			if(nodePost.gotLock == true)
 				postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-lock"].innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
+
 			if(post.attachments){
 				var attsNode = postNBody.cNodes["attachments"];
 				post.attachments.forEach(function(att){
@@ -624,6 +702,10 @@ _Drawer.prototype = {
 			anchorDate.date = JSON.parse(post.createdAt);
 			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
 
+			if((typeof post.commentsDisabled !== "undefined")
+			&& (post.commentsDisabled == "1")){
+				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","cmts-lock-msg"]).hidden = false;
+			} else post.commentsDisabled = "0";
 			if(cView.ids){
 				var nodeControls;
 				if (cView.ids.indexOf(post.createdBy) != -1){
@@ -632,18 +714,20 @@ _Drawer.prototype = {
 					nodeControls = cView.gNodes["controls-others"].cloneAll();
 					postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes["post-control-like"];
 					nodeControls.cNodes["post-control-like"].action = true;
+					if(post.commentsDisabled == "1"){
+						var nodeCmtControl = nodeControls.getElementsByClassName("post-control-comment")[0];
+						nodeCmtControl.style.display = "none";
+						nodeCmtControl.nextSibling.style.display = "none";
+					}
 				}
 				nodeControls.className = "controls";
-				var nodeHide  = cView.gNodes["hide"].cloneAll();
-				nodeControls.appendChild(nodeHide);
-				var aHide = nodeHide.cNodes["href"]
+				var aHide = nodeControls.cNodes["hide"];
 				//aHide.className = "hide";
 				aHide.innerHTML = post.isHidden?"Un-hide":"Hide";
 				aHide.action = !post.isHidden;
 				postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
 				postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["controls"] = nodeControls;
 				//postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
-				nodeControls.cNodes["hide"] = nodeHide;
 			}
 			if (post.likes)	Drawer.genLikes(nodePost );
 			if (post.comments){
@@ -665,12 +749,14 @@ _Drawer.prototype = {
 		}
 		var nodePost = cView.gNodes["post"].cloneAll();
 		var postNBody = nodePost.cNodes["post-body"];
+
 		var user = undefined;
 		if(post.createdBy) user = cView.gUsers[post.createdBy];
 		nodePost.homed = false;
 		nodePost.rawData = post;
 		nodePost.id = post.id;
 		nodePost.isPrivate = false;
+		nodePost.commentsModerated = false;
 
 		//var cpost = matrix.decrypt(post.body);
 		var cpost = {};
@@ -730,7 +816,7 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var oEmbedURL;
 		var m;
-		if((m = /^https:\/\/docs\.google\.com\/(document|spreadsheets|presentation|drawings)\/d\/([^\/]+)/.exec(victim)) !== null) {
+		if((m = /^https:\/\/(?:docs\.google\.com\/(?:document|spreadsheets|presentation|drawings)|drive\.google\.com\/file)\/d\/([^\/]+)/.exec(victim)) !== null) {
 			new Promise(function(resolve,reject){
 				var oReq = new XMLHttpRequest();
 				oReq.onload = function(){
@@ -739,7 +825,7 @@ _Drawer.prototype = {
 					else reject(oReq.response);
 				}
 
-				oReq.open("get","https://www.googleapis.com/drive/v2/files/" + m[2] + "?key=AIzaSyA8TI6x9A8VdqKEGFSE42zSexn5HtUkaT8",true);
+				oReq.open("get","https://www.googleapis.com/drive/v2/files/" + m[1] + "?key=AIzaSyA8TI6x9A8VdqKEGFSE42zSexn5HtUkaT8",true);
 				oReq.send();
 			}).then(function(info){
 				//var nodeiFrame = cView.doc.createElement("iframe");
@@ -844,14 +930,14 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
 		var cUser = cView.gUsers[comment.createdBy];
-		var nodeSpan = cView.doc.createElement("span");
+		var nodeSpan = nodeComment.getNode(["c","comment-body"],["c","cmt-content"]);
 		nodeComment.userid = null;
 		function gotUser(){
 			nodeComment.userid = cUser.id;
 			nodeSpan.innerHTML += " - " + cUser.link ;
 			if(cView.ids){
 				if(cView.ids.indexOf(cUser.id) != -1)
-					nodeComment.cNodes["comment-body"].appendChild(cView.gNodes["comment-controls"].cloneAll());
+					cView.Utils.setChild(nodeComment.cNodes["comment-body"],"comment-controls",cView.gNodes["comment-controls"].cloneAll());
 				else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
 			}
 			if(( typeof cView["blockComments"]!== "undefined") && ( cView["blockComments"]!= null) && (cView["blockComments"][cUser.id]))
@@ -859,7 +945,6 @@ _Drawer.prototype = {
 
 		}
 		function spam(){nodeComment = cView.doc.createElement("span");};
-		nodeComment.cNodes["comment-body"].appendChild(nodeSpan);
 		nodeSpan.innerHTML = cView.autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodeComment.id = comment.id;
 		nodeComment.createdAt = comment.createdAt;
@@ -955,6 +1040,7 @@ _Drawer.prototype = {
 		var rmSenders = victim.getElementsByClassName("rm-sender");
 		if(rmSenders.length > 1)
 			for (idx = 0; idx < rmSenders.length; idx++)rmSenders[idx].hidden = false;
+		victim.getNode(["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 	}
 	,"genPostTo":function(victim, init, login){
 		var cView = this.cView;
@@ -1040,6 +1126,7 @@ _Drawer.prototype = {
 				nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = "@" + init;
 			nodePostTo.feeds.push(init);
 		}
+		victim.getNode(["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 
 	}
 	,"blockPosts":function(name, action){

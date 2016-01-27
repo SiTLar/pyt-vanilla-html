@@ -102,7 +102,7 @@ _Actions.prototype = {
 					alert("you should provide some text");
 					return;
 				}
-				post.body = textField.value;
+				post.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 				oReq.send(JSON.stringify(postdata));
 			}
 		}
@@ -192,7 +192,8 @@ _Actions.prototype = {
 		e.target.parentNode.parentNode.cNodes["edit-txt-area"].disabled = true;
 
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
-		var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value;
+		var text = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value
+			.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 	/*
 		if(nodePost.isPrivate){
 			oReq.open("put",matrix.cfg.srvurl+"edit", true);
@@ -379,12 +380,13 @@ _Actions.prototype = {
 		var oReq = new XMLHttpRequest();
 		var nodeUC = cView.Utils.getNode(nodeParent,["p","up-controls"]);
 		var username = nodeUC.user;
+		var loginId = nodeParent.getNode(["p","up-c-mu"]).loginId;
 		oReq.open("post", gConfig.serverURL +"users/"+username+(target.subscribed?"/unsubscribe":"/subscribe"), true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.logins[target.getNode(["p","up-c-mu"]).loginId].token);
+		oReq.setRequestHeader("X-Authentication-Token", cView.logins[loginId].token);
 		oReq.onload = function(){
 			if(oReq.status < 400) {
-				cView.logins[target.loginId].data = JSON.parse(oReq.response); 
-				Utils.refreshLogin(target.loginId);
+				cView.logins[loginId].data = JSON.parse(oReq.response); 
+				Utils.refreshLogin(loginId);
 				Utils.setChild(cView.Utils.getNode(nodeParent,["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(username));
 			}else nodeParent.replaceChild( target, spinner);
 		}
@@ -424,7 +426,7 @@ _Actions.prototype = {
 	}
 	,"doHide": function(victim, action){
 		var cView = document.cView;
-		var nodeHide = victim.cNodes["post-body"].cNodes["post-info"].cNodes["post-controls"].cNodes["controls"].cNodes["hide"].cNodes["href"];
+		var nodeHide = victim.getNode(["c","post-body"],["c","post-info"],["c","post-controls"],["c","controls"],["c","hide"]);
 		if(action != nodeHide.action) return;
 		victim.rawData.isHidden = action;
 		nodeHide.action = !action;
@@ -487,15 +489,14 @@ _Actions.prototype = {
 			return;
 		}
 		var comment = cView.gComments[nodeComment.id];
-		comment.body = textField.value ;
+		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 		comment.updatedAt = Date.now();
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			if(this.status < 400){
 				var comment = JSON.parse(this.response).comments;
 				nodeComment.parentNode.replaceChild(cView.Drawer.genComment(comment),nodeComment);
-				cView.gComments[comment.id] = cView.autolinker.link(comment.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
-
+				cView.gComments[comment.id] = comment;
 			}
 		};
 
@@ -504,7 +505,7 @@ _Actions.prototype = {
 		oReq.setRequestHeader("Content-type","application/json");
 		var postdata = new Object();
 		postdata.comment = comment;
-		postdata.users = new Array(cView.gMe);
+	//	postdata.users = new Array(cView.gMe);
 		oReq.send(JSON.stringify(postdata));
 
 	}
@@ -562,7 +563,7 @@ _Actions.prototype = {
 		}
 		textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 		var comment = new Object();
-		comment.body = textField.value;
+		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 		comment.postId = nodePost.id;
 		comment.createdAt = null;
 		comment.createdBy = null;
@@ -641,8 +642,14 @@ _Actions.prototype = {
 			oReq.setRequestHeader("x-content-type", "comment");
 			oReq.send();
 		}else{
+			var token;
+			if( typeof cView.logins[nodeComment.userid] != "undefined") 
+				token = cView.logins[nodeComment.userid].token;
+			else if (typeof cView.logins[nodePost.rawData.createdBy] != "undefined" )
+				token = cView.logins[nodePost.rawData.createdBy].token;
+			else return;
 			oReq.open("delete",gConfig.serverURL + "comments/"+nodeComment.id, true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.logins[nodeComment.userid].token);
+			oReq.setRequestHeader("X-Authentication-Token", token);
 			oReq.setRequestHeader("Content-type","application/json");
 			oReq.send();
 		}
@@ -893,7 +900,7 @@ _Actions.prototype = {
 		}
 		e.target.parentNode.removeChild(e.target);
 		if(nodeP.feeds.length == 0)
-			nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
+			nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = true;
 	}
 	,"newDirectRemoveFeed": function(e){
 		var cView = document.cView;
@@ -953,7 +960,7 @@ _Actions.prototype = {
 		li.idx = e.target.selectedIndex;
 		li.addEventListener("click", cView["Actions"]["newPostRemoveFeed"]);
 		nodeP.cNodes["new-post-feeds"].appendChild(li);
-		nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
+		nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 	}
 	,"evtUserPopup": function(e){
 		var cView = document.cView;
@@ -1033,6 +1040,7 @@ _Actions.prototype = {
 		oUser.screenName = inputs["screen-name"].value;
 		oUser.email = inputs["email"].value;
 		oUser.isPrivate = inputs["is-private"].checked?"1":"0";
+			oUser.description = nodeProfile.cNodes["gs-descr"].value;
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];
@@ -1074,7 +1082,9 @@ _Actions.prototype = {
 		var userid = null;
 		oReq.onload = function(){
 			var res =  JSON.parse(oReq.response);
+			var nodeMsg = nodeLogin.cNodes["msg-error"];
 			if(oReq.status < 400){
+				nodeMsg.hidden = true;
 				if(typeof cView.logins[res.users.id] !== "undefined"){
 					cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
 					nodeLogin.parentNode.removeChild(nodeLogin);
@@ -1085,7 +1095,12 @@ _Actions.prototype = {
 				userid = res.users.id;
 				cView.Utils.getWhoami(res.users.id, finish);
 
-			}else cView.doc.getElementById("auth-msg").innerHTML = res.err;
+			}else {
+				nodeMsg.hidden = false;
+				nodeMsg.innerHTML = res.err;
+				nodeLogin.getElementsByClassName("spinner")[0].hidden = true;
+				e.target.disabled = false;
+			}
 		};
 		oReq.open("post", gConfig.serverURL +"session", true);
 		oReq.setRequestHeader("X-Authentication-Token", null);
@@ -1278,7 +1293,88 @@ _Actions.prototype = {
 		var rmSenders = host.getElementsByClassName("rm-sender");
 		if(rmSenders.length = 1)rmSenders[0].hidden = true;
 	}
+	,"unfoldUserDet":function(e){
+		document.getElementsByClassName("ud-info")[0].style.display = "flex";
+		document.getElementsByClassName("ud-fold")[0].hidden = false;
+		document.getElementsByClassName("ud-unfold")[0].style.display = "none";
+	}
+	,"foldUserDet":function(e){
+		document.getElementsByClassName("ud-info")[0].style.display = "none";
+		document.getElementsByClassName("ud-fold")[0].hidden = true;
+		document.getElementsByClassName("ud-unfold")[0].style.display = "block";
+	}
+	,"goUserSubs": function(e){
+		e.target.getNode(["p","uds-subs"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/subscriptions";
+	}
+	,"goUserSubsc": function(e){
+		e.target.getNode(["p","uds-subsc"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/subscribers";
+	}
+	,"goUserComments": function(e){
+		e.target.getNode(["p","uds-com"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/comments";
+	}
+	,"goUserLikes": function(e){
+		e.target.getNode(["p","uds-likes"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/likes";
+	}
+	,"morePostCtrls":function(e){
+		var cView = document.cView;
+		var node = e.target.parentNode;
+		var nodePost = e.target.getNode(["p","post"]);
+		var nodeMore = cView.gNodes["adv-cmts"].cloneAll();
+		nodeMore.className = "user-popup"; 
+		nodeMore.user = node.user;
+		node.appendChild(nodeMore);
+		nodeMore.style.top =  e.target.offsetTop;
+		nodeMore.style.left = e.target.offsetLeft;
+		nodeMore.style["z-index"] = 2;
+		var nodeDisCmt = nodeMore.getElementsByClassName("disable-cmts")[0];
+		var nodeModCmt = nodeMore.getElementsByClassName("moderate-cmts")[0];
 
+		if((typeof nodePost.rawData.commentsDisabled !== "undefined")
+		&& JSON.parse(nodePost.rawData.commentsDisabled)){
+			nodeDisCmt.innerHTML = "Enable comments";
+			nodeDisCmt.action = false;
+		}else nodeDisCmt.action = true;
+
+		if(nodePost.commentsModerated){
+			nodeModCmt.innerHTML = "Stop moderating comments";
+			nodeModCmt.action = false;
+		}else nodeModCmt.action = true;
+
+	}
+	,"showDelete": function(e){
+		var cView = document.cView;
+		var action = e.target.action;
+		e.target.getNode(["p","post"]).commentsModerated = action;
+		var comments = e.target.getNode(["p","post-body"],["c","comments"]).getElementsByClassName("comment");
+		for(var idx = 0; idx < comments.length; idx++){
+			var comment = comments[idx];
+			if (cView.ids.indexOf(comment.userid) != -1)continue;
+			comment.getNode(["c","comment-body"],["c","comment-controls"]).hidden = !action;
+		}
+		e.target.innerHTML = action?"Stop moderating comments":"Moderate comments";
+		e.target.action = !action;
+
+	}
+	,"switchCmts": function(e){
+		var cView = document.cView;
+		var nodePost = e.target.getNode(["p","post"]);
+		var post = nodePost.rawData;
+		var spinner = cView.gNodes["spinner"].cloneAll(); 
+		var parentNode = e.target.parentNode;
+		var ctrl = parentNode.replaceChild(spinner, e.target);
+		var oParam = {
+			"url":gConfig.serverURL +"posts/" + post.id + (e.target.action?"/disableComments":"/enableComments")
+			,"token":cView.logins[post.createdBy].token
+			,"method":"post"
+		}
+		cView.Utils.ffReq(oParam, function(res){
+			post.commentsDisabled = ctrl.action?"1":"0";
+			ctrl.innerHTML = ctrl.action?"Enable comments":"Disable commnents";
+			nodePost.getElementsByClassName("cmts-lock-msg")[0].hidden = !ctrl.action;
+			ctrl.action = !ctrl.action;
+			parentNode.replaceChild(ctrl, spinner);	
+		});
+	}
 };
 return _Actions;
 });

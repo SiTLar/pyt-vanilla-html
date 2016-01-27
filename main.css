@@ -125,10 +125,9 @@ h1{
 .up-controls{
 	clear:both;
 }
-
 .up-date{
-	display: block;
 	clear:both;
+	display: block;
 }
 .user-popup label {
 	display:flex;
@@ -210,6 +209,12 @@ h1{
 	}
 	.post:after {
 		margin: 0;
+	}
+	.ud-info{
+		display:flex;
+	}
+	.ud-unfold{
+		display:none;
 	}
 }
 .post-body a {
@@ -309,8 +314,7 @@ span.comment-controls::after {
 	content: ")";
 }
 span.comment-controls::before {
-	content: "(";
-	margin-left: 0.3em;
+	content: " \2022\00A0(";
 }
 .comments {
 	clear: both;
@@ -452,6 +456,9 @@ span.comment-controls::before {
 	cursor: pointer;
 	margin-top: 0.7em;
 }
+.new-post{
+	clear:both;
+}
 .new-post-to{
 	margin-top: 1.5em;
 	margin-bottom: 0.3em;
@@ -551,4 +558,59 @@ span.comment-controls::before {
 }
 .select-user{
 	margin-left:3em;
+}
+.gs-descr{
+	margin-bottom: 0.5em;
+	max-width: 100%;
+	min-width: 100%;
+	padding: 3px;
+	width: 100%;
+}
+.ud-avatar-img, .ud-text{
+	float:left;
+}
+.ud-text{
+	margin-left:1em;
+	margin-right:1em;
+}
+.ud-title{
+	font-weight:bold;
+}
+.ud-stats a{
+	display:block;
+}
+.ud-stats{
+	float:right;
+	margin-left: auto;
+	padding-left:1em;
+}
+@media (max-width: 399px) {
+	.ud-info{
+		display:none ;
+		flex-flow: column;
+	}
+	.ud-unfold{
+		display:block;
+	}
+}
+
+.subs-cont > div {
+	display:flex;
+	text-align: center;
+	word-wrap: break-word;
+	flex-wrap: wrap;
+	border-top: solid thin #ccc;
+}
+
+.sub-item *{
+	display:block;	
+	margin: 0 auto;
+}
+.sub-item {
+	font-size: small;
+	margin: 1em auto;
+	width: 110px;
+}
+.block-links a{
+	display:block;
 }

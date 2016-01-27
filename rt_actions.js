@@ -26,9 +26,9 @@ RtHandler.prototype = {
 		node.style.opacity = 0;
 		node.style.position = "absolute";
 		var victim = document.getElementById(node.id);
-		if(victim) victim.parentNode.removeChild(victim);
 		if(!nodePos)document.posts.appendChild(node);
 		else nodePos.parentNode.insertBefore(node,nodePos);
+		if(victim) victim.parentNode.removeChild(victim);
 		node.style.width = node.parentNode.clientWidth;
 		var height = node.clientHeight;
 		node.style.width = "auto";
@@ -183,11 +183,13 @@ RtHandler.prototype = {
 		nodePost.parentNode.removeChild(nodePost);
 	}
 	, "post:hide" : function(data){
+		var cView = document.cView;
 		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) return;
 		cView.Actions.doHide(nodePost, true, "rt");
 	}
 	, "post:unhide" : function(data){
+		var cView = document.cView;
 		var nodePost = document.getElementById(data.meta.postId);
 		if(!nodePost) 
 			document.hiddenPosts.forEach(function (item){

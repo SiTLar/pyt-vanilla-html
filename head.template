@@ -1,6 +1,6 @@
 	<meta charset="UTF-8">
-	<script type="text/javascript" src="/static/config_srv.json" ></script> 
-	<script type="text/javascript" src="/static/vanilla.js" > </script>
-	<link rel="stylesheet" id="main-stylesheet" type="text/css" href="/static/main.css" media="screen"/>
+	<script type="text/javascript" src="/s/config_srv.json" ></script> 
+	<script type="text/javascript" src="/s/vanilla.js" > </script>
+	<link rel="stylesheet" id="main-stylesheet" type="text/css" href="/s/main.css" media="screen"/>
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 	<meta name="viewport" content="width=device-width, initial-scale=1">

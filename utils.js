@@ -114,22 +114,28 @@ _Utils.prototype = {
 	}
 	,"addUser": function(user){
 		var cView = this.cView;
-		if (typeof cView.gUsers[user.id] !== "undefined" ) return;
+		if (typeof cView.gUsers[user.id] !== "undefined" ){
+			var localUser = cView.gUsers[user.id];
+			Object.keys(user).forEach(function(key){
+				if(typeof localUser[key] === "undefined")
+					 localUser[key] = user[key];
+			});
+			return;
+		}
 		var className = "not-my-link";
-		var userTitle;
 		if(typeof user.isPrivate !== "undefined")user.isPrivate = JSON.parse(user.isPrivate);
 		if (cView.mode == null) cView.mode = "screen";
 		switch(cView.mode){
 		case "screen":
-			userTitle  = user.screenName;
+			user.title  = user.screenName;
 			break;
 		case "screen_u":
 			if(user.screenName != user.username)
-				userTitle  = user.screenName + " <div class=username>(" + user.username + ")</div>";
-			else userTitle  = "<div class=username>"+user.username+"</div>";
+				user.title  = user.screenName + " <div class=username>(" + user.username + ")</div>";
+			else user.title  = "<div class=username>"+user.username+"</div>";
 			break;
 		case "username":
-			userTitle  = "<div class=username>"+user.username+"</div>";
+			user.title  = "<div class=username>"+user.username+"</div>";
 		}
 		if(typeof cView.logins[user.id] !== "undefined"){
 			user.my = true;
@@ -139,7 +145,7 @@ _Utils.prototype = {
 			className = "not-my-link";
 		}
 		user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'
-		+ userTitle
+		+ user.title
 		+"</a>";
 		if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
 		user.friend = false;
@@ -390,6 +396,7 @@ _Utils.prototype = {
 		var arrPath =  args2Arr.apply(this,arguments);
 		arrPath.shift();
 		arrPath.forEach(function(step){
+			if (node.className == step[1])return;
 			var className = step[1];
 			switch(step[0]){
 			case "p":
@@ -424,6 +431,10 @@ _Utils.prototype = {
 			cView.Utils.refreshLogin(id);
 			if (typeof callback == "function") callback(res);
 		});
+	}
+	,"setFrontUrl": function(url){
+		return url.replace(/((beta|m)\.)?freefeed.net\/(?=.+)/,
+			gConfig.front.slice(8));
 	}
 };
 return _Utils;

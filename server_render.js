@@ -32,6 +32,7 @@ module.exports = function(req,res){
 		,"logins": {}
 		,"mainId": ""
 		,"rtSub" : {}
+		,"mode": "username"
 		,get "gMe"(){
 			var ids = Object.keys(this.logins);
 			if(ids.length == 1)return this.logins[ids[0]].data;
@@ -53,7 +54,9 @@ module.exports = function(req,res){
 	cView.Actions = Actions_srv;
 	cView.SecretActions = SecretActions_srv;
 	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
-	cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
+	var Url2link =  require("./url2link");
+	cView.autolinker = new Url2link({"truncate":25});
+	//cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
 	Utils.setStorage();
 	var urlReq = url.parse(req.url, true);	
 	document.location = urlReq;
@@ -115,15 +118,25 @@ module.exports = function(req,res){
 	getContent(cView.xhrurl+locationSearch, cView.token).then(function(vals){
 		var content = vals[0];
 		if(vals[1]){
-			cView.gMe = vals[1];
-			Utils.addUser(cView.gMe);
+			cView.mainId = vals[1].users.id;
+			cView.logins[cView.mainId] = new Object();
+			cView.logins[cView.mainId].data = vals[1];
+			cView.logins[cView.mainId].token = cView.token;
+			Utils.refreshLogin(cView.mainId);
+			
 		}
 		if(content){
 			Drawer.draw(content);
-			nodeInitS.innerHTML += "document.cView.gContent = " + JSON.stringify(content)+ ";\n";
+			nodeInitS.innerHTML += "\ndocument.cView.gContent = " + JSON.stringify(content)+ ";";
 		}
-		if(typeof cView.gMe !== "undefined")nodeInitS.innerHTML += "\ncView.gMe = " + JSON.stringify(cView.gMe)+ ";\n";
-		nodeInitS.innerHTML += '\ncView.token = cView.Utils.getCookie(gConfig.tokenPrefix + "authToken");';
+		if(typeof cView.gMe !== "undefined")
+			nodeInitS.innerHTML += '\n cView.mainId = "' + cView.mainId + '";'
+			+ '\ncView.token = cView.Utils.getCookie(gConfig.tokenPrefix + "authToken");'
+			+ '\ncView.logins[cView.mainId] =  new Object() ;'
+			+ '\ncView.logins[cView.mainId].token = ' + 'cView.token;'
+			+ '\ncView.logins[cView.mainId].data = ' + JSON.stringify(cView.gMe)+ ';'
+			;
+		
 		nodeInitS.innerHTML += "\nsrvDoc();"
 		document.body.appendChild(nodeInitS);
 		res.writeHead(200);	

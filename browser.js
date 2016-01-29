@@ -134,9 +134,12 @@ window.browserDoc = function(){
 			cView.xhrurl = gConfig.serverURL + "users/" + locationPath;
 			cView.timeline = locationPath;
 		}
-		else if((["likes","comments"].indexOf(arrLocationPath[1]) != -1)
-			|| ("filter" == arrLocationPath[0])){
+		else if(["likes","comments"].indexOf(arrLocationPath[1]) != -1){
 			cView.xhrurl = gConfig.serverURL + "timelines/" + locationPath;
+			cView.timeline = locationPath;
+
+		}else if ("filter" == arrLocationPath[0]){
+			cView.xhrurl = gConfig.serverURL + "timelines/" + locationPath.replace(/direct/,"directs");
 			cView.timeline = locationPath;
 		}else{
 			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];

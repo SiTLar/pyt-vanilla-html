@@ -716,7 +716,7 @@ _Actions.prototype = {
 	}
 	,"directs": function(e){
 		var cView = document.cView;
-	    e.target.href = gConfig.front+ "filter/direct";
+	    e.target.href = gConfig.front+ "filter/directs";
 	}
 	,"my": function(e){
 		var cView = document.cView;

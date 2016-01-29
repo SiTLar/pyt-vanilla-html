@@ -716,7 +716,7 @@ _Actions.prototype = {
 	}
 	,"directs": function(e){
 		var cView = document.cView;
-	    e.target.href = gConfig.front+ "filter/directs";
+	    e.target.href = gConfig.front+ "filter/direct";
 	}
 	,"my": function(e){
 		var cView = document.cView;
@@ -913,7 +913,7 @@ _Actions.prototype = {
 		}
 		e.target.parentNode.removeChild(e.target);
 		if((nodeP.feeds.length == 0)&&(nodeP.cNodes["new-direct-input"].value == ""))
-			nodeP.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
+			nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = true;
 	}
 	,"newPostAddFeed": function(e){
 		var cView = document.cView;

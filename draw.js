@@ -1016,7 +1016,12 @@ _Drawer.prototype = {
 		var oDest = new Object();
 		if ((typeof login.users.subscribers !== "undefined") && (typeof login.users.subscriptions !== "undefined")){
 			for (var username in cView.gUsers.byName){
-				if (!login.oFriends[cView.gUsers.byName[username].id] || !(cView.gUsers.byName[username].subscriber || (cView.gUsers.byName[username].type == "group")))
+				var userid = cView.gUsers.byName[username].id;
+				if (!login.oFriends[userid] 
+					|| !(login.users.subscribers.some(function(sub){return sub.id == userid;}) 
+						|| (cView.gUsers.byName[username].type == "group")
+					)
+				)
 					continue;
 				var pos = oDest;
 				for(var idx = 0; idx < username.length; idx++){

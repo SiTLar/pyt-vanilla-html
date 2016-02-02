@@ -1,6 +1,6 @@
 "use strict";
 
-define("Drawer", [],function(Autolinker){
+define("Drawer", [],function(){
 
 function _Drawer(v){
 	this.cView = v;

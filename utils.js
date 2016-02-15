@@ -120,7 +120,7 @@ _Utils.prototype = {
 				if(typeof localUser[key] === "undefined")
 					 localUser[key] = user[key];
 			});
-			return;
+			return localUser;
 		}
 		var className = "not-my-link";
 		if(typeof user.isPrivate !== "undefined")user.isPrivate = JSON.parse(user.isPrivate);
@@ -152,6 +152,7 @@ _Utils.prototype = {
 		user.subscriber = false;
 		cView.gUsers[user.id] = user;
 		cView.gUsers.byName[user.username] = user;
+		return user;
 	}
 	,"genNodes": function (templates){
 		var cView = this.cView;
@@ -401,7 +402,7 @@ _Utils.prototype = {
 			switch(step[0]){
 			case "p":
 				do node = node.parentNode; 
-				while(node.className != className);
+				while(node.classList[0] != className);
 				break;
 			case "c":
 				node = node.cNodes[className];

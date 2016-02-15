@@ -614,3 +614,26 @@ span.comment-controls::before {
 .block-links a{
 	display:block;
 }
+.settings-head {
+	display:flex;
+}
+.settings-head div{
+	border-width: thin;
+	border-color: #ccc;
+	padding:0.3em;
+}
+.sh-selected{
+	border-top-left-radius:1em;
+	border-style: solid;
+	background-color:#fff;
+	border-bottom-style: none;
+}
+.sh-displ, .sh-acc{
+	border-top-left-radius:1em;
+	border-style: solid;
+	background-color:#eee;
+}
+.sh-end{
+	flex:auto;
+	border-bottom-style: solid;
+}

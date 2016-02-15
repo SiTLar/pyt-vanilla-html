@@ -654,11 +654,12 @@ _Actions.prototype = {
 			oReq.send();
 		}
 	}
-	,"unfoldComm": function(id){
+	,"unfoldComm": function(e){
 		var cView = document.cView;
-		var post = cView.doc.getElementById(id).rawData;
 		var oReq = new XMLHttpRequest();
-		var spUnfold = cView.doc.getElementById(id+"-unc").parentNode.appendChild(cView.doc.createElement("i"));
+		var post = e.target.getNode(["p","post"]).rawData;
+		var id = post.id;
+		var spUnfold = e.target.parentNode.appendChild(cView.doc.createElement("i"));
 		spUnfold.className = "fa fa-spinner fa-pulse";
 		oReq.onload = function(){
 			if(oReq.status < 400){
@@ -1068,7 +1069,7 @@ _Actions.prototype = {
 	}
 	,"addAcc": function (e){
 		var cView = document.cView;
-		var nodePorfiles = cView.Utils.getNode(e.target, ["p","global-settings"],["c","settings-profiles"]);
+		var nodePorfiles = cView.Utils.getNode(e.target, ["p","accaunts-settings"],["c","settings-profiles"]);
 		nodePorfiles.appendChild(cView.gNodes["settings-login"].cloneAll());
 		document.getElementsByClassName("gs-add-acc")[0].hidden = true;
 	}
@@ -1374,6 +1375,12 @@ _Actions.prototype = {
 			ctrl.action = !ctrl.action;
 			parentNode.replaceChild(ctrl, spinner);	
 		});
+	}
+	,"goSetAccounts": function(e){
+		e.target.href = gConfig.front+"settings/accounts";
+	}
+	,"goSetDisplay": function(e){
+		e.target.href = gConfig.front+"settings/display";
 	}
 };
 return _Actions;

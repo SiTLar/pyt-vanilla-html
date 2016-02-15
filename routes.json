@@ -1,0 +1,24 @@
+{
+	"default":{
+		"comments":{"dest":["Router","timeline"]}
+		,"likes":{"dest":["Router","timeline"]}
+		,"subscribers":{"dest":["Router","subscribers"]}
+		,"subscriptions":{"dest":["Router","subscriptions"]}
+	}
+	,"dest":{"reroute":["Router", "routeHome"]}
+	,"vals":{
+		"as":{"reroute":["Router","routeContext"]}
+		,"filter":{
+			"req":["token"]
+			,"vals":{ 
+				"direct":{"dest":["Router","directs"]}
+				,"discussions":{"dest":["Router","discussions"]} 
+			} 
+		}
+		,"home":{ "req":["token"],"dest":["Router","timeline"] }
+		,"logout":{"dest":["Actions","logout"]}
+		,"requests":{"req":["token"], "dest":["Drawer","drawRequests"] }
+		,"settings":{"dest":["Drawer","drawSettings"]}
+	}
+
+}

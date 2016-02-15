@@ -1,6 +1,7 @@
 "use strict";
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var matrix  = new Object();
+var Init = require("./init.js")
 var _Utils = require("./utils.js");
 var _Drawer =  require("./draw.js");
 var _Actions = require("./actions.js");
@@ -11,36 +12,7 @@ var gTemplates = require("json!./templates.json");
 @interface
 */
 window.init = function (){
-	var cView = {
-		"gUsers": { "byName":{}}
-		,"gUsersQ": {}
-		,"gComments": {}
-		,"gAttachments": {}
-		,"gFeeds": {}
-		,"gEmbed": {}
-		,"gRt": {}
-		,"gNodes": {}
-		,"logins": []
-		,"mainId": ""
-		,"rtSub" : {}
-		,"initRt": function(){
-			var cView = this;
-			var bump = cView.localStorage.getItem("rtbump");
-			cView.gRt = new RtUpdate(cView.token, bump);
-			cView.gRt.subscribe(cView.rtSub);
-		}
-		,get "gMe"(){
-			var ids = Object.keys(this.logins);
-			if(ids.length == 1)return this.logins[ids[0]].data;
-			if((this.mainId == "")||(ids.length == 0))return null;
-			return this.logins[this.mainId].data;
-		}
-		,get "ids"(){
-			var ids = Object.keys(this.logins);
-			if (!ids.length) return null;
-			return ids;
-		}
-	};
+	var cView = new Init.cView();
 	var Utils = new _Utils(cView);
 	var Drawer = new _Drawer(cView);
 	//var Autolinker = require("./Autolinker.min");
@@ -63,9 +35,6 @@ window.init = function (){
 	cView.cTxt = null;
 	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
 	Utils.setStorage();
-	["blockPosts", "blockComments"].forEach(function(list){
-		cView[list]= JSON.parse(cView.localStorage.getItem(list));
-	});
 	Utils.setIcon("throbber-16.gif");
 }
 /* @externs
@@ -82,6 +51,9 @@ window.browserDoc = function(){
 	var arrLocationPath = locationPath.split("/");
 	cView.timeline = arrLocationPath[0];
 	var nameMode = cView.localStorage.getItem("screenname");
+	["blockPosts", "blockComments"].forEach(function(list){
+		cView[list]= JSON.parse(cView.localStorage.getItem(list));
+	});
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
 		cView.localStorage.removeItem("screenname");
@@ -103,7 +75,7 @@ window.browserDoc = function(){
 	oReq.onload = function(){
 		document.getElementById("loading-msg").innerHTML = "Building page";
 		if(oReq.status < 400){
-			cView.Drawer.draw(JSON.parse(this.response));
+			cView.Drawer.draw(JSON.parse(this.response), new Init.context("freefeed.net",cView));
 			cView.doc.body.removeChild(cView.doc.getElementById("splash"));
 			Utils.postInit();	
 			return;

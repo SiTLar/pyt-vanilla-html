@@ -118,6 +118,11 @@
 		,{"c":"spacer","t":"span","txt":"|"}
 		,{"t":"a","txt":"delete","e":{"click":["Actions","deleteComment"]}}
 	]}
+	,{"c":"comments-load", "t":"a", "e":{"click":["Actions","unfoldComm"]}
+	,"children":[
+		{"c":"num", "t":"span"}
+		,{"t":"span", "txt":" more comments"}
+	]}
 	,{"c":"edit"
 	,"children":[
 		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
@@ -341,10 +346,21 @@
 			,{"t":"span", "txt":"Ban"}
 		]}
 	]}
-	,{"c":"global-settings"
+	,{"c":"settings-head"
 	,"children":[
-		{"t":"h3","txt":"Profiles" }
-		,{"c":"settings-profiles"}
+		{"c":"sh-displ"
+		,"children":[
+			{"t":"a","txt":"Display","e":{"mousedown":["Actions","goSetDisplay"]}}
+		]}
+		,{"c":"sh-acc"
+		,"children":[
+			{"t":"a","txt":"Accounts","e":{"mousedown":["Actions","goSetAccounts"]}}
+		]}
+		,{"c":"sh-end"}
+	]}
+	,{"c":"accaunts-settings"
+	,"children":[
+		{"c":"settings-profiles"}
 		,{"c":"gs-add-acc"
 		,"children":[
 			{"t":"a", "e":{"click":["Actions","addAcc"]}
@@ -352,9 +368,11 @@
 				{"c":"fa fa-plus","t":"i"}
 				,{"t":"span", "txt":"&nbsp;Add account"}
 			]}
-
 		]}
-		,{"t":"h3","txt":"Theme"}
+	]}
+	,{"c":"display-settings"
+	,"children":[
+		{"t":"h3","txt":"Theme"}
 		,{"c":"radio", "t":"label"
 		,"children":[
 			{"t":"input"
@@ -504,6 +522,19 @@
 	,{"c":"settings-login"
 	,"children":[
 		{"t":"p","txt":"Please log in to another account"}
+		,{
+		"children":[
+			{"t":"label"
+			,"children":[
+				{"t":"input" ,"p":{"type":"radio" ,"name":"backend", "value":"freefeed.net"} }
+				,{"t":"span","txt":"freefeed.net" }
+			]}
+			,{"t":"label"
+			,"children":[
+				{"t":"input" ,"p":{"type":"radio" ,"name":"backend", "value":"mokum.place"} }
+				,{"t":"span","txt":"mokum.place" }
+			]}
+		]}
 		,{"t":"p", "txt":"Username:"}
 		,{"c":"gs-input","t":"input","p":{"name":"login-username"}}
 		,{"t":"p", "txt":"Password:"}
@@ -518,6 +549,18 @@
 			]}
 		]}
 		,{"c":"msg-error", "p":{"hidden":true}}
+	]}
+	,{"c":"req-body"
+	,"children":[
+		{"c":"req-body-pend", "p":{"hidden":true}
+		,"children":[
+			{"t":"h3", "txt":"Pending requests", "p":{"id":"sr-header"}}
+		]}
+		,{"c":"req-body-sent", "p":{"hidden":true}
+		,"children":[
+			{"t":"h3", "txt":"Sent requests"}
+		]}
+		
 	]}
 	,{"c":"sub-request"
 	,"children":[

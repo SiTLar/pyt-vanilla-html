@@ -437,6 +437,28 @@ _Utils.prototype = {
 		return url.replace(/((beta|m)\.)?freefeed.net\/(?=.+)/,
 			gConfig.front.slice(8));
 	}
+	,"loadGlobals":function(data, context){
+		var cView = context.cView;
+		if(context.ids)context.ids.forEach(function(id){
+			cView.Utils.addUser.call(context, context.logins[id].data.users);
+		}); 
+
+		if(data.attachments)data.attachments.forEach(function(attachment){ context.gAttachments[attachment.id] = attachment; });
+		if(data.comments)data.comments.forEach(function(comment){ context.gComments[comment.id] = comment; });
+		if(data.users)data.users.forEach(cView.Utils.addUser, context);
+		if(data.subscribers) data.subscribers.forEach(cView.Utils.addUser, context);
+		if(data.subscribers && data.subscriptions ){
+			var subscribers = new Object();
+			data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
+			data.subscriptions.forEach(function(sub){
+				if(["Posts", "Directs"].indexOf(sub.name) != -1 ){
+					context.gFeeds[sub.id] = { "user":context.gUsers[sub.user]
+						,"direct": (sub.name == "Directs")
+					}
+				}
+			});
+		}
+	}
 };
 return _Utils;
 });

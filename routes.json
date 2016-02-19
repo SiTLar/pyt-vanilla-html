@@ -1,11 +1,15 @@
 {
 	"default":{
-		"comments":{"dest":["Router","timeline"]}
-		,"likes":{"dest":["Router","timeline"]}
-		,"subscribers":{"dest":["Router","subscribers"]}
-		,"subscriptions":{"dest":["Router","subscriptions"]}
+		"req":["singleContext"]
+		,"vals":{ 
+			"comments":{"dest":["Router","timeline"]}
+			,"likes":{"dest":["Router","timeline"]}
+			,"subscribers":{"dest":["Router","timeline"]}
+			,"subscriptions":{"dest":["Router","subscriptions"]}
+		}
+		,"dest":["Router","timeline"] 
 	}
-	,"dest":{"reroute":["Router", "routeHome"]}
+	,"dest":["Router", "routeHome"]
 	,"vals":{
 		"as":{"reroute":["Router","routeContext"]}
 		,"filter":{

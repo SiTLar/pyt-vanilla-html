@@ -83,28 +83,6 @@ _Drawer.prototype = {
 			}
 		}
 	}
-	,"loadGlobals":function(data, context){
-		var cView = context.cView;
-		if(context.ids)context.ids.forEach(function(id){
-			cView.Utils.addUser.call(context, context.logins[id].data.users);
-		}); 
-
-		if(data.attachments)data.attachments.forEach(function(attachment){ context.gAttachments[attachment.id] = attachment; });
-		if(data.comments)data.comments.forEach(function(comment){ context.gComments[comment.id] = comment; });
-		if(data.users)data.users.forEach(cView.Utils.addUser, context);
-		if(data.subscribers) data.subscribers.forEach(cView.Utils.addUser, context);
-		if(data.subscribers && data.subscriptions ){
-			var subscribers = new Object();
-			data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
-			data.subscriptions.forEach(function(sub){
-				if(["Posts", "Directs"].indexOf(sub.name) != -1 ){
-					context.gFeeds[sub.id] = { "user":context.gUsers[sub.user]
-						,"direct": (sub.name == "Directs")
-					}
-				}
-			});
-		}
-	}
 	,"makeContainer":function(context){
 		var cView = context.cView;
 		var body = cView.doc.createElement("div");
@@ -256,7 +234,7 @@ _Drawer.prototype = {
 		}
 
 	}
-	,"draw":function(content,context){
+	,"drawTimeline":function(content,context){
 		var cView = context.cView;
 		var Drawer = cView.Drawer;
 
@@ -276,7 +254,7 @@ _Drawer.prototype = {
 		//var nodeRTControls = cView.gNodes["rt-controls"].cloneAll();
 		var view = cView.timeline.split("/")[0];
 		var filter = cView.timeline.split("/")[1];
-		if(typeof filter !== "undefined"){
+		/*if(typeof filter !== "undefined"){
 			switch(filter){
 			case "subscriptions":
 				return body.appendChild(Drawer.genSubs(content));
@@ -284,6 +262,7 @@ _Drawer.prototype = {
 				return body.appendChild(Drawer.genSubsc(content));
 			}
 		}
+		*/
 		if(typeof context.gUsers.byName[view] !== "undefined")
 			body.appendChild(cView.Drawer.genUserDetails(view));
 		if(!context.ids){
@@ -471,8 +450,8 @@ _Drawer.prototype = {
 
 		}
 	}
-	,"genSubs": function(content){
-		var cView = this.cView;
+	,"drawSubs": function(content,context){
+		var cView = context.cView;
 		var out = cView.gNodes["subs-cont"].cloneAll();
 		content.subscriptions.forEach(function(sub){
 			var node = cView.gNodes["sub-item"].cloneAll();
@@ -486,10 +465,10 @@ _Drawer.prototype = {
 			if(user.type == "user")out.cNodes["sc-users"].appendChild(node);
 			else out.cNodes["sc-grps"].appendChild(node);
 		});
-		return out;
+		cView.doc.getElementById("content").appendChild(out);
 	}
-	,"genSubsc": function(content){
-		var cView = this.cView;
+	,"drawSubsc": function(content,context){
+		var cView = context.cView;
 		var out0 = cView.doc.createElement("div");
 		var out = cView.doc.createElement("div");
 		out0.appendChild(out);
@@ -504,7 +483,7 @@ _Drawer.prototype = {
 			a.cNodes["usr-title"].innerHTML = user.title;
 			out.appendChild(node);
 		});
-		return out0;
+		cView.doc.getElementById("content").appendChild(out0);
 	}
 	,"genUserPopup": function(node, user){
 		var cView = this.cView;

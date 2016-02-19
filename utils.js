@@ -459,6 +459,26 @@ _Utils.prototype = {
 			});
 		}
 	}
+	,"loadLogins":function(){
+		var cView = this.cView;
+		var frfToken = Utils.getCookie(gConfig.tokenPrefix + "authToken");
+		var txtgMe = null;
+		txtgMe = cView.localStorage.getItem("gMe");
+		if (txtgMe && frfToken){
+			var logins = JSON.parse(txtgMe);
+			if(Array.isArray(logins) && (typeof logins[0].domain !== "undefined")){
+				logins.forEach(function(id) {
+
+					Utils.addUser(user.users);
+					Utils.refreshLogin(id);
+					setTimeout(function (){ Utils.getWhoami(id); },300);
+				});
+				return true;
+			}else cView.logins = new Object();
+
+		}
+
+	}
 };
 return _Utils;
 });

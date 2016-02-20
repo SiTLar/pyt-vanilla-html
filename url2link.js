@@ -56,7 +56,7 @@ _Url2link.prototype = {
 	
 	}
 	,"url":{
-		"regex": /(?:https?:\/\/)?(?:[^\s\/'"<>~!@#$^&*()_?:;|\\,]+\.)+[^\s\/'"<>~!@#$^&*()_?:;|\\\.,]{2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*?)*?(?=[.,(){}\[\]<>?:;"]*(?:\s|$))/
+		"regex": /(?:https?:\/\/)?(?:[^\s\/'"<>~!@#$^&*()_?:;|\\,]+\.)+[^\s\/'"<>~!@#$^&*()_?:;|\\\.,]{2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*?)*?[\]>)}]*?(?=[.,({\[<?:;"]*(?:\s|$))/
 		,"flags": "i"
 		,"newtab": true
 		,"check":function(text){
@@ -68,8 +68,21 @@ _Url2link.prototype = {
 		}
 		,"actions":[function(match,host){
 			var text;
-			var regex = /^https?:\/\//
+			var suffix = ""; 
+			var regex = /^https?:\/\//;
 			var scheme = regex.exec(match); 
+			var pos = match.length - 1;
+			do{
+				var idx = ">})]".indexOf(match.charAt(pos));
+				if(idx == -1) continue;
+				var bra = "<{([".charAt(idx);				
+				var ket = match.charAt(pos);
+				var ketPos = match.lastIndexOf(ket, pos-1);
+				if(match.indexOf(bra,ketPos) == -1){
+					suffix = match.slice(pos) + suffix;
+					match = match.slice(0,pos);
+				}
+			}while(--pos > 0);
 			if(scheme) text = match.slice(scheme[0].length);
 			else {
 				text = match;
@@ -79,7 +92,7 @@ _Url2link.prototype = {
 			catch(e){};
 			if (text.slice(-1) == "/")text = text.slice(0,-1);
 			text = (host.trunc &&(text.length > host.trunc))? text.substr(0,host.trunc)+"...":text;
-			return '<a ' +(host["url"].newtab?'target="_blank"':"") +' href="'+match+'">' + text + "</a>";
+			return '<a ' +(host["url"].newtab?'target="_blank"':"") +' href="'+match+'">' + text + "</a>"+suffix;
 		}]
 	}
 	,"uname":{

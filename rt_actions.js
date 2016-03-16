@@ -104,7 +104,7 @@ RtHandler.prototype = {
 			&& (cView.gMe.users.banIds.indexOf(data.comments.createdBy) > -1))
 			return;
 		var nodePost = document.getElementById(data.comments.postId);
-		cView.Utils.addUser(data.users[0]);
+		cView.Common.addUser(data.users[0]);
 		if(nodePost){
 			cView.gComments[data.comments.id] = data.comments; 
 			if(!document.getElementById(data.comments.id))
@@ -141,7 +141,7 @@ RtHandler.prototype = {
 		if (cView.gMe && Array.isArray(cView.gMe.users.banIds)
 			&& (cView.gMe.users.banIds.indexOf(data.users.id) > -1))
 			return;
-		cView.Utils.addUser(data.users);
+		cView.Common.addUser(data.users);
 		var nodePost = document.getElementById(data.meta.postId);
 		if(nodePost){
 			if (!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();

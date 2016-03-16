@@ -426,6 +426,87 @@ _SecretActions.prototype = {
 		var victim = e.target; while(victim.parentNode !=  document.body)victim = victim.parentNode;
 		document.body.removeChild(victim);
 	}
+	,"genPost": function(post){
+	
+		var nodePost = cView.gNodes["post"].cloneAll();
+		var postNBody = nodePost.cNodes["post-body"];
+
+		var user = undefined;
+		if(post.createdBy) user = context.gUsers[post.createdBy];
+		nodePost.homed = false;
+		nodePost.rawData = post;
+		nodePost.id = context.domain + "-post-" + post.id;
+		nodePost.isPrivate = false;
+		nodePost.commentsModerated = false;
+
+		//var cpost = matrix.decrypt(post.body);
+		var cpost = {};
+		cpost.error = "0";
+
+		if (typeof cpost.error !== "undefined"){
+			switch(cpost.error){
+			case "0":
+				break;
+			case "3":
+				gPrivTimeline.noKey[post.id] = post;
+				console.log(post.id+": unknown key");
+				break;
+			case "4":
+				gPrivTimeline.noDecipher[post.id] = post;
+				console.log("Private keys not loaded");
+				break;
+			}
+			postNBody.cNodes["post-cont"].innerHTML =  cView.autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+			gotUser();
+		}else{
+			nodePost.isPrivate = true;
+			post.createdAt = Date.parse(post.createdAt);
+			nodePost.rawData.createdAt = post.createdAt;
+			cpost = JSON.parse(cpost);
+			if (typeof cpost.payload.author === "undefined" ) return spam();
+			matrix.verify(JSON.stringify(cpost.payload), cpost.sign, cpost.payload.author).then(ham,spam);
+			nodePost.sign = cpost.sign;
+		}
+		function spam(){nodePost = cView.doc.createElement("span");};
+		function ham(){
+			nodePost.feed = cpost.payload.feed;
+			gPrivTimeline.posts.push(nodePost);
+			gPrivTimeline.postsById[post.id] = nodePost;
+			nodePost.rawData.body = cpost.payload.data;
+			postNBody.cNodes["post-cont"].innerHTML = cView.autolinker.link(cpost.payload.data.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+			if(typeof user === "undefined"){
+				if (context.gUsers.byName[cpost.payload.author]){
+					user = context.gUsers.byName[cpost.payload.author];
+					post.createdBy = user.id;
+					gotUser();
+				} else if(cView.gUsersQ[cpost.payload.author]) cView.gUsersQ[cpost.payload.author].then(
+					function(){
+						user = cView.gUsers.byName[cpost.payload.author];
+						post.createdBy = user.id;
+						gotUser();
+					},spam);
+				else{
+					cView.gUsersQ[cpost.payload.author] = new Promise (function(resolve,reject){
+
+						var oReq = new XMLHttpRequest();
+						oReq.onload = function(){
+							if(this.status < 400){
+								var oRes = JSON.parse(oReq.response);
+								cView.Utils.addUser(oRes.users);
+								user = cView.gUsers.byName[cpost.payload.author];
+								post.createdBy = user.id;
+								resolve();
+							}
+						};
+
+						oReq.open("get",gConfig.serverURL + "users/"+post.username, true);
+						oReq.setRequestHeader("X-Authentication-Token", cView.token);
+						oReq.send();
+					}).then(gotUser,spam);
+				}
+			}else gotUser();
+		}
+	}
 };
 return _SecretActions;
 });

@@ -1,28 +1,30 @@
 {
 	"default":{
-		"req":["singleContext"]
+		"req":["frfContext"]
 		,"vals":{ 
 			"comments":{"dest":["Router","timeline"]}
 			,"likes":{"dest":["Router","timeline"]}
-			,"subscribers":{"dest":["Router","timeline"]}
+			,"subscribers":{"dest":["Router","subscribers"]}
 			,"subscriptions":{"dest":["Router","subscriptions"]}
 		}
-		,"dest":["Router","timeline"] 
+		,"default":{
+			"dest":["Router","unmixed"]
+			,"defualt":{"dest":["Router","onePost"]}
+		}
 	}
-	,"dest":["Router", "routeHome"]
 	,"vals":{
 		"as":{"reroute":["Router","routeContext"]}
 		,"filter":{
 			"req":["token"]
 			,"vals":{ 
 				"direct":{"dest":["Router","directs"]}
-				,"discussions":{"dest":["Router","discussions"]} 
+				,"discussions":{"dest":["Router","timeline"]} 
 			} 
 		}
-		,"home":{ "req":["token"],"dest":["Router","timeline"] }
+		,"home":{ "dest":["Router","routeHome","token"] }
 		,"logout":{"dest":["Actions","logout"]}
-		,"requests":{"req":["token"], "dest":["Drawer","drawRequests"] }
-		,"settings":{"dest":["Drawer","drawSettings"]}
+		,"requests":{"dest":["Drawer","drawRequests","token"] }
+		,"settings":{"default":{"dest":["Drawer","drawSettings"]}}
 	}
 
 }

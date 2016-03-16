@@ -21,19 +21,23 @@ var shortid = require("shortid");
 	}
  }
  function Element (tag){
+ 	var that = this;
+	Object.keys(that.defaults).forEach(function(key){
+		that[key] = JSON.parse(JSON.stringify(that.defaults[key]))
+	});
 	this.tagName = tag;
-	this.childNodes = new Array();
-	this.style = new Object();
 	this.eventHost = new EventHost();
  };
 Element.prototype = {
  	constructor: Element
-	,tagName: ""
-	,className:""
-	,childNodes: Array
-	,innerHTML: ""
-	,eventHost: null
-	,style: null 
+	,defaults:{
+		tagName: ""
+		,className:""
+		,childNodes: []
+		,innerHTML: ""
+		,eventHost: null
+		,style: {}
+	}
 	,appendChild: function(newChild){
 		if(newChild)this.childNodes.push(newChild);
 		newChild.parentNode = this;

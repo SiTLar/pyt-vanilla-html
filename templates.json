@@ -1,5 +1,12 @@
 {"nodes": [
-	{"c":"post"
+	{"c":"container", "p":{"id":"container"}
+	,"children":[
+		{"c":"controls"}
+		,{"c":"pagetitle", "t":"h1"}
+		,{"c":"details"}
+		,{"c":"up-controls"}
+	]}
+	,{"c":"post"
 	,"children":[
 		{"c":"avatar"
 		,"children":[
@@ -48,7 +55,7 @@
 	,"children":[
 		{"c":"priv-body"}
 	]}
-	,{"c":"controls-user","t":"div"
+	,{"c":"controls-login","t":"div"
 	,"children":[
 		{"c":"user-home","t":"a","href":"#","txt":"home","e":{"mousedown":["Actions","home"]}}
 		,{"t":"span","txt":" &#8226; "}

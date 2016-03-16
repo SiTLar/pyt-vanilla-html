@@ -2,50 +2,13 @@
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var matrix  = new Object();
 var Init = require("./init.js")
-var _Utils = require("./utils.js");
-var _Drawer =  require("./draw.js");
-var _Actions = require("./actions.js");
-var _SecretActions = require("./secrets.js");
 var RtUpdate = require("./rt_network.js");
-var gTemplates = require("json!./templates.json");
-/* @externs
-@interface
-*/
-window.init = function (){
-	var cView = new Init.cView();
-	var Utils = new _Utils(cView);
-	var Drawer = new _Drawer(cView);
-	//var Autolinker = require("./Autolinker.min");
-	var Url2link =  require("./url2link");
-	cView.autolinker = new Url2link({ "truncate":25
-		,"url":{
-			"actions":[
-				["pre",Utils.setFrontUrl]
-			]
-		}
-	});
-	//cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
-	cView.doc = document;
-	document.cView = cView;
-	cView.cView = cView;
-	cView.Utils = Utils;
-	cView.Drawer = Drawer;
-	cView.Actions = new _Actions(cView);
-	cView.SecretActions = new _SecretActions(cView);
-	cView.cTxt = null;
-	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
-	Utils.setStorage();
-	Utils.setIcon("throbber-16.gif");
-}
-/* @externs
-@interface
-*/
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;
 	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
-	var locationSearch = document.location.search;
 	if (locationPath == "")locationPath = "home";
+	var locationSearch = document.location.search;
 	if (locationSearch == "")locationSearch = "?offset=0";
 	cView.cSkip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
@@ -59,6 +22,25 @@ window.browserDoc = function(){
 		cView.localStorage.removeItem("screenname");
 	}
 	setLocalSettings();
+	cView.Common.loadLogins();
+	var body = cView.gNodes["container"].cloneAll();
+	cView.Utils.setChild(body, "controls",(
+		Object.keys(cView.contexts).some(function(domain){return cView.contexts[domain].token})?
+		cView.gNodes["controls-login"].cloneAll():cView.gNodes["controls-anon"].cloneAll()
+	));
+	cView.doc.getElementsByTagName("body")[0].appendChild(body);
+	cView.Router.route(cView.contexts, locationPath).then(postInit
+	,function(err){
+		console.log(err);
+		switch(err){
+			case "token":
+				cView.Common.auth();
+			break;
+		}
+	});
+
+	return ;
+	/////////////////////////////////////////////////////////////////////
 	if(["home", "filter", "settings", "requests"].indexOf(cView.timeline) != -1){
 		if(!Utils.auth()) return;
 	}else if(!Utils.auth(true)) cView.logins = [];
@@ -125,17 +107,46 @@ window.browserDoc = function(){
 	oReq.send();
 }
 
-/* @externs
-@interface
-*/
 window.initDoc = function(){
-	init();
+	Init.init(document);
 	browserDoc();
 }
 
-/* @externs
-@interface
-*/
+function postInit(){
+	var cView = document.cView;
+	(function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,cView.doc,"script","//www.google-analytics.com/analytics.js","ga");
+	ga("create", gConfig.ga, "auto");
+	ga("send", "pageview");
+
+	//if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
+	if(cView.localStorage.getItem("show_link_preview") == "1"){
+		(function(a,b,c){
+			var d,e,f;
+			f="PIN_"+~~((new Date).getTime()/864e5),
+			a[f]||(a[f]=!0,a.setTimeout(function(){
+				d=b.getElementsByTagName("SCRIPT")[0],
+				e=b.createElement("SCRIPT"),
+				e.type="text/javascript",
+				e.async=!0,
+				e.src=c+"?"+f,
+				d.parentNode.insertBefore(e,d)
+			}
+			,10))
+		})(window,cView.doc,"//assets.pinterest.com/js/pinit_main.js");
+	}
+	var nodesAttImg = document.getElementsByClassName("atts-img");
+	for (var idx = 0; idx < nodesAttImg.length; idx++){
+		var nodeImgAtt = nodesAttImg[idx];
+		if(cView.Utils.chkOverflow(nodeImgAtt))
+			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+	}
+	var nodeSplash = document.getElementById("splash");
+	nodeSplash.parentNode.removeChild(nodeSplash);
+	cView.Common.setIcon("favicon.ico");
+}
 window.srvDoc = function(){
 	var cView = document.cView;
 	var idx = 0;

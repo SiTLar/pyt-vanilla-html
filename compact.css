@@ -74,11 +74,12 @@ h1{
 }
 .pagetitle {
 	border-top: 1px solid #ccc;
+	margin-top: 0;
 }
 .friends-tip{
 	position:absolute;
 }
-.content{
+.container{
 	max-width: 680;
 	width: 100%;
 	padding: 0 1em;

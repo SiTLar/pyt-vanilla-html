@@ -1,5 +1,5 @@
 "use strict";
-define("Actions",[],function() {
+define("./actions",[],function() {
 function _Actions(v){
 	this.cView = v;
 };
@@ -333,7 +333,7 @@ _Actions.prototype = {
 				if(oReq.status < 400){
 					span.parentNode.removeChild(span);
 					var postUpd = JSON.parse(this.response);
-					postUpd.users.forEach(cView.Utils.addUser, cView.Utils);
+					postUpd.users.forEach(cView.Common.addUser, cView.Common);
 					nodePost.rawData.likes = postUpd.posts.likes;
 					cView.Drawer.writeAllLikes(nodePost.id, nodeLikes);
 				}else{
@@ -386,7 +386,7 @@ _Actions.prototype = {
 		oReq.onload = function(){
 			if(oReq.status < 400) {
 				cView.logins[loginId].data = JSON.parse(oReq.response); 
-				Utils.refreshLogin(loginId);
+				Common.refreshLogin(loginId);
 				Utils.setChild(cView.Utils.getNode(nodeParent,["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(username));
 			}else nodeParent.replaceChild( target, spinner);
 		}
@@ -822,14 +822,14 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var action = e.target.checked;
 		var nodeUC = e.target.getNode(["p","up-controls"]);
-		cView.Utils.updateBlockList("blockComments", nodeUC.user, action);
+		cView.Common.updateBlockList("blockComments", nodeUC.user, action);
 		cView.Drawer.blockComments(nodeUC.user, action);
 	}
 	,"doBlockPosts": function(e){
 		var cView = document.cView;
 		var action = e.target.checked;
 		var nodeUC = e.target.getNode(["p","up-controls"]);
-		cView.Utils.updateBlockList("blockPosts", nodeUC.user, action);
+		cView.Common.updateBlockList("blockPosts", nodeUC.user, action);
 		cView.Drawer.blockPosts(nodeUC.user, action);
 	}
 	,"setRadioOption": function(e){
@@ -886,7 +886,7 @@ _Actions.prototype = {
 		//matrix.ready = 0;
 		try{matrix.logout();}catch(e){};
 		cView.localStorage.removeItem("gMe");
-		cView.Utils.deleteCookie(gConfig.tokenPrefix + "authToken");
+		cView.Common.deleteCookie(gConfig.tokenPrefix + "authToken");
 		location.reload();
 	}
 	,"newPostRemoveFeed": function(e){
@@ -1051,7 +1051,7 @@ _Actions.prototype = {
 				cView.logins[id].data = JSON.parse(oReq.response);
 				nodeMsg.className = "sr-info";
 				nodeMsg.innerHTML = "Updated. @"+ oUser.username +"'s feed is <span style='font-weight: bold;'>" + ((oUser.isPrivate == "1")?"private":"public")+ ".</span>";
-				cView.Utils.refreshLogin(id);
+				cView.Common.refreshLogin(id);
 			}else {
 				nodeMsg.className = "msg-error";
 				nodeMsg.innerHTML = "Got error: ";
@@ -1121,7 +1121,7 @@ _Actions.prototype = {
 		var id = cView.Utils.getInputsByName(nodeProf)["id"].value;
 		cView.token = cView.logins[id].token;
 		cView.mainId = id;
-		cView.Utils.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
+		cView.Common.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
 	}
 	,"logoutAcc": function(e){
 		var cView = document.cView;
@@ -1138,7 +1138,7 @@ _Actions.prototype = {
 			inputs["is-main"].checked = true;
 			cView.mainId = id;
 			cView.token = cView.logins[id].token; 
-			cView.Utils.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
+			cView.Common.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
 		}
 	}
 	,"setRTparams": function (e){
@@ -1210,7 +1210,7 @@ _Actions.prototype = {
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			if(this.status < 400){
-				cView.Utils.setCookie(gConfig.tokenPrefix + "authToken", JSON.parse(this.response).authToken);
+				cView.Common.setCookie(gConfig.tokenPrefix + "authToken", JSON.parse(this.response).authToken);
 				cView.token =  JSON.parse(this.response).authToken;
 				///cView.Utils.doc.getElementsByTagName("body")[0].removeChild(cView.Utils.doc.getElementsByClassName("nodeAuth")[0]);
 			//	initDoc();
@@ -1256,7 +1256,7 @@ _Actions.prototype = {
 			oReq.onload = function(){
 				if(oReq.status < 400){
 					cView.logins[id].data = JSON.parse(oReq.response);
-					Utils.refreshLogin(id);
+					Common.refreshLogin(id);
 					nodeImg.src = cView.logins[id].data.users.profilePictureMediumUrl;
 				}
 			}
@@ -1368,7 +1368,7 @@ _Actions.prototype = {
 			,"token":cView.logins[post.createdBy].token
 			,"method":"post"
 		}
-		cView.Utils.ffReq(oParam, function(res){
+		cView.Utils.xhrReq(oParam, function(res){
 			post.commentsDisabled = ctrl.action?"1":"0";
 			ctrl.innerHTML = ctrl.action?"Enable comments":"Disable commnents";
 			nodePost.getElementsByClassName("cmts-lock-msg")[0].hidden = !ctrl.action;

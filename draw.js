@@ -1,6 +1,6 @@
 "use strict";
 
-define("Drawer", [],function(){
+define("./draw", [],function(){
 
 function _Drawer(v){
 	this.cView = v;
@@ -10,12 +10,13 @@ _Drawer.prototype = {
 	,"writeAllLikes":function(id,nodeLikes){
 		var cView = this.cView;
 		var post = cView.doc.getElementById(id).rawData;
+		var context = cView.contexts[post.domain];
 		nodeLikes.innerHTML = "";
 		var nodeLike = cView.doc.createElement("span");
 		nodeLike.className = "p-timeline-user-like";
 		for(var like = 0; like < post.likes.length; like++){
 			var nodeCLike = nodeLike.cloneNode();
-			nodeCLike.innerHTML = cView.gUsers[post.likes[like]].link;
+			nodeCLike.innerHTML = context.gUsers[post.likes[like]].link;
 			//nodeLikes.childNodes[idx].appendChild(nodeCLike);
 			nodeLikes.appendChild(nodeCLike);
 		}
@@ -27,6 +28,7 @@ _Drawer.prototype = {
 	,"genLikes":function(nodePost){
 		var cView = this.cView;
 		var post = nodePost.rawData;
+		var context = cView.contexts[post.domain];
 		var postNBody = nodePost.cNodes["post-body"];
 		var node = cView.doc.createElement("div");
 		node.className = "likes";
@@ -55,7 +57,7 @@ _Drawer.prototype = {
 		nodeLike.className = "p-timeline-user-like";
 		post.likes.forEach(function(like){
 			var nodeCLike = nodeLike.cloneNode();
-			nodeCLike.innerHTML = cView.gUsers[like].link;
+			nodeCLike.innerHTML = context.gUsers[like].link;
 			nodeLikes.appendChild(nodeCLike);
 		});
 		var suffix = cView.gNodes["likes-suffix"].cloneAll();
@@ -71,8 +73,8 @@ _Drawer.prototype = {
 		postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 		//postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 		nodeLikes.className = "comma";
-		if(cView.ids){
-			if(post.likes[0] == cView.gMe.users.id){
+		if(context.ids){
+			if(post.likes[0] == context.gMe.users.id){
 				postNBody.cNodes["post-info"].myLike = nodeLikes.childNodes[0];
 				if( postNBody.cNodes["post-info"].nodeLike) {
 					postNBody.cNodes["post-info"].nodeLike.innerHTML = "Un-like";
@@ -83,37 +85,9 @@ _Drawer.prototype = {
 			}
 		}
 	}
-	,"makeContainer":function(context){
-		var cView = context.cView;
-		var body = cView.doc.createElement("div");
-		body.className = "content";
-		body.id = "content";
-		cView.doc.getElementsByTagName("body")[0].appendChild(body);
-		var controls = cView.gNodes["controls-user"].cloneAll();
-		var ids = context.ids;
-		if(ids) cView.subReqsCount = ids.reduce(function(total, id){
-			var profile = context.logins[id].data.users;
-			if (Array.isArray(profile.subscriptionRequests))
-				return total + profile.subscriptionRequests.length;
-			else return total;
-		},0); else cView.subReqsCount = 0;
-		if (cView.subReqsCount){
-			controls.cNodes["sr-info"].cNodes["sr-info-a"].innerHTML = "You have "
-			+ cView.subReqsCount
-			+ " subscription requests to review.";
-			controls.cNodes["sr-info"].hidden = false;
-		}
-		body.appendChild(controls );
-		var title =  cView.doc.createElement("div");
-		title.className = "pagetitle";
-		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
-		cView.doc.title = "FreeFeed: " + cView.timeline; 
-		body.appendChild(title);
-		return body;
-	}
-	,"genUserDetails":function(username){
+	,"genUserDetails":function(username, context){
 		var cView = this.cView;
-		var user = cView.gUsers.byName[username];
+		var user = context.gUsers.byName[username];
 		var nodeUD = cView.gNodes["user-detailes"].cloneAll();
 		var nodeInfo = nodeUD.cNodes["ud-info"];
 		nodeInfo.cNodes["ud-username"].value = user.username;
@@ -172,7 +146,8 @@ _Drawer.prototype = {
 	}
 	,"drawSettings":function(){
 		var cView = document.cView;
-		var body = cView.Drawer.makeContainer();
+		var body = cView.doc.getElementById("container");
+		//var body = cView.Drawer.makeContainer();
 		var nodeSettingsHead = cView.gNodes["settings-head"].cloneAll();
 		body.appendChild(nodeSettingsHead);
 		switch(cView.doc.location.pathname.split("/").pop()){
@@ -183,9 +158,7 @@ _Drawer.prototype = {
 		default:
 			drawDisp();
 		}
-		cView.Utils.setIcon("favicon.ico");
-		try{cView.doc.body.removeChild(cView.doc.getElementById("splash"));}
-		catch(e){};
+		cView.Common.setIcon("favicon.ico");
 		function drawAcc(){
 			nodeSettingsHead.cNodes["sh-acc"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["accaunts-settings"].cloneAll();
@@ -234,140 +207,77 @@ _Drawer.prototype = {
 		}
 
 	}
-	,"drawTimeline":function(content,context){
-		var cView = context.cView;
+	,"drawTimeline":function(posts,contexts){
+		var cView = this.cView;
 		var Drawer = cView.Drawer;
-
-		/*
-		matrix = new CryptoPrivate(gCryptoPrivateCfg );
-		matrix.storage = cView.sessionStorage;
-		var body = cView.doc.createElement("div");
-		body.className = "content";
-		body.id = "content";
-		cView.doc.getElementsByTagName("body")[0].appendChild(body);
-		var title =  cView.doc.createElement("div");
-		title.innerHTML = "<h1>" +cView.timeline+ "</h1>"
-		title.className = "pagetitle";
-		*/
-		Drawer.loadGlobals(content,context);
-		var body = Drawer.makeContainer();
-		//var nodeRTControls = cView.gNodes["rt-controls"].cloneAll();
 		var view = cView.timeline.split("/")[0];
 		var filter = cView.timeline.split("/")[1];
-		/*if(typeof filter !== "undefined"){
-			switch(filter){
-			case "subscriptions":
-				return body.appendChild(Drawer.genSubs(content));
-			case "subscribers":
-				return body.appendChild(Drawer.genSubsc(content));
-			}
+		var body = cView.doc.getElementById("container");
+		var nodeMore = cView.doc.createElement("div");
+		nodeMore.className = "more-node";
+		var htmlPrefix = '<a href="' + gConfig.front+cView.timeline ;
+		var htmlForward;
+		var htmlBackward;
+		//var fLastPage = (content.posts.length != cView.offset);
+		var backward = cView.cSkip*1 - gConfig.offset*1;
+		var forward = cView.cSkip*1 + gConfig.offset*1;
+		if (cView.cSkip){
+			if (backward>=0) htmlBackward = htmlPrefix + "?offset="
+				+ backward*1+ "&limit="+gConfig.offset*1
+				+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
+			nodeMore.innerHTML = htmlBackward ;
 		}
+		htmlForward = htmlPrefix + "?offset="
+		+ forward*1 + "&limit="+gConfig.offset*1
+		+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
+		if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
+		nodeMore.innerHTML +=  htmlForward;
+		body.appendChild(nodeMore.cloneNode(true));
+		cView.doc.posts = cView.doc.createElement("div");
+		cView.doc.posts.className = "posts";
+		cView.doc.posts.id = "posts";
+		body.appendChild(cView.doc.posts);
+		cView.doc.hiddenPosts = new Array();
+		cView.doc.hiddenCount = 0;
+		var idx = 0;
+		posts.forEach(function(post){
+			post.idx = idx++;
+			if(post.isHidden){
+				cView.doc.hiddenCount++;
+			}else{
+				post.isHidden = false;
+				cView.doc.posts.appendChild(Drawer.genPost(post));
+			}
+			cView.doc.hiddenPosts.push({"is":post.isHidden,"data":post});
+		});
+		var nodeShowHidden = cView.gNodes["show-hidden"].cloneAll();
+		nodeShowHidden.cNodes["href"].action = true;
+		body.appendChild(nodeShowHidden);
+		if(cView.doc.hiddenCount) nodeShowHidden.cNodes["href"].innerHTML= "Show "+ cView.doc.hiddenCount + " hidden entries";
+		body.appendChild(nodeMore);
+		var drop = Math.floor(cView.cSkip/3);
+		var toAdd = drop + Math.floor(gConfig.offset/3);
+		/*
+		if((!gPrivTimeline.done)&& (cView.timeline == "home")&& matrix.ready){
+			gPrivTimeline.done = true;
+			new Promise(function (){addPosts(drop,toAdd,0);});
+		};
 		*/
-		if(typeof context.gUsers.byName[view] !== "undefined")
-			body.appendChild(cView.Drawer.genUserDetails(view));
-		if(!context.ids){
-			var nodeGControls = cView.gNodes["controls-anon"].cloneAll();
-			var controls = body.getElementsByClassName("controls-user")[0];
-			body.replaceChild(nodeGControls, controls);
-		}else{
-			var names = new Array();
-			//Object.keys(cView.gUsers).forEach(key => {console.log(key)} );
-			context.ids.forEach(function(id){
-			//	var user = cView.gUsers[id];
-			//	console.log(id+":"+ cView.logins[id].data.users.username );
-			//	console.log(cView.gUsers[id].username);
-				names.push(cView.gUsers[id].username);
-			});
-			names.push("home");
-
-			if(names.indexOf(view) != -1){
-				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
-				body.appendChild(nodeAddPost);
-				Drawer.genPostTo(nodeAddPost, context.gMe.users.username, context.gMe);
-			}else if (view == "filter"){
-				if (cView.timeline.split("/")[1] == "direct"){
-					var nodeAddPost = cView.gNodes["new-post"].cloneAll();
-					body.appendChild(nodeAddPost);
-					Drawer.genDirectTo(nodeAddPost, context.gMe);
-				}
-			}else if(typeof context.gUsers.byName[view] !== "undefined")
-				cView.Utils.setChild(body, "up-controls", Drawer.genUpControls(view));
-			
-			var feed = context.gUsers.byName[cView.timeline];
-			if( (typeof feed !== "undefined") && (feed.type == "group") && feed.friend){
-				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
-				body.appendChild(nodeAddPost);
-				Drawer.genPostTo(nodeAddPost, feed.username, context.gMe);
-			}
-				
-		}
-		if(content.timelines){
-			var nodeMore = cView.doc.createElement("div");
-			nodeMore.className = "more-node";
-			var htmlPrefix = '<a href="' + gConfig.front+cView.timeline ;
-			var htmlForward;
-			var htmlBackward;
-			//var fLastPage = (content.posts.length != cView.offset);
-			var backward = cView.cSkip*1 - gConfig.offset*1;
-			var forward = cView.cSkip*1 + gConfig.offset*1;
-			if (cView.cSkip){
-				if (backward>=0) htmlBackward = htmlPrefix + "?offset="
-					+ backward*1+ "&limit="+gConfig.offset*1
-					+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
-				nodeMore.innerHTML = htmlBackward ;
-			}
-			/*if(!fLastPage)*/ if(content.posts){
-				htmlForward = htmlPrefix + "?offset="
-				+ forward*1 + "&limit="+gConfig.offset*1
-				+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
-				if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
-				nodeMore.innerHTML +=  htmlForward;
-			}
-			body.appendChild(nodeMore.cloneNode(true));
-			cView.doc.posts = cView.doc.createElement("div");
-			cView.doc.posts.className = "posts";
-			cView.doc.posts.id = "posts";
-			body.appendChild(cView.doc.posts);
-			cView.doc.hiddenPosts = new Array();
-			cView.doc.hiddenCount = 0;
-			var idx = 0;
-			if (content.posts){
-				content.posts.forEach(function(post){
-					post.idx = idx++;
-					if(post.isHidden){
-						cView.doc.hiddenCount++;
-					}else{
-						post.isHidden = false;
-						cView.doc.posts.appendChild(Drawer.genPost(post));
-					}
-					cView.doc.hiddenPosts.push({"is":post.isHidden,"data":post});
-				});
-			}
-			var nodeShowHidden = cView.gNodes["show-hidden"].cloneAll();
-			nodeShowHidden.cNodes["href"].action = true;
-			body.appendChild(nodeShowHidden);
-			if(cView.doc.hiddenCount) nodeShowHidden.cNodes["href"].innerHTML= "Show "+ cView.doc.hiddenCount + " hidden entries";
-			body.appendChild(nodeMore);
-			var drop = Math.floor(cView.cSkip/3);
-			var toAdd = drop + Math.floor(gConfig.offset/3);
-			/*
-			if((!gPrivTimeline.done)&& (cView.timeline == "home")&& matrix.ready){
-				gPrivTimeline.done = true;
-				new Promise(function (){addPosts(drop,toAdd,0);});
-			};
-			*/
-		}else{
-			var singlePost = Drawer.genPost(content.posts);
-			body.appendChild(singlePost);
-			var nodesHide = singlePost.getElementsByClassName("hide");
-			singlePost.hidden = false;
-			if (nodesHide.length)nodesHide[0].hidden = true;
-			cView.doc.title = "@" 
-				+ context.gUsers[singlePost.rawData.createdBy].username + ": "
-				+ singlePost.rawData.body.slice(0,20).trim()
-				+ (singlePost.rawData.body.length > 20?"\u2026":"" )
-				+ " (FreeFeed)";
-		}
+	
+	} 
+	,"drawPost": function(content,context) {
+		var cView = this.cView;
+		var singlePost = cView.Drawer.genPost(content);
+		body.appendChild(singlePost);
+		var nodesHide = singlePost.getElementsByClassName("hide");
+		singlePost.hidden = false;
+		if (nodesHide.length)nodesHide[0].hidden = true;
+		cView.doc.title = "@" 
+			+ context.gUsers[singlePost.rawData.createdBy].username + ": "
+			+ singlePost.rawData.body.slice(0,20).trim()
+			+ (singlePost.rawData.body.length > 20?"\u2026":"" )
+			+ " ("+ context.domain  +")";
+	}
 	/*
 		var nodeRTCtrl = body.getElementsByClassName("rt-controls")[0];
 		nodeRTCtrl.cNodes["rt-chkbox"].checked = JSON.parse(cView.localStorage.getItem("rt"));
@@ -377,17 +287,17 @@ _Drawer.prototype = {
 				nodeBump.selectedIndex = idx;
 				break;
 			}
-		*/
 		if(content.timelines) context.rtSub = {"timeline":[content.timelines.id]};
 		else context.rtSub = {"post":[content.posts.id]};
-	}
+		*/
+	
 	,"drawRequests":function(){
 		var cView = document.cView;
+		var count = context.ids.length;
 		Object.keys(cView.contexts).forEach( function (domain){
 			var context = cView.contexts[domain];
-			var count = context.ids.length;
 			context.ids.forEach(function(id){
-				cView.Utils.getWhoami(id, all(completeRequests));
+				context.getWhoami(id, all(completeRequests));
 			
 			});
 		});
@@ -398,14 +308,11 @@ _Drawer.prototype = {
 		function completeRequests(){
 			var body = cView.Drawer.makeContainer();
 			Object.keys(cView.contexts).forEach( function (domain){
-				cView.Drawer.drawRequests(cView.contexts[domian], body);
+				genRequests(cView.contexts[domian], body);
 			});
-			cView.Utils.setIcon("favicon.ico");
-			try{cView.doc.body.removeChild(cView.doc.getElementById("splash"));}
-			catch(e){};
 		}
 
-		function drawRequests(context,body){
+		function genRequests(context,body){
 			var cView = context.cView;
 			var count = 0;
 			context.ids.forEach(function(id){
@@ -415,7 +322,7 @@ _Drawer.prototype = {
 				var nodeH = cView.doc.createElement("h2");
 				nodeH.innerHTML = "@"+login.users.username+" requests";
 				body.appendChild(nodeH);
-				login.requests.forEach( cView.Utils.addUser, context);
+				login.requests.forEach( cView.Common.addUser, context);
 				if(Array.isArray(login.users.subscriptionRequests)){
 					body.cNodes["req-body-pend"].hidden = false;
 					login.users.subscriptionRequests.forEach(function(req){
@@ -450,14 +357,14 @@ _Drawer.prototype = {
 
 		}
 	}
-	,"drawSubs": function(content,context){
+	,"drawFriends": function(content,context){
 		var cView = context.cView;
 		var out = cView.gNodes["subs-cont"].cloneAll();
 		content.subscriptions.forEach(function(sub){
 			var node = cView.gNodes["sub-item"].cloneAll();
 			var a = node.cNodes["link"];
 			if(sub.name != "Posts")return;
-			var user = cView.gUsers[sub.user];
+			var user = context.gUsers[sub.user];
 
 			a.href = gConfig.front+ user.username;
 			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
@@ -465,9 +372,9 @@ _Drawer.prototype = {
 			if(user.type == "user")out.cNodes["sc-users"].appendChild(node);
 			else out.cNodes["sc-grps"].appendChild(node);
 		});
-		cView.doc.getElementById("content").appendChild(out);
+		cView.doc.getElementById("container").appendChild(out);
 	}
-	,"drawSubsc": function(content,context){
+	,"drawSubs": function(content,context){
 		var cView = context.cView;
 		var out0 = cView.doc.createElement("div");
 		var out = cView.doc.createElement("div");
@@ -475,7 +382,7 @@ _Drawer.prototype = {
 		out0.className = "subs-cont";
 		content.subscribers.forEach(function(sub){
 			var node = cView.gNodes["sub-item"].cloneAll();
-			var user = cView.gUsers[sub.id];
+			var user = context.gUsers[sub.id];
 
 			var a = node.cNodes["link"];
 			a.href = gConfig.front+ user.username;
@@ -483,7 +390,7 @@ _Drawer.prototype = {
 			a.cNodes["usr-title"].innerHTML = user.title;
 			out.appendChild(node);
 		});
-		cView.doc.getElementById("content").appendChild(out0);
+		cView.doc.getElementById("container").appendChild(out0);
 	}
 	,"genUserPopup": function(node, user){
 		var cView = this.cView;
@@ -534,7 +441,7 @@ _Drawer.prototype = {
 				}
 				if(Array.isArray(login.users.pendingSubscriptionRequests)
 				&&login.users.pendingSubscriptionRequests.some(function(a){
-						return oRequests[a].username == username;
+						return oRequests[a].username == user.username;
 					})){
 					nodeSub = cView.Utils.setChild(envelop, "up-s", cView.doc.createElement("span")); 
 					nodeSub.innerHTML = "Subscription request sent";
@@ -547,7 +454,7 @@ _Drawer.prototype = {
 			if(friend 
 			&& ((user.type == "group") 
 				|| login.users.subscribers.some(function(sub){ return sub.id == user.id;}))){
-				envelop.cNodes["up-d"].href = gConfig.front + "filter/direct#"+username;
+				envelop.cNodes["up-d"].href = gConfig.front + "filter/direct#"+ user.username;
 				envelop.cNodes["up-d"].target = "_blank";
 			}else{
 				envelop.cNodes["up-d"].hidden = true;
@@ -583,48 +490,10 @@ _Drawer.prototype = {
 		window.setTimeout(cView.Drawer.updateDate, 30000, node, cView);
 	}
 	 
-	,"genPost":function(post, context){
-		var cView = context.cView;
+	,"genPost":function(post){
+		var cView = this.cView;
+		var context = cView.contexts[post.domain];
 		var Drawer = cView.Drawer;
-		function spam(){nodePost = cView.doc.createElement("span");};
-		function ham(){
-			nodePost.feed = cpost.payload.feed;
-			gPrivTimeline.posts.push(nodePost);
-			gPrivTimeline.postsById[post.id] = nodePost;
-			nodePost.rawData.body = cpost.payload.data;
-			postNBody.cNodes["post-cont"].innerHTML = cView.autolinker.link(cpost.payload.data.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
-			if(typeof user === "undefined"){
-				if (context.gUsers.byName[cpost.payload.author]){
-					user = context.gUsers.byName[cpost.payload.author];
-					post.createdBy = user.id;
-					gotUser();
-				} else if(cView.gUsersQ[cpost.payload.author]) cView.gUsersQ[cpost.payload.author].then(
-					function(){
-						user = cView.gUsers.byName[cpost.payload.author];
-						post.createdBy = user.id;
-						gotUser();
-					},spam);
-				else{
-					cView.gUsersQ[cpost.payload.author] = new Promise (function(resolve,reject){
-
-						var oReq = new XMLHttpRequest();
-						oReq.onload = function(){
-							if(this.status < 400){
-								var oRes = JSON.parse(oReq.response);
-								cView.Utils.addUser(oRes.users);
-								user = cView.gUsers.byName[cpost.payload.author];
-								post.createdBy = user.id;
-								resolve();
-							}
-						};
-
-						oReq.open("get",gConfig.serverURL + "users/"+post.username, true);
-						oReq.setRequestHeader("X-Authentication-Token", cView.token);
-						oReq.send();
-					}).then(gotUser,spam);
-				}
-			}else gotUser();
-		}
 		function gotUser(){
 			var urlMatch ;		
 			if(( typeof cView["blockPosts"]!== "undefined")&& (cView["blockPosts"] != null)&& (cView["blockPosts"][context.domain + user.id])){
@@ -682,7 +551,7 @@ _Drawer.prototype = {
 				});
 			}
 			var anchorDate = cView.doc.createElement("a");
-			if(typeof user !== "undefined") anchorDate.href = [gConfig.front , "as",  context.domain, user.username , post.id].join("/");
+			if(typeof user !== "undefined") anchorDate.href = [gConfig.front + "as",  context.domain, user.username , post.id].join("/");
 			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
 			anchorDate.date = JSON.parse(post.createdAt);
 			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
@@ -722,7 +591,7 @@ _Drawer.prototype = {
 					var nodeComment = cView.gNodes["comment"].cloneAll();
 					nodeComment.cNodes["comment-date"].innerHTML = "";
 					var nodeLoad = cView.gNodes["comments-load"].cloneAll();
-					nodeLoad.cNodes["num"] = post.omittedComments;
+					nodeLoad.cNodes["num"].innerHTML = post.omittedComments;
 					nodeComment.cNodes["comment-body"].appendChild(nodeLoad);
 					postNBody.cNodes["comments"].appendChild(nodeComment);
 					if(post.comments[1])
@@ -747,41 +616,14 @@ _Drawer.prototype = {
 		nodePost.id = context.domain + "-post-" + post.id;
 		nodePost.isPrivate = false;
 		nodePost.commentsModerated = false;
-
-		//var cpost = matrix.decrypt(post.body);
-		var cpost = {};
-		cpost.error = "0";
-
-		if (typeof cpost.error !== "undefined"){
-			switch(cpost.error){
-			case "0":
-				break;
-			case "3":
-				gPrivTimeline.noKey[post.id] = post;
-				console.log(post.id+": unknown key");
-				break;
-			case "4":
-				gPrivTimeline.noDecipher[post.id] = post;
-				console.log("Private keys not loaded");
-				break;
-			}
-			postNBody.cNodes["post-cont"].innerHTML =  cView.autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		postNBody.cNodes["post-cont"].innerHTML =  cView.autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 			gotUser();
-		}else{
-			nodePost.isPrivate = true;
-			post.createdAt = Date.parse(post.createdAt);
-			nodePost.rawData.createdAt = post.createdAt;
-			cpost = JSON.parse(cpost);
-			if (typeof cpost.payload.author === "undefined" ) return spam();
-			matrix.verify(JSON.stringify(cpost.payload), cpost.sign, cpost.payload.author).then(ham,spam);
-			nodePost.sign = cpost.sign;
-		}
 		return nodePost;
 
 	}
 	,"genTitle":function(nodePost){
 		var cView = this.cView;
-		var context = cView.contexts[nodePost.domain];
+		var context = cView.contexts[nodePost.rawData.domain];
 		var post = nodePost.rawData;
 		var user = context.gUsers[post.createdBy];
 		var title = user.link;
@@ -824,8 +666,8 @@ _Drawer.prototype = {
 				//nodeiFrame.src = info.embedLink;
 				var nodeA = cView.doc.createElement("a");
 				var img = cView.doc.createElement("img");
-				var width = cView.doc.getElementById("content").clientWidth*3/4;
-				img.src = info.thumbnailLink.replace("=s220","=w"+ width+"-c-h"+ width/5 );// "=s"+cView.doc.getElementById("content").clientWidth/2+"-p");
+				var width = cView.doc.getElementById("container").clientWidth*3/4;
+				img.src = info.thumbnailLink.replace("=s220","=w"+ width+"-c-h"+ width/5 );// "=s"+cView.doc.getElementById("container").clientWidth/2+"-p");
 				var node = cView.doc.createElement("div");
 				node.className = "att-img";
 				nodeA.appendChild(img);
@@ -851,7 +693,7 @@ _Drawer.prototype = {
 						+ encodeURIComponent(endp.url 
 							+ "?url=" + victim 
 							+ "&format=json"
-							+ "&maxwidth="+cView.doc.getElementById("content").clientWidth*3/4
+							+ "&maxwidth="+cView.doc.getElementById("container").clientWidth*3/4
 						)
 						+ "'&format=json";
 					return true;
@@ -927,7 +769,7 @@ _Drawer.prototype = {
 		nodeComment.userid = null;
 		nodeSpan.innerHTML = cView.autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodeComment.id = context.domain + "-cmt-" + comment.id;
-		nodeComment.domain = contex.domain;
+		nodeComment.domain = context.domain;
 		nodeComment.createdAt = comment.createdAt;
 		nodeComment.userid = cUser.id;
 		nodeSpan.innerHTML += " - " + cUser.link ;
@@ -1181,6 +1023,26 @@ _Drawer.prototype = {
 		}
 		nodeComment.userid = context.gMe.users.id;
 		return nodeComment;
+	}
+	,"updateReqs":function(){
+		var cView = this.cView;
+		Object.keys(cView.contexts).forEach(function(domain){
+			var context = cView.contexts[domain];
+			var ids = context.ids;
+			if(ids) cView.subReqsCount = ids.reduce(function(total, id){
+				var profile = context.logins[id].data.users;
+				if (Array.isArray(profile.subscriptionRequests))
+					return total + profile.subscriptionRequests.length;
+				else return total;
+			},0); else cView.subReqsCount = 0;
+			if (cView.subReqsCount){
+				var nodeInfo = cView.doc.getElementById("sr-info");
+				nodeInfo.cNodes["sr-info-a"].innerHTML = "You have "
+				+ cView.subReqsCount
+				+ " subscription requests to review.";
+				nodeInfo.hidden = false;
+			}
+		});
 	}
 };
 return _Drawer;

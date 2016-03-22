@@ -13,7 +13,8 @@ function get(token, url){
 
 return {
 	"get": get
-	,"getTimeline": function(token, timelien) {return get(token, "timelines/"+ timeline) }
+	,"getTimeline": function(token, timeline) {return get(token, "timelines/"+ timeline) }
+	,"getPost": function(token, path) {return get(token, "posts/"+ path.split("/")[1]) }
 	,"getUser": function(token, req) {return get(token, "users/" + req ) }
 	,"get": function(token, timelien) {return get(token, timeline) }
 	,"_getWhoami": function(token){

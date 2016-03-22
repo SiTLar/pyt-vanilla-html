@@ -9,7 +9,7 @@
 		}
 		,"default":{
 			"dest":["Router","unmixed"]
-			,"defualt":{"dest":["Router","onePost"]}
+			,"default":{"dest":["Router","singlePost"]}
 		}
 	}
 	,"vals":{

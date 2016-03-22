@@ -68,7 +68,7 @@ define("./router",[],function(){
 		,"routeContext":function(contexts, path){
 			var arrPath = path.split("/");
 			var context = contexts[arrPath[1]];
-			return this.route([context], arrPath.slice(2).join("/") );
+			return this.route(context, arrPath.slice(2).join("/") );
 		}
 		,"routeHome":function(contexts){
 			var cView = this.cView;
@@ -96,10 +96,8 @@ define("./router",[],function(){
 			var cView = this.cView;
 			var context = contexts[Object.keys(contexts)[0]];
 			return new cView.Utils._Promise(function(resolve,reject){
-				(new cView.Utils._PromiseAll([
-					context.api.getUser(context.token, path)
-					,context.p
-				])).then(function(res){ 
+				(new cView.Utils._PromiseAll([ context.api.getUser(context.token,path),context.p ]))
+				.then(function(res){ 
 					cView.Common.loadGlobals(res[0], context);
 					var body = cView.doc.getElementById("container");
 					body.cNodes["pagetitle"].innerHTML = path;
@@ -113,6 +111,7 @@ define("./router",[],function(){
 			var cView = this.cView;
 			return new cView.Utils._Promise(function(resolve,reject){
 				var body = cView.doc.getElementById("container");
+				var nodeDummy = body.appendChild(cView.doc.createElement("div"));
 				cView.Router.timeline(contexts, path).then(function(){ 
 					context = contexts[Object.keys(contexts)[0]];
 					var feed = context.gUsers.byName[path.split("/")[0]];
@@ -121,11 +120,10 @@ define("./router",[],function(){
 					if (context.ids)
 						cView.Utils.setChild(body, "up-controls", cView.Drawer.genUpControls(feed));
 					var names = new Array();
-					context.ids.forEach(function(id){ 
-						names.push(context.gUsers[id].username); 
-					});
+					context.ids.forEach(function(id){ names.push(context.gUsers[id].username); });
 					if ( (names.indexOf(feed.username)!= -1) || ((feed.type == "group") && feed.friend)){
-						body.appendChild(cView.gNodes["new-post"].cloneAll());
+						var nodeAddPost = cView.gNodes["new-post"].cloneAll();
+						body.replaceChild(nodeAddPost, nodeDummy);
 						cView.Drawer.genPostTo( 
 							nodeAddPost 
 							,feed.username 
@@ -139,9 +137,14 @@ define("./router",[],function(){
 		,"singlePost":function(context,path){
 			var cView = this.cView;
 			return new cView.Utils._Promise(function(resolve,reject){
-				(new cView.Utils._PromiseAll([,context.p)).then( function (res){
-					cView.Common.loadGlobals(data, contexts[domains[idx]]);
-				});
+				(new cView.Utils._PromiseAll([context.api.getPost(context.token,path),context.p]))
+				.then( function (res){
+					cView.Common.loadGlobals(res[0], context);
+					var post = res[0].posts;
+					post.domain = context.domain;
+					cView.Drawer.drawPost(post,context);
+					resolve();
+				},reject);
 			});
 		}
 		,"timeline":function(contexts, path){
@@ -155,7 +158,7 @@ define("./router",[],function(){
 					var context = contexts[domain];
 					domains.push(domain);
 					prContxt.push(context.p);
-					prConts.push(context.api.getTimeline(context.token, path));
+					prConts.push(context.api.getTimeline(context.token,path));
 				});
 				var prAllC =  new cView.Utils._PromiseAll(prConts);
 				var prAllL =  new cView.Utils._PromiseAll(prContxt);
@@ -164,10 +167,12 @@ define("./router",[],function(){
 					cView.doc.getElementById("loading-msg").innerHTML = "Building page";
 					res[0].forEach(function(data,idx){
 						cView.Common.loadGlobals(data, contexts[domains[idx]]);
-						data.posts.forEach(function(post){
-							post.domain = domains[idx];
-						});
-						posts = posts.concat(data.posts);
+						if(typeof data.posts !== "undefined" ){
+							data.posts.forEach(function(post){
+								post.domain = domains[idx];
+							});
+							posts = posts.concat(data.posts);
+						}
 					});
 					posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
 					cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
@@ -180,7 +185,7 @@ define("./router",[],function(){
 
 
 		}
-	
+
 	}
 return _Router;
 });

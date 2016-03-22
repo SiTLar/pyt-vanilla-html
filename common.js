@@ -130,7 +130,7 @@ _Common.prototype = {
 	}
 	,"refreshLogin": function(id, context){
 		var cView = context.cView;
-		cView.Utils.saveLogins;
+		cView.common.saveLogins();
 		if((typeof context.gUsers[id] !== "undefined") && Array.isArray(context.gUsers[id].subscriptionRequests))
 			cView.subReqsCount -= context.gUsers[id].subscriptionRequests.length;
 		delete context.gUsers[id];
@@ -261,6 +261,7 @@ _Common.prototype = {
 							Common.refreshLogin(login.id, context);
 						});
 					},300);
+
 				});
 				return true;
 			} 

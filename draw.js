@@ -147,7 +147,8 @@ _Drawer.prototype = {
 	,"drawSettings":function(){
 		var cView = document.cView;
 		var body = cView.doc.getElementById("container");
-		//var body = cView.Drawer.makeContainer();
+		body.cNodes["pagetitle"].innerHTML = "Settings";
+		cView.doc.title = "Settings";
 		var nodeSettingsHead = cView.gNodes["settings-head"].cloneAll();
 		body.appendChild(nodeSettingsHead);
 		switch(cView.doc.location.pathname.split("/").pop()){
@@ -159,15 +160,21 @@ _Drawer.prototype = {
 			drawDisp();
 		}
 		cView.Common.setIcon("favicon.ico");
+		return new cView.Utils._Promise(function(resolve,reject){resolve();});
 		function drawAcc(){
 			nodeSettingsHead.cNodes["sh-acc"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["accaunts-settings"].cloneAll();
 			nodeSettings.className += " global-settings";
 			body.appendChild(nodeSettings);
-			cView.ids.forEach(function(id){
-				nodeSettings
-				.cNodes["settings-profiles"]
-				.appendChild(cView.Drawer.genProfile(cView.logins[id].data.users));
+			Object.keys(cView.contexts).forEach(function (domain){
+				var context = cView.contexts[domain];
+				context.p.then(function(){
+					if (context.ids)context.ids.forEach(function(id){
+						nodeSettings
+						.cNodes["settings-profiles"]
+						.appendChild(cView.Drawer.genProfile(context.logins[id].data.users));
+					});
+				});
 			});
 		}
 		function drawDisp(){
@@ -268,6 +275,7 @@ _Drawer.prototype = {
 	,"drawPost": function(content,context) {
 		var cView = this.cView;
 		var singlePost = cView.Drawer.genPost(content);
+		var body = cView.doc.getElementById("container");
 		body.appendChild(singlePost);
 		var nodesHide = singlePost.getElementsByClassName("hide");
 		singlePost.hidden = false;

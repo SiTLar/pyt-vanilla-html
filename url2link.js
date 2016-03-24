@@ -96,7 +96,7 @@ _Url2link.prototype = {
 		}]
 	}
 	,"uname":{
-		"regex": /@[-a-z0-9]{3,}/
+		"regex": /@[A-Za-z0-9]{3,25}/
 		,"newtab": true
 		,"flags":"i"
 		,"actions":[function(match, host){
@@ -107,7 +107,7 @@ _Url2link.prototype = {
 	,"link": function(input){
 		var that = this;
 		var matches = new Array();
-		var out = new Array({"type":"text", "prefix":"", "val":input, "start":0});
+		var out = new Array({"type":"text", "val":input});
 		
 		["email","url","uname"].forEach(function(type){
 			var newOut = new Array();
@@ -116,7 +116,7 @@ _Url2link.prototype = {
 					newOut = newOut.concat(digest(type, el.val, el.start));
 				else newOut = newOut.concat(el);
 			});
-			out = newOut;
+			out = fuseText(newOut);
 		});
 		
 		function digest(t, text, start){
@@ -145,6 +145,18 @@ _Url2link.prototype = {
 			}
 			output.push(textobj(text.slice(prevIdx)));
 			return output;
+		}
+		function fuseText(inp){
+			if(!inp.length)return inp;
+			var outIdx = 0;
+			var out = new Array();
+			out.push(inp[0]);
+			for (var idx = 1; idx<inp.length; idx++){
+				if((inp[idx].type == "text") && (out[outIdx].type == "text") )
+					out[outIdx].val = out[outIdx].val.concat(inp[idx].val);
+				else out[++outIdx] = inp[idx];
+			}
+			return out;
 		}
 
 		function binarySearch(array, key) {

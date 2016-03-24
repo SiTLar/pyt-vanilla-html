@@ -433,7 +433,7 @@ _Utils.prototype = {
 		});
 	}
 	,"setFrontUrl": function(url){
-		return url.replace(/((beta|m)\.)?freefeed.net\/(?=.+)/,
+		return url.replace(/((https?:\/\/)|beta\.|m\.|^)freefeed.net\/(?=.+)/,
 			gConfig.front.slice(8));
 	}
 };

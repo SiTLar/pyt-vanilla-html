@@ -7,6 +7,21 @@ var gConfig = {
 , "likesFold":4
 , "tokenPrefix":"test_"
 , "ga":"UA-0-1"
+, "leadDomain":"micropeppa"
+, "domains":{
+	"FreeFeed":{ "api":"freefeed"
+		,"server":{
+			  "serverURL":"https://freefeed.net/v1/"
+			, "rtURL":"https://freefeed.net/socket.io/"
+		}
+	}		
+	,"micropeppa":{ "api":"freefeed"
+		,"server":{
+			  "serverURL":"https://nanopeppa.freefeed.net/v1/"
+			, "rtURL":"https://nanopeppa.freefeed.net/socket.io/"
+		}
+	}		
+}
 }
 var gCryptoPrivateCfg = {
   "srvurl":"https://moimosk.ru/secret/"

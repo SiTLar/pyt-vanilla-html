@@ -47,7 +47,6 @@ _Common.prototype = {
 	,"addUser": function(user){
 		var context = this;
 		var cView = context.cView;
-		user.context = context;
 		if (typeof context.gUsers[user.id] !== "undefined" ){
 			var localUser = context.gUsers[user.id];
 			Object.keys(user).forEach(function(key){
@@ -56,6 +55,7 @@ _Common.prototype = {
 			return localUser;
 		}
 		var className = "not-my-link";
+		user.domain = context.domain;
 		if(typeof user.isPrivate !== "undefined")user.isPrivate = JSON.parse(user.isPrivate);
 		if (cView.mode == null) cView.mode = "screen";
 		switch(cView.mode){
@@ -130,7 +130,6 @@ _Common.prototype = {
 	}
 	,"refreshLogin": function(id, context){
 		var cView = context.cView;
-		cView.common.saveLogins();
 		if((typeof context.gUsers[id] !== "undefined") && Array.isArray(context.gUsers[id].subscriptionRequests))
 			cView.subReqsCount -= context.gUsers[id].subscriptionRequests.length;
 		delete context.gUsers[id];
@@ -164,8 +163,18 @@ _Common.prototype = {
 				}
 			});
 		}
+		cView.Common.saveLogins();
+		var nodesMenu = document.getElementsByClassName("controls-anon");
+		if(nodesMenu.length){
+			var nodeMenu = nodesMenu[0];
+			cView.Utils.setChild(
+				nodeMenu.parentNode
+				,"controls"
+				,cView.gNodes["controls-login"].cloneAll()
+			);
+		}
 		var nodeSR = cView.doc.getElementById("sr-info");
-		if (!nodeSR)return;
+		if (!nodeSR) return;
 		cView.Drawer.updateReqs();
 		if(Array.isArray(user.subscriptionRequests)){
 			cView.subReqsCount += user.subscriptionRequests.length;
@@ -193,21 +202,26 @@ _Common.prototype = {
 		var nodeAuth = cView.doc.createElement("div");
 
 		nodeAuth.className = "nodeAuth";
-		nodeAuth.innerHTML ='<div id=auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" id=a-form><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
+		nodeAuth.innerHTML ='<div id=auth-msg style="color:red; font-weight: bold;">&nbsp;</div>'
+		+'<div style="text-align:center;margin-bottom:.5em;"><h3>'+gConfig.leadDomain +'</h3></div>'
+		+'<form action="javascript:" id=a-form><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodeAuth);
 		cView.doc.getElementById("a-form").addEventListener("submit",cView.Actions.getauth);
 
 	}
-	,"updateBlockList": function(list, username, add){
+	,"updateBlockList": function(tag, node, add){
 		var cView = document.cView;
-		var id = cView.gUsers.byName[username].id;
+		var context = cView.contexts[node.domain];
+		var id = context.gUsers.byName[node.user].id;
+		var list = cView.blocks[tag][node.domain];
 		if(add){
-			if ((typeof cView[list] === "undefined") || (cView[list] == null)) cView[list] = new Object();
-			cView[list][id] = true;
+			if ((typeof list === "undefined") || (list == null)) list = new Object();
+			list[id] = true;
 		}else try{
-			delete cView[list][id];
+			delete list[id];
 		}catch(e){};
-		cView.localStorage.setItem(list, JSON.stringify(cView[list]));
+		cView.blocks[tag][node.domain] = list;
+		cView.localStorage.setItem("blocks", JSON.stringify(cView.blocks));
 	}
 	,"setFrontUrl": function(url){
 		return url.replace(/((beta|m)\.)?freefeed.net\/(?=.+)/,
@@ -238,47 +252,61 @@ _Common.prototype = {
 	,"loadLogins":function(){
 		var cView = this.cView;
 		var Common = cView.Common;
-		var frfToken = Common.getCookie(gConfig.tokenPrefix + "authToken");
+		Object.keys(cView.contexts).forEach(function(domain){
+			var context = cView.contexts[domain];
+			var token = Common.getCookie(gConfig.tokenPrefix + domain +"authToken");
+			if(token){
+				context.token = token;
+				context.pending.push(token);
+			}
+		});
 		var txtgMe = cView.localStorage.getItem("logins");
 		if (txtgMe){
-			var logins = JSON.parse(txtgMe);
-			if(Array.isArray(logins) && (typeof logins[0].domain === "string")){
+			try{
+				var logins = JSON.parse(txtgMe);
 				logins.forEach(function(login) {
-					var context = cView.contexts[login.domain];
-					if(typeof context === "unsefined") 
-						context = new cView.Context(login.domain, cView);
-					context.logins[login.id] = login;
-					if(login.isMain == true)cView.Context.token = login.token;
-					Common.addUser.call(context, login.data.user.users);
-					Common.refreshLogin(login.id, context);
-					login.p = new cView.Utils._Promise(
-						function(resolve){resolve(login.data)}
-					);
-					setTimeout(function(){
-						context.getWhoami(login.token)
-						.then(function(res){
-							login.data = res;
-							Common.refreshLogin(login.id, context);
-						});
-					},300);
+					var domain = login.domain;
+					var context = cView.contexts[domain];
+					if(typeof context === "undefined") return;
+					if(login.isMain == true)context.token = login.token;
+					if ((typeof login.data === "undefined")
+					&& (context.pending.indexOf(login.token) == -1)){
+						context.pending.push(login.token);
+						return;
+					}
+					context.logins[login.data.users.id] = login;
+					Common.addUser.call(context, login.data.users);
+					Common.refreshLogin(login.data.users.id, context);
+					setTimeout(function(){ context.getWhoami(login.token);},300);
 
 				});
-				return true;
+			}catch(e){
+				console.log(e);
+				cView.localStorage.removeItem("logins");
 			} 
-		}else if (frfToken){
-			var context = new cView._Context(gConfig.frfDomain, cView);
-			context.token = frfToken;
-			context.p = context.getWhoami(frfToken);
-			cView.contexts[gConfig.frfDomain] = context;
-			return true;
-		}else return false; 
+		}
+		Object.keys(cView.contexts).forEach(function(domain){
+			var context = cView.contexts[domain];
+			if(!context.token){
+				if(context.ids){
+					context.token = context.logins[context.ids[0]].token;
+					context.logins[context.ids[0]].isMain = true;
+				}else if (context.pending.length) 
+					context.token = context.pending[0]; 
+			}
+			context.p = cView.Utils._Promise.all(
+				context.pending.map(function(token){
+					return context.getWhoami(token);
+				})
+			);
+		});
 	}
 	,"saveLogins": function(){
 		var cView = this.cView;
-		cView.Common.setCookie(gConfig.tokenPrefix + "authToken", cView.contexts[gConfig.frfDomain].token);
 		var logins = new Array();
 		Object.keys(cView.contexts).forEach(function (domain){
-			var context = cView.context[domain];
+			var context = cView.contexts[domain];
+			cView.Common.getCookie(gConfig.tokenPrefix + domain +"authToken",context.token );
 			Object.keys(context.logins).forEach(function(id){
 				logins.push(context.logins[id]);			
 			});

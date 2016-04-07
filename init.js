@@ -1,22 +1,29 @@
 "use strict";
 var apis = {
-	"freefeed.net": require("./freefeed")
-	,"micropeppa.freefeed.net": require("./freefeed")
+	"freefeed": require("./freefeed")
 
 }
 
 var gTemplates = require("json!./templates.json");
 define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router" ]
 ,function(Utils, _Common, _Drawer,_Actions, _SecretActions, _Router){
-	function _Context(domain, v){
+	function _Context(v, domain, api){
 		var that = this ;
 		Object.keys(that.defaults).forEach(function(key){
 			that[key] = JSON.parse(JSON.stringify(that.defaults[key]))
 		});
-		this.domain = domain;
-		this.cView = v;
-		v.contexts[domain] = this;
-		this.api = apis[domain];
+		that.domain = domain;
+		that.cView = v;
+		v.contexts[domain] = that;
+		that.api = new Object();
+		Object.keys(api.protocol).forEach(function(f){
+			that.api[f] = function(){
+				return api.protocol[f].apply(that, arguments)
+				.then(api.parse);
+			}
+		});
+		this.p = new Utils._Promise( function(resolve){resolve()});
+
 	}
 	_Context.prototype = {
 		constructor:_Context
@@ -28,8 +35,8 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 			,"gFeeds": {}
 			,"gRt": {}
 			,"logins": {} 
-			,"mainId": ""
 			,"token": null
+			,"pending":[]
 		}
 		,"initRt": function(){
 			var cView = this;
@@ -38,15 +45,24 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 			this.gRt.subscribe(this.rtSub);
 		}
 		,get "gMe"(){
-			var logins = this.logins;
+			var context = this;
+			var logins = context.logins;
+			var mainId;  
 			var ids = Object.keys(logins);
+			if(ids.length == 0)return null;
 			if(ids.length == 1){
 				logins[ids[0]].isMain = true;
-				this.token = logins[ids[0]].token;
-				return logins[ids[0]].data;
-			}
-			if((this.mainId == "")||(ids.length == 0))return null;
-			return logins[this.mainId].data;
+				mainId = ids[0];
+				context.token = logins[ids[0]].token;
+			}else ids.some(function(id){
+				if(logins[id].token == context.token) {
+					mainId = id;
+					return true;
+				}else return false;
+			});
+			
+			logins[mainId].data.domain = context.domain;
+			return logins[mainId].data;
 		}
 		,get "ids"(){
 			var ids = Object.keys(this.logins);
@@ -55,18 +71,18 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 		}
 		,"getWhoami": function(token){
 			var context = this;
-			return new Utils._Promise(function(resolve, reject){
-				context.api["_getWhoami"](token).then(function(res){
-					var id = res.users.id;
-					if(typeof context.logins[id] === "undefined"){
-						context.logins[id] = new Object();
-						context.logins[id].token = token;
-					}
-					context.logins[id].data = res;
-					context.cView.Common.refreshLogin(id,context);
-					context.logins[id].data.domain = context.domain;
-					resolve(res);
-				},reject);
+			return context.api["_getWhoami"](token).then(function(res){
+				var id = res.users.id;
+				if(typeof context.logins[id] === "undefined"){
+					context.logins[id] = new Object();
+					context.logins[id].token = token;
+					context.logins[id].domain = context.domain;
+				}
+
+				context.logins[id].data = res;
+				context.logins[id].data.domain = context.domain;
+				context.cView.Common.refreshLogin(id,context);
+				return res;
 			});
 		}
 	}
@@ -102,6 +118,10 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 				]
 			}
 		});
+		Object.keys(gConfig.domains).forEach(function (d){
+			var cfg = gConfig.domains[d];
+			cView.contexts[d] = new _Context(cView, d, apis[cfg.api](cfg.server));
+		});
 	}
 	_cView.prototype = {
 		constructor: _cView
@@ -111,8 +131,8 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 			,"gNodes": {}
 			,"rtSub" : {}
 			,"cTxt": null
+			,"blocks": {"blockPosts":{},"blockComments":{}}
 		}
-		,"_Context":_Context
 		,"Utils":Utils
 	};
 	function init(doc){

@@ -77,9 +77,9 @@
 	]}
 	,{"c":"controls-anon","t":"div"
 	,"children":[
-		{"c":"user-signup","t":"a","txt":""}
+		{"c":"user-signup","t":"a","txt":"Sign up","p":{"href":"https://beta.freefeed.net/signup"}}
 		,{"t":"span","txt":" &#8226; "}
-		,{"c":"user-login","t":"a","txt":"login","e":{"click":["Actions","auth"]}}
+		,{"c":"user-login","t":"a","txt":"login","e":{"click":["Common","auth"]}}
 	]}
 	,{"c":"controls-self","t":"span"
 	,"children":[
@@ -194,6 +194,7 @@
 		]}
 		,{"c":"ft-list","t":"ul"}
 	]}
+	,{"c":"ft-i", "t":"li", "e":{"click":["Actions","selectFriend"]}}
 	,{"c":"likes-smile","t":"span"
 	,"children":[
 		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"}
@@ -502,6 +503,7 @@
 			]}
 		]}
 		,{"c":"gs-input","t":"input","p":{"name":"id", "type":"hidden"}}
+		,{"c":"gs-input","t":"input","p":{"name":"domain", "type":"hidden"}}
 		,{"t":"p", "txt":"Screen name:"}
 		,{"c":"gs-input","t":"input","p":{"name":"screen-name"}}
 		,{"t":"p", "txt":"Email:"}
@@ -529,19 +531,7 @@
 	,{"c":"settings-login"
 	,"children":[
 		{"t":"p","txt":"Please log in to another account"}
-		,{
-		"children":[
-			{"t":"label"
-			,"children":[
-				{"t":"input" ,"p":{"type":"radio" ,"name":"backend", "value":"freefeed.net"} }
-				,{"t":"span","txt":"freefeed.net" }
-			]}
-			,{"t":"label"
-			,"children":[
-				{"t":"input" ,"p":{"type":"radio" ,"name":"backend", "value":"mokum.place"} }
-				,{"t":"span","txt":"mokum.place" }
-			]}
-		]}
+		,{"c":"domains" }
 		,{"t":"p", "txt":"Username:"}
 		,{"c":"gs-input","t":"input","p":{"name":"login-username"}}
 		,{"t":"p", "txt":"Password:"}
@@ -556,6 +546,11 @@
 			]}
 		]}
 		,{"c":"msg-error", "p":{"hidden":true}}
+	]}
+	,{"c":"input-block","t":"label"
+	,"children":[
+		{"c":"ib-input","t":"input" ,"p":{"type":"radio" } }
+		,{"c":"ib-span","t":"span"}
 	]}
 	,{"c":"req-body"
 	,"children":[
@@ -575,6 +570,7 @@
 		,{"c":"sr-name"}
 		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-id", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-domain", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-ctrl"
 		,"children":[
 			{"t":"a","txt":"Accept request", "e":{"click":["Actions","srAccept"]}}

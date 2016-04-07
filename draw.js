@@ -115,6 +115,7 @@ _Drawer.prototype = {
 	}
 	,"genProfile": function(user){
 		var cView = document.cView;
+		var context = cView.contexts[user.domain];
 		var nodeProfile = cView.gNodes["settings-profile"].cloneAll();
 		nodeProfile.getElementsByClassName("sp-username")[0].innerHTML = "@" + user.username;
 		nodeProfile.cNodes["chng-avatar"].cNodes["sp-avatar-img"].src = user.profilePictureMediumUrl; 
@@ -128,17 +129,20 @@ _Drawer.prototype = {
 				node.value = user.id;
 				break;
 			case "is-main":
-				node.checked = (cView.mainId == user.id);
+				node.checked = (context.logins[user.id].token == context.token);
 				break;
 			case "email": 
 				if(typeof user.email !== "undefined" )
 					node.value =  user.email;
 				break;
+			case "domain":
+				node.value = user.domain;
+				break;
 			case "screen-name": 
 				node.value = user.screenName;
 				break;
 			case "is-private":
-				node.checked = JSON.parse(user.isPrivate);
+				node.checked = (user.isPrivate == "1");
 				break;
 			}
 		};
@@ -301,28 +305,24 @@ _Drawer.prototype = {
 	
 	,"drawRequests":function(){
 		var cView = document.cView;
-		var count = context.ids.length;
+		var whoamis = new Array();
 		Object.keys(cView.contexts).forEach( function (domain){
 			var context = cView.contexts[domain];
 			context.ids.forEach(function(id){
-				context.getWhoami(id, all(completeRequests));
+				whoamis.push(context.getWhoami(context.logins[id].token));
 			
 			});
 		});
-		function all(cb){
-			if (--count)return;
-			cb();
-		}
-		function completeRequests(){
-			var body = cView.Drawer.makeContainer();
+		return cView.Utils._Promise.all(whoamis).then(function(){
 			Object.keys(cView.contexts).forEach( function (domain){
-				genRequests(cView.contexts[domian], body);
+				genRequests(cView.contexts[domain]);
 			});
-		}
+		});
 
-		function genRequests(context,body){
+		function genRequests(context){
 			var cView = context.cView;
 			var count = 0;
+			var body = cView.doc.getElementById("container");
 			context.ids.forEach(function(id){
 				var login = context.logins[id].data;
 				if(!Array.isArray(login.requests))return;
@@ -330,19 +330,20 @@ _Drawer.prototype = {
 				var nodeH = cView.doc.createElement("h2");
 				nodeH.innerHTML = "@"+login.users.username+" requests";
 				body.appendChild(nodeH);
+				var nodeReqs = body.appendChild(cView.gNodes["req-body"].cloneAll());
 				login.requests.forEach( cView.Common.addUser, context);
 				if(Array.isArray(login.users.subscriptionRequests)){
-					body.cNodes["req-body-pend"].hidden = false;
+					nodeReqs.cNodes["req-body-pend"].hidden = false;
 					login.users.subscriptionRequests.forEach(function(req){
-						body.cNodes["req-body-pend"].appendChild(genReqNode(context.gUsers[req], id));
+						nodeReqs.cNodes["req-body-pend"].appendChild(genReqNode(context.gUsers[req], id));
 					});
 				}
 				if(Array.isArray(login.users.pendingSubscriptionRequests)){
-					body.cNodes["req-body-sent"].hidden = false;
+					nodeReqs.cNodes["req-body-sent"].hidden = false;
 					login.users.pendingSubscriptionRequests.forEach(function(req){
 						var node = genReqNode(context.gUsers[req], id);
 						node.cNodes["sr-ctrl"].hidden = true;
-						body.cNodes["req-body-sent"].appendChild(node);
+						nodeReqs.cNodes["req-body-sent"].appendChild(node);
 					});
 				}
 
@@ -360,6 +361,7 @@ _Drawer.prototype = {
 				node.cNodes["sr-avatar"].src =  user.profilePictureMediumUrl ;
 				node.cNodes["sr-user"].value = user.username;
 				node.cNodes["sr-id"].value = loginid;
+				node.cNodes["sr-domain"].value = user.domain;
 				return node;
 			}
 
@@ -402,10 +404,10 @@ _Drawer.prototype = {
 	}
 	,"genUserPopup": function(node, user){
 		var cView = this.cView;
-		var context = user.context;
+		var context = cView.contexts[user.domain];
 		var nodePopup = cView.gNodes["user-popup"].cloneAll(true);
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
-		nodePopup.id = "userPopup" + user.userid;
+		nodePopup.id = "userPopup" + context.domain + user.id;
 		nodePopup.cNodes["up-avatar"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 		nodePopup.cNodes["up-info"].innerHTML  ="<span>@" + user.username + "</span><br>"+ user.link;
 		if((typeof context.gMe !== "undefined") && (context.ids.indexOf(user.id) == -1))
@@ -421,7 +423,7 @@ _Drawer.prototype = {
 	}
 	,"genUpControls":function(user){
 		var cView = this.cView;
-		var context = user.context;
+		var context = cView.contexts[user.domain];
 		var controls = cView.gNodes["up-controls"].cloneAll();
 		var subs = controls.cNodes["up-sbs"];
 		controls.user = user.username;
@@ -504,7 +506,8 @@ _Drawer.prototype = {
 		var Drawer = cView.Drawer;
 		function gotUser(){
 			var urlMatch ;		
-			if(( typeof cView["blockPosts"]!== "undefined")&& (cView["blockPosts"] != null)&& (cView["blockPosts"][context.domain + user.id])){
+			var listBlocks = cView.blocks.blockPosts[context.domain];
+			if(( typeof listBlocks !== "undefined")&& ( listBlocks != null)&& (listBlocks[ user.id])){
 				nodePost.hidden = true  ;
 			}
 			nodePost.gotLock  = false;
@@ -777,6 +780,7 @@ _Drawer.prototype = {
 		nodeComment.userid = null;
 		nodeSpan.innerHTML = cView.autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodeComment.id = context.domain + "-cmt-" + comment.id;
+		nodeComment.rawId = comment.id;
 		nodeComment.domain = context.domain;
 		nodeComment.createdAt = comment.createdAt;
 		nodeComment.userid = cUser.id;
@@ -786,9 +790,10 @@ _Drawer.prototype = {
 				cView.Utils.setChild(nodeComment.cNodes["comment-body"],"comment-controls",cView.gNodes["comment-controls"].cloneAll());
 			else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
 		}
-		if(( typeof cView["blockComments"]!== "undefined") 
-		&& ( cView["blockComments"]!= null) 
-		&& (cView["blockComments"][context.domain + cUser.id]))
+		var listBlocks = cView.blocks.blockComments[context.domain];
+		if(( typeof listBlocks!== "undefined") 
+		&& ( listBlocks!= null) 
+		&& (listBlocks[cUser.id]))
 			nodeComment.innerHTML = "---";
 		return nodeComment;
 	}
@@ -813,6 +818,7 @@ _Drawer.prototype = {
 		var context = cView.contexts[login.domain];
 		var nodeDirectTo = cView.gNodes["new-direct-to"].cloneAll();
 		nodeDirectTo.userid = login.users.id;
+		nodeDirectTo.domain = login.domain;
 		if(context.ids.length > 1 ){
 			nodeDirectTo.cNodes["mu-login"].innerHTML = login.users.link;
 			nodeDirectTo.cNodes["mu-login"].hidden = false;
@@ -940,6 +946,7 @@ _Drawer.prototype = {
 		if(rmSenders.length > 1)
 			for (idx = 0; idx < rmSenders.length; idx++)rmSenders[idx].hidden = false;
 		nodePostTo.userid = login.users.id;
+		nodePostTo.domain = login.domain;
 		function chkInit(init, option, idx){
 			if (init != option.value) return;
 			option.disabled = true;
@@ -952,8 +959,10 @@ _Drawer.prototype = {
 		victim.getNode(["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 
 	}
-	,"blockPosts":function(user, action){
+	,"blockPosts":function(node, action){
 		var cView = this.cView;	
+		var context = cView.contexts[node.domain];
+		var user = context.gUsers.byName[node.user];
 		var nodesPosts = cView.doc.getElementsByClassName("post");
 		for(var idx = 0; idx < nodesPosts.length; idx++){
 			if((nodesPosts[idx].rawData.createdBy == user.id)
@@ -961,20 +970,23 @@ _Drawer.prototype = {
 				nodesPosts[idx].hidden = action;
 		}
 	}
-	,"blockComments":function(user, action){
+	,"blockComments":function(node, action){
 		var cView = this.cView;	
-		var context = cView.contexts[user.domain];
+		var context = cView.contexts[node.domain];
+		var user = context.gUsers.byName[node.user];
 		var nodesCmts = cView.doc.getElementsByClassName("comment");
 		for(var idx = 0; idx < nodesCmts.length; idx++){
 			if((nodesCmts[idx].userid == user.id)
 			&& (nodesCmts[idx].domain == user.domain)) {
 				if(action) nodesCmts[idx].innerHTML = "---";
 				else{
-					var id = nodesCmts[idx].id.slice((context.domain+"-cmt-").length)
-
+					var id = nodesCmts[idx].rawId; 
 					nodesCmts[idx].parentNode.replaceChild(
-						cView.Drawer.genComment.call(context, 
-						context.gComments[nodesCmts[idx].id]), nodesCmts[idx]
+						cView.Drawer.genComment.call(
+							context
+							,context.gComments[id]
+						)
+						, nodesCmts[idx]
 					);
 				}
 			}
@@ -1009,7 +1021,7 @@ _Drawer.prototype = {
 				unit.getNode(["c","up-avatar"],["c","avatar-img"]).src = login.users.profilePictureMediumUrl;
 				unit.getNode(["c","asu-info"],["c","username"]).innerHTML = "@" + login.users.username;
 				unit.getNode(["c","asu-info"],["c","screen-name"]).innerHTML = login.users.screenName;
-				unit.addEventListener("click", function(){cb(id)});
+				unit.addEventListener("click", function(){cb(id,context)});
 				popup.cNodes["units"].appendChild(unit);
 			});
 		});

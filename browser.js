@@ -14,9 +14,8 @@ window.browserDoc = function(){
 	var arrLocationPath = locationPath.split("/");
 	cView.timeline = arrLocationPath[0];
 	var nameMode = cView.localStorage.getItem("screenname");
-	["blockPosts", "blockComments"].forEach(function(list){
-		cView[list]= JSON.parse(cView.localStorage.getItem(list));
-	});
+	if(JSON.parse(cView.localStorage.getItem("blocks")))
+		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
 		cView.localStorage.removeItem("screenname");
@@ -26,11 +25,12 @@ window.browserDoc = function(){
 	var body = cView.gNodes["container"].cloneAll();
 	cView.Utils.setChild(body, "controls",(
 		Object.keys(cView.contexts).some(function(domain){return cView.contexts[domain].token})?
-		cView.gNodes["controls-login"].cloneAll():cView.gNodes["controls-anon"].cloneAll()
+		cView.gNodes["controls-login"].cloneAll()
+		:cView.gNodes["controls-anon"].cloneAll()
 	));
 	cView.doc.getElementsByTagName("body")[0].appendChild(body);
-	cView.Router.route(cView.contexts, locationPath).then(postInit
-	,function(err){
+	cView.Router.route(cView.contexts, locationPath)
+	.then(postInit,function(err){
 		console.log(err);
 		switch(err){
 			case "token":
@@ -40,75 +40,11 @@ window.browserDoc = function(){
 	});
 
 	return ;
-	/////////////////////////////////////////////////////////////////////
-	if(["home", "filter", "settings", "requests"].indexOf(cView.timeline) != -1){
-		if(!Utils.auth()) return;
-	}else if(!Utils.auth(true)) cView.logins = [];
-
-	if(cView.timeline == "settings"){
-		cView.Drawer.drawSettings();
-		return Utils.postInit();	
-	}
-	if(cView.timeline == "requests"){
-		cView.Drawer.drawRequests();
-		return Utils.postInit();	
-	}
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		document.getElementById("loading-msg").innerHTML = "Building page";
-		if(oReq.status < 400){
-			cView.Drawer.draw(JSON.parse(this.response), new Init.context("freefeed.net",cView));
-			cView.doc.body.removeChild(cView.doc.getElementById("splash"));
-			Utils.postInit();	
-			return;
-		}
-		else{
-			if (oReq.status==401) {
-				Utils.deleteCookie("token");
-				cView.localStorage.removeItem("gMe");
-				location.reload();
-			}
-			if(Utils.auth())
-				document.getElementsByTagName("body")[0].appendChild(cView.gNodes["controls-user"].cloneAll());
-			var nodeError = document.createElement("div");
-			nodeError.className = "error-node";
-			nodeError.innerHTML = "Error #"+ oReq.status + ": " + oReq.statusText;
-			try{
-				var res = JSON.parse(this.response);
-				nodeError.innerHTML += "<br>"+res.err;
-			}catch(e){};
-			document.getElementsByTagName("body")[0].appendChild(nodeError);
-			document.body.removeChild(document.getElementById("splash"));
-
-		}
-
-	};
-	if(arrLocationPath.length > 1){
-		if(["subscribers","subscriptions"].indexOf(arrLocationPath[1]) != -1){
-			cView.xhrurl = gConfig.serverURL + "users/" + locationPath;
-			cView.timeline = locationPath;
-		}
-		else if(["likes","comments"].indexOf(arrLocationPath[1]) != -1){
-			cView.xhrurl = gConfig.serverURL + "timelines/" + locationPath;
-			cView.timeline = locationPath;
-
-		}else if ("filter" == arrLocationPath[0]){
-			cView.xhrurl = gConfig.serverURL + "timelines/" + locationPath.replace(/direct/,"directs");
-			cView.timeline = locationPath;
-		}else{
-			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
-			locationSearch = "?maxComments=all";
-		}
-	} else cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
-
-	oReq.open("get",cView.xhrurl+locationSearch,true);
-	oReq.setRequestHeader("X-Authentication-Token", cView.token);
-	document.getElementById("loading-msg").innerHTML = "Loading content";
-	oReq.send();
 }
 
 window.initDoc = function(){
 	Init.init(document);
+	//document.cView.Utils._Promise = Promise;
 	browserDoc();
 }
 

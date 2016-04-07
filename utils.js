@@ -10,60 +10,6 @@ function args2Arr(){
 	}
 	return args;
 }
-function _PromiseAll(arr){
-	var that = this;
-	Object.keys(that.defaults).forEach(function(key){
-		that[key] = JSON.parse(JSON.stringify(that.defaults[key]))
-	});
-	that.count = arr.length;
-	arr.forEach(function(promise, idx){
-		function success(res){that.success(res,idx);};
-		function fail(res){that.fail(res);};
-		promise.then(success, fail);
-	});	
-}
-_PromiseAll.prototype = {
-	constructor: _PromiseAll
-	,"defaults":{
-		"count": 0
-		,"compleated":false
-		,"failed":false
-		,"fails": []
-		,"reses": []
-		,"resolves": []
-		,"rejects": []
-		,"thens":[]
-	}
-	,"success": function(data,idx){
-		this.reses[idx] = data;
-		if (--this.count)return;
-		this.compleated = true;
-		this.done();
-	}
-	,"fail": function(res){
-		this.failed = true;
-		this.drop(res);
-	}
-	,"done": function(){
-		if(this.failed) return;
-		while(this.thens.length)
-			this.thens.pop()(this.reses);
-	}
-	,"drop": function(res){
-		while(this.rejects.length)
-			this.rejects.pop()(res);
-	}
-	,"then":function(resolve, reject){
-		if (typeof reject === "function"){
-			if(this.failed) return reject(this.fails);
-			else this.rejects.push(reject);
-		}
-		if(this.failed) return;
-		if(this.reses.length)resolve(this.reses);
-		else this.thens.push(resolve);
-	}
-
-}
 function _Promise(cb){
 	var that = this ;
 	Object.keys(that.defaults).forEach(function(key){
@@ -73,29 +19,53 @@ function _Promise(cb){
 	function reject(res){that.reject(res);}
 	setTimeout(function (){cb(resolve,reject)});
 }
+_Promise.all = function(arr){
+	return new _Promise(function(resolve, reject){
+		var count = arr.length;
+		if(!count)resolve();
+		var reses = new Array(count);
+		function alldone(data,idx){
+			reses[idx] = data;
+			if (--count)return;
+			resolve(reses);
+		}
+
+		arr.forEach(function(promise, idx){
+			function success(res){alldone(res,idx);};
+			promise.then(success, reject);
+		});	
+	
+	});
+}
+
 _Promise.prototype = {
 	constructor:_Promise
 	,"defaults":{
 		"resolves":[]
 		,"rejects":[]
 		,"done":false
+		,"failed":false
 	}
 	,"then":function(resolve, reject){
-		if (typeof reject === "function"){
-			if(typeof this.fail !== "undefined") 
-				return reject(this.fail);
-			else this.rejects.push(reject);
-		}
-		if(this.done )resolve(this.res);
-		else this.resolves.push(resolve);
+		var that = this;
+		return new _Promise(function( thenRes, thenRej){
+			function pass(arg){return arg;};
+			if (typeof reject !== "function") reject = pass;
+			if (typeof thenRej!== "function") thenRej = pass;
+			if(that.failed)thenRej(reject(that.fail));
+			else that.rejects.push(function(fail){thenRej(reject(fail))});
+			if(that.done && !that.failed)thenRes(resolve(that.res));
+			else that.resolves.push(function(res){thenRes(resolve(res))});
+		});
 	}
 	,"resolve":function(res){
 		this.done = true;
 		this.res = res;
 		while(this.resolves.length)
-			(this.resolves.pop())(this.res);
+			this.resolves.pop()(this.res);
 	}
 	,"reject":function(res){
+		this.failed = true;
 		this.fail = res;
 		while(this.rejects.length)
 			this.rejects.pop()(this.fail);
@@ -137,22 +107,23 @@ return {
 	}
 	/**********************************************/
 	,"args2Arr": function(){return args2Arr.apply(this, arguments);}
-	,"xhrReq": function(o, callback, fail ){
-		fail = typeof fail !== "undefined" ? fail : function(){return;};
-		var method = typeof o.method  !== "undefined"? o.method : "get";
-		var oReq = new XMLHttpRequest();
-		oReq.open(method ,o.url , true);
-		if(typeof o.token !== "undefined" )
-			oReq.setRequestHeader("X-Authentication-Token",o.token);
-		if(typeof o.headers !== "undefined" ) Object.keys(o.headers).forEach(function (header){
-			oReq.setRequestHeader(header,o.headers[o.headers])
+	,"xhrReq": function(o){
+		return new _Promise(function( callback, fail ){
+			var method = typeof o.method  !== "undefined"? o.method : "get";
+			var oReq = new XMLHttpRequest();
+			oReq.open(method ,o.url , true);
+			if(typeof o.token !== "undefined" )
+				oReq.setRequestHeader("X-Authentication-Token",o.token);
+			if(typeof o.headers !== "undefined" ) Object.keys(o.headers).forEach(function (header){
+				oReq.setRequestHeader(header,o.headers[header])
+			});
+			oReq.onload = function(){
+				if(oReq.status < 400) callback(oReq.response);
+				else fail({"code":oReq.status, "data":oReq.response});
+			}
+			if (typeof o.data  !== "undefined")  oReq.send(o.data);
+			else  oReq.send();
 		});
-		oReq.onload = function(){
-			if(oReq.status < 400) callback(oReq.response);
-			else fail({"code":oReq.status, "data":oReq.response});
-		}
-		if (typeof o.data  !== "undefined")  oReq.send(data);
-		else  oReq.send();
 	}
 	,"getNode":function(node){
 		var arrPath =  args2Arr.apply(this,arguments);
@@ -178,7 +149,9 @@ return {
 		var nodes = node.getElementsByTagName("input");
 		for(var idx = 0; idx < nodes.length; idx++){
 			var input = nodes[idx];
+			if ((input.type == "radio")&&(input.checked == false) )continue;
 			oInputs[input.name] = input;
+			
 		}
 		return oInputs;
 	}
@@ -203,6 +176,5 @@ return {
 		return ret;
 	}
 	,"_Promise": _Promise
-	,"_PromiseAll":_PromiseAll
 }
 });

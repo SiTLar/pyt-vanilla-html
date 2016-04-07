@@ -4,15 +4,15 @@ function is(val){return typeof val !== "undefined";};
 var chk = {
 	"token":function(contexts){
 		Object.keys(contexts).forEach(function(domain){
-			if (typeof contexts[domain].token === "undefined")
+			if (!contexts[domain].token)
 				delete contexts[domain];
 		});
 		return  Object.keys(contexts).length?null:"token";
 	}
-	,"frfContext":function(contexts){
+	,"leadContext":function(contexts){
 		if (Object.keys(contexts).length > 1){
-			var frfContext = new Object();
-			frfContext[gConfig.frfDomain] = contexts[gConfig.frfDomain];
+			var leadContext = new Object();
+			leadContext[gConfig.leadDomain] = contexts[gConfig.leadDomain];
 			contexts = frfContext;
 		}
 		return null;
@@ -25,13 +25,14 @@ define("./router",[],function(){
 	_Router.prototype = {
 		"route":function(contexts, path){
 			var cView = this.cView;
-			if (cView.doc.title == "") cView.doc.title = "Feeds: ";
+			if (cView.doc.title == "") cView.doc.title = "Feeds";
 			var arrPath = path.split("/");
 			var step = gRoutes;
 			for(var idx = 0; idx < arrPath.length; idx++){
 				var txtStep = arrPath[idx];
+				if (txtStep == "")continue;
 				if (is(step.req) && chk[step.req](contexts))
-					return new cView.Utils._Promise(function(resolve,reject){reject(chk[step.dest[2]](contexts))});
+					return new cView.Utils._Promise(function(resolve,reject){reject(chk[step.req](contexts))});
 
 				if(is(step.reroute))
 					return cView[step.reroute[0]][step.reroute[1]](contexts, path);
@@ -54,21 +55,24 @@ define("./router",[],function(){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				var body = cView.doc.getElementById("container");
 				body.appendChild(nodeAddPost);
-				contexts[gConfig.frfDomain].p.then(function () {
+				contexts[gConfig.leadDomain].p.then(function () {
 					cView.Drawer.genDirectTo(nodeAddPost
-						,contexts[gConfig.frfDomain].gMe);
+						,contexts[gConfig.leadDomain].gMe);
 				});
 				cView.Router.timeline(contexts, "filter/directs/").then(function(){
 					body.cNodes["pagetitle"].innerHTML = "Direct messages";
-					cView.doc.title = "Feeds: Direct messages";
+					cView.doc.title += ": Direct messages";
 					resolve();
 				},reject);
 			});
 		}
 		,"routeContext":function(contexts, path){
+			var cView = this.cView;
 			var arrPath = path.split("/");
-			var context = contexts[arrPath[1]];
-			return this.route(context, arrPath.slice(2).join("/") );
+			var singleContext = new Object();
+			singleContext[arrPath[1]] = contexts[arrPath[1]];
+			cView.doc.title = arrPath[1];
+			return this.route(singleContext, arrPath.slice(2).join("/") );
 		}
 		,"routeHome":function(contexts){
 			var cView = this.cView;
@@ -76,10 +80,10 @@ define("./router",[],function(){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				var body = cView.doc.getElementById("container");
 				body.appendChild(nodeAddPost);
-				contexts[gConfig.frfDomain].p.then(function () {
+				contexts[gConfig.leadDomain].p.then(function () {
 					cView.Drawer.genPostTo(nodeAddPost
-						,contexts[gConfig.frfDomain].gMe.users.username
-						,contexts[gConfig.frfDomain].gMe);
+						,contexts[gConfig.leadDomain].gMe.users.username
+						,contexts[gConfig.leadDomain].gMe);
 				});
 				cView.Router.timeline(contexts, "home" ).then(resolve,reject);
 			});
@@ -96,7 +100,7 @@ define("./router",[],function(){
 			var cView = this.cView;
 			var context = contexts[Object.keys(contexts)[0]];
 			return new cView.Utils._Promise(function(resolve,reject){
-				(new cView.Utils._PromiseAll([ context.api.getUser(context.token,path),context.p ]))
+				new cView.Utils._Promise.all([ context.api.getUser(context.token,path),context.p ])
 				.then(function(res){ 
 					cView.Common.loadGlobals(res[0], context);
 					var body = cView.doc.getElementById("container");
@@ -112,15 +116,21 @@ define("./router",[],function(){
 			return new cView.Utils._Promise(function(resolve,reject){
 				var body = cView.doc.getElementById("container");
 				var nodeDummy = body.appendChild(cView.doc.createElement("div"));
-				cView.Router.timeline(contexts, path).then(function(){ 
-					context = contexts[Object.keys(contexts)[0]];
+				var domains = Object.keys(contexts);
+				var domain = (domains.indexOf(gConfig.leadDomain) != -1)?  gConfig.leadDomain :domains[0];
+				var cs = new Object();
+				cs[domain] = contexts[domain];
+				cView.Router.timeline(cs, path).then(function(){ 
+					var context = cs[domain];
 					var feed = context.gUsers.byName[path.split("/")[0]];
 					cView.doc.title = "@"+feed.username + ", a " + context.domain + " feed.";
 					cView.Utils.setChild(body, "details", cView.Drawer.genUserDetails(feed.username, context));
 					if (context.ids)
 						cView.Utils.setChild(body, "up-controls", cView.Drawer.genUpControls(feed));
 					var names = new Array();
-					context.ids.forEach(function(id){ names.push(context.gUsers[id].username); });
+					if(context.ids)context.ids.forEach( function(id){
+						names.push(context.gUsers[id].username);
+					});
 					if ( (names.indexOf(feed.username)!= -1) || ((feed.type == "group") && feed.friend)){
 						var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 						body.replaceChild(nodeAddPost, nodeDummy);
@@ -134,58 +144,51 @@ define("./router",[],function(){
 				},reject);
 			});
 		}
-		,"singlePost":function(context,path){
+		,"singlePost":function(contexts,path){
 			var cView = this.cView;
-			return new cView.Utils._Promise(function(resolve,reject){
-				(new cView.Utils._PromiseAll([context.api.getPost(context.token,path),context.p]))
-				.then( function (res){
-					cView.Common.loadGlobals(res[0], context);
-					var post = res[0].posts;
-					post.domain = context.domain;
-					cView.Drawer.drawPost(post,context);
-					resolve();
-				},reject);
+			var context = Object.keys(contexts).map(function(d){ return contexts[d];})[0];
+			return cView.Utils._Promise.all( [
+				context.api.getPost(context.token, path.split("/")[1], ["comments"])
+				,context.p
+			]).then( function (res){
+				cView.Common.loadGlobals(res[0], context);
+				var post = res[0].posts;
+				post.domain = context.domain;
+				cView.Drawer.drawPost(post,context);
 			});
 		}
 		,"timeline":function(contexts, path){
 			var cView = this.cView;
-			return new cView.Utils._Promise(function(resolve,reject){
-				var arrContent = new Array();
-				var prConts = new Array();
-				var prContxt = new Array();
-				var domains = new Array();
-				Object.keys(contexts).forEach(function(domain){ 
-					var context = contexts[domain];
-					domains.push(domain);
-					prContxt.push(context.p);
-					prConts.push(context.api.getTimeline(context.token,path));
-				});
-				var prAllC =  new cView.Utils._PromiseAll(prConts);
-				var prAllL =  new cView.Utils._PromiseAll(prContxt);
-				(new cView.Utils._PromiseAll([prAllC,prAllL])).then( function (res){
-					var posts = new Array();
-					cView.doc.getElementById("loading-msg").innerHTML = "Building page";
-					res[0].forEach(function(data,idx){
-						cView.Common.loadGlobals(data, contexts[domains[idx]]);
-						if(typeof data.posts !== "undefined" ){
-							data.posts.forEach(function(post){
-								post.domain = domains[idx];
-							});
-							posts = posts.concat(data.posts);
-						}
-					});
-					posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
-					cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
-					cView.doc.title += path;
-					cView.Drawer.drawTimeline(posts,contexts);
-					cView.Drawer.updateReqs();
-					resolve();
-				},reject);
+			var arrContent = new Array();
+			var prConts = new Array();
+			var prContxt = new Array();
+			var domains = Object.keys(contexts);
+			domains.forEach(function(domain){ 
+				var context = contexts[domain];
+				prContxt.push(context.p);
+				prConts.push(context.api.getTimeline(context.token,path));
 			});
-
-
+			var prAllC = cView.Utils._Promise.all(prConts);
+			var prAllT = cView.Utils._Promise.all(prContxt);
+			return cView.Utils._Promise.all([prAllC,prAllT]).then( function (res){
+				var posts = new Array();
+				cView.doc.getElementById("loading-msg").innerHTML = "Building page";
+				res[0].forEach(function(data,idx){
+					cView.Common.loadGlobals(data, contexts[domains[idx]]);
+					if(typeof data.posts !== "undefined" ){
+						data.posts.forEach(function(post){
+							post.domain = domains[idx];
+						});
+						posts = posts.concat(data.posts);
+					}
+				});
+				posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
+				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
+				cView.doc.title +=": " + path;
+				cView.Drawer.drawTimeline(posts,contexts);
+				cView.Drawer.updateReqs();
+			});
 		}
-
 	}
 return _Router;
 });

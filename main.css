@@ -168,7 +168,8 @@ h1{
 	color: rgba(40,40,40,1);
 	-o-text-overflow: clip;
 	text-overflow: clip;
-	background: #0199d9;
+	background: white;
+	border: thin solid gray;
 	-webkit-box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 	box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }

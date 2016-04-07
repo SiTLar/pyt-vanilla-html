@@ -36,9 +36,8 @@ _Actions.prototype = {
 			post.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 			if(textField.attachments) post.attachments = textField.attachments;
 			postdata.post = post;
-			oReq.send(JSON.stringify(postdata));
-			context.api.sendPost(context.logins[postTo.userid].token, post)
-			.then(function(){
+			context.api.sendPost(context.logins[postTo.userid].token, postdata)
+			.then(function(res){
 				var nodeAtt = cView.doc.createElement("div");
 				nodeAtt.className = "attachments";
 				textField.parentNode.replaceChild(nodeAtt,
@@ -49,13 +48,13 @@ _Actions.prototype = {
 				delete textField.pAtt;
 				delete textField.attachments;
 				postTo.feeds = new Array();
-				cView.updPostTo(cView.gMe, true, cView.gMe.users.username);
+				cView.updPostTo(context.gMe, true, context.gMe.users.username);
 				e.target.disabled = false;
 				textField.style.height  = "4em";
 				try{ e.target.parentNode.removeChild(nodeSpinner); }
 				catch(e){};
-				var res = JSON.parse(oReq.response);
-				cView.Drawer.loadGlobals(res);
+				cView.Common.loadGlobals(res, context);
+				res.posts.domain = context.domain;
 				if(!cView.doc.getElementById(res.posts.id))cView.doc.posts.insertBefore(cView.Drawer.genPost(res.posts), cView.doc.posts.childNodes[0]);
 			}
 			,function(err){
@@ -64,10 +63,9 @@ _Actions.prototype = {
 				var errmsg = "";
 				try{
 					e.target.parentNode.removeChild(nodeSpinner );
-					var eresp = JSON.parse(oReq.response);
 					errmsg = eresp.err;
 				}catch(e){};
-				alert("Error #"+oReq.status+": "+oReq.statusText+" "+errmsg) ;
+				//TODO
 			});
 			
 		/*	if(postTo.isPrivate){
@@ -94,7 +92,7 @@ _Actions.prototype = {
 			}
 		}
 	}
-	,"sendAttachment": function(e){
+	,"sendAttachment": function(e){//TODO
 		var cView = document.cView;
 		e.target.disabled = true;
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
@@ -133,7 +131,7 @@ _Actions.prototype = {
 		var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditedPost,cView.Actions.cancelEditPost);
 		nodeEdit.cNodes["edit-txt-area"].value = victim.rawData.body;
 		victim.cNodes["post-body"].replaceChild( nodeEdit, victim.cNodes["post-body"].cNodes["post-cont"]);
-}
+	}
 	,"cancelEditPost": function(e){
 		var cView = document.cView;
 		var victim = e.target.getNode(["p","post"]);
@@ -162,10 +160,10 @@ _Actions.prototype = {
 			.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
 		context.api.editPost(
 			context.logins[nodePost.rawData.createdBy].token
-			,nodePost.id
+			,nodePost.rawData.id
 			,postdata
-		).then(function(){
-			var post = JSON.parse(oReq.response).posts;
+		).then(function(res){
+			var post = res.posts;
 			var postCNode = cView.doc.createElement("div");
 			/*
 			var cpost = matrix.decrypt(post.body);
@@ -216,22 +214,14 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var victim = but.node;
 		var context = cView.contexts[victim.rawData.domain];
-		e.target.disabled = true;
 		but.parentNode.parentNode.removeChild(but.parentNode);
-			oReq.open("delete",gConfig.serverURL + "posts/"+victim.id, true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.logins[victim.rawData.createdBy].token);
-			oReq.setRequestHeader("Content-type","application/json");
-			oReq.send();
-		var oReq = new XMLHttpRequest();
 		context.api.deletePost( 
 			context.logins[victim.rawData.createdBy].token
-			,victim.id
+			,victim.rawData.id
 		).then(function(){
-			if(this.status < 400){
-				cView.doc.hiddenPosts.splice(victim.rawData.idx,1);
-				//victim.parentNode.removeChild(victim);
-				cView.Drawer.regenHides();
-			}
+			cView.doc.hiddenPosts.splice(victim.rawData.idx,1);
+			//victim.parentNode.removeChild(victim);
+			cView.Drawer.regenHides();
 		});/*
 		if(victim.isPrivate){
 			oReq.open("delete",matrix.cfg.srvurl+"delete",true);
@@ -244,15 +234,12 @@ _Actions.prototype = {
 	}
 	,"postLike": function(e){
 		var cView = document.cView;
-		var nodeLikes = e.target.getNode(["p","likes"]);
-		var nodePost = nodeLikes.getNode(["p","post"]);
+		var nodeLikes = cView.Utils.getNode(e.target,["p","post-info"],["c","likes"]);
+		var nodePost = cView.Utils.getNode(nodeLikes, ["p","post"]);
 		var context = cView.contexts[nodePost.rawData.domain];
-			oReq.open("post",gConfig.serverURL + "posts/"+ e.target.parentNode.parentNode.parentNode.parentNode.parentNode.id+"/"+(e.target.action?"like":"unlike"), true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
-			oReq.send();
 		e.target.innerHTML = "";
 		e.target.appendChild(cView.gNodes["spinner"].cloneAll());
-		context.api.sendLike(context.token, nodePost.rawData.id, action).then(function(){
+		context.api.sendLike(context.token, nodePost.rawData.id, e.target.action).then(function(){
 			if(e.target.action){
 				var idx;
 				var likesUL;
@@ -314,10 +301,9 @@ _Actions.prototype = {
 
 		if (nodePost.rawData.omittedLikes > 0){
 			context.api.getPost(context.token, nodePost.rawData.id, ["likes"])
-			.then (function(){
+			.then (function(postUpd){
 				span.parentNode.removeChild(span);
-				var postUpd = JSON.parse(this.response);
-				postUpd.users.forEach(cView.Common.addUser, cView.Common);
+				postUpd.users.forEach(cView.Common.addUser, context);
 				nodePost.rawData.likes = postUpd.posts.likes;
 				cView.Drawer.writeAllLikes(nodePost.id, nodeLikes);
 			},function (res){
@@ -335,10 +321,9 @@ _Actions.prototype = {
 	}
 	,"reqSubscription": function(e){
 		var cView = document.cView;
-		var oReq = new XMLHttpRequest();
 		var username = cView.Utils.getNode(e.target,["p","up-controls"]).user;
 		var loginId = e.target.getNode(["p","up-c-mu"]).loginId;
-		var domain = e.target.getNode(["p","up-c-mu"]).domain;
+		var domain = e.target.getNode(["p","up-controls"]).domain;
 		var context = cView.contexts[domain];
 		context.api.reqSub( context.logins[loginId].token,username ).then( function(){
 				var span = cView.doc.createElement("span");
@@ -348,7 +333,6 @@ _Actions.prototype = {
 	}
 	,"evtSubscribe": function(e){
 		var cView = document.cView;
-		var Utils = cView.Utils;
 		var target = e.target;
 		var nodeParent = target.parentNode;
 		var spinner = cView.gNodes["spinner"].cloneAll();
@@ -356,11 +340,11 @@ _Actions.prototype = {
 		var nodeUC = cView.Utils.getNode(nodeParent,["p","up-controls"]);
 		var username = nodeUC.user;
 		var loginId = nodeParent.getNode(["p","up-c-mu"]).loginId;
-		var domain = e.target.getNode(["p","up-c-mu"]).domain;
+		var context = cView.contexts[nodeUC.domain];
 		context.api.evtSub( context.logins[loginId].token,username, target.subscribed ).then( function(res){
-			comtext.logins[loginId].data = res;
-			Common.refreshLogin(loginId,context);
-			Utils.setChild(nodeParent.getNode(["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(username));
+			context.logins[loginId].data = res;
+			cView.Common.refreshLogin(loginId,context);
+			cView.Utils.setChild(nodeParent.getNode(["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(context.gUsers.byName[username]));
 		},function(){  nodeParent.replaceChild( target, spinner); });
 	}
 	,"showHidden": function(e){
@@ -384,7 +368,8 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var victim = e.target.getNode(["p","post"]);
 		var action = e.target.action;
-		context.api.hide(context.token, victim.rawData.id, action).then(function(){
+		var context = cView.contexts[victim.rawData.domain];
+		context.api.sendHide(context.token, victim.rawData.id, action).then(function(){
 				cView.Actions.doHide(victim, action, "user");
 		});
 	}
@@ -424,18 +409,20 @@ _Actions.prototype = {
 	}
 	,"addComment": function(e){
 		var cView = document.cView;
-		var postNBody = e.target.getNode(["p","post-body"]);
+		var nodePost = e.target.getNode(["p","post"]);
+		var postNBody = nodePost.cNodes["post-body"];
 		if(postNBody.isBeenCommented === true)return;
 		postNBody.isBeenCommented = true;
-		var nodeComment = cView.Drawer.genAddComment();
+		var nodeComment = cView.Drawer.genAddComment(cView.contexts[nodePost.rawData.domain]);
 		postNBody.cNodes["comments"].appendChild(nodeComment);
 		nodeComment.getElementsByClassName("edit-txt-area")[0].focus();
 	}
 	,"editComment": function(e){
 		var cView = document.cView;
-		var victim = e.target.getNode(["p" "comment"]);
+		var victim = e.target.getNode(["p", "comment"]);
+		var context = cView.contexts[victim.domain];
 		var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditComment,cView.Actions.cancelEditComment);
-		nodeEdit.cNodes["edit-txt-area"].value = cView.gComments[victim.id].body;
+		nodeEdit.cNodes["edit-txt-area"].value = context.gComments[victim.rawId].body;
 		victim.replaceChild( nodeEdit, victim.cNodes["comment-body"]);
 		victim.cNodes["comment-body"] = nodeEdit;
 		nodeEdit.className = "comment-body";
@@ -444,16 +431,17 @@ _Actions.prototype = {
 	,"postEditComment": function(e){
 		var cView = document.cView;
 		var nodeComment = e.target.getNode(["p", "comment"]);
-		var nodePost = nodeComment.getNode(["p", "post"])
+		var context = cView.contexts[nodeComment.domain];
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 		e.target.disabled = true;
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
-		var comment = cView.gComments[nodeComment.rawId];
+		var comment = context.gComments[nodeComment.rawId];
 		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/"); //TODO
 		comment.updatedAt = Date.now();
 		var postdata = new Object();
 		postdata.comment = comment;
-		context.api.editComment( context.logins[comment.createdBy].token, postdata).then( function(res){
+		context.api.editComment( context.logins[comment.createdBy].token, comment.id, postdata)
+		.then( function(res){
 			nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, res.comments),nodeComment);
 			context.gComments[comment.id] = res.comments;
 		});
@@ -481,7 +469,7 @@ _Actions.prototype = {
 	}
 	,"cancelNewComment": function(e){
 		var cView = document.cView;
-		var postNBody = e.target.getNode(["p", "post-body");
+		var postNBody = e.target.getNode(["p", "post-body"]);
 		postNBody.isBeenCommented = false;
 		if(typeof postNBody.bumpLater !== "undefined")setTimeout(postNBody.bumpLater, 1000);
 		var nodeComment = e.target.getNode(["p", "comment"]);
@@ -493,8 +481,7 @@ _Actions.prototype = {
 		e.target.disabled = true;
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 		cView.Actions.sendComment(e.target.parentNode.previousSibling);
-		var nodeComment = e.target.getNode(["p", "comment"]);
-		nodeComments.cnt++;
+		e.target.getNode(["p", "comments"]).cnt++;
 	}
 	,"deleteComment": function(e){
 		var cView = document.cView;
@@ -512,7 +499,7 @@ _Actions.prototype = {
 		textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 		var comment = new Object();
 		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/"); //TODO
-		comment.postId = nodePost.id;
+		comment.postId = nodePost.rawData.id;
 		comment.createdAt = null;
 		comment.createdBy = null;
 		comment.updatedAt = null;
@@ -530,11 +517,11 @@ _Actions.prototype = {
 			}
 		}else token = context.token;
 
-		context.api.sendComment(token,postdata).then(function{
-			var comment = JSON.parse(this.response).comments;
-			cView.gComments[comment.id] = comment;
+		context.api.sendComment(token,postdata).then(function(res){
+			var comment = res.comments;
+			context.gComments[comment.id] = comment;
 			if( nodeComment.parentNode.childNodes.length > 4 )cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
-			if(!document.getElementById(comment.id))nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, comment),nodeComment);
+			if(!document.getElementById(context.domain + "-cmt-" + comment.id))nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, comment),nodeComment);
 			else nodeComment.parentNode.removeChild(nodeComment);
 		});
 		
@@ -577,7 +564,7 @@ _Actions.prototype = {
 		else if (typeof context.logins[nodePost.rawData.createdBy] != "undefined" )
 			token = context.logins[nodePost.rawData.createdBy].token;
 		else return;
-		context.api.deleteComment(toke, nodeComment.rawId).then(function(){
+		context.api.deleteComment(token, nodeComment.rawId).then(function(){
 			if(nodeComment.parentNode) nodeComment.parentNode.removeChild(nodeComment);
 			delete context.gComments[nodeComment.id];
 		});
@@ -592,14 +579,16 @@ _Actions.prototype = {
 	}
 	,"unfoldComm": function(e){
 		var cView = document.cView;
-		var oReq = new XMLHttpRequest();
-		var post = e.target.getNode(["p","post"]).rawData;
-		var id = post.id;
+		var nodePost = e.target.getNode(["p","post"]);
+		var domain = nodePost.rawData.domain;
+		var context = cView.contexts[domain];
+		var id = nodePost.id;
 		var spUnfold = e.target.parentNode.appendChild(cView.doc.createElement("i"));
 		spUnfold.className = "fa fa-spinner fa-pulse";
-		context.api.getPost(context.token, post.id, ["comments"]).then( function(postUpd){
-			cView.Drawer.loadGlobals(postUpd);
-			cView.doc.getElementById(id).rawData = post;
+		context.api.getPost(context.token, nodePost.rawData.id, ["comments"]).then( function(postUpd){
+			cView.Common.loadGlobals(postUpd, context);
+			postUpd.posts.domain = domain;
+			cView.doc.getElementById(id).rawData = postUpd.posts;
 			var nodePB = cView.doc.getElementById(id).cNodes["post-body"];
 			var text = "";
 			if (nodePB.isBeenCommented == true)
@@ -623,7 +612,7 @@ _Actions.prototype = {
 			spUnfold.parentNode.removeChild(spUnfold);
 			console.log(res);
 
-		};
+		});
 
 
 
@@ -673,10 +662,8 @@ _Actions.prototype = {
 					}
 				}
 				if(pos && pos.arr)pos.arr.forEach(function(user){
-					var li = cView.doc.createElement("li");
-					li.className = "ft-i";
+					var li = cView.gNodes["ft-i"].cloneAll();
 					li.innerHTML = user;
-					li.addEventListener("click",cView["Actions"]["selectFriend"]);
 					nodeTip.cNodes["ft-list"].appendChild(li);
 				});
 				nodeTip.inp = e.target;
@@ -697,72 +684,67 @@ _Actions.prototype = {
 	}
 	,"doBan": function(e){
 		var cView = document.cView;
-		var oReq = new XMLHttpRequest();
 		//var nodePopUp = e.target; do nodePopUp = nodePopUp.parentNode; while(nodePopUp.className != "user-popup");
 		var nodeUC = e.target.getNode(["p","up-controls"]);
 		var username = nodeUC.user;
 		var bBan = e.target.checked;
 		var nodeParent = e.target.parentNode;
 		var loginId = e.target.getNode(["p","up-c-mu"]).loginId;
-		var context = cView.contexts[e.target.getNode(["p","up-c-mu"]).domain];
+		var context = cView.contexts[nodeUC.domain];
+		var user = context.gUsers.byName[username];
 		var spinner = cView.gNodes["spinner"].cloneNode(true);
 		nodeParent.replaceChild(spinner,e.target);
 		context.api.doBan(context.logins[loginId].token,username, bBan).then(function(){
 			var banIds = context.logins[loginId].data.users.banIds;
-			if (bBan)banIds.push(cView.gUsers.byName[username].id);
+			if (bBan)banIds.push(context.gUsers.byName[username].id);
 			else{
-				var idx = banIds.indexOf(context.gUsers.byName[username].id);
+				var idx = banIds.indexOf(user.id);
 				if (idx != -1 ) banIds.splice(idx, 1);
 			}
-			cView.saveLogins();
+			cView.Common.saveLogins();
 			if (typeof nodeUC.parentNode !== "undefined" )
-				cView.Utils.setChild(nodeUC.parentNode, "up-controls", cView.Drawer.genUpControls(username));
+				cView.Utils.setChild(nodeUC.parentNode, "up-controls", cView.Drawer.genUpControls(user));
 		},function(){
 			if (typeof nodeUC.parentNode !== "undefined" )
-				cView.Utils.setChild(nodeUC.parentNode, "up-controls", cView.Drawer.genUpControls(username));
+				cView.Utils.setChild(nodeUC.parentNode, "up-controls", cView.Drawer.genUpControls(user));
 
 		});
 
 	}
 	,"doUnBan": function(e){
 		var cView = document.cView;
-		var oReq = new XMLHttpRequest();
 		var nodeHost = e.target.getNode(["p","up-controls"]);
 		var loginId = e.target.getNode(["p","up-c-mu"]).loginId;
-		var context = cView.contexts[e.target.getNode(["p","up-c-mu"]).domain];
+		var context = cView.contexts[nodeHost.domain];
 		var username = nodeHost.user;
-		oReq.open("post", gConfig.serverURL +"users/"+username+"/unban", true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.logins[loginId].token);
+		var user = context.gUsers.byName[username];
 		var spinner = cView.gNodes["spinner"].cloneNode(true);
 		e.target.parentNode.replaceChild(spinner,e.target);
 		context.api.doBan(context.logins[loginId].token, username, false).then(function(){
-			var banIds = cView.logins[loginId].data.users.banIds;
-			var idx = banIds.indexOf(context.gUsers.byName[username].id);
+			var banIds = context.logins[loginId].data.users.banIds;
+			var idx = banIds.indexOf(user.id);
 			if (idx != -1 ) banIds.splice(idx, 1);
 			cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
 			if (typeof nodeHost.parentNode !== "undefined" )
-				cView.Utils.setChild(nodeHost.parentNode, "up-controls", cView.Drawer.genUpControls(username));
+				cView.Utils.setChild(nodeHost.parentNode, "up-controls", cView.Drawer.genUpControls(user));
 		},function(res){	
 			console.log(res);
 			if (typeof nodeHost.parentNode !== "undefined" )
-				cView.Utils.setChild(nodeHost.parentNode, "up-controls", cView.Drawer.genUpControls(username));
-		}
+				cView.Utils.setChild(nodeHost.parentNode, "up-controls", cView.Drawer.genUpControls(users));
+		});
 
-		oReq.send();
 	}
 	,"doBlockCom": function(e){
 		var cView = document.cView;
-		var action = e.target.checked;
-		var nodeUC = e.target.getNode(["p","up-controls"]);
-		cView.Common.updateBlockList("blockComments", nodeUC.user, action);
-		cView.Drawer.blockComments(nodeUC.user, action);
+		var nodeUPC = e.target.getNode(["p" ,"up-controls"]);
+		cView.Common.updateBlockList("blockComments" ,nodeUPC ,e.target.checked);
+		cView.Drawer.blockComments( nodeUPC ,e.target.checked);
 	}
 	,"doBlockPosts": function(e){
 		var cView = document.cView;
-		var action = e.target.checked;
-		var nodeUC = e.target.getNode(["p","up-controls"]);
-		cView.Common.updateBlockList("blockPosts", nodeUC.user, action);
-		cView.Drawer.blockPosts(nodeUC.user, action);
+		var nodeUPC = e.target.getNode(["p" ,"up-controls"]);
+		cView.Common.updateBlockList("blockPosts" ,nodeUPC ,e.target.checked);
+		cView.Drawer.blockPosts( nodeUPC,e.target.checked );
 	}
 	,"setRadioOption": function(e){
 		var cView = document.cView;
@@ -770,7 +752,7 @@ _Actions.prototype = {
 	}
 	,"unfoldAttImgs": function (e){
 		var cView = document.cView;
-		var nodeAtts = e.target; do nodeAtts = nodeAtts.parentNode; while(nodeAtts.className != "attachments");
+		var nodeAtts = e.target.getNode(["p", "attachments"]);
 		if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
 			nodeAtts.cNodes["atts-img"].style.display = "block";
 			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';
@@ -784,27 +766,28 @@ _Actions.prototype = {
 	}
 	,"ftClose": function(e){
 		var cView = document.cView;
-		var victim =e.target;while(victim.className != "friends-tip") victim = victim.parentNode;
+		var victim =e.target.getNode(["p","friends-tip"]);
 		victim.inp.tip = undefined;
 		cView.doc.body.removeChild(victim);
 
 	}
 	,"selectFriend": function(e){
 		var cView = document.cView;
-		var victim =e.target; do victim = victim.parentNode; while(victim.className != "friends-tip");
+		var victim =e.target.getNode(["p","friends-tip"]);
 		victim.inp.value = e.target.innerHTML;
 
 	}
 	,"postDirect": function(e){
 		var cView = document.cView;
-		var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
+		var victim =e.target.getNode(["p","new-post"]);
 		var nodesSenders = victim.getElementsByClassName("new-post-to");	
 		for (var idx = 0; idx<nodesSenders.length; idx++){
 			var nodeSender = nodesSenders[idx];
+			var context = cView.contexts[nodeSender.domain];
 			var input = nodeSender.cNodes["new-direct-input"].value;
-			if ((input != "") && (typeof cView.gUsers.byName[input] !== "undefined")
-			&& cView.gUsers.byName[input].friend 
-			&& (cView.gUsers.byName[input].subscriber||cView.gUsers.byName[input].type == "group"))
+			if ((input != "") && (typeof context.gUsers.byName[input] !== "undefined")
+			&& context.gUsers.byName[input].friend 
+			&& (context.gUsers.byName[input].subscriber||context.gUsers.byName[input].type == "group"))
 				nodeSender.feeds.push(input);
 			/*
 			if (nodeSender.feeds.length) cView.Actions.newPost(e);
@@ -817,7 +800,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		//matrix.ready = 0;
 		try{matrix.logout();}catch(e){};
-		cView.localStorage.removeItem("gMe");
+		cView.localStorage.removeItem("logins");
 		cView.Common.deleteCookie(gConfig.tokenPrefix + "authToken");
 		location.reload();
 	}
@@ -873,6 +856,7 @@ _Actions.prototype = {
 		var option = e.target[e.target.selectedIndex];
 		if (option.value == "")return;
 		var nodeP = e.target.parentNode;
+		var context = cView.contexts[nodeP.domain];
 		if (option.privateFeed ){
 			nodeP.isPrivate  = true;
 			var ul = cView.doc.createElement("ul");
@@ -886,7 +870,7 @@ _Actions.prototype = {
 		option.disabled = true;
 		nodeP.feeds.push(option.value);
 		var li = cView.doc.createElement("li");
-		if(option.value == cView.gMe.users.username)li.innerHTML = "My feed";
+		if(option.value == context.gMe.users.username)li.innerHTML = "My feed";
 		else li.innerHTML = "@" + option.value;
 		li.className = "new-post-feed";
 		li.oValue = option.value;
@@ -898,8 +882,10 @@ _Actions.prototype = {
 	,"evtUserPopup": function(e){
 		var cView = document.cView;
 		var node = e.target; while(typeof node.userid === "undefined")node = node.parentNode;
-		var user = cView.gUsers[node.userid];
-		if(cView.doc.getElementById("userPopup" + node.userid))return;
+		var nodePost = node.getNode(["p","post"]);
+		var context = cView.contexts[nodePost.rawData.domain];
+		var user = context.gUsers[node.userid];
+		if(cView.doc.getElementById("userPopup" + context.domain+ node.userid))return;
 		var nodePopup = cView.Drawer.genUserPopup(node, user);
 		nodePopup.style.top = e.pageY;
 		nodePopup.style.left = e.pageX;
@@ -908,7 +894,7 @@ _Actions.prototype = {
 	}
 	,"upClose": function(e){
 		var cView = document.cView;
-		var node = e.target; while(node.className != "user-popup")node = node.parentNode;
+		var node = e.target.getNode(["p", "user-popup"]);
 		node.parentNode.removeChild(node);
 	}
 	,"destroy": function(e){
@@ -923,17 +909,6 @@ _Actions.prototype = {
 		var cView = document.cView;
 		if(e.target.checked )cView.localStorage.setItem("rt",1);
 		else cView.localStorage.setItem("rt",0);
-		if(cView.timeline == "settings") return;
-		var bump = e.target.parentNode.cNodes["rt-bump"].value;
-		if(e.target.checked && !cView.gRt.on){
-			cView.gRt = new RtUpdate(cView.token,bump);
-			cView.gRt.subscribe(cView.rt);
-		}else if(!e.target.checked){
-			if(cView.gRt.on){
-				cView.gRt.close();
-				cView.gRt = new Object();
-			}
-		}
 	}
 	,"goSettings": function (e){
 		var cView = document.cView;
@@ -948,6 +923,7 @@ _Actions.prototype = {
 		var node = e.target.parentNode;
 		var nodeUC = e.target.getNode(["p","up-controls"]);
 		var nodeBlock = cView.gNodes["up-block"].cloneAll();
+		var context = cView.contexts[nodeUC.domain];
 		nodeBlock.className = "user-popup"; 
 		nodeBlock.user = node.user;
 		node.appendChild(nodeBlock);
@@ -956,8 +932,12 @@ _Actions.prototype = {
 		nodeBlock.style["z-index"] = 2;
 		var chkboxes = nodeBlock.getElementsByTagName("input");
 		for(var idx = 0; idx < chkboxes.length; idx++){
-			var list = cView[chkboxes[idx].value];
-			if((typeof list !== "undefined") && (list != null) && (list[cView.gUsers.byName[nodeUC.user].id]>-1))
+			var list = cView.blocks[chkboxes[idx].value];
+			if((typeof list !== "undefined") 
+				&& (typeof list[context.domain]!== "undefined")
+				&& (list[context.domain] != null) 
+				&& (list[context.domain][context.gUsers.byName[nodeUC.user].id]>-1)
+			)
 				chkboxes[idx].checked = true;
 		}
 
@@ -969,108 +949,117 @@ _Actions.prototype = {
 		nodeProfile.getElementsByClassName("spinner")[0].hidden = false;
 		var inputs = cView.Utils.getInputsByName(nodeProfile); 
 		var id = inputs["id"].value; 
-		var oUser = cView.logins[id].data.users;
+		var context = cView.contexts[inputs["domain"].value]; 
+		var oUser = context.logins[id].data.users;
 		oUser.screenName = inputs["screen-name"].value;
 		oUser.email = inputs["email"].value;
 		oUser.isPrivate = inputs["is-private"].checked?"1":"0";
-			oUser.description = nodeProfile.cNodes["gs-descr"].value;
-		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];
+		oUser.description = nodeProfile.cNodes["gs-descr"].value;
+		var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];
+		context.api.updProfile(context.logins[id].token, id, {"user":oUser})
+		.then(function(res){
 			e.target.disabled = false;
 			nodeProfile.getElementsByClassName("spinner")[0].hidden = true;
-			if(oReq.status < 400){
-				cView.logins[id].data = JSON.parse(oReq.response);
-				nodeMsg.className = "sr-info";
-				nodeMsg.innerHTML = "Updated. @"+ oUser.username +"'s feed is <span style='font-weight: bold;'>" + ((oUser.isPrivate == "1")?"private":"public")+ ".</span>";
-				cView.Common.refreshLogin(id);
-			}else {
-				nodeMsg.className = "msg-error";
-				nodeMsg.innerHTML = "Got error: ";
-				try{ 
-					nodeMsg.innerHTML += JSON.parse(oReq.response).err;
-				}catch(e) {nodeMsg.innerHTML += "unknown error";};
-
-			}
+			context.logins[id].data = res;
+			nodeMsg.className = "sr-info";
+			nodeMsg.innerHTML = "Updated. @"+ oUser.username +"'s feed is <span style='font-weight: bold;'>" + ((oUser.isPrivate == "1")?"private":"public")+ ".</span>";
+			cView.Common.refreshLogin(id, context);
 		}
+		,function(res){
+			e.target.disabled = false;
+			nodeProfile.getElementsByClassName("spinner")[0].hidden = true;
+			nodeMsg.className = "msg-error";
+			nodeMsg.innerHTML = "Got error: ";
+			try{ 
+				nodeMsg.innerHTML += JSON.parse(res).data.err;
+			}catch(e) {nodeMsg.innerHTML += "unknown error";};
 
-		oReq.open("put",gConfig.serverURL + "users/" + id ,true);
-		oReq.setRequestHeader("Content-type","application/json");
-		oReq.setRequestHeader("X-Authentication-Token", cView.logins[id].token);
-		oReq.send(JSON.stringify({"user":oUser}));
+			
+		});
 	}
 	,"addAcc": function (e){
 		var cView = document.cView;
-		var nodePorfiles = cView.Utils.getNode(e.target, ["p","accaunts-settings"],["c","settings-profiles"]);
-		nodePorfiles.appendChild(cView.gNodes["settings-login"].cloneAll());
+		var nodePorfiles = e.target.getNode( ["p","accaunts-settings"],["c","settings-profiles"]);
+		var nodeLogin = cView.gNodes["settings-login"].cloneAll();
+		nodePorfiles.appendChild(nodeLogin);
 		document.getElementsByClassName("gs-add-acc")[0].hidden = true;
+		Object.keys(cView.contexts).forEach(function(domain,num){
+			var nodeIB = cView.gNodes["input-block"].cloneAll();
+			nodeIB.cNodes["ib-input"].value = domain;
+			nodeIB.cNodes["ib-input"].name = "domain";
+			nodeIB.cNodes["ib-span"].innerHTML = domain;
+			if(!num) nodeIB.cNodes["ib-input"].checked = true;
+			nodeLogin.cNodes["domains"].appendChild(nodeIB); 
+		});
+
 	}
 	,"addProfileLogin": function (e){
 		var cView = document.cView;
 		e.target.disabled = true;
 		var nodeLogin = cView.Utils.getNode(e.target, ["p","settings-login"]);
 		nodeLogin.getElementsByClassName("spinner")[0].hidden = false;
-		var oReq = new XMLHttpRequest();
 		var inpsLogin = cView.Utils.getInputsByName(nodeLogin);
+		var context = cView.contexts[inpsLogin["domain"].value];
 		var userid = null;
-		oReq.onload = function(){
-			var res =  JSON.parse(oReq.response);
-			var nodeMsg = nodeLogin.cNodes["msg-error"];
-			if(oReq.status < 400){
-				nodeMsg.hidden = true;
-				if(typeof cView.logins[res.users.id] !== "undefined"){
-					cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
-					nodeLogin.parentNode.removeChild(nodeLogin);
-					return; 
-				}
-				cView.logins[res.users.id] = new Object();
-				cView.logins[res.users.id].token =  res.authToken;
-				userid = res.users.id;
-				cView.Utils.getWhoami(res.users.id, finish);
-
-			}else {
-				nodeMsg.hidden = false;
-				nodeMsg.innerHTML = res.err;
-				nodeLogin.getElementsByClassName("spinner")[0].hidden = true;
-				e.target.disabled = false;
+		var nodeMsg = nodeLogin.cNodes["msg-error"];
+		context.api.login(inpsLogin["login-username"].value ,inpsLogin["login-password"].value)
+		.then( function(res){
+			nodeMsg.hidden = true;
+			userid = res.users.id;
+			if(!context.ids)context.token = res.authToken;
+			if(typeof context.logins[userid] !== "undefined"){
+				cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
+				nodeLogin.parentNode.removeChild(nodeLogin);
+				return; 
 			}
-		};
-		oReq.open("post", gConfig.serverURL +"session", true);
-		oReq.setRequestHeader("X-Authentication-Token", null);
-		oReq.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-		oReq.send("username="+inpsLogin["login-username"].value+"&password="+inpsLogin["login-password"].value);
+			context.logins[userid] = new Object();
+			context.logins[userid].token =  res.authToken;
+			context.logins[userid].domain = context.domain;
+			cView.Common.saveLogins();
+			context.getWhoami(res.authToken).then(finish);
+
+		} ,function(res){
+			nodeMsg.hidden = false;
+			nodeMsg.innerHTML = res.err;
+			nodeLogin.getElementsByClassName("spinner")[0].hidden = true;
+			e.target.disabled = false;
+		});
 		function finish(){
 			cView.doc.getElementsByClassName("gs-add-acc")[0].hidden = false;
-			nodeLogin.parentNode.replaceChild(cView.Drawer.genProfile(cView.logins[userid].data.users),nodeLogin);
+			nodeLogin.parentNode.replaceChild(cView.Drawer.genProfile(context.logins[userid].data.users),nodeLogin);
 
 		}
 	}
-	,"setMainProfile": function(e){
+	,"setMainProfile": function(e){//TODO
 		if(!e.target.checked)return;
 		var cView = document.cView;
 		//var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);
 		var nodeProf = e.target.getNode(["p","settings-profile"]);
-		var id = cView.Utils.getInputsByName(nodeProf)["id"].value;
-		cView.token = cView.logins[id].token;
-		cView.mainId = id;
-		cView.Common.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
+		var inputs = cView.Utils.getInputsByName(nodeProf);
+		var id = inputs["id"].value;
+		var context = cView.contexts[inputs["domain"].value];
+		context.token = context.logins[id].token;
+		context.logins[is].isMain = true;
+		cView.Common.saveLogins();
 	}
 	,"logoutAcc": function(e){
 		var cView = document.cView;
 		var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);
-		var id = cView.Utils.getInputsByName(nodeProf)["id"].value;
-		delete cView.logins[id];
-		cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
+		var inputs = cView.Utils.getInputsByName(nodeProf);
+		var id = inputs["id"].value;
+		var context = cView.contexts[inputs["domain"].value];
+		var token = context.logins[id].token;
+		delete context.logins[id];
+		cView.Common.saveLogins();
 		nodeProf.parentNode.removeChild(nodeProf);
-		if(id == cView.mainId){
+		if(token ==  context.token){
 			nodeProf = cView.doc.getElementsByClassName("settings-profile")[0];
 			if (typeof nodeProf === "undefined") return cView.Actions.logout(e);
 			var inputs = cView.Utils.getInputsByName(nodeProf);
 			id = inputs["id"].value;
 			inputs["is-main"].checked = true;
-			cView.mainId = id;
-			cView.token = cView.logins[id].token; 
-			cView.Common.setCookie(gConfig.tokenPrefix + "authToken", cView.token);
+			context.token = context.logins[id].token; 
+			if (inputs["domain"].value == gConfig.frfDomain)cView.Common.setCookie(gConfig.tokenPrefix + "authToken", context.token);
 		}
 	}
 	,"setRTparams": function (e){
@@ -1106,43 +1095,35 @@ _Actions.prototype = {
 		var cView = document.cView;
 		node.parentNode.hidden = true;
 		var host = node.parentNode.parentNode;
+		var context = cView.contexts[host.cNodes["sr-domain"].value];
 		var spinner = cView.gNodes["spinner"].cloneNode(true);
 		host.appendChild(spinner);
-		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			if(oReq.status < 400){
-				host.parentNode.removeChild(host);
-				var nodeSR = cView.doc.getElementById("sr-info");
-				if(--cView.subReqsCount){
-					nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
-					+ cView.subReqsCount
-					+ " subscription requests to review.";
-				}else{
-					nodeSR.hidden = true;
-					var victim = cView.doc.getElementById("sr-header");
-					victim.parentNode.removeChild(victim);
-				}
-				
-			}else {
-				host.removeChild(spinner);
-				node.parentNode.hidden = false;
+		context.api.reqResp(context.logins[host.cNodes["sr-id"].value].token, host.cNodes["sr-user"].value, action).then(function() {
+			host.parentNode.removeChild(host);
+			var nodeSR = cView.doc.getElementById("sr-info");
+			if(--cView.subReqsCount){
+				nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
+				+ cView.subReqsCount
+				+ " subscription requests to review.";
+			}else{
+				nodeSR.hidden = true;
+				var victim = cView.doc.getElementById("sr-header");
+				victim.parentNode.removeChild(victim);
 			}
+			
 		}
+		,function(){
+			host.removeChild(spinner);
+			node.parentNode.hidden = false;
+		});
 
-		oReq.open("post",gConfig.serverURL
-			+ "users/" 
-			+ action + "/" 
-			+ host.cNodes["sr-user"].value
-		,true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.logins[host.cNodes["sr-id"].value].token);
-		oReq.send();
 	}
 	,"getauth": function (e){
 		var cView = document.cView;
 		var oReq = new XMLHttpRequest();
 		oReq.onload = function(){
 			if(this.status < 400){
-				cView.Common.setCookie(gConfig.tokenPrefix + "authToken", JSON.parse(this.response).authToken);
+				cView.Common.setCookie(gConfig.tokenPrefix + gConfig.leadDomain + "authToken", JSON.parse(this.response).authToken);
 				cView.token =  JSON.parse(this.response).authToken;
 				///cView.Utils.doc.getElementsByTagName("body")[0].removeChild(cView.Utils.doc.getElementsByClassName("nodeAuth")[0]);
 			//	initDoc();
@@ -1157,7 +1138,7 @@ _Actions.prototype = {
 	}
 	,"showUnfolder":function(e){
 		var cView = document.cView;
-		var nodeImgAtt = e.target; do nodeImgAtt = nodeImgAtt.parentNode; while(nodeImgAtt.className != "atts-img");
+		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	
@@ -1168,43 +1149,29 @@ _Actions.prototype = {
 		var files = e.target.parentNode.cNodes["edit-buttons-upload"].files; 
 		if (!files.length)return;
 		e.target.disabled = true;
-		var nodeImg = e.target.parentNode.parentNode.cNodes["avatar-img"]
+		var nodeImg = e.target.getNode(["p","chng-avatar"],["c","sp-avatar-img"]);
 		nodeImg.src = gConfig.static+"throbber-100.gif";
-		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			if(oReq.status < 400)getNewWhoami();
-		}
-		var id = Utils.getInputsByName( Utils.getNode(e.target,["p","settings-profile"]))["id"].value;
-		var token = cView.logins[id].token;
-		oReq.open("post",gConfig.serverURL + "users/updateProfilePicture", true);
-		oReq.setRequestHeader("X-Authentication-Token", token);
+		var inputs = Utils.getInputsByName( e.target.getNode(["p","settings-profile"]));
+		var id = inputs["id"].value;
+		var context = cView.contexts[inputs["domain"].value];
+		var token = context.logins[id].token;
 		var data = new FormData();
 		data.append( "file",files[0]) ;
-		oReq.send(data);
-		function getNewWhoami() {
+		context.api.chngAvatar(token, data).then( function() {
 			e.target.value = "";
 			e.target.disabled = false;
-			var oReq = new XMLHttpRequest();
-			oReq.onload = function(){
-				if(oReq.status < 400){
-					cView.logins[id].data = JSON.parse(oReq.response);
-					Common.refreshLogin(id);
-					nodeImg.src = cView.logins[id].data.users.profilePictureMediumUrl;
-				}
-			}
-
-			oReq.open("get", gConfig.serverURL +"users/whoami", true);
-			oReq.setRequestHeader("X-Authentication-Token", token);
-			oReq.send();
-		}
+			context.getWhoami(token).then(function(res){
+				nodeImg.src = context.logins[id].data.users.profilePictureMediumUrl;
+			});
+		});
 	}
 	,"addSender": function(e){
 		var cView = document.cView;
 		if(document.getElementById("add_sender"))return
-		var nodePopup = cView.Drawer.genAddSender(function(id){
+		var nodePopup = cView.Drawer.genAddSender(function(id,context){
 			if ((typeof id !== "undefined")&&(e.target.ids.indexOf(id) == -1 ) ){
 				e.target.ids.push(id);
-				cView.updPostTo(cView.logins[id].data,false, cView.logins[id].data.users.username);
+				cView.updPostTo(context.logins[id].data,false, context.logins[id].data.users.username);
 				var victim = document.getElementById("add_sender");
 				victim.parentNode.removeChild(victim);
 			}
@@ -1237,16 +1204,16 @@ _Actions.prototype = {
 		document.getElementsByClassName("ud-unfold")[0].style.display = "block";
 	}
 	,"goUserSubs": function(e){
-		e.target.getNode(["p","uds-subs"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/subscriptions";
+		e.target.getNode(["p","uds-subs"]).href =document.location + "/subscriptions";
 	}
 	,"goUserSubsc": function(e){
-		e.target.getNode(["p","uds-subsc"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/subscribers";
+		e.target.getNode(["p","uds-subsc"]).href = document.location + "/subscribers";
 	}
 	,"goUserComments": function(e){
-		e.target.getNode(["p","uds-com"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/comments";
+		e.target.getNode(["p","uds-com"]).href = document.location + "/comments";
 	}
 	,"goUserLikes": function(e){
-		e.target.getNode(["p","uds-likes"]).href = gConfig.front + e.target.getNode(["p","ud-info"], ["c","ud-username"]).value+ "/likes";
+		e.target.getNode(["p","uds-likes"]).href = document.location +"/likes";
 	}
 	,"morePostCtrls":function(e){
 		var cView = document.cView;
@@ -1292,15 +1259,14 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var nodePost = e.target.getNode(["p","post"]);
 		var post = nodePost.rawData;
+		var context = cView.contexts[post.domain];
 		var spinner = cView.gNodes["spinner"].cloneAll(); 
 		var parentNode = e.target.parentNode;
 		var ctrl = parentNode.replaceChild(spinner, e.target);
-		var oParam = {
-			"url":gConfig.serverURL +"posts/" + post.id + (e.target.action?"/disableComments":"/enableComments")
-			,"token":cView.logins[post.createdBy].token
-			,"method":"post"
-		}
-		cView.Utils.xhrReq(oParam, function(res){
+		context.api.switchCmts(context.logins[post.createdBy].token
+			,post.id
+			,e.target.action )
+		.then(function(res){
 			post.commentsDisabled = ctrl.action?"1":"0";
 			ctrl.innerHTML = ctrl.action?"Enable comments":"Disable commnents";
 			nodePost.getElementsByClassName("cmts-lock-msg")[0].hidden = !ctrl.action;

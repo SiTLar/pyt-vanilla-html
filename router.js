@@ -13,7 +13,7 @@ var chk = {
 		if (Object.keys(contexts).length > 1){
 			var leadContext = new Object();
 			leadContext[gConfig.leadDomain] = contexts[gConfig.leadDomain];
-			contexts = frfContext;
+			contexts = leadContext;
 		}
 		return null;
 	}
@@ -32,7 +32,7 @@ define("./router",[],function(){
 				var txtStep = arrPath[idx];
 				if (txtStep == "")continue;
 				if (is(step.req) && chk[step.req](contexts))
-					return new cView.Utils._Promise(function(resolve,reject){reject(chk[step.req](contexts))});
+					return new cView.Utils._Promise.reject(chk[step.req](contexts));
 
 				if(is(step.reroute))
 					return cView[step.reroute[0]][step.reroute[1]](contexts, path);
@@ -44,10 +44,10 @@ define("./router",[],function(){
 			if(is(step.dest)){
 				cView.doc.getElementById("loading-msg").innerHTML = "Loading content";
 				if((step.dest.length == 3)&& chk[step.dest[2]](contexts) )
-					return new cView.Utils._Promise(function(resolve,reject){reject(chk[step.dest[2]](contexts))});
+					return new cView.Utils._Promise.reject(chk[step.dest[2]](contexts));
 				return cView[step.dest[0]][step.dest[1]](contexts, path);
 			}
-			return new cView.Utils._Promise(function(resolve,reject){reject(chk[step.dest[2]](contexts))});
+			return new cView.Utils._Promise.reject();
 		}
 		,"directs":function(contexts){
 			var cView = this.cView;
@@ -59,7 +59,7 @@ define("./router",[],function(){
 					cView.Drawer.genDirectTo(nodeAddPost
 						,contexts[gConfig.leadDomain].gMe);
 				});
-				cView.Router.timeline(contexts, "filter/directs/").then(function(){
+				cView.Router.timeline(contexts, "filter/directs").then(function(){
 					body.cNodes["pagetitle"].innerHTML = "Direct messages";
 					cView.doc.title += ": Direct messages";
 					resolve();
@@ -72,7 +72,8 @@ define("./router",[],function(){
 			var singleContext = new Object();
 			singleContext[arrPath[1]] = contexts[arrPath[1]];
 			cView.doc.title = arrPath[1];
-			return this.route(singleContext, arrPath.slice(2).join("/") );
+			var newPath = arrPath.slice(2).join("/"); 
+			return this.route(singleContext, (newPath != "")?newPath:"home");
 		}
 		,"routeHome":function(contexts){
 			var cView = this.cView;
@@ -80,10 +81,13 @@ define("./router",[],function(){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				var body = cView.doc.getElementById("container");
 				body.appendChild(nodeAddPost);
-				contexts[gConfig.leadDomain].p.then(function () {
+				var domains = Object.keys(contexts);
+				var mainContext = (domains.indexOf(gConfig.leadDomain) != -1)? 
+					contexts[gConfig.leadDomain]:contexts[domains[0]];
+				mainContext.p.then(function () {
 					cView.Drawer.genPostTo(nodeAddPost
-						,contexts[gConfig.leadDomain].gMe.users.username
-						,contexts[gConfig.leadDomain].gMe);
+						,mainContext.gMe.users.username
+						,mainContext.gMe);
 				});
 				cView.Router.timeline(contexts, "home" ).then(resolve,reject);
 			});
@@ -120,18 +124,29 @@ define("./router",[],function(){
 				var domain = (domains.indexOf(gConfig.leadDomain) != -1)?  gConfig.leadDomain :domains[0];
 				var cs = new Object();
 				cs[domain] = contexts[domain];
+				var context = cs[domain];
+				var username = path.split("/")[0];
 				cView.Router.timeline(cs, path).then(function(){ 
-					var context = cs[domain];
-					var feed = context.gUsers.byName[path.split("/")[0]];
+					var feed =  context.gUsers.byName[username];
+					cView.Common.addUser.call(context, feed);
 					cView.doc.title = "@"+feed.username + ", a " + context.domain + " feed.";
 					cView.Utils.setChild(body, "details", cView.Drawer.genUserDetails(feed.username, context));
 					if (context.ids)
 						cView.Utils.setChild(body, "up-controls", cView.Drawer.genUpControls(feed));
 					var names = new Array();
-					if(context.ids)context.ids.forEach( function(id){
+					context.ids.forEach( function(id){
 						names.push(context.gUsers[id].username);
 					});
-					if ( (names.indexOf(feed.username)!= -1) || ((feed.type == "group") && feed.friend)){
+					if (names.indexOf(feed.username)!= -1) {
+						var nodeAddPost = cView.gNodes["new-post"].cloneAll();
+						body.replaceChild(nodeAddPost, nodeDummy);
+						cView.Drawer.genPostTo( 
+							nodeAddPost 
+							,feed.username 
+							,context.logins[context.gUsers.byName[feed.username].id].data
+						);
+					}
+					if ((feed.type == "group") && feed.friend){
 						var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 						body.replaceChild(nodeAddPost, nodeDummy);
 						cView.Drawer.genPostTo( 
@@ -148,11 +163,12 @@ define("./router",[],function(){
 			var cView = this.cView;
 			var context = Object.keys(contexts).map(function(d){ return contexts[d];})[0];
 			return cView.Utils._Promise.all( [
-				context.api.getPost(context.token, path.split("/")[1], ["comments"])
+				context.api.getPost(context.token, path, ["comments"])
 				,context.p
 			]).then( function (res){
 				cView.Common.loadGlobals(res[0], context);
 				var post = res[0].posts;
+				if(Array.isArray(post))post = post[0];
 				post.domain = context.domain;
 				cView.Drawer.drawPost(post,context);
 			});

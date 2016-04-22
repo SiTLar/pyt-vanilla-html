@@ -32,11 +32,19 @@ window.browserDoc = function(){
 	cView.Router.route(cView.contexts, locationPath)
 	.then(postInit,function(err){
 		console.log(err);
-		switch(err){
+		if( typeof err === "string") switch(err){
 			case "token":
 				cView.Common.auth();
 			break;
+		}else {
+			var nodeMsg = cView.gNodes["global-failure"].cloneAll();
+			body.appendChild(nodeMsg);
+			try{
+				nodeMsg.cNodes["title"].innerHTML = "Error " + err.code;
+				nodeMsg.cNodes["info"].innerHTML = cView.Utils.err2html(err.data);
+			}catch(e){ };
 		}
+		postInit();
 	});
 
 	return ;

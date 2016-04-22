@@ -3,13 +3,14 @@ define(["./utils"],function(utils){
 
 return function(config){
 	function get(token, url){
-		return 	utils.xhrReq( {"url":config.serverURL +url ,"token":token })
+		return 	utils.xhrReq( {"url":config.serverURL +url ,"token":token });
 	}
 	return{
 		"protocol":{
 			"get": get
 			,"getTimeline": function(token, timeline) {return get(token, "timelines/"+ timeline); }
-			,"getPost": function(token, id, arrOptions) {
+			,"getPost": function(token, path, arrOptions) {
+				var id = path.split("/")[1];
 				var likes = "0";
 				var cmts = "0";
 				if(Array.isArray(arrOptions))arrOptions.forEach(function(option){
@@ -86,7 +87,7 @@ return function(config){
 			,"get": function(token, timeline) {return get(token, timeline);}
 			,"updProfile" : function(token, id, data){
 				return utils.xhrReq(
-					{ 	"url": config.serverURL + "users/"+id
+					{ 	"url": config.serverURL + id
 						,"token": token 
 						,"method": "put"
 						,"data": JSON.stringify(data)
@@ -107,11 +108,13 @@ return function(config){
 				return utils.xhrReq( { "url":config.serverURL +"users/whoami" ,"token":token });
 			}
 			,"login":function(username, password){
+				var data = "username="+utils.encodeURIForm(username)
+				+ "&password="+utils.encodeURIForm(password);
 				return utils.xhrReq(
 					{ 	"url": config.serverURL + "session"
 						,"headers":{"Content-type":"application/x-www-form-urlencoded"}
 						,"method": "post"
-						,"data":"username="+username+"&password="+encodeURI(password)
+						,"data":data
 					}
 				);
 			}

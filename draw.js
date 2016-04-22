@@ -73,15 +73,11 @@ _Drawer.prototype = {
 		postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 		//postNBody.cNodes["post-info"].cNodes["likes"].appendChild(suffix);
 		nodeLikes.className = "comma";
-		if(context.ids){
-			if(post.likes[0] == context.gMe.users.id){
-				postNBody.cNodes["post-info"].myLike = nodeLikes.childNodes[0];
-				if( postNBody.cNodes["post-info"].nodeLike) {
-					postNBody.cNodes["post-info"].nodeLike.innerHTML = "Un-like";
-					postNBody.cNodes["post-info"].nodeLike.action = false;
-
-				}
-
+		if(context.ids.length && (post.likes[0] == context.gMe.users.id)){
+			postNBody.cNodes["post-info"].myLike = nodeLikes.childNodes[0];
+			if( postNBody.cNodes["post-info"].nodeLike) {
+				postNBody.cNodes["post-info"].nodeLike.innerHTML = "Un-like";
+				postNBody.cNodes["post-info"].nodeLike.action = false;
 			}
 		}
 	}
@@ -93,7 +89,7 @@ _Drawer.prototype = {
 		nodeInfo.cNodes["ud-username"].value = user.username;
 		nodeInfo.getNode(["c","ud-avatar"],["c","ud-avatar-img"]).src = user.profilePictureMediumUrl;
 		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
-		if(typeof user.description !== "undefined")
+		if(typeof user.description === "string")
 			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = cView.autolinker.link(user.description.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		if(typeof user.statistics !== "undefined"){
 			var stats = {
@@ -130,6 +126,7 @@ _Drawer.prototype = {
 				break;
 			case "is-main":
 				node.checked = (context.logins[user.id].token == context.token);
+				node.name = "is-main-"+user.domain;
 				break;
 			case "email": 
 				if(typeof user.email !== "undefined" )
@@ -433,6 +430,7 @@ _Drawer.prototype = {
 		return controls;
 
 		function perLogin(id){
+			if (user.id == id)return;
 			var login = context.logins[id].data;
 			var friend = (typeof login.oFriends[user.id] !== "undefined");
 			var envelop =  cView.gNodes["up-c-mu"].cloneAll();
@@ -571,7 +569,7 @@ _Drawer.prototype = {
 			&& (post.commentsDisabled == "1")){
 				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","cmts-lock-msg"]).hidden = false;
 			} else post.commentsDisabled = "0";
-			if(context.ids){
+			if(context.ids.length){
 				var nodeControls;
 				if (context.ids.indexOf(post.createdBy) != -1){
 					nodeControls = cView.gNodes["controls-self"].cloneAll();
@@ -641,11 +639,9 @@ _Drawer.prototype = {
 		//if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 		if(false);
 		else if(post.postedTo){
-			nodePost.gotLock  = true;
 			post.postedTo.forEach(function(id){
-				if (context.gFeeds[id].user.isPrivate == "0")
-					nodePost.gotLock = false;
-				 nodePost.direct = context.gFeeds[id].direct;
+				nodePost.gotLock = context.gFeeds[id].isPrivate;
+				nodePost.direct = context.gFeeds[id].direct;
 			});
 			if ((post.postedTo.length >1)||(context.gFeeds[post.postedTo[0]].user.id!=user.id)){
 				title += "<span> posted to: </span>";
@@ -654,6 +650,8 @@ _Drawer.prototype = {
 				});
 			}
 		}
+		if(post.isDirect == true)
+			nodePost.direct = true;
 		return title;
 
 	}
@@ -785,7 +783,7 @@ _Drawer.prototype = {
 		nodeComment.createdAt = comment.createdAt;
 		nodeComment.userid = cUser.id;
 		nodeSpan.innerHTML += " - " + cUser.link ;
-		if(context.ids){
+		if(context.ids.length){
 			if(context.ids.indexOf(cUser.id) != -1)
 				cView.Utils.setChild(nodeComment.cNodes["comment-body"],"comment-controls",cView.gNodes["comment-controls"].cloneAll());
 			else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
@@ -819,14 +817,19 @@ _Drawer.prototype = {
 		var nodeDirectTo = cView.gNodes["new-direct-to"].cloneAll();
 		nodeDirectTo.userid = login.users.id;
 		nodeDirectTo.domain = login.domain;
-		if(context.ids.length > 1 ){
-			nodeDirectTo.cNodes["mu-login"].innerHTML = login.users.link;
+		if( Object.keys(cView.contexts).reduce(
+			function(prev,domain){ return prev.concat(cView.contexts[domain].ids);}
+			,[]
+		).length > 1 ){
+			nodeDirectTo.cNodes["mu-login"].innerHTML = context.doamin + ": " + login.users.link;
 			nodeDirectTo.cNodes["mu-login"].hidden = false;
 			victim.cNodes["add-sender"].hidden = false;
 			if (typeof victim.cNodes["add-sender"].ids === "undefined")
 				victim.cNodes["add-sender"].ids = [context.gMe.users.id];
 		}
 		victim.cNodes["post-to"].appendChild(nodeDirectTo);
+
+		nodeDirectTo.destType = "directs";
 		nodeDirectTo.className = "new-post-to";
 		nodeDirectTo.feeds = new Array();
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", cView["Actions"]["newPost"]);
@@ -875,7 +878,10 @@ _Drawer.prototype = {
 		var context = cView.contexts[login.domain];
 		var nodePostTo = cView.gNodes["new-post-to"].cloneAll();
 		var idx = 1;
-		if(context.ids.length > 1 ){
+		if( Object.keys(cView.contexts).reduce(
+			function(prev,domain){ return prev.concat(cView.contexts[domain].ids);}
+			,[]
+		).length > 1 ){
 			nodePostTo.cNodes["mu-login"].innerHTML = login.users.link;
 			nodePostTo.cNodes["mu-login"].hidden = false;
 			victim.cNodes["add-sender"].hidden = false;
@@ -884,6 +890,7 @@ _Drawer.prototype = {
 		}
 		victim.cNodes["post-to"].appendChild(nodePostTo);
 		nodePostTo.feeds = new Array();
+		nodePostTo.destType = "posts";
 		nodePostTo.parentNode.isPrivate  = false;
 		var select = cView.doc.createElement("select");
 		select.className = "new-post-feed-select";
@@ -900,7 +907,7 @@ _Drawer.prototype = {
 		chkInit(init, option, idx);
 		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
 		var groups = cView.doc.createElement("optgroup");
-		groups.label = "Public groups";
+		groups.label = "Groups";
 		if (typeof login.users.subscriptions !== "undefined"){
 			var oSubscriptions = new Object();
 			login.subscriptions.forEach(function(sub){if (sub.name == "Posts")oSubscriptions[sub.id] = sub; });
@@ -1014,9 +1021,9 @@ _Drawer.prototype = {
 			var context = cView.contexts[domain];
 			var title = document.createElement("p"); 
 			title.innerHTML = domain;
-			popup.appendChild(title);
+			popup.cNodes["units"].appendChild(title);
 			context.ids.forEach(function(id){
-				var login = cView.logins[id].data;
+				var login = context.logins[id].data;
 				var unit = cView.gNodes["add-sender-unit"].cloneAll();
 				unit.getNode(["c","up-avatar"],["c","avatar-img"]).src = login.users.profilePictureMediumUrl;
 				unit.getNode(["c","asu-info"],["c","username"]).innerHTML = "@" + login.users.username;

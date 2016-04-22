@@ -15,9 +15,19 @@ function _Promise(cb){
 	Object.keys(that.defaults).forEach(function(key){
 		that[key] = JSON.parse(JSON.stringify(that.defaults[key]))
 	});
-	function resolve(res){that.resolve(res);}
-	function reject(res){that.reject(res);}
-	setTimeout(function (){cb(resolve,reject)});
+	function fulfill(res){that.fulfill(res);}
+	function fail(res){that.fail(res);}
+	setTimeout(function (){cb(fulfill,fail)});
+}
+_Promise.resolve = function(val){
+	return new _Promise(function(resolve, reject){
+		resolve(val);
+	});
+}
+_Promise.reject = function(val){
+	return new _Promise(function(resolve, reject){
+		reject(val);
+	});
 }
 _Promise.all = function(arr){
 	return new _Promise(function(resolve, reject){
@@ -30,14 +40,14 @@ _Promise.all = function(arr){
 			resolve(reses);
 		}
 
-		arr.forEach(function(promise, idx){
+		arr.forEach(function(item, idx){
 			function success(res){alldone(res,idx);};
-			promise.then(success, reject);
+			if( typeof item.then !== "function")item = _Promise.resolve(item);
+			item.then(success, reject);
 		});	
 	
 	});
 }
-
 _Promise.prototype = {
 	constructor:_Promise
 	,"defaults":{
@@ -50,25 +60,31 @@ _Promise.prototype = {
 		var that = this;
 		return new _Promise(function( thenRes, thenRej){
 			function pass(arg){return arg;};
+			function react(after,before,val){
+				var ret = before(val);
+				if((typeof ret !== "undefined")&&(typeof ret.then === "function"))
+					ret.then(thenRes, thenRej);
+				else after(ret);
+			}; 
 			if (typeof reject !== "function") reject = pass;
 			if (typeof thenRej!== "function") thenRej = pass;
-			if(that.failed)thenRej(reject(that.fail));
-			else that.rejects.push(function(fail){thenRej(reject(fail))});
-			if(that.done && !that.failed)thenRes(resolve(that.res));
-			else that.resolves.push(function(res){thenRes(resolve(res))});
+			if(that.failed)react(thenRej,reject,that.fail);
+			else that.rejects.push(function(fail){react(thenRej,reject,fail);});
+			if(that.done && !that.failed)react(thenRes,resolve, that.res);
+			else that.resolves.push(function(res){react(thenRes,resolve,res);});
 		});
 	}
-	,"resolve":function(res){
+	,"fulfill":function(res){
 		this.done = true;
 		this.res = res;
 		while(this.resolves.length)
 			this.resolves.pop()(this.res);
 	}
-	,"reject":function(res){
+	,"fail":function(res){
 		this.failed = true;
-		this.fail = res;
+		this.error = res;
 		while(this.rejects.length)
-			this.rejects.pop()(this.fail);
+			this.rejects.pop()(this.error);
 	}
 }
 return {
@@ -108,7 +124,7 @@ return {
 	/**********************************************/
 	,"args2Arr": function(){return args2Arr.apply(this, arguments);}
 	,"xhrReq": function(o){
-		return new _Promise(function( callback, fail ){
+		return new _Promise(function( resolve, reject ){
 			var method = typeof o.method  !== "undefined"? o.method : "get";
 			var oReq = new XMLHttpRequest();
 			oReq.open(method ,o.url , true);
@@ -118,12 +134,26 @@ return {
 				oReq.setRequestHeader(header,o.headers[header])
 			});
 			oReq.onload = function(){
-				if(oReq.status < 400) callback(oReq.response);
-				else fail({"code":oReq.status, "data":oReq.response});
+				if(oReq.status < 400) resolve(oReq.response);
+				else reject({"code":oReq.status, "data":oReq.response});
 			}
+			oReq.onerror = function(){
+				reject({"code":oReq.status, "data":oReq.response});
+			};
 			if (typeof o.data  !== "undefined")  oReq.send(o.data);
 			else  oReq.send();
 		});
+	}
+	,"err2html":function(err) {
+		var data = JSON.parse(err);
+		return Object.keys(data)
+			.map(function(err){ return data[err]; })
+			.join("<br>");
+	}
+	,"encodeURIForm": function(str){
+		return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+			return '%' + c.charCodeAt(0).toString(16);
+		}).replace("%20","+");
 	}
 	,"getNode":function(node){
 		var arrPath =  args2Arr.apply(this,arguments);

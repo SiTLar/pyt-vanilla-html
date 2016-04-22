@@ -1,7 +1,6 @@
 {
 	"default":{
-		"req":["frfContext"]
-		,"vals":{ 
+		"vals":{ 
 			"comments":{"dest":["Router","timeline"]}
 			,"likes":{"dest":["Router","timeline"]}
 			,"subscribers":{"dest":["Router","subscribers"]}

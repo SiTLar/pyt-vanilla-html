@@ -1,6 +1,7 @@
 "use strict";
 var apis = {
 	"freefeed": require("./freefeed")
+	,"mokum": require("./mokum")
 
 }
 
@@ -51,7 +52,6 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 			var ids = Object.keys(logins);
 			if(ids.length == 0)return null;
 			if(ids.length == 1){
-				logins[ids[0]].isMain = true;
 				mainId = ids[0];
 				context.token = logins[ids[0]].token;
 			}else ids.some(function(id){
@@ -66,7 +66,6 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 		}
 		,get "ids"(){
 			var ids = Object.keys(this.logins);
-			if (!ids.length) return null;
 			return ids;
 		}
 		,"getWhoami": function(token){

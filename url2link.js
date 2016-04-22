@@ -83,7 +83,7 @@ _Url2link.prototype = {
 		}]
 	}
 	,"uname":{
-		"regex": /@[a-z0-9]{3,}/
+		"regex": /@[-a-z0-9]{3,}(?=[^_-a-z0-9]/)/
 		,"newtab": true
 		,"flags":"i"
 		,"actions":[function(match, host){

@@ -704,5 +704,10 @@
 			,{"c":"disable-cmts","t":"a","txt":"Disable comments", "e":{"click":["Actions","switchCmts"]} }
 		]}
 	]}
+	,{"c":"global-failure"
+	,"children":[
+		{"c":"title","t":"h1", "txt":"unknown error"}
+		,{"c":"info"}
+	]}
 ]}
 

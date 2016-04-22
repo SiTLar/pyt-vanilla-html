@@ -11,15 +11,37 @@ var gConfig = {
 , "domains":{
 	"FreeFeed":{ "api":"freefeed"
 		,"server":{
-			  "serverURL":"https://freefeed.net/v1/"
-			, "rtURL":"https://freefeed.net/socket.io/"
+			 "serverURL":"https://freefeed.net/v1/"
+			,"rtURL":"https://freefeed.net/socket.io/"
 		}
+		,"front":"freefeed.net"
+		,"fronts":["freefeed.net"
+			,"m.freefeed.net"
+			,"old.freefeed.net"
+			,"beta.freefeed.net"
+			,"gamma.freefeed.net"
+		]
+	}		
+	,"Mokum":{ "api":"mokum"
+		,"server":{
+			"serverURL":"https://mokum.place/"
+			,"serverApiURL":"https://mokum.place/api/v1/"
+			,"rtURL":"https://"
+		}
+		,"front":"mokum.place"
+		,"fronts":["mokum.place"]
 	}		
 	,"micropeppa":{ "api":"freefeed"
 		,"server":{
-			  "serverURL":"https://nanopeppa.freefeed.net/v1/"
-			, "rtURL":"https://nanopeppa.freefeed.net/socket.io/"
+			 "serverURL":"https://nanopeppa.freefeed.net/v1/"
+			,"rtURL":"https://nanopeppa.freefeed.net/socket.io/"
 		}
+		,"front":"micropeppa.freefeed.net"
+		,"fronts":["micropeppa.freefeed.net"
+			,"nanopeppa.freefeed.net"
+			,"george.freefeed.net"
+			,"candy.freefeed.net"
+		]
 	}		
 }
 }

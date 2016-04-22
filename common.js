@@ -77,7 +77,8 @@ _Common.prototype = {
 			user.my = false;
 			className = "not-my-link";
 		}
-		user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'
+		user.link = '<a class="'+className
+		+'" href="' + gConfig.front+"as/"+ context.domain + "/"+ user.username+'">'
 		+ user.title
 		+"</a>";
 		if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
@@ -142,7 +143,7 @@ _Common.prototype = {
 		login.oFriends = new Object();
 		if ((typeof user.subscribers !== "undefined") 
 		&& (typeof user.subscriptions !== "undefined")){
-			oSubscriptions = new Object();
+			var oSubscriptions = new Object();
 			login.subscribers.forEach(cView.Common.addUser,context);
 			login.subscriptions.forEach(function(sub){
 				if(sub.name == "Posts"){
@@ -224,12 +225,25 @@ _Common.prototype = {
 		cView.localStorage.setItem("blocks", JSON.stringify(cView.blocks));
 	}
 	,"setFrontUrl": function(url){
-		return url.replace(/((beta|m)\.)?freefeed.net\/(?=.+)/,
-			gConfig.front.slice(8));
+		Object.keys(gConfig.domains).forEach(function(domain){
+			url = url.replace(
+				new RegExp("^(.*://)?("+gConfig.domains[domain].fronts.join("|")+")/(?=.+)")
+				,gConfig.front+"as/"+domain+"/"
+			);
+		});
+		return url;
+	}
+	,"urlsToCanonical": function(text){
+		Object.keys(gConfig.domains).forEach(function(domain){
+			text = text.replace(new RegExp(gConfig.front.slice(8)+"as/"+domain)
+				,gConfig.domains[domain].front
+			);
+		});
+		return text;
 	}
 	,"loadGlobals":function(data, context){
 		var cView = context.cView;
-		if(context.ids)context.ids.forEach(function(id){
+		context.ids.forEach(function(id){
 			cView.Common.addUser.call(context, context.logins[id].data.users);
 		}); 
 
@@ -242,8 +256,12 @@ _Common.prototype = {
 			data.subscribers.forEach(function(sub){subscribers[sub.id]=sub;});
 			data.subscriptions.forEach(function(sub){
 				if(["Posts", "Directs"].indexOf(sub.name) != -1 ){
-					context.gFeeds[sub.id] = { "user":context.gUsers[sub.user]
+					var user = context.gUsers[sub.user];
+					var isPrivate = (sub.mayNotBePublic == true)?true:(user.isPrivate == "1");
+					context.gFeeds[sub.id] = { 
+						"user":user
 						,"direct": (sub.name == "Directs")
+						,"isPrivate": isPrivate
 					}
 				}
 			});
@@ -268,9 +286,10 @@ _Common.prototype = {
 					var domain = login.domain;
 					var context = cView.contexts[domain];
 					if(typeof context === "undefined") return;
+					var pPos = context.pending.indexOf(login.token);
+					if( pPos != -1)context.pending.splice(pPos,1);
 					if(login.isMain == true)context.token = login.token;
-					if ((typeof login.data === "undefined")
-					&& (context.pending.indexOf(login.token) == -1)){
+					if (typeof login.data === "undefined"){
 						context.pending.push(login.token);
 						return;
 					}
@@ -288,9 +307,8 @@ _Common.prototype = {
 		Object.keys(cView.contexts).forEach(function(domain){
 			var context = cView.contexts[domain];
 			if(!context.token){
-				if(context.ids){
+				if(context.ids.length){
 					context.token = context.logins[context.ids[0]].token;
-					context.logins[context.ids[0]].isMain = true;
 				}else if (context.pending.length) 
 					context.token = context.pending[0]; 
 			}
@@ -306,9 +324,14 @@ _Common.prototype = {
 		var logins = new Array();
 		Object.keys(cView.contexts).forEach(function (domain){
 			var context = cView.contexts[domain];
-			cView.Common.getCookie(gConfig.tokenPrefix + domain +"authToken",context.token );
-			Object.keys(context.logins).forEach(function(id){
-				logins.push(context.logins[id]);			
+			if(!context.token){
+				cView.Common.deleteCookie(gConfig.tokenPrefix + domain +"authToken",context.token );
+				return;
+			}
+			cView.Common.setCookie(gConfig.tokenPrefix + domain +"authToken",context.token );
+			Object.keys(context.logins).forEach(function(id){ 
+				context.logins[id].isMain = (context.logins[id].token == context.token);
+				logins.push(context.logins[id]);
 			});
 		});
 		cView.localStorage.setItem("logins", JSON.stringify(logins));

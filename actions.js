@@ -21,9 +21,9 @@ _Actions.prototype = {
 		textField.disabled = true;
 		e.target.disabled = true;
 		var nodeSpinner = e.target.parentNode.appendChild(cView.gNodes["spinner"].cloneNode(true));
-		var post = new Object();
 		var postsTo = e.target.parentNode.parentNode.getElementsByClassName("new-post-to");
 		var arrPostsTo = new Array(postsTo.length);
+		var body = cView.Common.urlsToCanonical(textField.value);
 		for (var idx = 0; idx < postsTo.length; idx++)arrPostsTo[idx] = postsTo[idx];
 		if(textField.pAtt)textField.pAtt.then(function(){ arrPostsTo.forEach(send);});
 		else arrPostsTo.forEach(send);
@@ -32,12 +32,16 @@ _Actions.prototype = {
 			var context = cView.contexts[postTo.domain];
 			var postdata = new Object();
 			postdata.meta = new Object();
+			postdata.post = new Object();
+			postdata.post.body = body;
 			postdata.meta.feeds = postTo.feeds ;
-			post.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
-			if(textField.attachments) post.attachments = textField.attachments;
-			postdata.post = post;
-			context.api.sendPost(context.logins[postTo.userid].token, postdata)
-			.then(function(res){
+			if(textField.attachments) postdata.post.attachments = textField[postTo.domain].attachments;
+			context.api.sendPost(
+				context.logins[postTo.userid].token
+				,postdata
+				,context.logins[postTo.userid].data.users.username
+				,postTo.destType
+			).then(function(res){
 				var nodeAtt = cView.doc.createElement("div");
 				nodeAtt.className = "attachments";
 				textField.parentNode.replaceChild(nodeAtt,
@@ -63,7 +67,7 @@ _Actions.prototype = {
 				var errmsg = "";
 				try{
 					e.target.parentNode.removeChild(nodeSpinner );
-					errmsg = eresp.err;
+					errmsg = err.err;
 				}catch(e){};
 				//TODO
 			});
@@ -154,10 +158,10 @@ _Actions.prototype = {
 		post.attachments = nodePost.rawData.attachments;
 		var postdata = new Object();
 		postdata.post = post;
-		e.target.parentNode.parentNode.cNodes["edit-txt-area"].disabled = true;
+		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
+		textField.disabled = true;
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
-		post.body = e.target.parentNode.parentNode.cNodes["edit-txt-area"].value
-			.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/");
+		post.body = cView.Common.urlsToCanonical( textField.value);
 		context.api.editPost(
 			context.logins[nodePost.rawData.createdBy].token
 			,nodePost.rawData.id
@@ -295,13 +299,16 @@ _Actions.prototype = {
 	,"unfoldLikes": function(e){
 		var cView = document.cView;
 		var nodePost = e.target.getNode(["p","post"]);
-		var context = cView.contexts[nodePost.rawData.domain];
+		var rawData = nodePost.rawData;
+		var context = cView.contexts[rawData.domain];
 		var span = e.target.getNode(["p","nocomma"]);
 		var nodeLikes = span.parentNode.cNodes["comma"];
 
 		if (nodePost.rawData.omittedLikes > 0){
-			context.api.getPost(context.token, nodePost.rawData.id, ["likes"])
-			.then (function(postUpd){
+			context.api.getPost(context.token 
+				,context.gUsers[rawData.createdBy].username + "/" + rawData.id
+				,["likes"]
+			).then (function(postUpd){
 				span.parentNode.removeChild(span);
 				postUpd.users.forEach(cView.Common.addUser, context);
 				nodePost.rawData.likes = postUpd.posts.likes;
@@ -326,9 +333,10 @@ _Actions.prototype = {
 		var domain = e.target.getNode(["p","up-controls"]).domain;
 		var context = cView.contexts[domain];
 		context.api.reqSub( context.logins[loginId].token,username ).then( function(){
-				var span = cView.doc.createElement("span");
-				span.innerHTML = "Request sent";
-				e.target.parentNode.replaceChild(span, e.target);
+			var span = cView.doc.createElement("span");
+			span.innerHTML = "Request sent";
+			e.target.parentNode.replaceChild(span, e.target);
+			context.getWhoami(context.logins[loginId].token);
 		} );
 	}
 	,"evtSubscribe": function(e){
@@ -345,6 +353,7 @@ _Actions.prototype = {
 			context.logins[loginId].data = res;
 			cView.Common.refreshLogin(loginId,context);
 			cView.Utils.setChild(nodeParent.getNode(["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(context.gUsers.byName[username]));
+			context.getWhoami(context.logins[loginId].token);
 		},function(){  nodeParent.replaceChild( target, spinner); });
 	}
 	,"showHidden": function(e){
@@ -409,7 +418,7 @@ _Actions.prototype = {
 	}
 	,"addComment": function(e){
 		var cView = document.cView;
-		var nodePost = e.target.getNode(["p","post"]);
+		var nodePost = cView.Utils.getNode(e.target,["p","post"]);
 		var postNBody = nodePost.cNodes["post-body"];
 		if(postNBody.isBeenCommented === true)return;
 		postNBody.isBeenCommented = true;
@@ -431,17 +440,19 @@ _Actions.prototype = {
 	,"postEditComment": function(e){
 		var cView = document.cView;
 		var nodeComment = e.target.getNode(["p", "comment"]);
+		var postId = nodeComment.getNode(["p","post"]).rawData.id;
 		var context = cView.contexts[nodeComment.domain];
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 		e.target.disabled = true;
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
 		var comment = context.gComments[nodeComment.rawId];
-		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/"); //TODO
+		comment.body = cView.Common.urlsToCanonical(textField.value);
 		comment.updatedAt = Date.now();
 		var postdata = new Object();
 		postdata.comment = comment;
-		context.api.editComment( context.logins[comment.createdBy].token, comment.id, postdata)
-		.then( function(res){
+		context.api.editComment( context.logins[comment.createdBy].token
+			,comment.id, postdata,postId 
+		).then( function(res){
 			nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, res.comments),nodeComment);
 			context.gComments[comment.id] = res.comments;
 		});
@@ -451,7 +462,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var nodeComment = e.target.getNode(["p","comment"]);
 		var context = cView.contexts[nodeComment.getNode(["p","post"]).rawData.domain];
-		nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, context.gComments[nodeComment.id]),nodeComment);
+		nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, context.gComments[nodeComment.rawId]),nodeComment);
 	}
 	,"processText": function(e) {
 		var cView = document.cView;
@@ -498,7 +509,7 @@ _Actions.prototype = {
 		if(typeof nodePost.cNodes["post-body"].bumpLater !== "undefined")setTimeout(nodePost.cNodes["post-body"].bumpLater, 1000);
 		textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 		var comment = new Object();
-		comment.body = textField.value.replace(new RegExp(gConfig.front.slice(8)+"(?=[^\\s])"),"freefeed.net/"); //TODO
+		comment.body = cView.Common.urlsToCanonical(textField.value);
 		comment.postId = nodePost.rawData.id;
 		comment.createdAt = null;
 		comment.createdBy = null;
@@ -508,7 +519,7 @@ _Actions.prototype = {
 		postdata.comment = comment;
 		var token;
 		var nodesSelectUsr = nodeComment.getElementsByClassName("select-user-ctrl")[0].childNodes;
-		if(context.ids > 1){
+		if(context.ids.length > 1){
 			for(var idx = 0; idx < nodesSelectUsr.length; idx++){
 				if (nodesSelectUsr[idx].selected){
 					token = context.logins[nodesSelectUsr[idx].value].token;
@@ -564,11 +575,12 @@ _Actions.prototype = {
 		else if (typeof context.logins[nodePost.rawData.createdBy] != "undefined" )
 			token = context.logins[nodePost.rawData.createdBy].token;
 		else return;
-		context.api.deleteComment(token, nodeComment.rawId).then(function(){
+		context.api.deleteComment(token, nodeComment.rawId, nodePost.rawData.id ).then(function(){
 			if(nodeComment.parentNode) nodeComment.parentNode.removeChild(nodeComment);
-			delete context.gComments[nodeComment.id];
+			delete context.gComments[nodeComment.rawId];
 		});
-/*		if(nodePost.isPrivate){
+/*		
+		if(nodePost.isPrivate){
 			oReq.open("delete",matrix.cfg.srvurl+"delete",true);
 			oReq.setRequestHeader("x-content-id", nodeComment.id);
 			oReq.setRequestHeader("x-access-token", matrix.mkOwnToken(nodeComment.sign));
@@ -585,7 +597,11 @@ _Actions.prototype = {
 		var id = nodePost.id;
 		var spUnfold = e.target.parentNode.appendChild(cView.doc.createElement("i"));
 		spUnfold.className = "fa fa-spinner fa-pulse";
-		context.api.getPost(context.token, nodePost.rawData.id, ["comments"]).then( function(postUpd){
+		context.api.getPost(context.token
+			, context.gUsers[nodePost.rawData.createdBy].username
+				+ "/" + nodePost.rawData.id 
+			, ["comments"]
+		).then( function(postUpd){
 			cView.Common.loadGlobals(postUpd, context);
 			postUpd.posts.domain = domain;
 			cView.doc.getElementById(id).rawData = postUpd.posts;
@@ -628,7 +644,7 @@ _Actions.prototype = {
 	}
 	,"me": function(e){
 		var cView = document.cView;
-		e.target.href = gConfig.front+cView.contexts[gConfig.frfDomain].gMe["users"]["username"];
+		e.target.href = gConfig.front+cView.contexts[gConfig.leadDomain].gMe["users"]["username"];
 	}
 	,"home": function(e){
 		var cView = document.cView;
@@ -788,7 +804,8 @@ _Actions.prototype = {
 			if ((input != "") && (typeof context.gUsers.byName[input] !== "undefined")
 			&& context.gUsers.byName[input].friend 
 			&& (context.gUsers.byName[input].subscriber||context.gUsers.byName[input].type == "group"))
-				nodeSender.feeds.push(input);
+			nodeSender.feeds.push(input);
+
 			/*
 			if (nodeSender.feeds.length) cView.Actions.newPost(e);
 			else alert("should have valid recipients");
@@ -1020,7 +1037,7 @@ _Actions.prototype = {
 
 		} ,function(res){
 			nodeMsg.hidden = false;
-			nodeMsg.innerHTML = res.err;
+			nodeMsg.innerHTML = res.code+" "+ res.data;
 			nodeLogin.getElementsByClassName("spinner")[0].hidden = true;
 			e.target.disabled = false;
 		});
@@ -1030,16 +1047,14 @@ _Actions.prototype = {
 
 		}
 	}
-	,"setMainProfile": function(e){//TODO
+	,"setMainProfile": function(e){
 		if(!e.target.checked)return;
 		var cView = document.cView;
-		//var nodeProf = cView.Utils.getNode(e.target, ["p","settings-profile"]);
 		var nodeProf = e.target.getNode(["p","settings-profile"]);
 		var inputs = cView.Utils.getInputsByName(nodeProf);
 		var id = inputs["id"].value;
 		var context = cView.contexts[inputs["domain"].value];
 		context.token = context.logins[id].token;
-		context.logins[is].isMain = true;
 		cView.Common.saveLogins();
 	}
 	,"logoutAcc": function(e){
@@ -1050,17 +1065,22 @@ _Actions.prototype = {
 		var context = cView.contexts[inputs["domain"].value];
 		var token = context.logins[id].token;
 		delete context.logins[id];
-		cView.Common.saveLogins();
 		nodeProf.parentNode.removeChild(nodeProf);
 		if(token ==  context.token){
-			nodeProf = cView.doc.getElementsByClassName("settings-profile")[0];
-			if (typeof nodeProf === "undefined") return cView.Actions.logout(e);
-			var inputs = cView.Utils.getInputsByName(nodeProf);
-			id = inputs["id"].value;
-			inputs["is-main"].checked = true;
-			context.token = context.logins[id].token; 
-			if (inputs["domain"].value == gConfig.frfDomain)cView.Common.setCookie(gConfig.tokenPrefix + "authToken", context.token);
+			context.token = null;
+			nodesProf = cView.doc.getElementsByClassName("settings-profile");
+			if (!nodesProf.length) return cView.Actions.logout(e);
+			for (var idx = 0; idx < nodesProf.length; idx++ ){
+				var nodeProf = nodesProf[idx];
+				inputs = cView.Utils.getInputsByName(nodeProf);
+				if(context.domin != inputs["domain"].value) continue;
+				id = inputs["id"].value;
+				inputs["is-main-"+context.domain].checked = true;
+				context.token = context.logins[id].token;
+				break;
+			}
 		}
+		cView.Common.saveLogins();
 	}
 	,"setRTparams": function (e){
 		var cView = document.cView;

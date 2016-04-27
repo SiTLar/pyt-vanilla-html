@@ -1,0 +1,501 @@
+"use strinct";
+define(["./utils"],function(utils){
+//utils._Promise = Promise;
+return function(config){
+	function get(token, url, pagenum){
+		var skip =  (typeof pagenum !== "undefined") ?("?page=" + pagenum):"";
+		return 	utils.xhrReq( {
+				"url":config.serverURL +url+".json" + skip
+				,"headers":{"X-API-Token":token}
+			}
+		);
+	}
+	function getSubs(token, username){
+		return utils._Promise.all([
+			get(token, username+"/subscribers")
+			,get(token, username+"/subscriptions")
+		]);
+	}
+	function getWhoami(token){
+		var pUser  = utils.xhrReq( 
+			{ 	"url":config.serverApiURL +"whoami.json" 
+				,"headers":{"X-API-Token":token}
+			}
+		).then(function(res){
+			return JSON.parse(res); 
+		});
+		pSubs = pUser.then(function(whoami){
+			return getSubs(token, whoami.user.name);
+		});
+		return utils._Promise.all([pUser,pSubs]).then(function(res){
+			var whoami = res[0];
+			var subs = res[1].map(JSON.parse);
+			var subscriptions = subs[1].subscriptions.map(function(sub){
+				sub = sub.user;
+				sub.type = "user";
+				sub.id =  sub.id.toString();
+				return sub;
+			}).concat(subs[1].group_subscriptions.map(function(sub){
+				sub = sub.group;
+				sub.type = "group";
+				sub.id = "groups/" + sub.id;
+				return sub;
+			}));
+
+			whoami.user.subscribers = subs[0].subscribers.map(function(sub){
+				sub = sub.user;
+				sub.id = sub.id.toString();
+				return sub;
+			});
+			whoami.subscribers = whoami.user.subscribers.concat(subscriptions);
+			whoami.subscriptions = subscriptions.map(function(sub){
+				return {"name": "Posts"
+					,"id": "posts-"+sub.id
+					,"user": sub.id.toString()
+				};
+			});
+			whoami.user.subscriptions = subscriptions.map(function(sub){return "posts-"+sub.id;});
+			whoami.user.banIds = subs[0].banned_subscribers;
+
+			return whoami;
+		});
+	}
+	return{
+		"protocol":{
+			"get": get
+			,"getTimeline": function(token, timeline, skip) {
+				var len = timeline.lebngth;
+				if(timeline.charAt(len - 1) == '/')timeline = timeline.slice(0,-1);
+				if (timeline == "home")timeline = "index";
+				return get(token, timeline, Math.ceil(skip/gConfig.offset)+1); 
+			}
+			,"getPost": function(token, path, arrOptions) {
+				var likes = false;
+				var cmts = "0";
+				if(Array.isArray(arrOptions))arrOptions.forEach(function(option){
+					switch(option){
+					case "likes":
+						likes = true;
+						break;
+					case "comments":
+						cmts = "all";
+					}
+				});
+				if(!likes) return get(token, path);
+				return utils._Promise.all([
+					get(token, path)
+					,get(token,path+"/likes")
+				]).then(function(res){
+					post = JSON.parse(res[0]);
+					likes = JSON.parse(res[1]);
+					post.entries.likes = likes.likes;
+					Object.keys(likes.users).forEach(function(id){
+						post.users[id] = likes.users[id] 
+					});
+					return post;
+				});
+			}
+			,"sendPost": function(token, postdata, sender, type){
+				var post = {
+					"timelines": new Array()
+					,"text": postdata.post.body
+					,"comments_disabled":0
+					,"attachment_ids":postdata.post.attachments
+				}; 
+				var dests = postdata.meta.feeds;
+				var myIdx = dests.indexOf(sender);
+				if(myIdx != -1 ){
+					post.timelines.push("user");
+					dests.splice(myIdx,1);
+				}
+				var prefix = "group:";
+				if(type == "directs") prefix = "direct:";
+				dests.forEach(function(dest){ post.timelines.push(prefix+dest); });
+				var data  = JSON.stringify({"post": post});
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "posts.json"
+						,"method": "post"
+						,"data": data
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"
+						}
+					}
+				);
+			}
+			,"editPost": function(token, id, postdata){
+				var data = JSON.stringify({"post":{"text":postdata.post.body }});
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "posts/"+id+".json"
+						,"method": "post"
+						,"data": data
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"
+						}
+					}
+				);
+			}
+			,"deletePost": function(token, id){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "posts/"+id+".json"
+						,"headers":{"X-API-Token":token}
+						,"method": "delete"
+					}
+				);
+			}
+			,"switchCmts": function(token, id, action){
+				var data = JSON.stringify({"post":{"comments_disable":action?1:0}});
+				return utils.xhrReq(
+					{	"url":config.serverApiURL +"posts/" + id + ".json"
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"
+						}
+						,"method": "patch"
+						,"data":data
+					}
+				);	
+			}
+			,"sendHide": function(token, id, action){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "posts/" + id + "/hide"
+						,"headers":{"X-API-Token":token}
+						,"method": action?"post":"delete"
+					}
+				);
+			}
+			,"getUser": function(token, req) {return get(token, "users/" + req );}
+			,"doBan": function(token, username, action){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "users/" + username + "/ban" 
+						,"headers":{"X-API-Token":token}
+						,"method": action?"post":"delete"
+					}
+				);
+			}
+			,"get": function(token, timeline) {return get(token, timeline);}
+			,"updProfile" : function(token, id, data){
+				var user = {
+					"description":data.user.description
+					,"display_name":data.user.screenName
+					,"status":data.user.isPrivate == "1"?"private":"public"
+
+				};
+				var data = JSON.stringify({"user":user});
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "users/" + id + ".json"
+						,"method": "patch"
+						,"data": data
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"
+						}
+					}
+				);
+			}
+			,"chngAvatar": function (token, data){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "avatars"
+						,"headers":{"X-API-Token":token}
+						,"method": "post"
+						,"data": data
+					}
+				).then(function(res){console.log(res)});
+			}
+			,"_getWhoami":getWhoami
+			,"getSubs":getSubs
+			,"login":function(username, token){
+				return new utils._Promise(function(resolve,reject){
+					utils.xhrReq( 
+						{ 	"url":config.serverApiURL +"whoami.json" 
+							,"headers":{"X-API-Token":token}
+						}
+					).then(function(strRes){
+						var res = JSON.parse(strRes);
+						if(res.user.name == username){
+							resolve({"authToken":token, "user":res.user});
+						}
+						else reject({"code":"", "data":"invalid login data"});
+					}
+					,reject);
+				});
+			}
+			,"sendLike": function(token, id, action){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "posts/" + id + "/likes.json" 
+						,"headers":{"X-API-Token":token}
+						,"method": action?"post":"delete"
+					}
+				);
+			}
+			,"sendComment": function(token, postdata){
+				var data = JSON.stringify({"comment":{"text":postdata.comment.body}});
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL 
+							+ "posts/" 
+							+ postdata.comment.postId 
+							+ "/comments.json"
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"
+						}
+						,"method": "post"
+						,"data": data
+					}
+				).then(function(res){return {"comments":JSON.parse(res)}});
+			}
+			,"editComment": function(token, id, postdata, postId){
+				var data = JSON.stringify({"comment":{"text":postdata.comment.body}});
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL 
+							+ "posts/" 
+							+ postId 
+							+ "/comments/"+id + ".json"
+						,"method": "post"
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"
+						}
+						,"data": data
+					}
+				).then(function(res){return{"comments":JSON.parse(res)}});
+			}
+			,"deleteComment": function(token, id, postId){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL
+							+ "posts/" 
+							+ postId 
+							+ "/comments/"+id + ".json"
+						,"headers":{"X-API-Token":token}
+						,"method": "delete"
+					}
+				);
+			}
+			,"reqSub": function(token,username ){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL 
+							+ "users/" + username 
+							+ "/subscribers.json" 
+						,"headers":{"X-API-Token":token}
+						,"method": "post"
+					}
+				);
+			}
+			,"evtSub": function(token,username, subscribed ){
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL 
+							+ "users/" + username 
+							+ "/subscribers" 
+						,"headers":{"X-API-Token":token}
+						,"method": subscribed?"delete":"post"
+					}
+				).then(function(){return getWhoami(token);});
+			}
+			,"reqResp": function(token, user, action){
+				return utils.xhrReq(
+					{ 	"url": config.serverURL 
+							+ "users/" 
+							+ action + "/" 
+							+ user
+						,"headers":{"X-API-Token":token}
+						,"method": (action == "acceptRequest")?"put":"delete"
+					}
+				);
+			}
+			,"sendAttachment": function(token,file, filename){
+				var data = new FormData();
+
+				data.append( "authenticity_token", token);
+				data.append( "attachment[attachment][]",file, filename);
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "attachments.json"
+						,"token": token 
+						,"method": "post"
+						,"data": data
+					}
+				);
+			}
+		}
+		,"parse":function (res){
+			var input = (typeof res == "string")?JSON.parse(res):res;
+			var aComments = new Array();
+			var aAttachments = new Array();
+			var subscriptions = new Object();
+			var convs = {
+				"attachment_file_name":{"out":"fileName","a":"copy"}
+				,"attachments":{"out":""
+					,"post":function(atts){ 
+						return atts.map(function(att){
+							att.mediaType="image";
+							aAttachments.push(att); 
+							return att.id;
+						});
+					} 
+				}
+				,"avatar_url":{"out":"profilePictureMediumUrl","a":"mutate", "f":addHost}
+				,"authToken":{"out":"","a":"copy"}
+				,"banIds":{"out":"","a":"str"}
+				,"can_unhide":{"out":"isHidden","a":"copy"} 
+				,"comments":{"out":"", "post":function(cmts){ 
+					if (Array.isArray(cmts))
+						return cmts.map(function(cmt){
+							aComments.push(cmt); return cmt.id;
+						});
+					else aComments = cmts;
+				} }
+				,"comments_count":{"out":"","a":"copy"}
+				,"created_at":{"out":"createdAt","a":"mutate","f":Date.parse,"single":true}
+				,"description":{"out":"","a":"copy"}
+				,"display_name":{"out":"screenName","a":"copy"}
+				//,"embeds":{"out":""}
+				,"entries":{"out":"posts", "post":function(posts){
+					if(Array.isArray(posts))posts.forEach(function(post){
+						post.omittedComments = post.comments_count - post.comments.length;
+					});
+					return posts;
+				}} 
+				,"fresh_at":{"out":"updatedAt","a":"mutate","f":Date.parse},"single":true
+				,"groups":{"out":"users", "pre":function(groups){
+						return Object.keys(groups).map(function(groupid){
+							var group = groups[groupid];
+							group.id = "groups/" + groupid;
+							group.type = "group";
+							return group;
+						});
+					}
+				}
+				,"id":{"out":"","a":"str"}//"a":"mutate","f":function(id){return id.toString();}}
+				,"is_direct":{"out":"isDirect", "a":"copy"}
+				,"is_public":{"out":"isPrivate","a":"mutate","f":function(fPub){ return fPub?"0":"1"; }}
+				,"likes":{"out":"","a":"str"}
+				,"more_likes":{"out":"omittedLikes","a":"copy"}
+				,"name":{"out":"username","a":"copy"}
+				,"original_url":{"out":"url","a":"mutate", "f":addHost}
+				//,"post_id":{"out":"","a":"copy"}
+				,"published_at":{"out":"createdAt","a":"mutate","f":Date.parse,"single":true}
+				,"post":{"out":"posts"}
+				,"river":{"out":"timelines"}
+				,"reason":{"out":"postedTo" ,"a":"mutate","f":function(val){
+					var feeds = new Array();
+					Object.keys(val).forEach(function(key){
+						switch(key){
+						case "user":
+							val[key].forEach(function(id){
+								addFeed(id,false);
+								feeds.push(id);
+							});
+							break;
+						case "group":
+							val[key].forEach(function(id){
+								addFeed("groups/"+id,false);
+								feeds.push("groups/"+id);
+							});
+							break;
+						case "user_private":
+							val[key].forEach(function(id){
+								addFeed(id,true);
+								feeds.push(id);
+							});
+							break;
+						default:
+						}
+					});
+					return feeds;
+				}}
+				,"status":{"out":"isPrivate","a":"mutate","f":function(val){
+					return ["public","disallow-robots","protected","subscribed"].indexOf(val) != -1 ?"0":"1";
+				}}
+				,"subscribers":{"out":""}
+				,"subscriptions":{"out":"","a":"copy"}
+				,"text":{"out":"body","a":"copy"}
+				,"thumb_url":{"out":"thumbnailUrl","a":"mutate", "f":addHost}
+				,"type":{"out":"","a":"copy"}
+				,"updated_at":{"out":"updatedAt","a":"mutate","f":Date.parse,"single":true}
+				,"user_id":{"out":"createdBy","a":"str"}
+				,"user":{"out":"users", "post":function(user){
+						user.type = "user";
+						return user;
+					}
+				}
+				,"users":{"out":"", "pre":obj2arr, "post":function(users){
+						users.forEach(function(user){user.type = "user";});
+						return users;
+					}
+				}
+				,"uuid":{"out":"id","a":"copy"}
+			}
+			var out = convert(input);
+			if((typeof out.subscribers === "undefined")&&Array.isArray(out.users))
+				out.subscribers = out.users;
+			out["comments"] = aComments;
+			out["attachments"] = aAttachments;
+			if (typeof out.posts !== "undefined"){
+				var posts = Array.isArray(out.posts)?out.posts:[out.posts];
+				posts.forEach(function(post){
+					if(Array.isArray(post.postedTo)&&(post.postedTo.length == 0)){
+						addFeed(post.createdBy,false);
+						post.postedTo.push(post.createdBy);
+					}
+				});
+			}
+			if (typeof  out.subscriptions === "undefined"){
+				out.subscriptions = new Array();
+				Object.keys(subscriptions).forEach(function(id){out.subscriptions.push(subscriptions[id])});
+			}
+			return out;
+			function convert(oData){
+				var oOut = new Object();
+				Object.keys(oData).forEach(function(key){
+					var val = oData[key];
+					var conv = convs[key];
+					var res;
+					if(typeof conv !== "undefined"){
+						if (typeof conv.pre === "function" )
+							val = conv.pre(val);
+						if (conv.out == "")conv.out = key;
+						switch(conv.a){
+						case "copy":
+							res = val;
+							break;
+						case "str":
+							res = Array.isArray(val)?
+								val.map(function(el){ return el.toString();})
+								:val.toString();
+							break;
+						case "mutate":
+							res = conv.f(val);
+							break;
+						default: 
+							res = Array.isArray(val)?val.map(convert):convert(val);
+						}
+						if (typeof conv.post === "function" ) res = conv.post(res);
+						if((typeof oOut[conv.out] === "undefined")||(conv.single === true) )
+							oOut[conv.out] = res;
+						else if((typeof res === "object" )&& res && !Object.keys(res).length)
+							return;
+						else if(Array.isArray(res))
+							oOut[conv.out] = res.concat(oOut[conv.out]);
+						else oOut[conv.out] = [res].concat(oOut[conv.out]);
+					}
+				});
+				return oOut;
+			}
+			function addFeed(id, priv){
+				subscriptions[id] = {
+					"id":priv?id+"-private":id
+					,"name":"Posts"
+					,"user":id
+					,"mayNotBePublic": priv
+				};
+			}
+			function obj2arr(obj){
+				return Object.keys(obj).map(function(key){
+					return obj[key];
+				});
+			}
+			function addHost(url){
+				if(url.charAt(1) == "/")return url;
+				return "//mokum.place" + url;
+			}
+			function wwwFormData(key,val){
+				return utils.encodeURIForm(key) + "=" + utils.encodeURIForm(val);
+			}
+		}
+	};
+};
+});

@@ -1,5 +1,12 @@
 {"nodes": [
-	{"c":"post"
+	{"c":"container", "p":{"id":"container"}
+	,"children":[
+		{"c":"controls"}
+		,{"c":"pagetitle", "t":"h1"}
+		,{"c":"details"}
+		,{"c":"up-controls"}
+	]}
+	,{"c":"post"
 	,"children":[
 		{"c":"avatar"
 		,"children":[
@@ -48,7 +55,7 @@
 	,"children":[
 		{"c":"priv-body"}
 	]}
-	,{"c":"controls-user","t":"div"
+	,{"c":"controls-login","t":"div"
 	,"children":[
 		{"c":"user-home","t":"a","href":"#","txt":"home","e":{"mousedown":["Actions","home"]}}
 		,{"t":"span","txt":" &#8226; "}
@@ -70,9 +77,9 @@
 	]}
 	,{"c":"controls-anon","t":"div"
 	,"children":[
-		{"c":"user-signup","t":"a","txt":""}
+		{"c":"user-signup","t":"a","txt":"Sign up","p":{"href":"https://beta.freefeed.net/signup"}}
 		,{"t":"span","txt":" &#8226; "}
-		,{"c":"user-login","t":"a","txt":"login","e":{"click":["Actions","auth"]}}
+		,{"c":"user-login","t":"a","txt":"login","e":{"click":["Common","auth"]}}
 	]}
 	,{"c":"controls-self","t":"span"
 	,"children":[
@@ -118,6 +125,11 @@
 		,{"c":"spacer","t":"span","txt":"|"}
 		,{"t":"a","txt":"delete","e":{"click":["Actions","deleteComment"]}}
 	]}
+	,{"c":"comments-load", "t":"a", "e":{"click":["Actions","unfoldComm"]}
+	,"children":[
+		{"c":"num", "t":"span"}
+		,{"t":"span", "txt":" more comments"}
+	]}
 	,{"c":"edit"
 	,"children":[
 		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
@@ -146,7 +158,7 @@
 		,{"c":"attachments"}
 		,{"c":"edit-buttons"
 		,"children":[
-			{"c":"edit-buttons-upload","t":"input","p":{"type":"file","accept":"image/*" }, "e":{"change":["Actions","sendAttachment"] }}
+			{"c":"edit-buttons-upload","t":"input","p":{"type":"file" }, "e":{"change":["Actions","sendAttachment"] }}
 			,{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":["Actions","newPost"]}}
 		]}
 	]}
@@ -182,6 +194,7 @@
 		]}
 		,{"c":"ft-list","t":"ul"}
 	]}
+	,{"c":"ft-i", "t":"li", "e":{"click":["Actions","selectFriend"]}}
 	,{"c":"likes-smile","t":"span"
 	,"children":[
 		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"}
@@ -341,10 +354,21 @@
 			,{"t":"span", "txt":"Ban"}
 		]}
 	]}
-	,{"c":"global-settings"
+	,{"c":"settings-head"
 	,"children":[
-		{"t":"h3","txt":"Profiles" }
-		,{"c":"settings-profiles"}
+		{"c":"sh-displ"
+		,"children":[
+			{"t":"a","txt":"Display","e":{"mousedown":["Actions","goSetDisplay"]}}
+		]}
+		,{"c":"sh-acc"
+		,"children":[
+			{"t":"a","txt":"Accounts","e":{"mousedown":["Actions","goSetAccounts"]}}
+		]}
+		,{"c":"sh-end"}
+	]}
+	,{"c":"accaunts-settings"
+	,"children":[
+		{"c":"settings-profiles"}
 		,{"c":"gs-add-acc"
 		,"children":[
 			{"t":"a", "e":{"click":["Actions","addAcc"]}
@@ -352,9 +376,11 @@
 				{"c":"fa fa-plus","t":"i"}
 				,{"t":"span", "txt":"&nbsp;Add account"}
 			]}
-
 		]}
-		,{"t":"h3","txt":"Theme"}
+	]}
+	,{"c":"display-settings"
+	,"children":[
+		{"t":"h3","txt":"Theme"}
 		,{"c":"radio", "t":"label"
 		,"children":[
 			{"t":"input"
@@ -477,6 +503,7 @@
 			]}
 		]}
 		,{"c":"gs-input","t":"input","p":{"name":"id", "type":"hidden"}}
+		,{"c":"gs-input","t":"input","p":{"name":"domain", "type":"hidden"}}
 		,{"t":"p", "txt":"Screen name:"}
 		,{"c":"gs-input","t":"input","p":{"name":"screen-name"}}
 		,{"t":"p", "txt":"Email:"}
@@ -504,6 +531,7 @@
 	,{"c":"settings-login"
 	,"children":[
 		{"t":"p","txt":"Please log in to another account"}
+		,{"c":"domains" }
 		,{"t":"p", "txt":"Username:"}
 		,{"c":"gs-input","t":"input","p":{"name":"login-username"}}
 		,{"t":"p", "txt":"Password:"}
@@ -519,12 +547,30 @@
 		]}
 		,{"c":"msg-error", "p":{"hidden":true}}
 	]}
+	,{"c":"input-block","t":"label"
+	,"children":[
+		{"c":"ib-input","t":"input" ,"p":{"type":"radio" } }
+		,{"c":"ib-span","t":"span"}
+	]}
+	,{"c":"req-body"
+	,"children":[
+		{"c":"req-body-pend", "p":{"hidden":true}
+		,"children":[
+			{"t":"h3", "txt":"Pending requests", "p":{"id":"sr-header"}}
+		]}
+		,{"c":"req-body-sent", "p":{"hidden":true}
+		,"children":[
+			{"t":"h3", "txt":"Sent requests"}
+		]}
+		
+	]}
 	,{"c":"sub-request"
 	,"children":[
 		{"c":"sr-avatar", "t":"img"}
 		,{"c":"sr-name"}
 		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-id", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-domain", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-ctrl"
 		,"children":[
 			{"t":"a","txt":"Accept request", "e":{"click":["Actions","srAccept"]}}
@@ -657,6 +703,11 @@
 			,{"c":"moderate-cmts","t":"a","txt":"Moderate comments", "e":{"click":["Actions","showDelete"]} }
 			,{"c":"disable-cmts","t":"a","txt":"Disable comments", "e":{"click":["Actions","switchCmts"]} }
 		]}
+	]}
+	,{"c":"global-failure"
+	,"children":[
+		{"c":"title","t":"h1", "txt":"unknown error"}
+		,{"c":"info"}
 	]}
 ]}
 

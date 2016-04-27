@@ -1,9 +1,6 @@
-"use strict";
-define("Utils", [], function(){
-function _Utils(view){
-	this.cView = view;
-};
-function args2Arr() {
+"use strinct";
+define([], function(){
+function args2Arr(){
 	//.length is just an integer, this doesn't leak
 	//the arguments object itself
 	var args = new Array(arguments.length);
@@ -13,10 +10,86 @@ function args2Arr() {
 	}
 	return args;
 }
-_Utils.prototype = {
-	constructor:_Utils
+function _Promise(cb){
+	var that = this ;
+	Object.keys(that.defaults).forEach(function(key){
+		that[key] = JSON.parse(JSON.stringify(that.defaults[key]))
+	});
+	function fulfill(res){that.fulfill(res);}
+	function fail(res){that.fail(res);}
+	setTimeout(function (){cb(fulfill,fail)});
+}
+_Promise.resolve = function(val){
+	return new _Promise(function(resolve, reject){
+		resolve(val);
+	});
+}
+_Promise.reject = function(val){
+	return new _Promise(function(resolve, reject){
+		reject(val);
+	});
+}
+_Promise.all = function(arr){
+	return new _Promise(function(resolve, reject){
+		var count = arr.length;
+		if(!count)resolve();
+		var reses = new Array(count);
+		function alldone(data,idx){
+			reses[idx] = data;
+			if (--count)return;
+			resolve(reses);
+		}
+
+		arr.forEach(function(item, idx){
+			function success(res){alldone(res,idx);};
+			if( typeof item.then !== "function")item = _Promise.resolve(item);
+			item.then(success, reject);
+		});	
+	
+	});
+}
+_Promise.prototype = {
+	constructor:_Promise
+	,"defaults":{
+		"resolves":[]
+		,"rejects":[]
+		,"done":false
+		,"failed":false
+	}
+	,"then":function(resolve, reject){
+		var that = this;
+		return new _Promise(function( thenRes, thenRej){
+			function pass(arg){return arg;};
+			function react(after,before,val){
+				var ret = before(val);
+				if((typeof ret !== "undefined")&&(typeof ret.then === "function"))
+					ret.then(thenRes, thenRej);
+				else after(ret);
+			}; 
+			if (typeof reject !== "function") reject = pass;
+			if (typeof thenRej!== "function") thenRej = pass;
+			if(that.failed)react(thenRej,reject,that.error);
+			else that.rejects.push(function(fail){react(thenRej,reject,fail);});
+			if(that.done && !that.failed)react(thenRes,resolve, that.res);
+			else that.resolves.push(function(res){react(thenRes,resolve,res);});
+		});
+	}
+	,"fulfill":function(res){
+		this.done = true;
+		this.res = res;
+		while(this.resolves.length)
+			this.resolves.pop()(this.res);
+	}
+	,"fail":function(res){
+		this.failed = true;
+		this.error = res;
+		while(this.rejects.length)
+			this.rejects.pop()(this.error);
+	}
+}
+return {
 	/*source: http://stackoverflow.com/a/7516652 */
-	,"relative_time": function(date) {
+	"relative_time": function(date) {
 		var cView = this.cView;
 	/*	if (!date_str) {return;}
 		//date_str = $.trim(date_str);
@@ -49,348 +122,39 @@ _Utils.prototype = {
 		return 'about ' + r;
 	}
 	/**********************************************/
-	,"args2Arr": function(){return args2Arr.apply(this,arguments);}
-	,"ffReq": function(o, callback, fail ){
-		fail = typeof fail !== "undefined" ? fail : function(){return;};
-		var method = typeof o.method  !== "undefined"? o.method : "get";
-		var oReq = new XMLHttpRequest();
-		oReq.open(method ,o.url , true);
-		if(typeof o.token !== "undefined" )
-			oReq.setRequestHeader("X-Authentication-Token",o.token);
-		oReq.onload = function(){
-			if(oReq.status < 400) callback(oReq.response);
-			else fail();
-		}
-		if (typeof o.data  !== "undefined")  oReq.send(data);
-		else  oReq.send();
-	}
-	,"setCookie": function(name, data){
-		var cView = this.cView;
-		//var hostname = window.location.hostname.split(".");
-		//hostname.reverse();
-
-		cView.doc.cookie = name
-			+"="+data
-			+";expires=" + new Date(Date.now()+3600000*24*365).toUTCString()
-		//	+"; domain="+ hostname[1] + "." + hostname[0] 
-			+"; path=/"
-			+";secure";
-	}
-	,"getCookie": function(name){
-		var cView = this.cView;
-		var arrCookies = cView.doc.cookie.split(";");
-		var res;
-		arrCookies.some(function(c){
-			var cookie = c.split("=");
-			if(cookie[0].trim() == name ){
-				res = decodeURIComponent(cookie[1]);
-				return true;
+	,"args2Arr": function(){return args2Arr.apply(this, arguments);}
+	,"xhrReq": function(o){
+		return new _Promise(function( resolve, reject ){
+			var method = typeof o.method  !== "undefined"? o.method : "get";
+			var oReq = new XMLHttpRequest();
+			oReq.open(method ,o.url , true);
+			if(typeof o.token !== "undefined" )
+				oReq.setRequestHeader("X-Authentication-Token",o.token);
+			if(typeof o.headers !== "undefined" ) Object.keys(o.headers).forEach(function (header){
+				if((o.headers[header] !== undefined)&&(o.headers[header] !== null))
+					oReq.setRequestHeader(header,o.headers[header]);
+			});
+			oReq.onload = function(){
+				if(oReq.status < 400) resolve(oReq.response);
+				else reject({"code":oReq.status, "data":oReq.response});
 			}
-		});
-		return res;
-	}
-	,"deleteCookie": function(name){
-		var cView = this.cView;
-		var hostname = window.location.hostname.split(".");
-		hostname.reverse();
-		var cookie = name
-			+"=;expires=" + new Date(0).toUTCString()
-			+"; domain="+ hostname[1] + "." + hostname[0]
-			+"; path=/";
-		cView.doc.cookie = cookie; 
-		cookie = name
-			+"=;expires=" + new Date(0).toUTCString()
-			+"; path=/";
-		cView.doc.cookie = cookie; 
-	}
-	,"setChild": function (node,name, newNode){
-		if(typeof node.cNodes === "undefined")
-			node.cNodes = new Object();
-		if(typeof node.cNodes[name] !== "undefined") 
-			node.replaceChild(newNode, node.cNodes[name]);
-		else node.appendChild(newNode);
-		node.cNodes[name] = newNode;
-		return newNode;
-	}
-	,"addUser": function(user){
-		var cView = this.cView;
-		if (typeof cView.gUsers[user.id] !== "undefined" ){
-			var localUser = cView.gUsers[user.id];
-			Object.keys(user).forEach(function(key){
-				if(typeof localUser[key] === "undefined")
-					 localUser[key] = user[key];
-			});
-			return;
-		}
-		var className = "not-my-link";
-		if(typeof user.isPrivate !== "undefined")user.isPrivate = JSON.parse(user.isPrivate);
-		if (cView.mode == null) cView.mode = "screen";
-		switch(cView.mode){
-		case "screen":
-			user.title  = user.screenName;
-			break;
-		case "screen_u":
-			if(user.screenName != user.username)
-				user.title  = user.screenName + " <div class=username>(" + user.username + ")</div>";
-			else user.title  = "<div class=username>"+user.username+"</div>";
-			break;
-		case "username":
-			user.title  = "<div class=username>"+user.username+"</div>";
-		}
-		if(typeof cView.logins[user.id] !== "undefined"){
-			user.my = true;
-			className = "my-link-"+user.id;
-		}else{
-			user.my = false;
-			className = "not-my-link";
-		}
-		user.link = '<a class="'+className+'" href="' + gConfig.front+ user.username+'">'
-		+ user.title
-		+"</a>";
-		if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
-		user.friend = false;
-		user.subscriber = false;
-		cView.gUsers[user.id] = user;
-		cView.gUsers.byName[user.username] = user;
-	}
-	,"genNodes": function (templates){
-		var cView = this.cView;
-		var nodes = new Array();
-		//oTemplates = JSON.parse(templates);
-		templates.forEach(function(template) {
-			if (!template.t)template.t = "div";
-			var node = cView.doc.createElement(template.t);
-			node.cloneAll = function(){
-				var newNode = this.cloneNode(true);
-				genCNodes(newNode, this);
-				return newNode;
+			oReq.onerror = function(){
+				reject({"code":oReq.status, "data":oReq.response});
 			};
-			if(template.c)node.className = template.c;
-			if(template.children)
-			cView.Utils.genNodes(template.children).forEach(function(victim){
-				node.appendChild(victim);
-			});
-			if(template.txt) node.innerHTML = template.txt;
-			if(template.e) node.e = template.e;
-			if(template.p) for( var p in template.p) node[p] =  template.p[p];
-			nodes.push(node);
-		} );
-		return nodes;
-		function genCNodes(node, proto){
-			node.cNodes = new Object();
-			node.getNode = function(){
-				var args = args2Arr.apply(this,arguments);
-				args.unshift(node);
-				return cView.Utils.getNode.apply(node, args);
-			};
-			for(var idx = 0; idx <  node.childNodes.length; idx++){
-				genCNodes(node.childNodes[idx], proto.childNodes[idx]);
-				node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
-			}
-			if (typeof proto.e  == "undefined"  ) return;
-			Object.keys(proto.e).forEach(function(evt){
-				var action = proto.e[evt];
-				node.addEventListener(evt,cView[action[0]][action[1]]);
-			});
-		}
-	}
-	,"refreshLogin": function(id){
-		var cView = this.cView;
-		cView.localStorage.setItem("gMe",JSON.stringify(cView.logins));
-		if((typeof cView.gUsers[id] !== "undefined") && Array.isArray(cView.gUsers[id].subscriptionRequests))
-			cView.subReqsCount -= cView.gUsers[id].subscriptionRequests.length;
-		delete cView.gUsers[id];
-		var user = cView.logins[id].data.users;
-		cView.Utils.addUser(user);
-		var links = cView.doc.getElementsByClassName("my-link-" + id);
-		for(var idx = 0; idx< links.length; idx++)
-			links[idx].outerHTML = user.link;
-		var login = cView.logins[id].data;
-		login.oFriends = new Object();
-		if ((typeof user.subscribers !== "undefined") 
-		&& (typeof user.subscriptions !== "undefined")){
-			oSubscriptions = new Object();
-			login.subscribers.forEach(cView.Utils.addUser, cView.Utils);
-			login.subscriptions.forEach(function(sub){
-				if(sub.name == "Posts"){
-					oSubscriptions[sub.id] = sub.user;
-				}
-			});
-			user.subscribers.forEach(function(sub){
-				cView.Utils.addUser(sub);
-				cView.gUsers[sub.id].subscriber = true;
-			});
-			user.subscriptions.forEach(function(subid){
-				var userid = oSubscriptions[subid];
-				if (typeof userid !== "undefined") {
-					if (typeof cView.gUsers[userid] !== "undefined") {
-						cView.gUsers[userid].friend = true;
-						login.oFriends[userid] = true;
-					}
-				}
-			});
-		}
-		var nodeSR = cView.doc.getElementById("sr-info");
-		if (!nodeSR)return;
-		if(Array.isArray(user.subscriptionRequests)){
-			cView.subReqsCount += user.subscriptionRequests.length;
-			nodeSR.cNodes["sr-info-a"].innerHTML ="You have "
-			+ cView.subReqsCount
-			+ " subscription requests to review.";
-			nodeSR.hidden = false;
-		}
-		if(!cView.subReqsCount)nodeSR.hidden = true;
-	}
-	,"setIcon": function (ico){
-		var cView = this.cView;
-		var linkFavicon = cView.doc.getElementById("favicon");
-		if (linkFavicon) linkFavicon.parentNode.removeChild(linkFavicon);
-		linkFavicon = cView.doc.createElement('link');
-		linkFavicon.id = "favicon";
-		linkFavicon.type = 'image/x-icon';
-		linkFavicon.rel = 'shortcut icon';
-		linkFavicon.href = gConfig.static + ico;
-		cView.doc.getElementsByTagName('head')[0].appendChild(linkFavicon);
-	}
-	,"postInit": function(){
-		var cView = this.cView;
-		(function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
-		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-		})(window,cView.doc,"script","//www.google-analytics.com/analytics.js","ga");
-		ga("create", gConfig.ga, "auto");
-		ga("send", "pageview");
-
-		if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
-		if(cView.localStorage.getItem("show_link_preview") == "1"){
-			(function(a,b,c){
-				var d,e,f;
-				f="PIN_"+~~((new Date).getTime()/864e5),
-				a[f]||(a[f]=!0,a.setTimeout(function(){
-					d=b.getElementsByTagName("SCRIPT")[0],
-					e=b.createElement("SCRIPT"),
-					e.type="text/javascript",
-					e.async=!0,
-					e.src=c+"?"+f,
-					d.parentNode.insertBefore(e,d)
-				}
-				,10))
-			})(window,cView.doc,"//assets.pinterest.com/js/pinit_main.js");
-		}
-		var nodesAttImg = document.getElementsByClassName("atts-img");
-		for (var idx = 0; idx < nodesAttImg.length; idx++){
-			var nodeImgAtt = nodesAttImg[idx];
-			if(cView.Utils.chkOverflow(nodeImgAtt))
-				nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
-		}
-		cView.Utils.setIcon("favicon.ico");
-	}
-	,"setStorage": function (){
-		var cView = this.cView;
-		["localStorage", "sessionStorage"].forEach(function(storage){
-			cView[storage] = new Object();
-			["setItem", "getItem", "removeItem"].forEach(function(action){
-				cView[storage][action] = function(){
-					try{
-						return window[storage][action].apply(window[storage],arguments);
-					} catch(e){return null};
-				}
-			});
+			if (typeof o.data  !== "undefined")  oReq.send(o.data);
+			else  oReq.send();
 		});
 	}
-	,"auth": function (check){
-		var cView = document.cView;
-		var Utils = cView.Utils;
-		cView.token = Utils.getCookie(gConfig.tokenPrefix + "authToken");
-		var txtgMe = null;
-		txtgMe = cView.localStorage.getItem("gMe");
-		if (txtgMe && cView.token){
-			cView.logins = JSON.parse(txtgMe);
-			if(cView.ids && (typeof cView.logins[cView.ids[0]].token !== "undefined")){
-				cView.ids.forEach(function(id) {
-					var user = cView.logins[id].data;
-					if (cView.token == cView.logins[id].token)cView.mainId = id;
-					Utils.addUser(user.users);
-					Utils.refreshLogin(id);
-					setTimeout(function (){ Utils.getWhoami(id); },300);
-				});
-				return true;
-			}else cView.logins = new Object();
-
-		}
-
-		var oReq = new XMLHttpRequest();
-		if(cView.token){
-			oReq.open("get", gConfig.serverURL +"users/whoami", false);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
-			oReq.send();
-			if(oReq.status < 400) {
-				var res = JSON.parse(oReq.response); 
-				var id = res.users.id;
-				cView.mainId = id;
-				cView.logins[id] = new Object();
-				cView.logins[id].token = cView.token;
-				cView.logins[id].data = res;
-				Utils.refreshLogin(id);
-				return true;
-			}
-		}
-		if (check !== true ){
-			cView.Utils.setIcon("favicon.ico");
-			var nodeAuth = cView.doc.createElement("div");
-
-			nodeAuth.className = "nodeAuth";
-			nodeAuth.innerHTML ='<div id=cView.Utils.auth-msg style="color:white; font-weight: bold;">&nbsp;</div><form action="javascript:" id=a-form><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
-			cView.doc.getElementsByTagName("body")[0].appendChild(nodeAuth);
-			cView.doc.getElementById("a-form").addEventListener("submit",cView.Actions.getauth);
-		}
-		return false;
-
+	,"err2html":function(err) {
+		var data = JSON.parse(err);
+		return Object.keys(data)
+			.map(function(err){ return data[err]; })
+			.join("<br>");
 	}
-	,"frfAutolinker":function( autolinker,match ){
-		switch (match.getType()){
-		case "twitter":
-			return "<a href=" + gConfig.front+match.getTwitterHandle()+">@" +match.getTwitterHandle( ) + "</a>" ;
-		/*
-		case "url":
-			if( match.getUrl().indexOf(".freefeed.net") != -1 ) return true;
-			else if( match.getUrl().indexOf("freefeed.net") != -1 ) {
-			    match.url = match.url.replace("freefeed.net","m.freefeed.net","gm");
-			    var tag = autolinker.getTagBuilder().build( match );
-			    return tag;
-
-			} else {
-			    return true;
-			}
-
-		*/
-		default:
-			return true;
-		}
-	}
-	,"chkOverflow":function(victim){
-		var cView = this.cView;
-		var test = victim.cloneNode(true);
-		test.style.opacity = 0;
-		test.style.position = "absolute";
-		test.style.display = "block";
-		victim.parentNode.appendChild(test);
-		test.style.width = victim.clientWidth;
-		var ret = victim.clientHeight < test.clientHeight;
-		victim.parentNode.removeChild(test);
-		return ret;
-	}
-	,"updateBlockList": function(list, username, add){
-		var cView = document.cView;
-		var id = cView.gUsers.byName[username].id;
-		if(add){
-			if ((typeof cView[list] === "undefined") || (cView[list] == null)) cView[list] = new Object();
-			cView[list][id] = true;
-			cView.localStorage.setItem(list, JSON.stringify(cView[list]));
-		}else try{
-			delete cView[list][id];
-			cView.localStorage.setItem(list, JSON.stringify(cView[list]));
-		}catch(e){};
+	,"encodeURIForm": function(str){
+		return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+			return '%' + c.charCodeAt(0).toString(16);
+		}).replace("%20","+");
 	}
 	,"getNode":function(node){
 		var arrPath =  args2Arr.apply(this,arguments);
@@ -401,7 +165,7 @@ _Utils.prototype = {
 			switch(step[0]){
 			case "p":
 				do node = node.parentNode; 
-				while(node.className != className);
+				while(node.classList[0] != className);
 				break;
 			case "c":
 				node = node.cNodes[className];
@@ -416,26 +180,32 @@ _Utils.prototype = {
 		var nodes = node.getElementsByTagName("input");
 		for(var idx = 0; idx < nodes.length; idx++){
 			var input = nodes[idx];
+			if ((input.type == "radio")&&(input.checked == false) )continue;
 			oInputs[input.name] = input;
+			
 		}
 		return oInputs;
 	}
-	,"getWhoami": function(id,callback){
-		var cView = this.cView;
-		var oParam = {
-			"url":gConfig.serverURL +"users/whoami"
-			,"token":cView.logins[id].token
-		};
-		cView.Utils.ffReq(oParam, function(res){
-			cView.logins[id].data = JSON.parse(res);
-			cView.Utils.refreshLogin(id);
-			if (typeof callback == "function") callback(res);
-		});
+	,"setChild": function (node,name, newNode){
+		if(typeof node.cNodes === "undefined")
+			node.cNodes = new Object();
+		if(typeof node.cNodes[name] !== "undefined") 
+			node.replaceChild(newNode, node.cNodes[name]);
+		else node.appendChild(newNode);
+		node.cNodes[name] = newNode;
+		return newNode;
 	}
-	,"setFrontUrl": function(url){
-		return url.replace(/((https?:\/\/)|beta\.|m\.|^)freefeed.net\/(?=.+)/,
-			gConfig.front.slice(8));
+	,"chkOverflow":function(victim){
+		var test = victim.cloneNode(true);
+		test.style.opacity = 0;
+		test.style.position = "absolute";
+		test.style.display = "block";
+		victim.parentNode.appendChild(test);
+		test.style.width = victim.clientWidth;
+		var ret = victim.clientHeight < test.clientHeight;
+		victim.parentNode.removeChild(test);
+		return ret;
 	}
-};
-return _Utils;
+	,"_Promise": _Promise
+}
 });

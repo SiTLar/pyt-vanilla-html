@@ -14,6 +14,7 @@ var gConfig = {
 			 "serverURL":"https://freefeed.net/v1/"
 			,"rtURL":"https://freefeed.net/socket.io/"
 		}
+		,"tokenPrefix":"freefeed_"
 		,"front":"freefeed.net"
 		,"fronts":["freefeed.net"
 			,"m.freefeed.net"
@@ -28,14 +29,18 @@ var gConfig = {
 			,"serverApiURL":"https://mokum.place/api/v1/"
 			,"rtURL":"https://"
 		}
+		,"tokenPrefix":"mokum_"
 		,"front":"mokum.place"
-		,"fronts":["mokum.place"]
+		,"fronts":["mokum.place"
+			 ,"mokum.ru"
+		]
 	}		
 	,"micropeppa":{ "api":"freefeed"
 		,"server":{
 			 "serverURL":"https://nanopeppa.freefeed.net/v1/"
 			,"rtURL":"https://nanopeppa.freefeed.net/socket.io/"
 		}
+		,"tokenPrefix":"test_"
 		,"front":"micropeppa.freefeed.net"
 		,"fronts":["micropeppa.freefeed.net"
 			,"nanopeppa.freefeed.net"

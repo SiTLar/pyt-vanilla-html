@@ -158,7 +158,7 @@
 		,{"c":"attachments"}
 		,{"c":"edit-buttons"
 		,"children":[
-			{"c":"edit-buttons-upload","t":"input","p":{"type":"file","accept":"image/*" }, "e":{"change":["Actions","sendAttachment"] }}
+			{"c":"edit-buttons-upload","t":"input","p":{"type":"file" }, "e":{"change":["Actions","sendAttachment"] }}
 			,{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":["Actions","newPost"]}}
 		]}
 	]}

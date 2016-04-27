@@ -68,7 +68,7 @@ _Promise.prototype = {
 			}; 
 			if (typeof reject !== "function") reject = pass;
 			if (typeof thenRej!== "function") thenRej = pass;
-			if(that.failed)react(thenRej,reject,that.fail);
+			if(that.failed)react(thenRej,reject,that.error);
 			else that.rejects.push(function(fail){react(thenRej,reject,fail);});
 			if(that.done && !that.failed)react(thenRes,resolve, that.res);
 			else that.resolves.push(function(res){react(thenRes,resolve,res);});
@@ -131,7 +131,8 @@ return {
 			if(typeof o.token !== "undefined" )
 				oReq.setRequestHeader("X-Authentication-Token",o.token);
 			if(typeof o.headers !== "undefined" ) Object.keys(o.headers).forEach(function (header){
-				oReq.setRequestHeader(header,o.headers[header])
+				if((o.headers[header] !== undefined)&&(o.headers[header] !== null))
+					oReq.setRequestHeader(header,o.headers[header]);
 			});
 			oReq.onload = function(){
 				if(oReq.status < 400) resolve(oReq.response);

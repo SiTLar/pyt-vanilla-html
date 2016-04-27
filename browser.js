@@ -6,13 +6,13 @@ var RtUpdate = require("./rt_network.js");
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;
-	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
+	var locationPath = /(https?:\/\/[^\?]*)/.exec(document.location)[1].slice(gConfig.front.length);
 	if (locationPath == "")locationPath = "home";
+	cView.fullPath = locationPath;
 	var locationSearch = document.location.search;
 	if (locationSearch == "")locationSearch = "?offset=0";
-	cView.cSkip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
+	cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
-	cView.timeline = arrLocationPath[0];
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(JSON.parse(cView.localStorage.getItem("blocks")))
 		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
@@ -29,8 +29,17 @@ window.browserDoc = function(){
 		:cView.gNodes["controls-anon"].cloneAll()
 	));
 	cView.doc.getElementsByTagName("body")[0].appendChild(body);
-	cView.Router.route(cView.contexts, locationPath)
-	.then(postInit,function(err){
+	/*
+	var nodeDebug =  document.createElement("div");	
+	nodeDebug.id = "debug";
+	nodeDebug.className = "debug";
+	body.appendChild(nodeDebug);
+	nodeDebug.innerHTML = [document.location
+		,"--------"
+		,locationPath 
+		,gConfig.front.length].join("<br>");
+	*/
+	cView.Router.route(cView.contexts, locationPath).then(postInit,function(err){
 		console.log(err);
 		if( typeof err === "string") switch(err){
 			case "token":

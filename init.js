@@ -9,21 +9,28 @@ var gTemplates = require("json!./templates.json");
 define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router" ]
 ,function(Utils, _Common, _Drawer,_Actions, _SecretActions, _Router){
 	function _Context(v, domain, api){
-		var that = this ;
-		Object.keys(that.defaults).forEach(function(key){
-			that[key] = JSON.parse(JSON.stringify(that.defaults[key]))
+		var context = this ;
+		Object.keys(context.defaults).forEach(function(key){
+			context[key] = JSON.parse(JSON.stringify(context.defaults[key]))
 		});
-		that.domain = domain;
-		that.cView = v;
-		v.contexts[domain] = that;
-		that.api = new Object();
+		context.domain = domain;
+		context.cView = v;
+		v.contexts[domain] = context;
+		context.api = new Object();
 		Object.keys(api.protocol).forEach(function(f){
-			that.api[f] = function(){
-				return api.protocol[f].apply(that, arguments)
+			context.api[f] = function(){
+				return api.protocol[f].apply(context, arguments)
 				.then(api.parse);
 			}
 		});
+		context.api.parse = api.parse;
 		this.p = new Utils._Promise( function(resolve){resolve()});
+		if ((typeof api.oRT !== "undefined") && JSON.parse(v.localStorage.getItem("rt"))){
+			context.rt = new api.oRT(context,JSON.parse(v.localStorage.getItem("rtbump")));
+			["rtSubTimeline","rtSubPost"].forEach(function(key){
+				context[key] = function(inp){context.rt[key](inp)};
+			});
+		}else ["rtSubTimeline","rtSubPost"].forEach(function(key){context[key] = function(){};});
 
 	}
 	_Context.prototype = {
@@ -121,6 +128,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 			var cfg = gConfig.domains[d];
 			cView.contexts[d] = new _Context(cView, d, apis[cfg.api](cfg.server));
 		});
+		cView.leadContext =  cView.contexts[gConfig.leadDomain];
 	}
 	_cView.prototype = {
 		constructor: _cView

@@ -641,3 +641,9 @@ span.comment-controls::before {
 	flex:auto;
 	border-bottom-style: solid;
 }
+.debug{
+	position:absolute;
+	background-color: #fff;
+	z-index:5;
+	border: red thin solid;
+}

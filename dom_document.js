@@ -23,7 +23,7 @@ var shortid = require("shortid");
  function Element (tag){
  	var that = this;
 	Object.keys(that.defaults).forEach(function(key){
-		that[key] = JSON.parse(JSON.stringify(that.defaults[key]))
+		that[key] = JSON.parse(JSON.stringify(that.defaults[key]));
 	});
 	this.tagName = tag;
 	this.eventHost = new EventHost();

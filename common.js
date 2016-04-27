@@ -272,7 +272,7 @@ _Common.prototype = {
 		var Common = cView.Common;
 		Object.keys(cView.contexts).forEach(function(domain){
 			var context = cView.contexts[domain];
-			var token = Common.getCookie(gConfig.tokenPrefix + domain +"authToken");
+			var token = Common.getCookie(gConfig.domains[domain].tokenPrefix +"authToken");
 			if(token){
 				context.token = token;
 				context.pending.push(token);
@@ -325,10 +325,10 @@ _Common.prototype = {
 		Object.keys(cView.contexts).forEach(function (domain){
 			var context = cView.contexts[domain];
 			if(!context.token){
-				cView.Common.deleteCookie(gConfig.tokenPrefix + domain +"authToken",context.token );
+				cView.Common.deleteCookie(gConfig.domains[domain].tokenPrefix +"authToken",context.token );
 				return;
 			}
-			cView.Common.setCookie(gConfig.tokenPrefix + domain +"authToken",context.token );
+			cView.Common.setCookie(gConfig.domains[domain].tokenPrefix +"authToken",context.token );
 			Object.keys(context.logins).forEach(function(id){ 
 				context.logins[id].isMain = (context.logins[id].token == context.token);
 				logins.push(context.logins[id]);

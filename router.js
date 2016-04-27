@@ -171,6 +171,7 @@ define("./router",[],function(){
 				if(Array.isArray(post))post = post[0];
 				post.domain = context.domain;
 				cView.Drawer.drawPost(post,context);
+				if(JSON.parse(cView.localStorage.getItem("rt"))) context.rtSubPost(post.id) ;
 			});
 		}
 		,"timeline":function(contexts, path){
@@ -182,7 +183,7 @@ define("./router",[],function(){
 			domains.forEach(function(domain){ 
 				var context = contexts[domain];
 				prContxt.push(context.p);
-				prConts.push(context.api.getTimeline(context.token,path));
+				prConts.push(context.api.getTimeline(context.token,path, cView.skip));
 			});
 			var prAllC = cView.Utils._Promise.all(prConts);
 			var prAllT = cView.Utils._Promise.all(prContxt);
@@ -190,13 +191,16 @@ define("./router",[],function(){
 				var posts = new Array();
 				cView.doc.getElementById("loading-msg").innerHTML = "Building page";
 				res[0].forEach(function(data,idx){
-					cView.Common.loadGlobals(data, contexts[domains[idx]]);
+					var context = contexts[domains[idx]];
+					cView.Common.loadGlobals( data, context);
 					if(typeof data.posts !== "undefined" ){
 						data.posts.forEach(function(post){
 							post.domain = domains[idx];
 						});
 						posts = posts.concat(data.posts);
 					}
+					if(JSON.parse(cView.localStorage.getItem("rt"))) 
+						context.rtSubTimeline(data);
 				});
 				posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
 				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;

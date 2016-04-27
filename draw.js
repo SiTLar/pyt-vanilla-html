@@ -91,6 +91,10 @@ _Drawer.prototype = {
 		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
 		if(typeof user.description === "string")
 			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = cView.autolinker.link(user.description.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		if (user.type == "group") 
+			["uds-subs","uds-likes","uds-com"].forEach(function(key){
+			nodeInfo.getNode(["c","ud-stats"],["c",key]).style.display = "none";
+		});
 		if(typeof user.statistics !== "undefined"){
 			var stats = {
 				"uds-subs":user.statistics.subscriptions
@@ -100,10 +104,6 @@ _Drawer.prototype = {
 			}
 			Object.keys(stats).forEach(function(key){
 				nodeInfo.getNode(["c","ud-stats"],["c",key],["c","val"]).innerHTML = stats[key];
-			});
-			if (user.type == "group") 
-				["uds-subs","uds-likes","uds-com"].forEach(function(key){
-				nodeInfo.getNode(["c","ud-stats"],["c",key]).style.display = "none";
 			});
 		}
 		return nodeUD;
@@ -218,18 +218,16 @@ _Drawer.prototype = {
 	,"drawTimeline":function(posts,contexts){
 		var cView = this.cView;
 		var Drawer = cView.Drawer;
-		var view = cView.timeline.split("/")[0];
-		var filter = cView.timeline.split("/")[1];
 		var body = cView.doc.getElementById("container");
 		var nodeMore = cView.doc.createElement("div");
 		nodeMore.className = "more-node";
-		var htmlPrefix = '<a href="' + gConfig.front+cView.timeline ;
+		var htmlPrefix = '<a href="' + gConfig.front+cView.fullPath;
 		var htmlForward;
 		var htmlBackward;
 		//var fLastPage = (content.posts.length != cView.offset);
-		var backward = cView.cSkip*1 - gConfig.offset*1;
-		var forward = cView.cSkip*1 + gConfig.offset*1;
-		if (cView.cSkip){
+		var backward = cView.skip*1 - gConfig.offset*1;
+		var forward = cView.skip*1 + gConfig.offset*1;
+		if (cView.skip){
 			if (backward>=0) htmlBackward = htmlPrefix + "?offset="
 				+ backward*1+ "&limit="+gConfig.offset*1
 				+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
@@ -263,7 +261,7 @@ _Drawer.prototype = {
 		body.appendChild(nodeShowHidden);
 		if(cView.doc.hiddenCount) nodeShowHidden.cNodes["href"].innerHTML= "Show "+ cView.doc.hiddenCount + " hidden entries";
 		body.appendChild(nodeMore);
-		var drop = Math.floor(cView.cSkip/3);
+		var drop = Math.floor(cView.skip/3);
 		var toAdd = drop + Math.floor(gConfig.offset/3);
 		/*
 		if((!gPrivTimeline.done)&& (cView.timeline == "home")&& matrix.ready){
@@ -351,7 +349,10 @@ _Drawer.prototype = {
 			
 			function genReqNode(user, loginid){
 				var node = cView.gNodes["sub-request"].cloneAll();
-				node.cNodes["sr-name"].innerHTML = "<a href="+gConfig.front+user.username+">"
+				node.cNodes["sr-name"].innerHTML = '<a href="'
+					+gConfig.front + "as/"
+					+context.domain + "/"
+					+user.username + '">'
 					+user.screenName
 					+"</a>"
 					+" @" + user.username; 
@@ -1046,6 +1047,7 @@ _Drawer.prototype = {
 				option.innerHTML = "@"+context.logins[id].data.users.username;
 				option.value = id;
 				nodeSelectUsr.appendChild(option);
+				if(context.logins[id].token == context.token) option.selected = true;
 			});
 		}
 		nodeComment.userid = context.gMe.users.id;

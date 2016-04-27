@@ -2,9 +2,10 @@
 define(["./utils"],function(utils){
 //utils._Promise = Promise;
 return function(config){
-	function get(token, url){
+	function get(token, url, pagenum){
+		var skip =  (typeof pagenum !== "undefined") ?("?page=" + pagenum):"";
 		return 	utils.xhrReq( {
-				"url":config.serverURL +url+".json" 
+				"url":config.serverURL +url+".json" + skip
 				,"headers":{"X-API-Token":token}
 			}
 		);
@@ -62,11 +63,11 @@ return function(config){
 	return{
 		"protocol":{
 			"get": get
-			,"getTimeline": function(token, timeline) {
+			,"getTimeline": function(token, timeline, skip) {
 				var len = timeline.lebngth;
 				if(timeline.charAt(len - 1) == '/')timeline = timeline.slice(0,-1);
 				if (timeline == "home")timeline = "index";
-				return get(token, timeline); 
+				return get(token, timeline, Math.ceil(skip/gConfig.offset)+1); 
 			}
 			,"getPost": function(token, path, arrOptions) {
 				var likes = false;
@@ -99,6 +100,7 @@ return function(config){
 					"timelines": new Array()
 					,"text": postdata.post.body
 					,"comments_disabled":0
+					,"attachment_ids":postdata.post.attachments
 				}; 
 				var dests = postdata.meta.feeds;
 				var myIdx = dests.indexOf(sender);
@@ -295,6 +297,19 @@ return function(config){
 					}
 				);
 			}
+			,"sendAttachment": function(token,file, filename){
+				var data = new FormData();
+
+				data.append( "authenticity_token", token);
+				data.append( "attachment[attachment][]",file, filename);
+				return utils.xhrReq(
+					{ 	"url": config.serverApiURL + "attachments.json"
+						,"token": token 
+						,"method": "post"
+						,"data": data
+					}
+				);
+			}
 		}
 		,"parse":function (res){
 			var input = (typeof res == "string")?JSON.parse(res):res;
@@ -324,7 +339,7 @@ return function(config){
 					else aComments = cmts;
 				} }
 				,"comments_count":{"out":"","a":"copy"}
-				//,"created_at":{"out":"createdAt","a":"mutate","f":Date.parse}
+				,"created_at":{"out":"createdAt","a":"mutate","f":Date.parse,"single":true}
 				,"description":{"out":"","a":"copy"}
 				,"display_name":{"out":"screenName","a":"copy"}
 				//,"embeds":{"out":""}
@@ -334,7 +349,7 @@ return function(config){
 					});
 					return posts;
 				}} 
-				,"fresh_at":{"out":"updatedAt","a":"mutate","f":Date.parse}
+				,"fresh_at":{"out":"updatedAt","a":"mutate","f":Date.parse},"single":true
 				,"groups":{"out":"users", "pre":function(groups){
 						return Object.keys(groups).map(function(groupid){
 							var group = groups[groupid];
@@ -352,7 +367,7 @@ return function(config){
 				,"name":{"out":"username","a":"copy"}
 				,"original_url":{"out":"url","a":"mutate", "f":addHost}
 				//,"post_id":{"out":"","a":"copy"}
-				,"published_at":{"out":"createdAt","a":"mutate","f":Date.parse}
+				,"published_at":{"out":"createdAt","a":"mutate","f":Date.parse,"single":true}
 				,"post":{"out":"posts"}
 				,"river":{"out":"timelines"}
 				,"reason":{"out":"postedTo" ,"a":"mutate","f":function(val){
@@ -390,7 +405,7 @@ return function(config){
 				,"text":{"out":"body","a":"copy"}
 				,"thumb_url":{"out":"thumbnailUrl","a":"mutate", "f":addHost}
 				,"type":{"out":"","a":"copy"}
-				,"updated_at":{"out":"updatedAt","a":"mutate","f":Date.parse}
+				,"updated_at":{"out":"updatedAt","a":"mutate","f":Date.parse,"single":true}
 				,"user_id":{"out":"createdBy","a":"str"}
 				,"user":{"out":"users", "post":function(user){
 						user.type = "user";
@@ -449,8 +464,7 @@ return function(config){
 							res = Array.isArray(val)?val.map(convert):convert(val);
 						}
 						if (typeof conv.post === "function" ) res = conv.post(res);
-
-						if(typeof oOut[conv.out] === "undefined") 
+						if((typeof oOut[conv.out] === "undefined")||(conv.single === true) )
 							oOut[conv.out] = res;
 						else if((typeof res === "object" )&& res && !Object.keys(res).length)
 							return;

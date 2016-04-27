@@ -57,21 +57,22 @@ RtHandler.prototype = {
 		cView.bumps.forEach(that.bumpPost, that);
 		cView.bumps = new Array();
 	}
-	,unshiftPost: function(data){
+	,unshiftPost: function(data, context){
 		var that = this;
 		var cView = document.cView;
-		if(cView.cSkip)return;
-		if (cView.gMe && Array.isArray(cView.gMe.users.banIds)
-			&& (cView.gMe.users.banIds.indexOf(data.posts.createdBy) > -1))
+		if(cView.skip)return;
+		if (context.gMe && Array.isArray(context.gMe.users.banIds)
+			&& (context.gMe.users.banIds.indexOf(data.posts.createdBy) > -1))
 			return;
-		cView.Drawer.loadGlobals(data);
+		cView.Common.loadGlobals(data, context);
+		data.posts.domain = context.domain;
 		var nodePost = cView.Drawer.genPost(data.posts);
 		document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
 		that.insertSmooth(nodePost, document.posts.firstChild);
 	}
 	,bumpPost: function(nodePost){
 		var cView = document.cView;
-		if(cView.cSkip)return;
+		if(cView.skip)return;
 		var that = this;
 		if(nodePost.cNodes["post-body"].isBeenCommented)
 			nodePost.cNodes["post-body"].bumpLater = function(){ that.bumpPost(nodePost);}
@@ -83,77 +84,81 @@ RtHandler.prototype = {
 			that.insertSmooth(nodePost, nodeParent.firstChild);
 		}
 	}
-	,injectPost: function(id){
+	,injectPost: function(id, context){
 		var that = this;
 		var cView = document.cView;
-		if(cView.cSkip)return;
-		var oReq = new XMLHttpRequest();
-		oReq.onload = function (){
-			if(oReq.status < 400){
-				 that.unshiftPost(JSON.parse(oReq.response));
-			}
-		}
-		oReq.open("get",gConfig.serverURL+"posts/"+id, true);
-		oReq.setRequestHeader("X-Authentication-Token", cView.token);
-		oReq.send();	
+		if(cView.skip)return;
+		context.api.getPost(context.token, "posts/" + id , ["comments"]).then(function(data){
+			that.unshiftPost(data,context);
+		});
 	}
-	,"comment:new": function(data){
+	,"comment:new": function(data, context){
 		var that = this;
 		var cView = document.cView;
-		if (cView.gMe && Array.isArray(cView.gMe.users.banIds)
-			&& (cView.gMe.users.banIds.indexOf(data.comments.createdBy) > -1))
+		if (context.gMe && Array.isArray(context.gMe.users.banIds)
+			&& (context.gMe.users.banIds.indexOf(data.comments.createdBy) > -1))
 			return;
-		var nodePost = document.getElementById(data.comments.postId);
-		cView.Common.addUser(data.users[0]);
+		var commentId = [context.domain,"cmt" ,data.comments.id].join("-");
+		var postId = [context.domain,"post" ,data.comments.postId].join("-");
+		var nodePost = document.getElementById(postId);
+		cView.Common.addUser.call(context, data.users[0]);
 		if(nodePost){
-			cView.gComments[data.comments.id] = data.comments; 
-			if(!document.getElementById(data.comments.id))
-				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(cView.Drawer.genComment(data.comments));
+			context.gComments[data.comments.id] = data.comments; 
+			if(!document.getElementById(commentId))
+				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(
+					cView.Drawer.genComment.call(context, data.comments)
+				);
 			if (that.bump && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown) < Date.now())){
 				if(!Array.isArray(cView.bumps))cView.bumps = new Array();
 				setTimeout(function(){ cView.bumps.push(nodePost)},that.bumpDelay+1);
 			}
 			nodePost.rawData.updatedAt = Date.now();
 						
-		}else that.injectPost(data.comments.postId);
+		}else that.injectPost(postId, context);
 	}
-	,"comment:update": function(data){
+	,"comment:update": function(data, context){
 		var cView = document.cView;
-		cView.gComments[data.comments.id] = data.comments; 
-		var nodeComment = document.getElementById(data.comments.id);
-		if (nodeComment) nodeComment.parentNode.replaceChild( cView.Drawer.genComment(data.comments), nodeComment);
+		var commentId = [context.domain,"cmt" ,data.comments.id].join("-");
+		var postId = [context.domain,"post" ,data.comments.postId].join("-");
+		context.gComments[data.comments.id] = data.comments; 
+		var nodeComment = document.getElementById(commentId);
+		if (nodeComment) nodeComment.parentNode.replaceChild( cView.Drawer.genComment.call(context, data.comments), nodeComment);
 	}
-	,"comment:destroy": function(data){
+	,"comment:destroy": function(data, context){
 		var cView = document.cView;
-		if(typeof cView.gComments[data.commentId] !== "undefined")delete cView.gComments[data.commentId];
-		var nodePost  = document.getElementById(data.postId);
+		if(typeof context.gComments[data.commentId] !== "undefined")delete context.gComments[data.commentId];
+		var postId = [context.domain,"post" ,data.postId].join("-");
+		var commentId = [context.domain,"cmt" ,data.commentId].join("-");
+		var nodePost  = document.getElementById(postId);
 		if(!nodePost)return;
 		if((typeof nodePost.rawData.comments !== "undefined")
-			&&(nodePost.rawData.comments.indexOf(data.commentId) > -1))
-			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(data.commentId),1);
-		var nodeComment = document.getElementById(data.commentId);
+			&&(nodePost.rawData.comments.indexOf(commentId) > -1))
+			nodePost.rawData.comments.splice(nodePost.rawData.comments.indexOf(commentId),1);
+		var nodeComment = document.getElementById(commentId);
 		if(!nodeComment)return;
 		nodeComment.parentNode.removeChild(nodeComment);
 	}
-	,"like:new": function(data){
+	,"like:new": function(data, context){
 		var that = this;
 		var cView = document.cView;
-		if (cView.gMe && Array.isArray(cView.gMe.users.banIds)
-			&& (cView.gMe.users.banIds.indexOf(data.users.id) > -1))
+		if (context.gMe && Array.isArray(context.gMe.users.banIds)
+			&& (context.gMe.users.banIds.indexOf(data.users.id) > -1))
 			return;
-		cView.Common.addUser(data.users);
-		var nodePost = document.getElementById(data.meta.postId);
+		cView.Common.addUser.call(context, data.users);
+		var postId = [context.domain,"post" ,data.meta.postId].join("-");
+		var nodePost = document.getElementById(postId);
 		if(nodePost){
 			if (!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
 			if (nodePost.rawData.likes.indexOf(data.users.id) > -1) return;
 			nodePost.rawData.likes.unshift(data.users.id);
 			cView.Drawer.genLikes(nodePost);
 			nodePost.rawData.updatedAt = Date.now();
-		}else that.injectPost(data.meta.postId);
+		}else that.injectPost(postId, context);
 	}
-	,"like:remove": function(data){
+	,"like:remove": function(data, context){
 		var cView = document.cView;
-		var nodePost = document.getElementById(data.meta.postId);
+		var postId = [context.domain,"post" ,data.meta.postId].join("-");
+		var nodePost = document.getElementById(postId);
 		if(nodePost  && Array.isArray(nodePost.rawData.likes)
 			&& (nodePost.rawData.likes.indexOf(data.meta.userId) > -1 )) {
 			nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(data.meta.userId), 1) ;
@@ -163,34 +168,39 @@ RtHandler.prototype = {
 		}
 
 	}
-	,"post:new" : function(data){
+	,"post:new" : function(data, context){
 		var that = this;
 		var cView = document.cView;
-		if(cView.cSkip)return;
-		if(document.getElementById(data.posts.id)) return;
-		that.unshiftPost(data);
+		if(cView.skip)return;
+		var postId = [context.domain,"post" ,data.posts.id].join("-");
+		if(document.getElementById(postId)) return;
+		that.unshiftPost(data, context);
 	}
-	, "post:update" : function(data){
+	, "post:update" : function(data, context){
 		var cView = document.cView;
-		var nodePost = document.getElementById(data.posts.id);
+		var postId = [context.domain,"post" ,data.posts.id].join("-");
+		var nodePost = document.getElementById(postId);
 		if(!nodePost) return;
 		nodePost.cNodes["post-body"].cNodes["post-cont"].innerHTML = cView.autolinker.link(data.posts.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 		nodePost.rawData.body = data.posts.body;
 	}
-	, "post:destroy" : function(data){
-		var nodePost = document.getElementById(data.meta.postId);
+	, "post:destroy" : function(data, context){
+		var postId = [context.domain,"post" ,data.meta.postId].join("-");
+		var nodePost = document.getElementById(postId);
 		if(!nodePost) return;
 		nodePost.parentNode.removeChild(nodePost);
 	}
-	, "post:hide" : function(data){
+	, "post:hide" : function(data, context){
 		var cView = document.cView;
-		var nodePost = document.getElementById(data.meta.postId);
+		var postId = [context.domain,"post" ,data.meta.postId].join("-");
+		var nodePost = document.getElementById(postId);
 		if(!nodePost) return;
 		cView.Actions.doHide(nodePost, true, "rt");
 	}
-	, "post:unhide" : function(data){
+	, "post:unhide" : function(data, context){
 		var cView = document.cView;
-		var nodePost = document.getElementById(data.meta.postId);
+		var postId = [context.domain,"post" ,data.meta.postId].join("-");
+		var nodePost = document.getElementById(postId);
 		if(!nodePost) 
 			document.hiddenPosts.forEach(function (item){
 				if (item.is && (item.data.id == data.meta.postId))nodePost = cView.Drawer.genPost(item.data);

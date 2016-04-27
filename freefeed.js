@@ -1,5 +1,5 @@
 "use strinct";
-define(["./utils"],function(utils){
+define(["./utils", "./freefeed_rt"],function(utils, RtUpdate ){
 
 return function(config){
 	function get(token, url){
@@ -8,7 +8,9 @@ return function(config){
 	return{
 		"protocol":{
 			"get": get
-			,"getTimeline": function(token, timeline) {return get(token, "timelines/"+ timeline); }
+			,"getTimeline": function(token, timeline, skip) {
+				return get(token, "timelines/"+ timeline + "?offset="+skip); 
+			}
 			,"getPost": function(token, path, arrOptions) {
 				var id = path.split("/")[1];
 				var likes = "0";
@@ -87,7 +89,7 @@ return function(config){
 			,"get": function(token, timeline) {return get(token, timeline);}
 			,"updProfile" : function(token, id, data){
 				return utils.xhrReq(
-					{ 	"url": config.serverURL + id
+					{ 	"url": config.serverURL + "users/" + id
 						,"token": token 
 						,"method": "put"
 						,"data": JSON.stringify(data)
@@ -187,10 +189,23 @@ return function(config){
 					}
 				);
 			}
+			,"sendAttachment": function(token,file, filename){
+				var data = new FormData();
+				data.append( "name", "attachment[file]");
+				data.append( "attachment[file]",file, filename);
+				return utils.xhrReq(
+					{ 	"url": config.serverURL + "attachments"
+						,"token": token 
+						,"method": "post"
+						,"data": data
+					}
+				);
+			}
 		}
 		,"parse":function (res){
 			return JSON.parse(res);
 		}
+		,"oRT":RtUpdate
 	};
 };
 });

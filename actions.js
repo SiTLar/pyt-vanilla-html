@@ -1,5 +1,57 @@
 "use strict";
 define("./actions",[],function() {
+function regenAttaches(host){
+	var cView = document.cView;
+	if (typeof host.attachs  === "undefined") return;
+	var nodesDest = host.childNodes;
+	delete host.attP;
+	var arrAttP = new Array();
+	for (var idx = 0; idx < nodesDest.length; idx++ ){
+		var domain = nodesDest[idx].domain;
+		var context = cView.contexts[domain];
+		if (typeof host.attachs[domain] === "undefined") 
+			host.attachs[domain] = {
+				"arrP":[]
+				,"arrId":[]
+				,"timestamps":[]
+			}
+		host.files.forEach(function(oAttach){
+			if (host.attachs[domain].timestamps.indexOf(oAttach.timestamp) == -1){
+				host.attachs[domain].arrP.push(
+					context.api.sendAttachment(
+						context.token
+						,oAttach.file
+						,oAttach.name
+					).then(function(data){
+						host.attachs[domain].arrId.push(
+							data.attachments.id
+						);
+						return data;
+					})
+				);
+				arrAttP = arrAttP.concat(host.attachs[domain].arrP);
+				host.attachs[domain].timestamps.push(oAttach.timestamp);
+			}
+		});
+	}
+	host.attP = cView.Utils._Promise.all(arrAttP).then( function(data){
+		if (typeof host.nodeSpinner === "undefined") return data;
+		host.nodeInput.value = "";
+		host.nodeInput.disabled = false;
+		host.buttonPost.disabled = false;
+		var attachments = data[0].attachments;
+		var nodeAtt = cView.doc.createElement("div");
+		nodeAtt.className = "att-img";
+		nodeAtt.innerHTML = '<a target="_blank" href="'
+			+attachments.url
+			+'" border=none ><img src="'
+			+attachments.thumbnailUrl
+			+'"></a>';
+		host.nodeSpinner.parentNode.replaceChild(nodeAtt, host.nodeSpinner);
+		delete host.nodeSpinner;
+		return data;
+	});
+}
 function _Actions(v){
 	this.cView = v;
 };
@@ -25,8 +77,34 @@ _Actions.prototype = {
 		var arrPostsTo = new Array(postsTo.length);
 		var body = cView.Common.urlsToCanonical(textField.value);
 		for (var idx = 0; idx < postsTo.length; idx++)arrPostsTo[idx] = postsTo[idx];
-		if(textField.pAtt)textField.pAtt.then(function(){ arrPostsTo.forEach(send);});
-		else arrPostsTo.forEach(send);
+		cView.Utils._Promise.all(arrPostsTo.map(send)).then(function(res){
+			var nodeAtt = cView.doc.createElement("div");
+			delete postTo.parentNode.attachs;
+			nodeAtt.className = "attachments";
+			textField.parentNode.replaceChild(nodeAtt,
+				textField.parentNode.cNodes["attachments"]);
+			textField.parentNode.cNodes["attachments"] = nodeAtt;
+			textField.value = "";
+			textField.disabled = false;
+			postTo.feeds = new Array();
+			cView.updPostTo(context.gMe, true, context.gMe.users.username);
+			e.target.disabled = false;
+			textField.style.height  = "4em";
+			try{ e.target.parentNode.removeChild(nodeSpinner); }
+			catch(e){};
+			cView.Common.loadGlobals(res, context);
+			res.posts.domain = context.domain;
+			if(!cView.doc.getElementById(res.posts.id))cView.doc.posts.insertBefore(cView.Drawer.genPost(res.posts), cView.doc.posts.childNodes[0]);
+		} ,function(err){
+			textField.disabled = false;
+			e.target.disabled = false;
+			var errmsg = "";
+			try{
+				e.target.parentNode.removeChild(nodeSpinner );
+				errmsg = err.err;
+			}catch(e){};
+			//TODO
+		});
 
 		function send(postTo){
 			var context = cView.contexts[postTo.domain];
@@ -35,43 +113,16 @@ _Actions.prototype = {
 			postdata.post = new Object();
 			postdata.post.body = body;
 			postdata.meta.feeds = postTo.feeds ;
-			if(textField.attachments) postdata.post.attachments = textField[postTo.domain].attachments;
-			context.api.sendPost(
+			if(typeof postTo.parentNode.attachs !== "undefined")
+				postdata.post.attachments = postTo.parentNode.attachs[context.domain].arrId;
+
+			return context.api.sendPost(
 				context.logins[postTo.userid].token
 				,postdata
 				,context.logins[postTo.userid].data.users.username
 				,postTo.destType
-			).then(function(res){
-				var nodeAtt = cView.doc.createElement("div");
-				nodeAtt.className = "attachments";
-				textField.parentNode.replaceChild(nodeAtt,
-					textField.parentNode.cNodes["attachments"]);
-				textField.parentNode.cNodes["attachments"] = nodeAtt;
-				textField.value = "";
-				textField.disabled = false;
-				delete textField.pAtt;
-				delete textField.attachments;
-				postTo.feeds = new Array();
-				cView.updPostTo(context.gMe, true, context.gMe.users.username);
-				e.target.disabled = false;
-				textField.style.height  = "4em";
-				try{ e.target.parentNode.removeChild(nodeSpinner); }
-				catch(e){};
-				cView.Common.loadGlobals(res, context);
-				res.posts.domain = context.domain;
-				if(!cView.doc.getElementById(res.posts.id))cView.doc.posts.insertBefore(cView.Drawer.genPost(res.posts), cView.doc.posts.childNodes[0]);
-			}
-			,function(err){
-				textField.disabled = false;
-				e.target.disabled = false;
-				var errmsg = "";
-				try{
-					e.target.parentNode.removeChild(nodeSpinner );
-					errmsg = err.err;
-				}catch(e){};
-				//TODO
-			});
-			
+			);
+		}			
 		/*	if(postTo.isPrivate){
 				oReq.open("post",matrix.cfg.srvurl+"post", true);
 				oReq.setRequestHeader("x-content-type", "post");
@@ -94,40 +145,27 @@ _Actions.prototype = {
 				},function(){console.log("Failed to sign")});
 			}else*/{
 			}
-		}
 	}
 	,"sendAttachment": function(e){//TODO
 		var cView = document.cView;
 		e.target.disabled = true;
-		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
+		var host = e.target.getNode(["p","new-post"],["c","post-to"]);
 		var nodeSpinner = cView.doc.createElement("div");
+		var buttonPost = host.getNode(["p","new-post"]).getElementsByClassName("edit-buttons-post")[0];
+		buttonPost.disabled = true;
+		host.buttonPost = buttonPost;
+		host.nodeInput = e.target;
+		host.nodeSpinner = nodeSpinner;
 		nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
 		e.target.parentNode.parentNode.cNodes["attachments"].appendChild(nodeSpinner);
-		textField.pAtt = new Promise(function(resolve,reject){
-			var oReq = new XMLHttpRequest();
-			oReq.onload = function(){
-				if(this.status < 400){
-					e.target.value = "";
-					e.target.disabled = false;
-					var attachments = JSON.parse(this.response).attachments;
-					var nodeAtt = cView.doc.createElement("div");
-					nodeAtt.className = "att-img";
-					nodeAtt.innerHTML = '<a target="_blank" href="'+attachments.url+'" border=none ><img src="'+attachments.thumbnailUrl+'"></a>';
-					nodeSpinner.parentNode.replaceChild(nodeAtt, nodeSpinner);
-					if (typeof(textField.attachments) === "undefined" ) textField.attachments = new Array();
-					textField.attachments.push(attachments.id);
-					resolve();
-
-				}else reject(this.status);
-			};
-
-			oReq.open("post",gConfig.serverURL + "attachments", true);
-			oReq.setRequestHeader("X-Authentication-Token", cView.token);
-			var data = new FormData();
-			data.append( "name", "attachment[file]");
-			data.append( "attachment[file]", e.target.files[0], e.target.value);
-			oReq.send(data);
+		if (typeof host.files === "undefined") host.files = new Array(); 
+		if (typeof host.attachs === "undefined") host.attachs = new Object(); 
+		host.files.push({ 
+			"name": e.target.value
+			,"file":e.target.files[0]
+			,"timestamp":Date.now() 
 		});
+		regenAttaches(host);
 	}
 	,"editPost": function(e) {
 		var cView = document.cView;
@@ -617,7 +655,7 @@ _Actions.prototype = {
 			postUpd.comments.forEach(function(cmt){context.gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(cView.Drawer.genComment.call(context, cmt))});
 			nodePB.appendChild(nodePB.cNodes["comments"]);
 			if (nodePB.isBeenCommented == true){ 
-				var nodeComment = cView.Drawer.genAddComment();
+				var nodeComment = cView.Drawer.genAddComment(context);
 				nodePB.cNodes["comments"].appendChild(nodeComment);
 				nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
 			}
@@ -636,7 +674,7 @@ _Actions.prototype = {
 	,"calcCmtTime": function(e){
 		var cView = document.cView;
 		if (typeof(e.target.parentNode.parentNode.parentNode.createdAt) !== "undefined" ){
-			var absUxTime = e.target.parentNode.parentNode.parentNode.createdAt*1;
+			var absUxTime = e.target.getNode(["p","comment"]).createdAt*1;
 			var txtdate = new Date(absUxTime ).toString();
 
 			e.target.title =  cView.Utils.relative_time(absUxTime) + " ("+ txtdate.slice(0, txtdate.indexOf("(")).trim()+ ")";
@@ -818,7 +856,8 @@ _Actions.prototype = {
 		//matrix.ready = 0;
 		try{matrix.logout();}catch(e){};
 		cView.localStorage.removeItem("logins");
-		cView.Common.deleteCookie(gConfig.tokenPrefix + "authToken");
+		Object.keys(cView.contexts).forEach(function(domain){ cView.contexts[domain].token = null;});
+		cView.Common.saveLogins();
 		location.reload();
 	}
 	,"newPostRemoveFeed": function(e){
@@ -988,7 +1027,7 @@ _Actions.prototype = {
 			nodeMsg.className = "msg-error";
 			nodeMsg.innerHTML = "Got error: ";
 			try{ 
-				nodeMsg.innerHTML += JSON.parse(res).data.err;
+				nodeMsg.innerHTML += res.data.err;
 			}catch(e) {nodeMsg.innerHTML += "unknown error";};
 
 			
@@ -1032,6 +1071,7 @@ _Actions.prototype = {
 			context.logins[userid] = new Object();
 			context.logins[userid].token =  res.authToken;
 			context.logins[userid].domain = context.domain;
+			if (!context.token)context.token = res.authToken;
 			cView.Common.saveLogins();
 			context.getWhoami(res.authToken).then(finish);
 
@@ -1140,21 +1180,19 @@ _Actions.prototype = {
 	}
 	,"getauth": function (e){
 		var cView = document.cView;
+		var context = cView.leadContext;
 		var oReq = new XMLHttpRequest();
-		oReq.onload = function(){
-			if(this.status < 400){
-				cView.Common.setCookie(gConfig.tokenPrefix + gConfig.leadDomain + "authToken", JSON.parse(this.response).authToken);
-				cView.token =  JSON.parse(this.response).authToken;
-				///cView.Utils.doc.getElementsByTagName("body")[0].removeChild(cView.Utils.doc.getElementsByClassName("nodeAuth")[0]);
-			//	initDoc();
-
+		context.api.login(cView.doc.getElementById("a-user").value,
+			cView.doc.getElementById("a-pass").value
+		).then(function(data){
+				cView.Common.setCookie(gConfig.domains[context.domain].tokenPrefix 
+					+ "authToken"
+					, data.authToken
+				);
 				location.reload();
-			}else cView.doc.getElementById("auth-msg").innerHTML = JSON.parse(this.response).err;
-		};
-		oReq.open("post", gConfig.serverURL +"session", true);
-		oReq.setRequestHeader("X-Authentication-Token", null);
-		oReq.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-		oReq.send("username="+cView.doc.getElementById("a-user").value+"&password="+cView.doc.getElementById("a-pass").value);
+		},function(err){
+			cView.doc.getElementById("auth-msg").innerHTML = JSON.parse(err.data).err;
+		});
 	}
 	,"showUnfolder":function(e){
 		var cView = document.cView;
@@ -1194,6 +1232,7 @@ _Actions.prototype = {
 				cView.updPostTo(context.logins[id].data,false, context.logins[id].data.users.username);
 				var victim = document.getElementById("add_sender");
 				victim.parentNode.removeChild(victim);
+				regenAttaches(document.getElementsByClassName("post-to")[0]);
 			}
 		});
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
@@ -1212,6 +1251,7 @@ _Actions.prototype = {
 		host.removeChild(e.target.parentNode);
 		var rmSenders = host.getElementsByClassName("rm-sender");
 		if(rmSenders.length = 1)rmSenders[0].hidden = true;
+		regenAttaches(host);
 	}
 	,"unfoldUserDet":function(e){
 		document.getElementsByClassName("ud-info")[0].style.display = "flex";

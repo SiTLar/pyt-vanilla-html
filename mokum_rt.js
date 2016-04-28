@@ -25,22 +25,29 @@ RtUpdate.prototype = {
 	, connect: function(){
 		var rt = this;
 		rt.ready = new utils._Promise(function(resolve,reject){
-			var cfg = gConfig.domains[rt.conext.domain];
 			var oReq = new XMLHttpRequest();
+			var cfg = gConfig.domains[rt.conext.domain];
 			clearTimeout(rt.pingTimeout);
-
 			rt.pingTimeout = null;
 			oReq.onload = function (){
 				if(oReq.status < 400){
-					var res = JSON.parse(oReq.response.slice(oReq.response.indexOf("{")));
-					rt.wSocket = new WebSocket(cfg.server.rtURL.replace("https","wss")+"?token="+rt.context.token+"&transport=websocket&sid=" + res.sid);
+					var res = JSON.parse(oReq.response)[0];
+					rt.clientId = res.rt.clientId;
+					rt.wSocket = new WebSocket(cfg.server.rtURL.replace("https","wss"));
 					rt.wSocket.onopen = function(){
-						rt.wSocket.send("2probe"); 
+						rt.wSocket.send( JSON.stringify([{
+							"channel":"/meta/connect"
+							,"clientId":rt.clientId
+							,"connectionType":"websocket"
+						}]));
+
 						rt.wSocket.onmessage = function(e){
-							if(e.data == "3probe")rt.wSocket.send("5");
 							rt.on = true;
 							rt.timeout = res.pingTimeout;
-							rt.pingInterval = setInterval(function (){rt.ping();}, res.pingInterval);
+							rt.pingInterval = setInterval(
+								function (){rt.ping();}
+								, rt.timeout
+							);
 							rt.wSocket.onmessage = null;
 							rt.callback =  function (e){rt.message(e)};
 							rt.wSocket.addEventListener("message",rt.callback);
@@ -53,8 +60,11 @@ RtUpdate.prototype = {
 					reject();
 				}
 			}
-			oReq.open("get",cfg.server.rtURL+"?token="+rt.context.token+"&transport=polling&t="+Date.now(), true);
-			oReq.send();	
+			oReq.open("POST",cfg.server.rtURL, true);
+			oReq.send(JSON.steingify([{"channel":"/meta/handshake"
+				,"version":"1.0"
+				,"supportedConnectionTypes":["websocket"]
+			}]));	
 		});
 		return rt.ready;
 	}
@@ -69,7 +79,7 @@ RtUpdate.prototype = {
 	}
 	, ping: function (){
 		var rt = this;
-		rt.wSocket.send("2");
+		rt.wSocket.send("[]");
 		rt.gotPing = false;
 		if(!rt.pingTimeout) rt.pingTimeout = setTimeout(rt.reconnect, rt.timeout, rt);
 	}
@@ -79,21 +89,26 @@ RtUpdate.prototype = {
 	}
 	, message: function(msg){
 		var rt = this;
-		if (msg.data == "3"){
+		if (msg.data == "[]"){
 			clearTimeout(rt.pingTimeout);
 			rt.pingTimeout = null;
 			return;
 		}
 		var idxPayload = msg.data.indexOf("[");
 		if (idxPayload == -1) return;
-		var type = msg.data.slice(0,idxPayload);
-		var data = rt.context.api.parse(msg.data.slice(idxPayload));
-		if (Array.isArray(data) &&  (typeof rt.handlers[data[0]] !== "undefined")) rt.handlers[data[0]](data[1], rt.context);
+		var data = rt.context.api.parse(JSON.parse(msg.data).data);
+		console.log(data);
+		//rt.handlers.unshiftPost(data, rt.context);
 	}
 	, subscribe: function (timeline){
 		var rt = this;
 		function sendSubReq(sub){
-			rt.wSocket.send("42"+JSON.stringify(["subscribe", sub]));
+			rt.wSocket.send(JSON.stringify(	[{
+					"channel":"/meta/subscribe"
+					,"clientId":rt.clientId
+					,"subscription":sub
+				}]
+			));
 		}
 		if(!rt.ready)rt.ready = rt.connect();
 		if (typeof timeline === "undefined") 

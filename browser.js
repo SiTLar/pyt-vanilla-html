@@ -2,7 +2,6 @@
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var matrix  = new Object();
 var Init = require("./init.js")
-var RtUpdate = require("./rt_network.js");
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;

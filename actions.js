@@ -217,7 +217,7 @@ _Actions.prototype = {
 			*/
 			postCNode.innerHTML = cView.autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
 			postCNode.className = "post-cont";
-			nodePost.rawData = post;
+			nodePost.rawData.body = post.body;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 		});

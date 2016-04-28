@@ -55,9 +55,11 @@ define("./router",[],function(){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				var body = cView.doc.getElementById("container");
 				body.appendChild(nodeAddPost);
-				contexts[gConfig.leadDomain].p.then(function () {
+				var context = contexts[gConfig.leadDomain];
+				if (!is(context))context = contexts[Object.keys(contexts)[0]];
+				context.p.then(function () {
 					cView.Drawer.genDirectTo(nodeAddPost
-						,contexts[gConfig.leadDomain].gMe);
+						,context.gMe);
 				});
 				cView.Router.timeline(contexts, "filter/directs").then(function(){
 					body.cNodes["pagetitle"].innerHTML = "Direct messages";

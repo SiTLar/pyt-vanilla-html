@@ -1,5 +1,5 @@
 "use strinct";
-define(["./utils"],function(utils){
+define(["./utils","./mokum_rt"],function(utils, RtUpdate){
 //utils._Promise = Promise;
 return function(config){
 	function get(token, url, pagenum){
@@ -81,18 +81,22 @@ return function(config){
 						cmts = "all";
 					}
 				});
-				if(!likes) return get(token, path);
-				return utils._Promise.all([
-					get(token, path)
-					,get(token,path+"/likes")
-				]).then(function(res){
-					post = JSON.parse(res[0]);
-					likes = JSON.parse(res[1]);
-					post.entries.likes = likes.likes;
-					Object.keys(likes.users).forEach(function(id){
-						post.users[id] = likes.users[id] 
-					});
-					return post;
+				return (!likes? get(token, path).then(JSON.parse)
+					:utils._Promise.all([
+						get(token, path)
+						,get(token,path+"/likes")
+					]).then(function(res){
+						data = JSON.parse(res[0]);
+						likes = JSON.parse(res[1]);
+						data.entries[0].likes = likes.likes;
+						Object.keys(likes.users).forEach(function(id){
+							data.users[id] = likes.users[id] 
+						});
+						return data;
+					})
+				).then(function(data){
+					data.entries = data.entries[0];
+					return data;
 				});
 			}
 			,"sendPost": function(token, postdata, sender, type){
@@ -126,19 +130,19 @@ return function(config){
 				var data = JSON.stringify({"post":{"text":postdata.post.body }});
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL + "posts/"+id+".json"
-						,"method": "post"
+						,"method": "PATCH"
 						,"data": data
 						,"headers":{"X-API-Token":token
 							,"Content-Type": "application/json"
 						}
 					}
-				);
+				).then(function(inp){return {"entries":JSON.parse(inp)};});
 			}
 			,"deletePost": function(token, id){
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL + "posts/"+id+".json"
 						,"headers":{"X-API-Token":token}
-						,"method": "delete"
+						,"method": "DELETE"
 					}
 				);
 			}
@@ -149,25 +153,35 @@ return function(config){
 						,"headers":{"X-API-Token":token
 							,"Content-Type": "application/json"
 						}
-						,"method": "patch"
+						,"method": "PATCH"
 						,"data":data
 					}
 				);	
 			}
 			,"sendHide": function(token, id, action){
 				return utils.xhrReq(
-					{ 	"url": config.serverApiURL + "posts/" + id + "/hide"
-						,"headers":{"X-API-Token":token}
-						,"method": action?"post":"delete"
+					{ 	"url": config.serverApiURL 
+							+ "posts/" 
+							+ id 
+							+ "/hide.json"
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"	
+						}
+						,"method": action?"post":"DELETE"
 					}
 				);
 			}
 			,"getUser": function(token, req) {return get(token, "users/" + req );}
 			,"doBan": function(token, username, action){
 				return utils.xhrReq(
-					{ 	"url": config.serverApiURL + "users/" + username + "/ban" 
-						,"headers":{"X-API-Token":token}
-						,"method": action?"post":"delete"
+					{ 	"url": config.serverApiURL 
+							+ "users/" 
+							+ username 
+							+ "/ban.json" 
+						,"headers":{"X-API-Token":token
+							,"Content-Type": "application/json"	
+						}
+						,"method": action?"post":"DELETE"
 					}
 				);
 			}
@@ -182,7 +196,7 @@ return function(config){
 				var data = JSON.stringify({"user":user});
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL + "users/" + id + ".json"
-						,"method": "patch"
+						,"method": "PATCH"
 						,"data": data
 						,"headers":{"X-API-Token":token
 							,"Content-Type": "application/json"
@@ -221,7 +235,7 @@ return function(config){
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL + "posts/" + id + "/likes.json" 
 						,"headers":{"X-API-Token":token}
-						,"method": action?"post":"delete"
+						,"method": action?"post":"DELETE"
 					}
 				);
 			}
@@ -262,7 +276,7 @@ return function(config){
 							+ postId 
 							+ "/comments/"+id + ".json"
 						,"headers":{"X-API-Token":token}
-						,"method": "delete"
+						,"method": "DELETE"
 					}
 				);
 			}
@@ -282,7 +296,7 @@ return function(config){
 							+ "users/" + username 
 							+ "/subscribers" 
 						,"headers":{"X-API-Token":token}
-						,"method": subscribed?"delete":"post"
+						,"method": subscribed?"DELETE":"post"
 					}
 				).then(function(){return getWhoami(token);});
 			}
@@ -293,7 +307,7 @@ return function(config){
 							+ action + "/" 
 							+ user
 						,"headers":{"X-API-Token":token}
-						,"method": (action == "acceptRequest")?"put":"delete"
+						,"method": (action == "acceptRequest")?"PUT":"DELETE"
 					}
 				);
 			}
@@ -344,8 +358,11 @@ return function(config){
 				,"display_name":{"out":"screenName","a":"copy"}
 				//,"embeds":{"out":""}
 				,"entries":{"out":"posts", "post":function(posts){
-					if(Array.isArray(posts))posts.forEach(function(post){
-						post.omittedComments = post.comments_count - post.comments.length;
+					(Array.isArray(posts)?posts:[posts]).forEach(function(post){
+						if ( Array.isArray(post.comments))
+							post.omittedComments = 
+								post.comments_count 
+								- post.comments.length;
 					});
 					return posts;
 				}} 
@@ -359,7 +376,7 @@ return function(config){
 						});
 					}
 				}
-				,"id":{"out":"","a":"str"}//"a":"mutate","f":function(id){return id.toString();}}
+				,"id":{"out":"","a":"str"}//"a":"mutate","f":function(id){return id.toString();}
 				,"is_direct":{"out":"isDirect", "a":"copy"}
 				,"is_public":{"out":"isPrivate","a":"mutate","f":function(fPub){ return fPub?"0":"1"; }}
 				,"likes":{"out":"","a":"str"}
@@ -368,12 +385,23 @@ return function(config){
 				,"original_url":{"out":"url","a":"mutate", "f":addHost}
 				//,"post_id":{"out":"","a":"copy"}
 				,"published_at":{"out":"createdAt","a":"mutate","f":Date.parse,"single":true}
-				,"post":{"out":"posts"}
+				,"post":{"out":"posts", "post":function(posts){
+						(Array.isArray(posts)?posts:[posts]).forEach(function(post){
+							if ( Array.isArray(post.comments))
+								post.omittedComments = 
+									post.comments_count 
+									- post.comments.length;
+						});
+						return posts;
+					}
+	
+				}
 				,"river":{"out":"timelines"}
 				,"reason":{"out":"postedTo" ,"a":"mutate","f":function(val){
 					var feeds = new Array();
 					Object.keys(val).forEach(function(key){
 						switch(key){
+						case "user_directs_received":
 						case "user":
 							val[key].forEach(function(id){
 								addFeed(id,false);
@@ -496,6 +524,7 @@ return function(config){
 				return utils.encodeURIForm(key) + "=" + utils.encodeURIForm(val);
 			}
 		}
+		//,"oRT":RtUpdate
 	};
 };
 });

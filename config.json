@@ -27,7 +27,7 @@ var gConfig = {
 		,"server":{
 			"serverURL":"https://mokum.place/"
 			,"serverApiURL":"https://mokum.place/api/v1/"
-			,"rtURL":"https://"
+			,"rtURL":"https://mokum.place/faye"
 		}
 		,"tokenPrefix":"mokum_"
 		,"front":"mokum.place"

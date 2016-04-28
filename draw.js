@@ -660,6 +660,8 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var oEmbedURL;
 		var m;
+		var blacklist = gConfig.domains["FreeFeed"].fronts;
+		if(blacklist.some(function(item){return victim.indexOf(item)!= -1;})) return;
 		if((m = /^https:\/\/(?:docs\.google\.com\/(?:document|spreadsheets|presentation|drawings)|drive\.google\.com\/file)\/d\/([^\/]+)/.exec(victim)) !== null) {
 			new Promise(function(resolve,reject){
 				var oReq = new XMLHttpRequest();
@@ -822,7 +824,7 @@ _Drawer.prototype = {
 			function(prev,domain){ return prev.concat(cView.contexts[domain].ids);}
 			,[]
 		).length > 1 ){
-			nodeDirectTo.cNodes["mu-login"].innerHTML = context.doamin + ": " + login.users.link;
+			nodeDirectTo.cNodes["mu-login"].innerHTML = context.domain + ": " + login.users.link;
 			nodeDirectTo.cNodes["mu-login"].hidden = false;
 			victim.cNodes["add-sender"].hidden = false;
 			if (typeof victim.cNodes["add-sender"].ids === "undefined")

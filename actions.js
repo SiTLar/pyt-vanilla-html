@@ -73,13 +73,13 @@ _Actions.prototype = {
 		textField.disabled = true;
 		e.target.disabled = true;
 		var nodeSpinner = e.target.parentNode.appendChild(cView.gNodes["spinner"].cloneNode(true));
-		var postsTo = e.target.parentNode.parentNode.getElementsByClassName("new-post-to");
+		var postsTo = e.target.getNode(["p", "new-post"]).getElementsByClassName("new-post-to");
 		var arrPostsTo = new Array(postsTo.length);
 		var body = cView.Common.urlsToCanonical(textField.value);
 		for (var idx = 0; idx < postsTo.length; idx++)arrPostsTo[idx] = postsTo[idx];
 		cView.Utils._Promise.all(arrPostsTo.map(send)).then(function(res){
 			var nodeAtt = cView.doc.createElement("div");
-			delete postTo.parentNode.attachs;
+			delete e.target.getNode(["p", "new-post"],["c","post-to"]).attachs;
 			nodeAtt.className = "attachments";
 			textField.parentNode.replaceChild(nodeAtt,
 				textField.parentNode.cNodes["attachments"]);

@@ -520,7 +520,7 @@ _Drawer.prototype = {
 			if(nodePost.direct)
 				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]).innerHTML += "<i class='fa fa fa-envelope icon'>&nbsp;</i>";
 
-			if(post.attachments){
+			if(Array.isArray(post.attachments)&&post.attachments.length){
 				var attsNode = postNBody.cNodes["attachments"];
 				post.attachments.forEach(function(att){
 					var nodeAtt = cView.doc.createElement("div");

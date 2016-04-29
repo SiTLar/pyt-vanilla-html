@@ -88,7 +88,7 @@ RtHandler.prototype = {
 		var that = this;
 		var cView = document.cView;
 		if(cView.skip)return;
-		context.api.getPost(context.token, "posts/" + id , ["comments"]).then(function(data){
+		context.api.getPost(context.token, "posts/" + id /*, ["comments"]*/).then(function(data){
 			that.unshiftPost(data,context);
 		});
 	}
@@ -104,6 +104,8 @@ RtHandler.prototype = {
 		data.users.forEach(cView.Common.addUser,context);
 		if(nodePost){
 			context.gComments[data.comments.id] = data.comments; 
+			if(!Array.isArray( nodePost.rawData.comments))
+				nodePost.rawData.comments = new Array();
 			nodePost.rawData.comments.push(data.comments.id);
 			if(!document.getElementById(commentId))
 				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(
@@ -115,7 +117,7 @@ RtHandler.prototype = {
 			}
 			nodePost.rawData.updatedAt = Date.now();
 						
-		}else that.injectPost(postId, context);
+		}else that.injectPost(data.comments.postId, context);
 	}
 	,"comment:update": function(data, context){
 		var cView = document.cView;
@@ -154,7 +156,7 @@ RtHandler.prototype = {
 			nodePost.rawData.likes.unshift(data.users.id);
 			cView.Drawer.genLikes(nodePost);
 			nodePost.rawData.updatedAt = Date.now();
-		}else that.injectPost(postId, context);
+		}else that.injectPost(data.meta.postId, context);
 	}
 	,"like:remove": function(data, context){
 		var cView = document.cView;

@@ -126,22 +126,24 @@ RtUpdate.prototype = {
 			rt.handlers["post:new"](data, rt.context);
 			return;
 		}
-		var newData = data.posts;
-		var myData = nodePost.rawData;
+		var newPost = data.posts;
+		var myPost = nodePost.rawData;
+		cView.Common.loadGlobals(data, rt.context);
 
-		myData.body = newData.body;
+		myPost.body = newPost.body;
 
-		nodePost.getNode(["c","post-body"],["c","post-cont"]).innerHTML = rt.context.digestText(myData.body);
-		myData.likes = newData.likes;
+		nodePost.getNode(["c","post-body"],["c","post-cont"]).innerHTML = rt.context.digestText(myPost.body);
+		myPost.likes = newPost.likes;
+		myPost.omittedLikes = newPost.omittedLikes;
 		cView.Drawer.genLikes(nodePost);
 		nodePost.rawData.updatedAt = Date.now();
 
-		if((myData.comments.length+myData.omittedComments) 
-		< (newData.comments.length+newData.omittedComments)){
-			newData.comments.forEach(function(id){
-				if(myData.comments.indexOf(id) == -1 ){
+		if((myPost.comments.length+myPost.omittedComments) 
+		< (newPost.comments.length+newPost.omittedComments)){
+			newPost.comments.forEach(function(id){
+				if(myPost.comments.indexOf(id) == -1 ){
 					var cmt = data.comments.find(function(cmt){return cmt.id == id;});
-					cmt.postId = newData.id;
+					cmt.postId = newPost.id;
 					rt.handlers["comment:new"]({
 						"users":data.users
 						,"comments":cmt

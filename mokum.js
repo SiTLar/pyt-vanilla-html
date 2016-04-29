@@ -402,27 +402,26 @@ return function(config){
 					Object.keys(val).forEach(function(key){
 						switch(key){
 						case "user_directs_received":
+						//case "user_directs_sent":
 						case "user":
 							val[key].forEach(function(id){
-								addFeed(id,false);
-								feeds.push(id);
+								feeds.push(addFeed(id,false));
 							});
 							break;
 						case "group":
 							val[key].forEach(function(id){
-								addFeed("groups/"+id,false);
-								feeds.push("groups/"+id);
+								feeds.push(addFeed("groups/"+id,false));
 							});
 							break;
 						case "user_private":
 							val[key].forEach(function(id){
-								addFeed(id,true);
-								feeds.push(id);
+								feeds.push(addFeed(id,true));
 							});
 							break;
 						default:
 						}
 					});
+					
 					return feeds;
 				}}
 				,"status":{"out":"isPrivate","a":"mutate","f":function(val){
@@ -504,12 +503,14 @@ return function(config){
 				return oOut;
 			}
 			function addFeed(id, priv){
-				subscriptions[id] = {
-					"id":priv?id+"-private":id
+				var subid = priv?id+"-private":id;
+				subscriptions[subid] = {
+					"id":subid
 					,"name":"Posts"
 					,"user":id
 					,"mayNotBePublic": priv
 				};
+				return subid;
 			}
 			function obj2arr(obj){
 				return Object.keys(obj).map(function(key){
@@ -524,7 +525,7 @@ return function(config){
 				return utils.encodeURIForm(key) + "=" + utils.encodeURIForm(val);
 			}
 		}
-		//,"oRT":RtUpdate
+		,"oRT":RtUpdate
 	};
 };
 });

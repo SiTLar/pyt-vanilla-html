@@ -19,6 +19,7 @@
 				"direct":{"dest":["Router","directs"]}
 				,"discussions":{"dest":["Router","timeline"]} 
 			} 
+			,"default":{"dest":["Router","timeline"]} 
 		}
 		,"home":{ "dest":["Router","routeHome","token"] }
 		,"requests":{"dest":["Drawer","drawRequests","token"] }

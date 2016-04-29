@@ -6,8 +6,8 @@ var apis = {
 }
 
 var gTemplates = require("json!./templates.json");
-define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router" ]
-,function(Utils, _Common, _Drawer,_Actions, _SecretActions, _Router){
+define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
+,function(Utils, _Common, _Drawer,_Actions, _Router){
 	function _Context(v, domain, api){
 		var context = this ;
 		Object.keys(context.defaults).forEach(function(key){
@@ -75,6 +75,9 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 			var ids = Object.keys(this.logins);
 			return ids;
 		}
+		,"digestText":function(text){
+			return this.cView.autolinker.link(text.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/___CONTEXT_PATH___/g,gConfig.front+"as/"+this.domain);
+		}
 		,"getWhoami": function(token){
 			var context = this;
 			return context.api["_getWhoami"](token).then(function(res){
@@ -115,7 +118,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" ,"./secrets", "./router"
 		cView.Drawer = new _Drawer(cView);
 		cView.Actions = new _Actions(cView);
 		cView.Router = new _Router(cView);
-		cView.SecretActions = new _SecretActions(cView);
+		//cView.SecretActions = new _SecretActions(cView);
 		var Url2link =  require("./url2link");
 		cView.autolinker = new Url2link({ "truncate":25
 			,"url":{

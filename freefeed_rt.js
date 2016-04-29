@@ -25,7 +25,7 @@ RtUpdate.prototype = {
 	, connect: function(){
 		var rt = this;
 		rt.ready = new utils._Promise(function(resolve,reject){
-			var cfg = gConfig.domains[rt.conext.domain];
+			var cfg = gConfig.domains[rt.context.domain];
 			var oReq = new XMLHttpRequest();
 			clearTimeout(rt.pingTimeout);
 
@@ -103,8 +103,8 @@ RtUpdate.prototype = {
 			rt.ready.then(function(){sendSubReq(timeline);});
 		}
 	}
-	,"rtSubPost": function(id){
-		this.subscribe({"post":[id]});
+	,"rtSubPost": function(data){
+		this.subscribe({"post":[data.posts.id]});
 	}
 	,"rtSubTimeline": function(data){
 		this.subscribe({"timeline":[data.timelines.id]});

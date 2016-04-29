@@ -130,7 +130,7 @@ define("./router",[],function(){
 				var username = path.split("/")[0];
 				cView.Router.timeline(cs, path).then(function(){ 
 					var feed =  context.gUsers.byName[username];
-					cView.Common.addUser.call(context, feed);
+					//cView.Common.addUser.call(context, feed);
 					cView.doc.title = "@"+feed.username + ", a " + context.domain + " feed.";
 					cView.Utils.setChild(body, "details", cView.Drawer.genUserDetails(feed.username, context));
 					if (context.ids)
@@ -173,7 +173,7 @@ define("./router",[],function(){
 				if(Array.isArray(post))post = post[0];
 				post.domain = context.domain;
 				cView.Drawer.drawPost(post,context);
-				if(JSON.parse(cView.localStorage.getItem("rt"))) context.rtSubPost(post.id) ;
+				if(JSON.parse(cView.localStorage.getItem("rt"))) context.rtSubPost(res[0]) ;
 			});
 		}
 		,"timeline":function(contexts, path){

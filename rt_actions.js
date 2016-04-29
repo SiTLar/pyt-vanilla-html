@@ -101,9 +101,10 @@ RtHandler.prototype = {
 		var commentId = [context.domain,"cmt" ,data.comments.id].join("-");
 		var postId = [context.domain,"post" ,data.comments.postId].join("-");
 		var nodePost = document.getElementById(postId);
-		cView.Common.addUser.call(context, data.users[0]);
+		data.users.forEach(cView.Common.addUser,context);
 		if(nodePost){
 			context.gComments[data.comments.id] = data.comments; 
+			nodePost.rawData.comments.push(data.comments.id);
 			if(!document.getElementById(commentId))
 				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(
 					cView.Drawer.genComment.call(context, data.comments)
@@ -181,7 +182,7 @@ RtHandler.prototype = {
 		var postId = [context.domain,"post" ,data.posts.id].join("-");
 		var nodePost = document.getElementById(postId);
 		if(!nodePost) return;
-		nodePost.cNodes["post-body"].cNodes["post-cont"].innerHTML = cView.autolinker.link(data.posts.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		nodePost.getNode(["c","post-body"],["c","post-cont"]).innerHTML = context.digestText(data.posts.body);
 		nodePost.rawData.body = data.posts.body;
 	}
 	, "post:destroy" : function(data, context){

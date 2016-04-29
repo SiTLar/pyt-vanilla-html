@@ -65,8 +65,6 @@
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-my","t":"a","txt":"direct messages","e":{"mousedown":["Actions","directs"]}}
 		,{"t":"span","txt":" &#8226; "}
-		,{"c":"user-priv","t":"a","txt":"secrets","e":{"click":["SecretActions","ctrlPriv"]}}
-		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-priv","t":"a","txt":"settings","e":{"mousedown":["Actions","goSettings"]}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-logout","t":"a","txt":"logout","e":{"click":["Actions","logout"]}}
@@ -327,7 +325,7 @@
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"up-d","t":"a", "txt":"Direct"}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"up-b","t":"a", "txt":"Block","e":{"click":["Actions","genBlock"]}}
+		,{"c":"up-b","t":"a", "txt":"hide&block","e":{"click":["Actions","genBlock"]}}
 	]}
 	,{"c":"up-block","e":{"mouseleave":["Actions","destroy"]}
 	,"children":[

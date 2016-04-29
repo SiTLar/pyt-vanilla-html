@@ -101,7 +101,7 @@ _Url2link.prototype = {
 		,"flags":"i"
 		,"actions":[function(match, host){
 			var uname = match.slice(1);
-			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="' + gConfig.front+uname+'" >@' +uname + '</a>' ;
+			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="___CONTEXT_PATH___/' + uname+'" >@' +uname + '</a>' ;
 		}]
 	}
 	,"link": function(input){

@@ -90,7 +90,7 @@ _Drawer.prototype = {
 		nodeInfo.getNode(["c","ud-avatar"],["c","ud-avatar-img"]).src = user.profilePictureMediumUrl;
 		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
 		if(typeof user.description === "string")
-			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = cView.autolinker.link(user.description.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = context.digestText(user.description);
 		if (user.type == "group") 
 			["uds-subs","uds-likes","uds-com"].forEach(function(key){
 			nodeInfo.getNode(["c","ud-stats"],["c",key]).style.display = "none";
@@ -626,7 +626,7 @@ _Drawer.prototype = {
 		nodePost.id = context.domain + "-post-" + post.id;
 		nodePost.isPrivate = false;
 		nodePost.commentsModerated = false;
-		postNBody.cNodes["post-cont"].innerHTML =  cView.autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		postNBody.cNodes["post-cont"].innerHTML =  context.digestText(post.body);
 			gotUser();
 		return nodePost;
 
@@ -779,7 +779,7 @@ _Drawer.prototype = {
 		var cUser = context.gUsers[comment.createdBy];
 		var nodeSpan = nodeComment.getNode(["c","comment-body"],["c","cmt-content"]);
 		nodeComment.userid = null;
-		nodeSpan.innerHTML = cView.autolinker.link(comment.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		nodeSpan.innerHTML = context.digestText(comment.body);
 		nodeComment.id = context.domain + "-cmt-" + comment.id;
 		nodeComment.rawId = comment.id;
 		nodeComment.domain = context.domain;

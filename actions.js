@@ -177,8 +177,9 @@ _Actions.prototype = {
 	,"cancelEditPost": function(e){
 		var cView = document.cView;
 		var victim = e.target.getNode(["p","post"]);
+		var context = cView.contexts[victim.rawData.domain]
 		var postCNode = cView.doc.createElement("div");
-		postCNode.innerHTML = cView.autolinker.link(victim.rawData.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+		postCNode.innerHTML = context.digestText(victim.rawData.body);
 		postCNode.className = "post-cont";
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
@@ -215,7 +216,7 @@ _Actions.prototype = {
 				nodePost.sign = cpost.sign;
 			}
 			*/
-			postCNode.innerHTML = cView.autolinker.link(post.body.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+			postCNode.innerHTML = context.digestText(post.body);
 			postCNode.className = "post-cont";
 			nodePost.rawData.body = post.body;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );

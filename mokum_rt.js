@@ -29,7 +29,7 @@ RtUpdate.prototype = {
 			var cfg = gConfig.domains[rt.context.domain];
 			clearTimeout(rt.pingTimeout);
 			rt.pingTimeout = null;
-			console.log("Connecting");
+			//console.log("Connecting");
 			oReq.onload = function (){
 				if(oReq.status < 400){
 					var res = JSON.parse(oReq.response)[0];
@@ -37,7 +37,6 @@ RtUpdate.prototype = {
 					rt.wSocket = new WebSocket(cfg.server.rtURL.replace("https","wss"));
 					rt.wSocket.onopen = function(){
 						rt.connectPing();
-
 						rt.callback =  function (e){rt.message(e)};
 						rt.wSocket.addEventListener("message",rt.callback);
 						rt.timeout = res.advice.timeout*2;
@@ -138,8 +137,19 @@ RtUpdate.prototype = {
 		cView.Drawer.genLikes(nodePost);
 		nodePost.rawData.updatedAt = Date.now();
 
-		if((myPost.comments.length+myPost.omittedComments) 
-		< (newPost.comments.length+newPost.omittedComments)){
+		if(Array.isArray(newPost.comments))newPost.comments.forEach(function(cmt){
+			var commentId = [rt.context.domain,"cmt" ,cmt].join("-");
+			var nodeCmt = document.getElementById(commentId);
+			if (nodeCmt)
+				nodeCmt.parentNode.replaceChild(
+					cView.Drawer.genComment.call(rt.context,cmt)
+					,nodeCmt
+				);
+		});
+			
+		if(Array.isArray(myPost.comments)
+		&&((myPost.comments.length+myPost.omittedComments) 
+		< (newPost.comments.length+newPost.omittedComments))){
 			newPost.comments.forEach(function(id){
 				if(myPost.comments.indexOf(id) == -1 ){
 					var cmt = data.comments.find(function(cmt){return cmt.id == id;});

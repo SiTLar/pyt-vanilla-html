@@ -76,6 +76,7 @@ return function(config){
 				);
 			}
 			,"getUser": function(token, req) {return get(token, "users/" + req );}
+			,"getSubs": function(token, req) {return get(token, "users/" + req );}
 			,"doBan": function(token, username, action){
 				return utils.xhrReq(
 					{ 	"url": config.serverURL 

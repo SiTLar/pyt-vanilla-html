@@ -10,7 +10,7 @@ return function(config){
 			}
 		);
 	}
-	function getSubs(token, username){
+	function getAllSubs(token, username){
 		return utils._Promise.all([
 			get(token, username+"/subscribers")
 			,get(token, username+"/subscriptions")
@@ -25,7 +25,7 @@ return function(config){
 			return JSON.parse(res); 
 		});
 		pSubs = pUser.then(function(whoami){
-			return getSubs(token, whoami.user.name);
+			return getAllSubs(token, whoami.user.name);
 		});
 		return utils._Promise.all([pUser,pSubs]).then(function(res){
 			var whoami = res[0];
@@ -63,6 +63,41 @@ return function(config){
 	return{
 		"protocol":{
 			"get": get
+			,"getSubs": function (token, userlist) {
+				return get(token, userlist).then(function(res){
+					res = JSON.parse(res);
+					var subscribers = new Array(); 
+					var subscriptions = new Array();
+					if (typeof  res.subscriptions !== "undefined" )
+						subscriptions = res.subscriptions.map(function(sub){
+							sub = sub.user;
+							sub.type = "user";
+							sub.id =  sub.id.toString();
+							return sub;
+						}).concat(res.group_subscriptions.map(function(sub){
+							sub = sub.group;
+							sub.type = "group";
+							sub.id = "groups/" + sub.id;
+							return sub;
+						}));
+
+					if (typeof  res.subscribers!== "undefined" )
+						subscribers = subscribers.map(function(sub){
+							sub = sub.user;
+							sub.id = sub.id.toString();
+							return sub;
+						});
+					res.subscribers = subscribers.concat(subscriptions);
+					res.subscriptions = subscriptions.map(function(sub){
+						return {"name": "Posts"
+							,"id": "posts-"+sub.id
+							,"user": sub.id.toString()
+						};
+					});
+
+					return res;
+				});
+			}
 			,"getTimeline": function(token, timeline, skip) {
 				var len = timeline.lebngth;
 				if(timeline.charAt(len - 1) == '/')timeline = timeline.slice(0,-1);
@@ -104,7 +139,7 @@ return function(config){
 					"timelines": new Array()
 					,"text": postdata.post.body
 					,"comments_disabled":0
-					,"attachment_ids":postdata.post.attachments
+					,"attachment_ids[]":postdata.post.attachments
 				}; 
 				var dests = postdata.meta.feeds;
 				var myIdx = dests.indexOf(sender);
@@ -214,7 +249,6 @@ return function(config){
 				).then(function(res){console.log(res)});
 			}
 			,"_getWhoami":getWhoami
-			,"getSubs":getSubs
 			,"login":function(username, token){
 				return new utils._Promise(function(resolve,reject){
 					utils.xhrReq( 
@@ -294,7 +328,7 @@ return function(config){
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL 
 							+ "users/" + username 
-							+ "/subscribers" 
+							+ "/subscribers.json" 
 						,"headers":{"X-API-Token":token}
 						,"method": subscribed?"DELETE":"post"
 					}
@@ -314,15 +348,39 @@ return function(config){
 			,"sendAttachment": function(token,file, filename){
 				var data = new FormData();
 
-				data.append( "authenticity_token", token);
+				data.append( "X-API-Token", token);
 				data.append( "attachment[attachment][]",file, filename);
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL + "attachments.json"
-						,"token": token 
 						,"method": "post"
 						,"data": data
+						,"headers":{"X-API-Token":token
+							,"Accept": "application/json, text/javascript, ?/?; q=0.01" 
+						}
 					}
-				);
+				).then(function(res){
+					var id = JSON.parse(res).attachments[0].id;
+					return new utils._Promise(function(resolve,reject){
+						var pulling = setInterval(pull,1000);
+						function pull(){ 
+							utils.xhrReq({ 	
+								"url": config.serverApiURL 
+									+ "attachments.json" 
+								,"headers":{"X-API-Token":token}
+							}).then(function(res){
+								res = JSON.parse(res);
+								if(res.queued_count == 0){
+									clearInterval(pulling);
+									resolve({ "attachments":
+										res.attachments.find(function(att){
+											return att.id == id;
+										})
+									});
+								}
+							});
+						}
+					});
+				});
 			}
 		}
 		,"parse":function (res){
@@ -334,7 +392,7 @@ return function(config){
 				"attachment_file_name":{"out":"fileName","a":"copy"}
 				,"attachments":{"out":""
 					,"post":function(atts){ 
-						return atts.map(function(att){
+						return (Array.isArray(atts)?atts:[atts]).map(function(att){
 							att.mediaType="image";
 							aAttachments.push(att); 
 							return att.id;

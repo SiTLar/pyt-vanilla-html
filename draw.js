@@ -374,7 +374,7 @@ _Drawer.prototype = {
 			if(sub.name != "Posts")return;
 			var user = context.gUsers[sub.user];
 
-			a.href = gConfig.front+ user.username;
+			a.href = gConfig.front+ "as/" + context.domain+ "/" + user.username;
 			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
 			a.cNodes["usr-title"].innerHTML = user.title;
 			if(user.type == "user")out.cNodes["sc-users"].appendChild(node);
@@ -393,7 +393,7 @@ _Drawer.prototype = {
 			var user = context.gUsers[sub.id];
 
 			var a = node.cNodes["link"];
-			a.href = gConfig.front+ user.username;
+			a.href = gConfig.front+ "as/" + context.domain+ "/" + user.username;
 			a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
 			a.cNodes["usr-title"].innerHTML = user.title;
 			out.appendChild(node);

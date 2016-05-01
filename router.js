@@ -105,16 +105,13 @@ define("./router",[],function(){
 		,"subs":function(contexts, path, fn){
 			var cView = this.cView;
 			var context = contexts[Object.keys(contexts)[0]];
-			return new cView.Utils._Promise(function(resolve,reject){
-				new cView.Utils._Promise.all([ context.api.getUser(context.token,path),context.p ])
-				.then(function(res){ 
-					cView.Common.loadGlobals(res[0], context);
-					var body = cView.doc.getElementById("container");
-					body.cNodes["pagetitle"].innerHTML = path;
-					cView.doc.title = "@"+path.split("/")[0]+ "'s  " + path.split("/")[1] + " ("+context.domain+")";
-					fn.call(cView, res[0],context); 
-					resolve();
-				},reject);
+			return cView.Utils._Promise.all([ context.api.getSubs(context.token,path),context.p ])
+			.then(function(res){ 
+				cView.Common.loadGlobals(res[0], context);
+				var body = cView.doc.getElementById("container");
+				body.cNodes["pagetitle"].innerHTML = path;
+				cView.doc.title = "@"+path.split("/")[0]+ "'s  " + path.split("/")[1] + " ("+context.domain+")";
+				fn.call(cView, res[0],context); 
 			});
 		}
 		,"unmixed":function(contexts, path){

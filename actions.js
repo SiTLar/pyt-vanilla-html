@@ -23,9 +23,11 @@ function regenAttaches(host){
 						,oAttach.file
 						,oAttach.name
 					).then(function(data){
-						host.attachs[domain].arrId.push(
-							data.attachments.id
-						);
+						var id = (Array.isArray(data.attachments)?
+							data.attachments[0]
+							:data.attachments
+						).id;
+						host.attachs[domain].arrId.push(id);
 						return data;
 					})
 				);
@@ -39,7 +41,8 @@ function regenAttaches(host){
 		host.nodeInput.value = "";
 		host.nodeInput.disabled = false;
 		host.buttonPost.disabled = false;
-		var attachments = data[0].attachments;
+		var payload = data[0].attachments;
+		var attachments = Array.isArray(payload)?payload[0]:payload ;
 		var nodeAtt = cView.doc.createElement("div");
 		nodeAtt.className = "att-img";
 		nodeAtt.innerHTML = '<a target="_blank" href="'
@@ -50,6 +53,12 @@ function regenAttaches(host){
 		host.nodeSpinner.parentNode.replaceChild(nodeAtt, host.nodeSpinner);
 		delete host.nodeSpinner;
 		return data;
+	},function(data){
+		host.nodeInput.value = "";
+		host.nodeInput.disabled = false;
+		host.buttonPost.disabled = false;
+		if (typeof host.nodeSpinner === "undefined")
+			delete host.nodeSpinner;
 	});
 }
 function _Actions(v){
@@ -80,21 +89,29 @@ _Actions.prototype = {
 		cView.Utils._Promise.all(arrPostsTo.map(send)).then(function(res){
 			var nodeAtt = cView.doc.createElement("div");
 			delete e.target.getNode(["p", "new-post"],["c","post-to"]).attachs;
+			delete e.target.getNode(["p", "new-post"],["c","post-to"]).files;
+			delete e.target.getNode(["p", "new-post"],["c","post-to"]).attP;
 			nodeAtt.className = "attachments";
 			textField.parentNode.replaceChild(nodeAtt,
 				textField.parentNode.cNodes["attachments"]);
 			textField.parentNode.cNodes["attachments"] = nodeAtt;
 			textField.value = "";
 			textField.disabled = false;
-			postTo.feeds = new Array();
-			cView.updPostTo(context.gMe, true, context.gMe.users.username);
 			e.target.disabled = false;
 			textField.style.height  = "4em";
 			try{ e.target.parentNode.removeChild(nodeSpinner); }
 			catch(e){};
-			cView.Common.loadGlobals(res, context);
-			res.posts.domain = context.domain;
-			if(!cView.doc.getElementById(res.posts.id))cView.doc.posts.insertBefore(cView.Drawer.genPost(res.posts), cView.doc.posts.childNodes[0]);
+			arrPostsTo.forEach(function(postTo,idx){
+				res[idx].posts.domain = postTo.domain;
+				var context = cView.contexts[postTo.domain];
+				cView.updPostTo(context.gMe, true, context.gMe.users.username);
+				cView.Common.loadGlobals(res[idx], context);
+				if(!cView.doc.getElementById(res[idx].posts.id))
+					cView.doc.posts.insertBefore(
+						cView.Drawer.genPost(res[idx].posts)
+						, cView.doc.posts.childNodes[0]
+					);
+			});
 		} ,function(err){
 			textField.disabled = false;
 			e.target.disabled = false;
@@ -683,7 +700,18 @@ _Actions.prototype = {
 	}
 	,"me": function(e){
 		var cView = document.cView;
-		e.target.href = gConfig.front+cView.contexts[gConfig.leadDomain].gMe["users"]["username"];
+		var context = cView.contexts[gConfig.leadDomain];
+		var loginDomain;
+		if ((typeof context !== "undefined") && context.gMe)loginDomain = gConfig.leadDomain;
+		else{
+			Object.keys(cView.contexts).some(function(domain){
+				if(cView.contexts[domain].gMe != null){
+					loginDomain = domain;
+					return true;
+				}else return false;
+			});
+		}
+		e.target.href = gConfig.front+cView.contexts[loginDomain].gMe["users"]["username"];
 	}
 	,"home": function(e){
 		var cView = document.cView;
@@ -807,7 +835,7 @@ _Actions.prototype = {
 	}
 	,"unfoldAttImgs": function (e){
 		var cView = document.cView;
-		var nodeAtts = e.target.getNode(["p", "attachments"]);
+		var nodeAtts = cView.Utils.getNode(e.target,["p", "attachments"]);
 		if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
 			nodeAtts.cNodes["atts-img"].style.display = "block";
 			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';

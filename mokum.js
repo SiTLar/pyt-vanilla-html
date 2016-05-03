@@ -82,7 +82,7 @@ return function(config){
 						}));
 
 					if (typeof  res.subscribers!== "undefined" )
-						subscribers = subscribers.map(function(sub){
+						subscribers = res.subscribers.map(function(sub){
 							sub = sub.user;
 							sub.id = sub.id.toString();
 							return sub;

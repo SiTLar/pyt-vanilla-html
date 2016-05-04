@@ -119,13 +119,21 @@ define("./router",[],function(){
 		,"routeMe": function(contexts, path){
 			var cView = this.cView;
 			var nodeAddPost = cView.gNodes["new-post"].cloneAll();
+			var domains = Object.keys(contexts);
 			var body = cView.doc.getElementById("container");
+			var mainContext = (domains.indexOf(gConfig.leadDomain) != -1)? 
+				contexts[gConfig.leadDomain]:contexts[domains[0]];
+			mainContext.p.then(function () {
+				cView.Drawer.genPostTo(nodeAddPost
+					,mainContext.gMe.users.username
+					,mainContext.gMe);
+			});
 			body.appendChild(nodeAddPost);
 			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
 			cView.doc.title +=": " + path;
 			var prContxt = new Array();
 			var prConts = new Array();
-			Object.keys(contexts).forEach(function(domain){
+			domains.forEach(function(domain){
 				var context = contexts[domain];
 				prContxt.push(context.p);
 				prConts.push(context.api.get(

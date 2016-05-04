@@ -136,9 +136,10 @@ define("./router",[],function(){
 			domains.forEach(function(domain){
 				var context = contexts[domain];
 				prContxt.push(context.p);
-				prConts.push(context.api.get(
+				prConts.push(context.api.getTimeline(
 					context.token
 					,context.gMe.users.username
+					,cView.skip
 				));
 			});
 			var prAllT = cView.Utils._Promise.all(prConts);

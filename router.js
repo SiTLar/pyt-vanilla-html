@@ -18,6 +18,28 @@ var chk = {
 		return null;
 	}
 }
+function mixedTimelines (cView, contexts, prAllT,prAllC){
+	return cView.Utils._Promise.all([prAllT,prAllC]).then( function (res){
+		var domains = Object.keys(contexts);
+		var posts = new Array();
+		cView.doc.getElementById("loading-msg").innerHTML = "Building page";
+		res[0].forEach(function(data,idx){
+			var context = contexts[domains[idx]];
+			cView.Common.loadGlobals( data, context);
+			if(typeof data.posts !== "undefined" ){
+				data.posts.forEach(function(post){
+					post.domain = domains[idx];
+				});
+				posts = posts.concat(data.posts);
+			}
+			if(JSON.parse(cView.localStorage.getItem("rt"))) 
+				context.rtSubTimeline(data);
+		});
+		posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
+		cView.Drawer.drawTimeline(posts,contexts);
+		cView.Drawer.updateReqs();
+	});
+}
 define("./router",[],function(){
 	function _Router(v){
 		this.cView = v;
@@ -93,6 +115,27 @@ define("./router",[],function(){
 				});
 				cView.Router.timeline(contexts, "home" ).then(resolve,reject);
 			});
+		}
+		,"routeMe": function(contexts, path){
+			var cView = this.cView;
+			var nodeAddPost = cView.gNodes["new-post"].cloneAll();
+			var body = cView.doc.getElementById("container");
+			body.appendChild(nodeAddPost);
+			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
+			cView.doc.title +=": " + path;
+			var prContxt = new Array();
+			var prConts = new Array();
+			Object.keys(contexts).forEach(function(domain){
+				var context = contexts[domain];
+				prContxt.push(context.p);
+				prConts.push(context.api.get(
+					context.token
+					,context.gMe.users.username
+				));
+			});
+			var prAllT = cView.Utils._Promise.all(prConts);
+			var prAllC = cView.Utils._Promise.all(prContxt);
+			return mixedTimelines (cView, contexts, prAllT,prAllC);
 		}
 		,"subscribers":function(contexts, path){
 			var cView = this.cView;
@@ -184,29 +227,11 @@ define("./router",[],function(){
 				prContxt.push(context.p);
 				prConts.push(context.api.getTimeline(context.token,path, cView.skip));
 			});
-			var prAllC = cView.Utils._Promise.all(prConts);
-			var prAllT = cView.Utils._Promise.all(prContxt);
-			return cView.Utils._Promise.all([prAllC,prAllT]).then( function (res){
-				var posts = new Array();
-				cView.doc.getElementById("loading-msg").innerHTML = "Building page";
-				res[0].forEach(function(data,idx){
-					var context = contexts[domains[idx]];
-					cView.Common.loadGlobals( data, context);
-					if(typeof data.posts !== "undefined" ){
-						data.posts.forEach(function(post){
-							post.domain = domains[idx];
-						});
-						posts = posts.concat(data.posts);
-					}
-					if(JSON.parse(cView.localStorage.getItem("rt"))) 
-						context.rtSubTimeline(data);
-				});
-				posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
-				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
-				cView.doc.title +=": " + path;
-				cView.Drawer.drawTimeline(posts,contexts);
-				cView.Drawer.updateReqs();
-			});
+			var prAllT = cView.Utils._Promise.all(prConts);
+			var prAllC = cView.Utils._Promise.all(prContxt);
+			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
+			cView.doc.title +=": " + path;
+			return mixedTimelines(cView, contexts, prAllT,prAllC);
 		}
 	}
 return _Router;

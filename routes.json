@@ -18,6 +18,7 @@
 			,"vals":{ 
 				"direct":{"dest":["Router","directs"]}
 				,"discussions":{"dest":["Router","timeline"]} 
+				,"me":{"dest":["Router","routeMe"]}
 			} 
 			,"default":{"dest":["Router","timeline"]} 
 		}

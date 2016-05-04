@@ -142,7 +142,7 @@ RtUpdate.prototype = {
 			var nodeCmt = document.getElementById(commentId);
 			if (nodeCmt)
 				nodeCmt.parentNode.replaceChild(
-					cView.Drawer.genComment.call(rt.context,cmt)
+					cView.Drawer.genComment.call(rt.context,rt.context.gComments[cmt])
 					,nodeCmt
 				);
 		});

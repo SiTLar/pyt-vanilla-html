@@ -139,7 +139,7 @@ return function(config){
 					"timelines": new Array()
 					,"text": postdata.post.body
 					,"comments_disabled":0
-					,"attachment_ids[]":postdata.post.attachments
+					,"attachment_ids":postdata.post.attachments.map(Number)
 				}; 
 				var dests = postdata.meta.feeds;
 				var myIdx = dests.indexOf(sender);
@@ -157,6 +157,7 @@ return function(config){
 						,"data": data
 						,"headers":{"X-API-Token":token
 							,"Content-Type": "application/json"
+							,"Accept": "application/json, text/javascript, ?/?; q=0.01" 
 						}
 					}
 				);

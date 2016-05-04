@@ -699,30 +699,15 @@ _Actions.prototype = {
 		}
 	}
 	,"me": function(e){
-		var cView = document.cView;
-		var context = cView.contexts[gConfig.leadDomain];
-		var loginDomain;
-		if ((typeof context !== "undefined") && context.gMe)loginDomain = gConfig.leadDomain;
-		else{
-			Object.keys(cView.contexts).some(function(domain){
-				if(cView.contexts[domain].gMe != null){
-					loginDomain = domain;
-					return true;
-				}else return false;
-			});
-		}
-		e.target.href = gConfig.front+cView.contexts[loginDomain].gMe["users"]["username"];
+		e.target.href = gConfig.front+"filter/me";
 	}
 	,"home": function(e){
-		var cView = document.cView;
 	    e.target.href = gConfig.front;
 	}
 	,"directs": function(e){
-		var cView = document.cView;
 	    e.target.href = gConfig.front+ "filter/direct";
 	}
 	,"my": function(e){
-		var cView = document.cView;
 	    e.target.href = gConfig.front+ "filter/discussions";
 	}
 	,"newDirectInp": function(e){

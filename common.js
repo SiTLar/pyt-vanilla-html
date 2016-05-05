@@ -50,7 +50,8 @@ _Common.prototype = {
 		if (typeof context.gUsers[user.id] !== "undefined" ){
 			var localUser = context.gUsers[user.id];
 			Object.keys(user).forEach(function(key){
-				 localUser[key] = user[key];
+				 if (user[key] != "")
+					 localUser[key] = user[key];
 			});
 			return localUser;
 		}
@@ -81,7 +82,9 @@ _Common.prototype = {
 		+'" href="' + gConfig.front+"as/"+ context.domain + "/"+ user.username+'">'
 		+ user.title
 		+"</a>";
-		if(!user.profilePictureMediumUrl)user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
+		if((typeof user.profilePictureMediumUrl === "undefined")
+		||(user.profilePictureMediumUrl == ""))
+			user.profilePictureMediumUrl = gConfig.static+ "default-userpic-48.png";
 		user.friend = false;
 		user.subscriber = false;
 		context.gUsers[user.id] = user;

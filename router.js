@@ -225,7 +225,8 @@ define("./router",[],function(){
 				post.domain = context.domain;
 				cView.Drawer.drawPost(post,context);
 				if(JSON.parse(cView.localStorage.getItem("rt"))) context.rtSubPost(res[0]) ;
-				context.timelineId = res[0].timelines.id;
+				if(is(res[0].timelines))
+					context.timelineId = res[0].timelines.id;
 			});
 		}
 		,"timeline":function(contexts, path){

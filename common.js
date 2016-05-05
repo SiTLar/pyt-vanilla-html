@@ -227,7 +227,7 @@ _Common.prototype = {
 	,"setFrontUrl": function(url){
 		Object.keys(gConfig.domains).forEach(function(domain){
 			url = url.replace(
-				new RegExp("^(.*://)?("+gConfig.domains[domain].fronts.join("|")+")/(?=.+)")
+				new RegExp("^(.*://)?("+gConfig.domains[domain].fronts.join("|")+")/(?=[^(as/)|(settings/)])")
 				,gConfig.front+"as/"+domain+"/"
 			);
 		});

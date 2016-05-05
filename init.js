@@ -45,6 +45,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
 			,"logins": {} 
 			,"token": null
 			,"pending":[]
+			,"timelineId": null
 		}
 		,"initRt": function(){
 			var cView = this;

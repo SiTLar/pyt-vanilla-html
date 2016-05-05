@@ -243,10 +243,14 @@ return function(config){
 					}
 				);
 			}
-			,"chngAvatar": function (token, data){
+			,"chngAvatar": function (token, file){
+				var data = new FormData();
+				data.append( "avatar[avatar]",file) ;
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL + "avatars"
-						,"headers":{"X-API-Token":token}
+						,"headers":{"X-API-Token":token
+							,"Accept": "application/json, text/javascript, ?/?; q=0.01" 
+						}
 						,"method": "post"
 						,"data": data
 					}

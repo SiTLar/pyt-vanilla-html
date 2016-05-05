@@ -98,7 +98,9 @@ return function(config){
 					}
 				);
 			}
-			,"chngAvatar": function (token, data){
+			,"chngAvatar": function (token, file){
+				var data = new FormData();
+				data.append( "file",file) ;
 				return utils.xhrReq(
 					{ 	"url": config.serverURL + "users/updateProfilePicture"
 						,"token": token 

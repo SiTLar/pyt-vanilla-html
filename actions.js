@@ -1233,9 +1233,7 @@ _Actions.prototype = {
 		var id = inputs["id"].value;
 		var context = cView.contexts[inputs["domain"].value];
 		var token = context.logins[id].token;
-		var data = new FormData();
-		data.append( "file",files[0]) ;
-		context.api.chngAvatar(token, data).then( function() {
+		context.api.chngAvatar(token, files[0]).then( function() {
 			e.target.value = "";
 			e.target.disabled = false;
 			context.getWhoami(token).then(function(res){

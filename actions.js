@@ -6,8 +6,7 @@ function regenAttaches(host){
 	var nodesDest = host.childNodes;
 	delete host.attP;
 	var arrAttP = new Array();
-	for (var idx = 0; idx < nodesDest.length; idx++ ){
-		var domain = nodesDest[idx].domain;
+	for (var idx = 0; idx < nodesDest.length; idx++ )(function(domain){
 		var context = cView.contexts[domain];
 		if (typeof host.attachs[domain] === "undefined") 
 			host.attachs[domain] = {
@@ -35,7 +34,7 @@ function regenAttaches(host){
 				host.attachs[domain].timestamps.push(oAttach.timestamp);
 			}
 		});
-	}
+	})(nodesDest[idx].domain);
 	host.attP = cView.Utils._Promise.all(arrAttP).then( function(data){
 		if (typeof host.nodeSpinner === "undefined") return data;
 		host.nodeInput.value = "";
@@ -88,9 +87,10 @@ _Actions.prototype = {
 		for (var idx = 0; idx < postsTo.length; idx++)arrPostsTo[idx] = postsTo[idx];
 		cView.Utils._Promise.all(arrPostsTo.map(send)).then(function(res){
 			var nodeAtt = cView.doc.createElement("div");
-			delete e.target.getNode(["p", "new-post"],["c","post-to"]).attachs;
-			delete e.target.getNode(["p", "new-post"],["c","post-to"]).files;
-			delete e.target.getNode(["p", "new-post"],["c","post-to"]).attP;
+			var nodePostTo =  e.target.getNode(["p", "new-post"],["c","post-to"]);
+			delete nodePostTo.attachs;
+			delete nodePostTo.files;
+			delete nodePostTo.attP;
 			nodeAtt.className = "attachments";
 			textField.parentNode.replaceChild(nodeAtt,
 				textField.parentNode.cNodes["attachments"]);
@@ -106,7 +106,12 @@ _Actions.prototype = {
 				var context = cView.contexts[postTo.domain];
 				cView.updPostTo(context.gMe, true, context.gMe.users.username);
 				cView.Common.loadGlobals(res[idx], context);
-				if(!cView.doc.getElementById(res[idx].posts.id))
+				var nodePostId = [
+					context.domain
+					,"post" 
+					,res[idx].posts.id
+				].join("-");
+				if(!cView.doc.getElementById(nodePostId))
 					cView.doc.posts.insertBefore(
 						cView.Drawer.genPost(res[idx].posts)
 						, cView.doc.posts.childNodes[0]
@@ -138,6 +143,7 @@ _Actions.prototype = {
 				,postdata
 				,context.logins[postTo.userid].data.users.username
 				,postTo.destType
+				,context.timelineId
 			);
 		}			
 		/*	if(postTo.isPrivate){

@@ -32,6 +32,7 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 				});
 				posts = posts.concat(data.posts);
 			}
+			context.timelineId = data.timelines.id;
 			if(JSON.parse(cView.localStorage.getItem("rt"))) 
 				context.rtSubTimeline(data);
 		});
@@ -77,8 +78,9 @@ define("./router",[],function(){
 				var nodeAddPost = cView.gNodes["new-post"].cloneAll();
 				var body = cView.doc.getElementById("container");
 				body.appendChild(nodeAddPost);
+				var domains = Object.keys(contexts);
 				var context = contexts[gConfig.leadDomain];
-				if (!is(context))context = contexts[Object.keys(contexts)[0]];
+				if (!is(context))context = contexts[domains[0]];
 				context.p.then(function () {
 					cView.Drawer.genDirectTo(nodeAddPost
 						,context.gMe);
@@ -223,6 +225,7 @@ define("./router",[],function(){
 				post.domain = context.domain;
 				cView.Drawer.drawPost(post,context);
 				if(JSON.parse(cView.localStorage.getItem("rt"))) context.rtSubPost(res[0]) ;
+				context.timelineId = data.timelines.id;
 			});
 		}
 		,"timeline":function(contexts, path){

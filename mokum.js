@@ -134,7 +134,7 @@ return function(config){
 					return data;
 				});
 			}
-			,"sendPost": function(token, postdata, sender, type){
+			,"sendPost": function(token, postdata, sender, type, timelineId){
 				var post = {
 					"timelines": new Array()
 					,"text": postdata.post.body
@@ -158,9 +158,12 @@ return function(config){
 						,"headers":{"X-API-Token":token
 							,"Content-Type": "application/json"
 							,"Accept": "application/json, text/javascript, ?/?; q=0.01" 
+							,"X-River-Signature":timelineId
 						}
 					}
-				);
+				).then(function(res){
+					return JSON.parse(res).entries[timelineId];
+				});
 			}
 			,"editPost": function(token, id, postdata){
 				var data = JSON.stringify({"post":{"text":postdata.post.body }});

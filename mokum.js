@@ -139,7 +139,7 @@ return function(config){
 					"timelines": new Array()
 					,"text": postdata.post.body
 					,"comments_disabled":0
-					,"attachment_ids":postdata.post.attachments.map(Number)
+					,"attachment_ids":postdata.post.attachments//.map(Number)
 				}; 
 				var dests = postdata.meta.feeds;
 				var myIdx = dests.indexOf(sender);

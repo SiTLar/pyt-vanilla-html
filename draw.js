@@ -309,19 +309,20 @@ _Drawer.prototype = {
 			});
 		});
 		return cView.Utils._Promise.all(whoamis).then(function(){
+			var body = cView.doc.getElementById("container");
 			Object.keys(cView.contexts).forEach( function (domain){
 				genRequests(cView.contexts[domain]);
 			});
+			if (!body.getElementsByClassName("sub-request").length)
+				body.getElementsByClassName("pagetitle")[0].innerHTML = "No requests";
 		});
 
 		function genRequests(context){
 			var cView = context.cView;
-			var count = 0;
 			var body = cView.doc.getElementById("container");
 			context.ids.forEach(function(id){
 				var login = context.logins[id].data;
 				if(!Array.isArray(login.requests))return;
-				count++;
 				var nodeH = cView.doc.createElement("h2");
 				nodeH.innerHTML = "@"+login.users.username+" requests";
 				body.appendChild(nodeH);
@@ -330,13 +331,13 @@ _Drawer.prototype = {
 				if(Array.isArray(login.users.subscriptionRequests)){
 					nodeReqs.cNodes["req-body-pend"].hidden = false;
 					login.users.subscriptionRequests.forEach(function(req){
-						nodeReqs.cNodes["req-body-pend"].appendChild(genReqNode(context.gUsers[req], id));
+						nodeReqs.cNodes["req-body-pend"].appendChild(genReqNode(req,id));
 					});
 				}
 				if(Array.isArray(login.users.pendingSubscriptionRequests)){
 					nodeReqs.cNodes["req-body-sent"].hidden = false;
 					login.users.pendingSubscriptionRequests.forEach(function(req){
-						var node = genReqNode(context.gUsers[req], id);
+						var node = genReqNode({"userid": req, "id": req}, id);
 						node.cNodes["sr-ctrl"].hidden = true;
 						nodeReqs.cNodes["req-body-sent"].appendChild(node);
 					});
@@ -345,10 +346,11 @@ _Drawer.prototype = {
 
 			
 			});
-			if (!count)body.getElementsByClassName("pagetitle")[0].innerHTML = "<h1>No requests</h1>";
 			
-			function genReqNode(user, loginid){
+			function genReqNode(req, loginid){
 				var node = cView.gNodes["sub-request"].cloneAll();
+				var userid = (typeof req.userid !== "undefined")?req.userid:req;
+				var user = context.gUsers[userid];
 				node.cNodes["sr-name"].innerHTML = '<a href="'
 					+gConfig.front + "as/"
 					+context.domain + "/"
@@ -359,7 +361,8 @@ _Drawer.prototype = {
 				node.cNodes["sr-avatar"].src =  user.profilePictureMediumUrl ;
 				node.cNodes["sr-user"].value = user.username;
 				node.cNodes["sr-id"].value = loginid;
-				node.cNodes["sr-domain"].value = user.domain;
+				node.cNodes["sr-reqid"].value = req.id;
+				node.cNodes["sr-domain"].value = context.domain;
 				return node;
 			}
 

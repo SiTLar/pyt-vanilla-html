@@ -24,10 +24,16 @@ return function(config){
 		).then(function(res){
 			return JSON.parse(res); 
 		});
-		pSubs = pUser.then(function(whoami){
+		var pSubs = pUser.then(function(whoami){
 			return getAllSubs(token, whoami.user.name);
 		});
-		return utils._Promise.all([pUser,pSubs]).then(function(res){
+		var pReqs = utils.xhrReq( 
+			{ 	"url":config.serverApiURL +"subscription_requests.json" 
+				,"headers":{"X-API-Token":token}
+			}
+		);
+
+		return utils._Promise.all([pUser, pSubs, pReqs]).then(function(res){
 			var whoami = res[0];
 			var subs = res[1].map(JSON.parse);
 			var subscriptions = subs[1].subscriptions.map(function(sub){
@@ -56,7 +62,16 @@ return function(config){
 			});
 			whoami.user.subscriptions = subscriptions.map(function(sub){return "posts-"+sub.id;});
 			whoami.user.banIds = subs[0].banned_subscribers;
-
+			whoami.requests = new Array();
+			whoami.user.subscriptionRequests = new Array();
+			var subscription_requests = JSON.parse(res[2]).subscription_requests;
+			subscription_requests.forEach(function(req){
+				whoami.user.subscriptionRequests.push({
+					"userid":req.request.user_id.toString()
+					, "id":req.request.uuid
+				});
+				whoami.requests.push(req.from_user);
+			});
 			return whoami;
 		});
 	}
@@ -102,7 +117,25 @@ return function(config){
 				var len = timeline.lebngth;
 				if(timeline.charAt(len - 1) == '/')timeline = timeline.slice(0,-1);
 				if (timeline == "home")timeline = "index";
-				return get(token, timeline, Math.ceil(skip/gConfig.offset)+1); 
+				return get(token, timeline, Math.ceil(skip/gConfig.offset)+1)
+				.then(function(res){
+					res = JSON.parse(res);
+					if( res.entries.length 
+					|| Object.keys(res.users).some(isThere, res.users)
+					|| Object.keys(res.groups).some(isThere, res.groups))
+						return res;
+					return utils.xhrReq( {
+						"url":config.serverApiURL +"users/"+ timeline +".json"
+						,"headers":{"X-API-Token":token}
+					}).then(function(user){
+						user = JSON.parse(user);
+						if(typeof res.users === "undefined") 
+							res.users = new Object();
+						res.users[user.id] = user;
+						return res; 
+					});
+					function isThere(id){return this[id].username == timeline ;}
+				}); 
 			}
 			,"getPost": function(token, path, arrOptions) {
 				var likes = false;
@@ -342,13 +375,14 @@ return function(config){
 					}
 				).then(function(){return getWhoami(token);});
 			}
-			,"reqResp": function(token, user, action){
+			,"reqResp": function(token, user, action, id){
 				return utils.xhrReq(
-					{ 	"url": config.serverURL 
-							+ "users/" 
-							+ action + "/" 
-							+ user
-						,"headers":{"X-API-Token":token}
+					{ 	"url": config.serverApiURL 
+							+ "subscription_requests/"
+							+ id
+						,"headers":{"X-API-Token":token
+							,"Accept": "application/json, text/javascript, ?/?; q=0.01" 
+						}
 						,"method": (action == "acceptRequest")?"PUT":"DELETE"
 					}
 				);
@@ -462,6 +496,11 @@ return function(config){
 					}
 	
 				}
+				,"requests":{"out":"", "post":function(user){
+						user.type = "user";
+						return user;
+					}
+				}
 				,"river":{"out":"timelines"}
 				,"reason":{"out":"postedTo" ,"a":"mutate","f":function(val){
 					var feeds = new Array();
@@ -494,6 +533,7 @@ return function(config){
 					return ["public","disallow-robots","protected","subscribed"].indexOf(val) != -1 ?"0":"1";
 				}}
 				,"subscribers":{"out":""}
+				,"subscriptionRequests":{"out":"", "a":"copy"}
 				,"subscriptions":{"out":"","a":"copy"}
 				,"text":{"out":"body","a":"copy"}
 				,"thumb_url":{"out":"thumbnailUrl","a":"mutate", "f":addHost}

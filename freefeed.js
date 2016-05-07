@@ -206,7 +206,7 @@ return function(config){
 			}
 		}
 		,"parse":function (res){
-			return JSON.parse(res);
+			return (typeof res == "string")?JSON.parse(res):res;
 		}
 		,"oRT":RtUpdate
 	};

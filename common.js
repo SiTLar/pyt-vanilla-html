@@ -230,7 +230,10 @@ _Common.prototype = {
 	,"setFrontUrl": function(url){
 		Object.keys(gConfig.domains).forEach(function(domain){
 			url = url.replace(
-				new RegExp("^(.*://)?("+gConfig.domains[domain].fronts.join("|")+")/(?=[^(as/)|(settings/)])")
+				new RegExp("^(.*:\/\/)?("
+					+gConfig.domains[domain].fronts.join("|")
+					+")\/(?!((as)|(settings)|(about))(\/|$))"
+				)
 				,gConfig.front+"as/"+domain+"/"
 			);
 		});

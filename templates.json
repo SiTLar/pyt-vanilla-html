@@ -568,6 +568,7 @@
 		,{"c":"sr-name"}
 		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-id", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-reqid", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-domain", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-ctrl"
 		,"children":[

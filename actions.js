@@ -1178,7 +1178,11 @@ _Actions.prototype = {
 		var context = cView.contexts[host.cNodes["sr-domain"].value];
 		var spinner = cView.gNodes["spinner"].cloneNode(true);
 		host.appendChild(spinner);
-		context.api.reqResp(context.logins[host.cNodes["sr-id"].value].token, host.cNodes["sr-user"].value, action).then(function() {
+		context.api.reqResp(context.logins[host.cNodes["sr-id"].value].token
+			,host.cNodes["sr-user"].value
+			,action
+			,host.cNodes["sr-reqid"].value 
+		).then(function() {
 			host.parentNode.removeChild(host);
 			var nodeSR = cView.doc.getElementById("sr-info");
 			if(--cView.subReqsCount){

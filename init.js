@@ -142,6 +142,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
 			,"gNodes": {}
 			,"rtSub" : {}
 			,"cTxt": null
+			,"subReqsCount":0
 			,"blocks": {"blockPosts":{},"blockComments":{}}
 		}
 		,"Utils":Utils

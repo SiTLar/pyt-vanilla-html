@@ -134,10 +134,8 @@ _Common.prototype = {
 	}
 	,"refreshLogin": function(id, context){
 		var cView = context.cView;
-		if((typeof context.gUsers[id] !== "undefined") && Array.isArray(context.gUsers[id].subscriptionRequests))
-			cView.subReqsCount -= context.gUsers[id].subscriptionRequests.length;
-		delete context.gUsers[id];
 		var user = context.logins[id].data.users;
+		delete context.gUsers[id];
 		cView.Common.addUser.call(context, user);
 		var links = cView.doc.getElementsByClassName("my-link-" + context.domain+ "-" + id);
 		for(var idx = 0; idx< links.length; idx++)
@@ -180,14 +178,6 @@ _Common.prototype = {
 		var nodeSR = cView.doc.getElementById("sr-info");
 		if (!nodeSR) return;
 		cView.Drawer.updateReqs();
-		if(Array.isArray(user.subscriptionRequests)){
-			cView.subReqsCount += user.subscriptionRequests.length;
-			nodeSR.cNodes["sr-info-a"].innerHTML ="You have "
-			+ cView.subReqsCount
-			+ " subscription requests to review.";
-			nodeSR.hidden = false;
-		}
-		if(!cView.subReqsCount)nodeSR.hidden = true;
 	}
 	,"setIcon": function (ico){
 		var cView = this.cView;

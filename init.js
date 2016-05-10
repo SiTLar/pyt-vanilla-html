@@ -77,7 +77,11 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
 			return ids;
 		}
 		,"digestText":function(text){
-			return this.cView.autolinker.link(text.replace(/&/g,"&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/___CONTEXT_PATH___/g,gConfig.front+"as/"+this.domain);
+			return this.cView.autolinker.link(text.replace(/&/g,"&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+			).replace(/___CONTEXT_PATH___/g,gConfig.front+"as/"+this.domain)
+			.replace(/___CONTEXT_SEARCH___/g,gConfig.domains[this.domain].search);
 		}
 		,"getWhoami": function(token){
 			var context = this;

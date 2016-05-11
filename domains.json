@@ -1,0 +1,44 @@
+{
+	"FreeFeed":{ "api":"freefeed"
+		,"server":{
+			 "serverURL":"https://freefeed.net/v1/"
+			,"rtURL":"https://freefeed.net/socket.io/"
+		}
+		,"tokenPrefix":"freefeed_"
+		,"front":"freefeed.net"
+		,"fronts":["freefeed.net"
+			,"m.freefeed.net"
+			,"old.freefeed.net"
+			,"beta.freefeed.net"
+			,"gamma.freefeed.net"
+		]
+		,"search":"http://search.pepyatka.com/s?q="
+	}		
+	,"Mokum":{ "api":"mokum"
+		,"server":{
+			"serverURL":"https://mokum.place/"
+			,"serverApiURL":"https://mokum.place/api/v1/"
+			,"rtURL":"https://mokum.place/faye"
+		}
+		,"tokenPrefix":"mokum_"
+		,"front":"mokum.place"
+		,"fronts":["mokum.place"
+			 ,"mokum.ru"
+		]
+		,"search":"https://mokum.place/s?q="
+	}		
+	,"micropeppa":{ "api":"freefeed"
+		,"server":{
+			 "serverURL":"https://candy.freefeed.net/v1/"
+			,"rtURL":"https://candy.freefeed.net/socket.io/"
+		}
+		,"tokenPrefix":"test_"
+		,"front":"micropeppa.freefeed.net"
+		,"fronts":["micropeppa.freefeed.net"
+			,"nanopeppa.freefeed.net"
+			,"george.freefeed.net"
+			,"candy.freefeed.net"
+		]
+		,"search":"https://search.micropeppa.freefeed.net?s="
+	}		
+}

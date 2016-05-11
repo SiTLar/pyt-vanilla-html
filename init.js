@@ -6,6 +6,7 @@ var apis = {
 }
 
 var gTemplates = require("json!./templates.json");
+var gDomains = require("json!./domains.json");
 define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
 ,function(Utils, _Common, _Drawer,_Actions, _Router){
 	function _Context(v, domain, api){
@@ -132,10 +133,15 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
 				]
 			}
 		});
-		Object.keys(gConfig.domains).forEach(function (d){
-			var cfg = gConfig.domains[d];
+		var domains = new Object();
+		var confDomains = Array.isArray(gConfig.domains)?gConfig.domains:Object.keys(gConfig.domains);
+		//gConfig.domains.forEach(function (d){
+		confDomains.forEach(function (d){
+			var cfg = gDomains[d];
+			domains[d] = cfg;
 			cView.contexts[d] = new _Context(cView, d, apis[cfg.api](cfg.server));
 		});
+		gConfig.domains = domains;
 		cView.leadContext =  cView.contexts[gConfig.leadDomain];
 	}
 	_cView.prototype = {

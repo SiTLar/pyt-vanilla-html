@@ -1,169 +1,104 @@
 "use strict";
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var matrix  = new Object();
-var _Utils = require("./utils.js");
-var _Drawer =  require("./draw.js");
-var _Actions = require("./actions.js");
-var _SecretActions = require("./secrets.js");
-var RtUpdate = require("./rt_network.js");
-var gTemplates = require("json!./templates.json");
-/* @externs
-@interface
-*/
-window.init = function (){
-	var cView = {
-		"gUsers": { "byName":{}}
-		,"gUsersQ": {}
-		,"gComments": {}
-		,"gAttachments": {}
-		,"gFeeds": {}
-		,"gEmbed": {}
-		,"gRt": {}
-		,"gNodes": {}
-		,"logins": []
-		,"mainId": ""
-		,"rtSub" : {}
-		,"initRt": function(){
-			var cView = this;
-			var bump = cView.localStorage.getItem("rtbump");
-			cView.gRt = new RtUpdate(cView.token, bump);
-			cView.gRt.subscribe(cView.rtSub);
-		}
-		,get "gMe"(){
-			var ids = Object.keys(this.logins);
-			if(ids.length == 1)return this.logins[ids[0]].data;
-			if((this.mainId == "")||(ids.length == 0))return null;
-			return this.logins[this.mainId].data;
-		}
-		,get "ids"(){
-			var ids = Object.keys(this.logins);
-			if (!ids.length) return null;
-			return ids;
-		}
-	};
-	var Utils = new _Utils(cView);
-	var Drawer = new _Drawer(cView);
-	//var Autolinker = require("./Autolinker.min");
-	var Url2link =  require("./url2link");
-	cView.autolinker = new Url2link({ "truncate":25
-		,"url":{
-			"actions":[
-				["pre",Utils.setFrontUrl]
-			]
-		}
-	});
-	//cView.autolinker = new Autolinker({"truncate":20,  "replaceFn":Utils.frfAutolinker } );
-	cView.doc = document;
-	document.cView = cView;
-	cView.cView = cView;
-	cView.Utils = Utils;
-	cView.Drawer = Drawer;
-	cView.Actions = new _Actions(cView);
-	cView.SecretActions = new _SecretActions(cView);
-	cView.cTxt = null;
-	Utils.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
-	Utils.setStorage();
-	["blockPosts", "blockComments"].forEach(function(list){
-		cView[list]= JSON.parse(cView.localStorage.getItem(list));
-	});
-	Utils.setIcon("throbber-16.gif");
-}
-/* @externs
-@interface
-*/
+var Init = require("./init.js")
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;
-	var locationPath = (document.location.origin + document.location.pathname).slice(gConfig.front.length);
-	var locationSearch = document.location.search;
+	var locationPath = /(https?:\/\/[^\?]*)/.exec(document.location)[1].slice(gConfig.front.length);
 	if (locationPath == "")locationPath = "home";
+	cView.fullPath = locationPath;
+	var locationSearch = document.location.search;
 	if (locationSearch == "")locationSearch = "?offset=0";
-	cView.cSkip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
+	cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
-	cView.timeline = arrLocationPath[0];
 	var nameMode = cView.localStorage.getItem("screenname");
+	if(JSON.parse(cView.localStorage.getItem("blocks")))
+		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
 		cView.localStorage.removeItem("screenname");
 	}
 	setLocalSettings();
-	if(["home", "filter", "settings", "requests"].indexOf(cView.timeline) != -1){
-		if(!Utils.auth()) return;
-	}else if(!Utils.auth(true)) cView.logins = [];
-
-	if(cView.timeline == "settings"){
-		cView.Drawer.drawSettings();
-		return Utils.postInit();	
-	}
-	if(cView.timeline == "requests"){
-		cView.Drawer.drawRequests();
-		return Utils.postInit();	
-	}
-	var oReq = new XMLHttpRequest();
-	oReq.onload = function(){
-		document.getElementById("loading-msg").innerHTML = "Building page";
-		if(oReq.status < 400){
-			cView.Drawer.draw(JSON.parse(this.response));
-			cView.doc.body.removeChild(cView.doc.getElementById("splash"));
-			Utils.postInit();	
-			return;
-		}
-		else{
-			if (oReq.status==401) {
-				Utils.deleteCookie("token");
-				cView.localStorage.removeItem("gMe");
-				location.reload();
-			}
-			if(Utils.auth())
-				document.getElementsByTagName("body")[0].appendChild(cView.gNodes["controls-user"].cloneAll());
-			var nodeError = document.createElement("div");
-			nodeError.className = "error-node";
-			nodeError.innerHTML = "Error #"+ oReq.status + ": " + oReq.statusText;
+	cView.Common.loadLogins();
+	var body = cView.gNodes["container"].cloneAll();
+	cView.Utils.setChild(body, "controls",(
+		Object.keys(cView.contexts).some(function(domain){return cView.contexts[domain].token})?
+		cView.gNodes["controls-login"].cloneAll()
+		:cView.gNodes["controls-anon"].cloneAll()
+	));
+	cView.doc.getElementsByTagName("body")[0].appendChild(body);
+	/*
+	var nodeDebug =  document.createElement("div");	
+	nodeDebug.id = "debug";
+	nodeDebug.className = "debug";
+	body.appendChild(nodeDebug);
+	nodeDebug.innerHTML = [document.location
+		,"--------"
+		,locationPath 
+		,gConfig.front.length].join("<br>");
+	*/
+	cView.Router.route(cView.contexts, locationPath).then(postInit,function(err){
+		console.log(err);
+		if( typeof err === "string") switch(err){
+			case "token":
+				cView.Common.auth();
+			break;
+		}else {
+			var nodeMsg = cView.gNodes["global-failure"].cloneAll();
+			body.appendChild(nodeMsg);
 			try{
-				var res = JSON.parse(this.response);
-				nodeError.innerHTML += "<br>"+res.err;
-			}catch(e){};
-			document.getElementsByTagName("body")[0].appendChild(nodeError);
-			document.body.removeChild(document.getElementById("splash"));
-
+				nodeMsg.cNodes["title"].innerHTML = "Error " + err.code;
+				nodeMsg.cNodes["info"].innerHTML = cView.Utils.err2html(err.data);
+			}catch(e){ };
 		}
+		postInit();
+	});
 
-	};
-	if(arrLocationPath.length > 1){
-		if(["subscribers","subscriptions"].indexOf(arrLocationPath[1]) != -1){
-			cView.xhrurl = gConfig.serverURL + "users/" + locationPath;
-			cView.timeline = locationPath;
-		}
-		else if(["likes","comments"].indexOf(arrLocationPath[1]) != -1){
-			cView.xhrurl = gConfig.serverURL + "timelines/" + locationPath;
-			cView.timeline = locationPath;
-
-		}else if ("filter" == arrLocationPath[0]){
-			cView.xhrurl = gConfig.serverURL + "timelines/" + locationPath.replace(/direct/,"directs");
-			cView.timeline = locationPath;
-		}else{
-			cView.xhrurl = gConfig.serverURL +"posts/"+arrLocationPath[1];
-			locationSearch = "?maxComments=all";
-		}
-	} else cView.xhrurl = gConfig.serverURL + "timelines/"+locationPath;
-
-	oReq.open("get",cView.xhrurl+locationSearch,true);
-	oReq.setRequestHeader("X-Authentication-Token", cView.token);
-	document.getElementById("loading-msg").innerHTML = "Loading content";
-	oReq.send();
+	return ;
 }
 
-/* @externs
-@interface
-*/
 window.initDoc = function(){
-	init();
+	Init.init(document);
+	//document.cView.Utils._Promise = Promise;
 	browserDoc();
 }
 
-/* @externs
-@interface
-*/
+function postInit(){
+	var cView = document.cView;
+	(function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,cView.doc,"script","//www.google-analytics.com/analytics.js","ga");
+	ga("create", gConfig.ga, "auto");
+	ga("send", "pageview");
+
+	//if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
+	if(cView.localStorage.getItem("show_link_preview") == "1"){
+		(function(a,b,c){
+			var d,e,f;
+			f="PIN_"+~~((new Date).getTime()/864e5),
+			a[f]||(a[f]=!0,a.setTimeout(function(){
+				d=b.getElementsByTagName("SCRIPT")[0],
+				e=b.createElement("SCRIPT"),
+				e.type="text/javascript",
+				e.async=!0,
+				e.src=c+"?"+f,
+				d.parentNode.insertBefore(e,d)
+			}
+			,10))
+		})(window,cView.doc,"//assets.pinterest.com/js/pinit_main.js");
+	}
+	var nodesAttImg = document.getElementsByClassName("atts-img");
+	for (var idx = 0; idx < nodesAttImg.length; idx++){
+		var nodeImgAtt = nodesAttImg[idx];
+		if(cView.Utils.chkOverflow(nodeImgAtt))
+			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+	}
+	var nodeSplash = document.getElementById("splash");
+	nodeSplash.parentNode.removeChild(nodeSplash);
+	cView.Common.setIcon("favicon.ico");
+}
 window.srvDoc = function(){
 	var cView = document.cView;
 	var idx = 0;

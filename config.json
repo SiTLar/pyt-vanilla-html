@@ -7,6 +7,8 @@ var gConfig = {
 , "likesFold":4
 , "tokenPrefix":"test_"
 , "ga":"UA-0-1"
+, "leadDomain":"micropeppa"
+, "domains":["FreeFeed", "micropeppa", "Mokum"]
 }
 var gCryptoPrivateCfg = {
   "srvurl":"https://moimosk.ru/secret/"

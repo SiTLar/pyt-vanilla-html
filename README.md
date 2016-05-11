@@ -1,12 +1,14 @@
-# pyp-vanila-html
-The master branch is available at [http://moimosk.ru/frf/](http://moimosk.ru/frf/)
+# pyt-vanila-html
+The master branch is available at [http://myfeed.rocks/b/](http://myfeed.rocks/b/)
 ## Setup
+You may whant to edit domains.json for information about supported back ends.
 Use `tools/deploy.sh` to collect all the necessary stuff in a desired deployment directory
 Then put there and edit `config.josn`:
 - the path on your server as "front"
 - the path to the files as "static"
 - the backend as "serverURL"
 - the real-time socket URL as "rtURL"
+- the list back ends you whant to serve in "domains"
  
 Then set up the web server to rewrite all the requests to `index.html`, accept those whitch go to `static`
 
@@ -34,6 +36,7 @@ var gConfig = {
   , "front":"https://{mydomain}/vainlla/"
   , "static":"https://{mydomain}/vainlla/s/"
   , "rtURL":"{backend real-time}"
+  , domains: ["FreeFeed", "MyOtherFF"]
 ...
 ```
 

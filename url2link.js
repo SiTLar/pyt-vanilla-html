@@ -96,12 +96,20 @@ _Url2link.prototype = {
 		}]
 	}
 	,"uname":{
-		"regex": /@[A-Za-z0-9]{3,25}/
+		"regex": /@[-_a-z0-9]{3,}(?=[}\]\).,;:!?\s]|$)/
 		,"newtab": true
 		,"flags":"i"
 		,"actions":[function(match, host){
 			var uname = match.slice(1);
-			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="' + gConfig.front+uname+'" >@' +uname + '</a>' ;
+			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="___CONTEXT_PATH___/' + uname+'" >@' +uname + '</a>' ;
+		}]
+	}
+	,"hashtag":{
+		"regex": /#[^\s]{2,}(?=[}\]\).,;:!?\s]|$)/
+		,"newtab": true
+		,"flags":"i"
+		,"actions":[function(match, host){
+			return '<a '+(host["hashtag"].newtab?'target="_blank"':"") +' href="___CONTEXT_SEARCH___%23' + match.slice(1)+'" >' + match+ '</a>' ;
 		}]
 	}
 	,"link": function(input){
@@ -109,7 +117,7 @@ _Url2link.prototype = {
 		var matches = new Array();
 		var out = new Array({"type":"text", "val":input});
 		
-		["email","url","uname"].forEach(function(type){
+		["email","url","uname","hashtag"].forEach(function(type){
 			var newOut = new Array();
 			out.forEach(function(el){
 				if (el.type == "text") 

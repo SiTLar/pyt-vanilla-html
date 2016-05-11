@@ -1061,11 +1061,16 @@ _Actions.prototype = {
 		document.getElementsByClassName("gs-add-acc")[0].hidden = true;
 		Object.keys(cView.contexts).forEach(function(domain,num){
 			var nodeIB = cView.gNodes["input-block"].cloneAll();
-			nodeIB.cNodes["ib-input"].value = domain;
-			nodeIB.cNodes["ib-input"].name = "domain";
+			var nodeInput = nodeIB.cNodes["ib-input"];
+			nodeInput.value = domain;
+			nodeInput.name = "domain";
 			nodeIB.cNodes["ib-span"].innerHTML = domain;
-			if(!num) nodeIB.cNodes["ib-input"].checked = true;
+			nodeInput.addEventListener("change",cView.Actions.setDomainInfo);
 			nodeLogin.cNodes["domains"].appendChild(nodeIB); 
+			if(domain == gConfig.leadDomain){
+				nodeInput.checked = true;
+				nodeInput.dispatchEvent(new Event("change"));
+			}
 		});
 
 	}
@@ -1361,6 +1366,10 @@ _Actions.prototype = {
 	}
 	,"goSetDisplay": function(e){
 		e.target.href = gConfig.front+"settings/display";
+	}
+	,"setDomainInfo": function(e){
+		e.target.getNode(["p","settings-login"],["c","info"]).innerHTML = "Log in to&nbsp;"
+		+ gConfig.domains[e.target.value].msg;
 	}
 };
 return _Actions;

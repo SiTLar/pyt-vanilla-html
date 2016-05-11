@@ -530,6 +530,7 @@
 	,"children":[
 		{"t":"p","txt":"Please log in to another account"}
 		,{"c":"domains" }
+		,{"c":"info" }
 		,{"t":"p", "txt":"Username:"}
 		,{"c":"gs-input","t":"input","p":{"name":"login-username"}}
 		,{"t":"p", "txt":"Password:"}

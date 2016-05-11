@@ -198,6 +198,7 @@ _Common.prototype = {
 		nodeAuth.className = "nodeAuth";
 		nodeAuth.innerHTML ='<div id=auth-msg style="color:red; font-weight: bold;">&nbsp;</div>'
 		+'<div style="text-align:center;margin-bottom:.5em;"><h3>'+gConfig.leadDomain +'</h3></div>'
+		+'<div>' + gConfig.domains[gConfig.leadDomain].msg + '</div>'
 		+'<form action="javascript:" id=a-form><table><tr><td>Username</td><td><input name="username" id=a-user type="text"></td></tr><tr><td>Password</td><td><input name="password" id=a-pass type="password"></td></tr><tr><td>&nbsp;</td><td><input type="submit" value="Log in" style=" font-size: large; height: 2.5em; width: 100%; margin-top: 1em;" ></td></tr></table></form>';
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodeAuth);
 		cView.doc.getElementById("a-form").addEventListener("submit",cView.Actions.getauth);

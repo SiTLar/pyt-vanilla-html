@@ -67,6 +67,7 @@ RtHandler.prototype = {
 		cView.Common.loadGlobals(data, context);
 		data.posts.domain = context.domain;
 		var nodePost = cView.Drawer.genPost(data.posts);
+		nodePost.rawData.sign = cView.hasher.of(nodePost.rawData.body);
 		document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
 		that.insertSmooth(nodePost, document.posts.firstChild);
 	}

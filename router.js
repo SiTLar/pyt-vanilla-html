@@ -36,10 +36,65 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 			if(JSON.parse(cView.localStorage.getItem("rt"))) 
 				context.rtSubTimeline(data);
 		});
+		posts = undup(cView, posts);
 		posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
 		cView.Drawer.drawTimeline(posts,contexts);
 		cView.Drawer.updateReqs();
 	});
+}
+function undup (cView, posts){
+	posts.forEach(function(post,idx){
+		post.sign = cView.hasher.of(post.body);
+	});
+	//var hashes = posts.map(function(post){return hash.of(post.body);});
+	var duplicates = new Object();
+	for(var idx = 0; idx < posts.length-1; idx++){
+		if(posts[idx].body.length < 4) continue;
+		for(var v = idx+1; v < posts.length; v++){
+			if(posts[v].body.length < 4) continue;
+			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>0.65){
+				var dups;
+				if (is(duplicates[idx]))dups = duplicates[idx];
+				else if (is(duplicates[v]))dups = duplicates[v];
+				else dups = new Object();
+				dups[idx] = true;
+				dups[v] = true;
+				duplicates[idx] = duplicates[v] = dups;
+			}
+		}
+	}
+	Object.keys(duplicates).forEach(function(idx){
+		idx = parseInt(idx);
+		if (!is(duplicates[idx]))return;
+		posts.push(
+			genMetapost(
+				Object.keys( duplicates[idx]).map(function(v){
+					return posts[parseInt(v)];
+				})
+			)
+		);
+		Object.keys(duplicates[idx])
+		.forEach(function(v){
+			v = parseInt(v);
+			delete duplicates[v];	
+			posts[v] = null;
+		});
+	});
+	posts = posts.filter(function(post){return post != null;});
+	return posts;
+
+}
+function genMetapost(posts){
+	var updatedAt = posts[0].updatedAt;
+	var data = new Array();
+	posts.forEach(function(post){
+		if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
+		data.push(post);
+	});
+	return {"type": "metapost"
+		,"updatedAt":updatedAt
+		,"data":data
+	};
 }
 define("./router",[],function(){
 	function _Router(v){

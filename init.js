@@ -7,8 +7,8 @@ var apis = {
 
 var gTemplates = require("json!./templates.json");
 var gDomains = require("json!./domains.json");
-define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
-,function(Utils, _Common, _Drawer,_Actions, _Router){
+define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher" ]
+,function(Utils, _Common, _Drawer,_Actions, _Router, _Hasher){
 	function _Context(v, domain, api){
 		var context = this ;
 		Object.keys(context.defaults).forEach(function(key){
@@ -21,7 +21,12 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
 		Object.keys(api.protocol).forEach(function(f){
 			context.api[f] = function(){
 				return api.protocol[f].apply(context, arguments)
-				.then(api.parse);
+				.then(function(res){
+					return ( typeof res !== "undefined")?
+						api.parse(res)
+						:null;
+
+				});
 			}
 		});
 		context.api.parse = api.parse;
@@ -124,6 +129,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router" ]
 		cView.Drawer = new _Drawer(cView);
 		cView.Actions = new _Actions(cView);
 		cView.Router = new _Router(cView);
+		cView.hasher = new _Hasher["_Minhash"]({"fnum":300});
 		//cView.SecretActions = new _SecretActions(cView);
 		var Url2link =  require("./url2link");
 		cView.autolinker = new Url2link({ "truncate":25

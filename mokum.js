@@ -3,7 +3,7 @@ define(["./utils","./mokum_rt"],function(utils, RtUpdate){
 //utils._Promise = Promise;
 return function(config){
 	function get(token, url, pagenum){
-		var skip =  (typeof pagenum !== "undefined") ?("?page=" + pagenum):"";
+		var skip =((typeof pagenum !== "undefined")&& (pagenum != 1)) ?("?page=" + pagenum):"";
 		return 	utils.xhrReq( {
 				"url":config.serverURL +url+".json" + skip
 				,"headers":{"X-API-Token":token}

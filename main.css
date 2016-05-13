@@ -635,7 +635,7 @@ span.comment-controls::before {
 .sh-displ, .sh-acc{
 	border-top-left-radius:1em;
 	border-style: solid;
-	background-color:#eee;
+	background-color:#ddd;
 }
 .sh-end{
 	flex:auto;
@@ -646,4 +646,37 @@ span.comment-controls::before {
 	background-color: #fff;
 	z-index:5;
 	border: red thin solid;
+}
+.post-refl-menu{
+	display:flex;
+}
+.reflect-menu-item {
+	margin:0 .3em;
+	padding:0 .3em;
+	background-color:#ddd;
+
+}
+.pr-selected {
+	background-color:#fff;
+}
+.debug{
+	position:absolute;
+	background-color: #fff;
+	z-index:5;
+	border: red thin solid;
+}
+.post-refl-menu{
+	display:flex;
+}
+.reflect-menu-item {
+	margin:0 .3em;
+	padding:0 .3em;
+	background-color:#ddd;
+
+}
+.pr-selected {
+	background-color:#fff;
+}
+.avatar img{
+	width:50;
 }

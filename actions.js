@@ -1371,6 +1371,15 @@ _Actions.prototype = {
 		e.target.getNode(["p","settings-login"],["c","info"]).innerHTML = "Log in to&nbsp;"
 		+ gConfig.domains[e.target.value].msg;
 	}
+	,"showRefl": function(e){
+		var id = e.target.parentNode.cNodes["victim-id"].value;
+		var nodesPosts = e.target.getNode(["p","metapost"]).getElementsByClassName("post");
+		for (var idx = 0; idx < nodesPosts.length; idx++){
+			nodesPosts[idx].hidden = (nodesPosts[idx].id != id);
+		}
+
+			
+	}
 };
 return _Actions;
 });

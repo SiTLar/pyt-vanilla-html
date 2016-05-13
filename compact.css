@@ -639,3 +639,39 @@ span.comment-controls::before {
 	flex:auto;
 	border-bottom-style: solid;
 }
+.debug{
+	position:absolute;
+	background-color: #fff;
+	z-index:5;
+	border: red thin solid;
+}
+.post-refl-menu{
+	display:flex;
+}
+.reflect-menu-item {
+	margin:0 .3em;
+	padding:0 .3em;
+	background-color:#ddd;
+
+}
+.pr-selected {
+	background-color:#fff;
+}
+.debug{
+	position:absolute;
+	background-color: #fff;
+	z-index:5;
+	border: red thin solid;
+}
+.post-refl-menu{
+	display:flex;
+}
+.reflect-menu-item {
+	margin:0 .3em;
+	padding:0 .3em;
+	background-color:#ddd;
+
+}
+.pr-selected {
+	background-color:#fff;
+}

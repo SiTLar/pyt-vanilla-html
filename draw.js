@@ -504,121 +504,45 @@ _Drawer.prototype = {
 	 
 	,"genPost":function(post){
 		var cView = this.cView;
-		var context = cView.contexts[post.domain];
 		var Drawer = cView.Drawer;
-		function gotUser(){
-			var urlMatch ;		
-			var listBlocks = cView.blocks.blockPosts[context.domain];
-			if(( typeof listBlocks !== "undefined")&& ( listBlocks != null)&& (listBlocks[ user.id])){
-				nodePost.hidden = true  ;
-			}
-			nodePost.gotLock  = false;
-			if(typeof user !== "undefined"){
-				nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
-				nodePost.cNodes["avatar"].cNodes["avatar-h"].userid = user.id;
-				postNBody.cNodes["title"].innerHTML = Drawer.genTitle(nodePost);
-			}
-			if(nodePost.gotLock)
-				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]).innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
-			if(nodePost.direct)
-				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]).innerHTML += "<i class='fa fa fa-envelope icon'>&nbsp;</i>";
-
-			if(Array.isArray(post.attachments)&&post.attachments.length){
-				var attsNode = postNBody.cNodes["attachments"];
-				post.attachments.forEach(function(att){
-					var nodeAtt = cView.doc.createElement("div");
-					var oAtt = context.gAttachments[att];
-					switch(oAtt.mediaType){
-					case "image":
-						var nodeA = cView.doc.createElement("a");
-						nodeA.target = "_blank";
-						nodeA.href = oAtt.url;
-						nodeA.border = "none";
-						var nodeImg = cView.doc.createElement("img");
-						nodeImg.src = oAtt.thumbnailUrl;
-						nodeImg.addEventListener("load", cView.Actions.showUnfolder);
-						nodeA.appendChild(nodeImg);
-						nodeAtt.appendChild(nodeA);
-						attsNode.cNodes["atts-img"].appendChild(nodeAtt);
-						nodeAtt.className = "att-img";
-						break;
-					case "audio":
-						nodeAtt.innerHTML = '<audio style="height:40" preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
-						nodeAtt.className = "att-audio";
-						attsNode.cNodes["atts-audio"].appendChild(nodeAtt);
-						break;
-					default:
-						nodeAtt.innerHTML = '<a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
-						attsNode.appendChild(nodeAtt);
-
-					}
-				});		
-			}else 
-			if(((urlMatch = post.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
-			&&(cView.localStorage.getItem("show_link_preview") == "1")){
-				cView.gEmbed.p.then(function(oEmbedPr){
-					Drawer.embedPreview(oEmbedPr
-						,urlMatch[0]
-						,postNBody.cNodes["attachments"] 
-					);
+		if (post.type == "metapost"){
+			var nodeRefMenu = document.createElement("div");
+			var nodeMetapost = document.createElement("div");
+			nodeMetapost.className = "metapost";
+			var dups = new Array(post.data.length);
+			var score = new Array(post.data.length);
+			
+			post.data.forEach(function(post){
+				var nodePost = Drawer.genPost(post);
+				nodePost.hidden = true;
+				nodeMetapost.appendChild(nodePost);
+				dups.push(nodePost);
+				score.push({
+					"s":cView.Common.calcPostScore(post)
+					,"id": nodePost.id
 				});
-			}
-			var anchorDate = cView.doc.createElement("a");
-			if(typeof user !== "undefined") anchorDate.href = [gConfig.front + "as",  context.domain, user.username , post.id].join("/");
-			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
-			anchorDate.date = JSON.parse(post.createdAt);
-			window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
-
-			if((typeof post.commentsDisabled !== "undefined")
-			&& (post.commentsDisabled == "1")){
-				postNBody.getNode(["c","post-info"],["c","post-controls"],["c","cmts-lock-msg"]).hidden = false;
-			} else post.commentsDisabled = "0";
-			if(context.ids.length){
-				var nodeControls;
-				if (context.ids.indexOf(post.createdBy) != -1){
-					nodeControls = cView.gNodes["controls-self"].cloneAll();
-				}else {
-					nodeControls = cView.gNodes["controls-others"].cloneAll();
-					postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes["post-control-like"];
-					nodeControls.cNodes["post-control-like"].action = true;
-					if(post.commentsDisabled == "1"){
-						var nodeCmtControl = nodeControls.getElementsByClassName("post-control-comment")[0];
-						nodeCmtControl.style.display = "none";
-						nodeCmtControl.nextSibling.style.display = "none";
-					}
-				}
-				nodeControls.className = "controls";
-				var aHide = nodeControls.cNodes["hide"];
-				//aHide.className = "hide";
-				aHide.innerHTML = post.isHidden?"Un-hide":"Hide";
-				aHide.action = !post.isHidden;
-				postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
-				postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["controls"] = nodeControls;
-				//postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
-			}
-			if (post.likes)	Drawer.genLikes(nodePost );
-			if (post.comments){
-				if(post.omittedComments){
-					if(post.comments[0])
-						postNBody.cNodes["comments"].appendChild(Drawer.genComment.call(context, context.gComments[post.comments[0]]));
-					var nodeComment = cView.gNodes["comment"].cloneAll();
-					nodeComment.cNodes["comment-date"].innerHTML = "";
-					var nodeLoad = cView.gNodes["comments-load"].cloneAll();
-					nodeLoad.cNodes["num"].innerHTML = post.omittedComments;
-					nodeComment.cNodes["comment-body"].appendChild(nodeLoad);
-					postNBody.cNodes["comments"].appendChild(nodeComment);
-					if(post.comments[1])
-						postNBody.cNodes["comments"].appendChild(Drawer.genComment.call(context, context.gComments[post.comments[1]]));
-				}
-				else post.comments.forEach(function(commentId){ 
-					postNBody.cNodes["comments"]
-					.appendChild(Drawer.genComment.call(context, context.gComments[commentId]))
+			});
+			score.sort(function(a,b){return b.s - a.s;});	
+			dups.forEach(function(nodePost){
+				post.data.forEach(function(post){
+					var item = genMenuItem(post);
+					if(post.id == nodePost.rawData.id) 
+						item.className = "pr-selected";
+					nodePost.cNodes["post-refl-menu"].appendChild(item);
 				});
+				nodePost.hidden = (nodePost.id != score[0].id);
+			});
+			return nodeMetapost;
+			function genMenuItem(post){
+				var context = cView.contexts[post.domain];
+				var node = cView.gNodes["reflect-menu-item"].cloneAll();
+				node.cNodes["lable"].innerHTML = post.domain 
+					+ ": @" + context.gUsers[post.createdBy].username;
+				node.cNodes["victim-id"].value = context.domain + "-post-" + post.id;;
+				return node;
 			}
-			postNBody.cNodes["comments"].cnt = postNBody.cNodes["comments"].childNodes.length;
-			if (postNBody.cNodes["comments"].cnt > 4)
-					Drawer.addLastCmtButton(postNBody);
 		}
+		var context = cView.contexts[post.domain];
 		var nodePost = cView.gNodes["post"].cloneAll();
 		var postNBody = nodePost.cNodes["post-body"];
 
@@ -630,7 +554,118 @@ _Drawer.prototype = {
 		nodePost.isPrivate = false;
 		nodePost.commentsModerated = false;
 		postNBody.cNodes["post-cont"].innerHTML =  context.digestText(post.body);
-			gotUser();
+
+		var urlMatch ;		
+		var listBlocks = cView.blocks.blockPosts[context.domain];
+		if(( typeof listBlocks !== "undefined")&& ( listBlocks != null)&& (listBlocks[ user.id])){
+			nodePost.hidden = true  ;
+		}
+		nodePost.gotLock  = false;
+		if(typeof user !== "undefined"){
+			nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
+			nodePost.cNodes["avatar"].cNodes["avatar-h"].userid = user.id;
+			postNBody.cNodes["title"].innerHTML = Drawer.genTitle(nodePost);
+		}
+		if(nodePost.gotLock)
+			postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]).innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
+		if(nodePost.direct)
+			postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]).innerHTML += "<i class='fa fa fa-envelope icon'>&nbsp;</i>";
+
+		if(Array.isArray(post.attachments)&&post.attachments.length){
+			var attsNode = postNBody.cNodes["attachments"];
+			post.attachments.forEach(function(att){
+				var nodeAtt = cView.doc.createElement("div");
+				var oAtt = context.gAttachments[att];
+				switch(oAtt.mediaType){
+				case "image":
+					var nodeA = cView.doc.createElement("a");
+					nodeA.target = "_blank";
+					nodeA.href = oAtt.url;
+					nodeA.border = "none";
+					var nodeImg = cView.doc.createElement("img");
+					nodeImg.src = oAtt.thumbnailUrl;
+					nodeImg.addEventListener("load", cView.Actions.showUnfolder);
+					nodeA.appendChild(nodeImg);
+					nodeAtt.appendChild(nodeA);
+					attsNode.cNodes["atts-img"].appendChild(nodeAtt);
+					nodeAtt.className = "att-img";
+					break;
+				case "audio":
+					nodeAtt.innerHTML = '<audio style="height:40" preload="none" controls><source src="'+oAtt.url+'" ></audio> <br><a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					nodeAtt.className = "att-audio";
+					attsNode.cNodes["atts-audio"].appendChild(nodeAtt);
+					break;
+				default:
+					nodeAtt.innerHTML = '<a href="'+oAtt.url+'" target="_blank" ><i class="fa fa-download"></i> '+oAtt.fileName+'</a>';
+					attsNode.appendChild(nodeAtt);
+
+				}
+			});		
+		}else 
+		if(((urlMatch = post.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
+		&&(cView.localStorage.getItem("show_link_preview") == "1")){
+			cView.gEmbed.p.then(function(oEmbedPr){
+				Drawer.embedPreview(oEmbedPr
+					,urlMatch[0]
+					,postNBody.cNodes["attachments"] 
+				);
+			});
+		}
+		var anchorDate = cView.doc.createElement("a");
+		if(typeof user !== "undefined") anchorDate.href = [gConfig.front + "as",  context.domain, user.username , post.id].join("/");
+		postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["post-date"].appendChild(anchorDate);
+		anchorDate.date = JSON.parse(post.createdAt);
+		window.setTimeout(Drawer.updateDate, 10,anchorDate, cView);
+
+		if((typeof post.commentsDisabled !== "undefined")
+		&& (post.commentsDisabled == "1")){
+			postNBody.getNode(["c","post-info"],["c","post-controls"],["c","cmts-lock-msg"]).hidden = false;
+		} else post.commentsDisabled = "0";
+		if(context.ids.length){
+			var nodeControls;
+			if (context.ids.indexOf(post.createdBy) != -1){
+				nodeControls = cView.gNodes["controls-self"].cloneAll();
+			}else {
+				nodeControls = cView.gNodes["controls-others"].cloneAll();
+				postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes["post-control-like"];
+				nodeControls.cNodes["post-control-like"].action = true;
+				if(post.commentsDisabled == "1"){
+					var nodeCmtControl = nodeControls.getElementsByClassName("post-control-comment")[0];
+					nodeCmtControl.style.display = "none";
+					nodeCmtControl.nextSibling.style.display = "none";
+				}
+			}
+			nodeControls.className = "controls";
+			var aHide = nodeControls.cNodes["hide"];
+			//aHide.className = "hide";
+			aHide.innerHTML = post.isHidden?"Un-hide":"Hide";
+			aHide.action = !post.isHidden;
+			postNBody.cNodes["post-info"].cNodes["post-controls"].appendChild( nodeControls);
+			postNBody.cNodes["post-info"].cNodes["post-controls"].cNodes["controls"] = nodeControls;
+			//postNBody.cNodes["post-info"].cNodes["post-controls"].nodeHide = aHide;
+		}
+		if (post.likes)	Drawer.genLikes(nodePost );
+		if (post.comments){
+			if(post.omittedComments){
+				if(post.comments[0])
+					postNBody.cNodes["comments"].appendChild(Drawer.genComment.call(context, context.gComments[post.comments[0]]));
+				var nodeComment = cView.gNodes["comment"].cloneAll();
+				nodeComment.cNodes["comment-date"].innerHTML = "";
+				var nodeLoad = cView.gNodes["comments-load"].cloneAll();
+				nodeLoad.cNodes["num"].innerHTML = post.omittedComments;
+				nodeComment.cNodes["comment-body"].appendChild(nodeLoad);
+				postNBody.cNodes["comments"].appendChild(nodeComment);
+				if(post.comments[1])
+					postNBody.cNodes["comments"].appendChild(Drawer.genComment.call(context, context.gComments[post.comments[1]]));
+			}
+			else post.comments.forEach(function(commentId){ 
+				postNBody.cNodes["comments"]
+				.appendChild(Drawer.genComment.call(context, context.gComments[commentId]))
+			});
+		}
+		postNBody.cNodes["comments"].cnt = postNBody.cNodes["comments"].childNodes.length;
+		if (postNBody.cNodes["comments"].cnt > 4)
+				Drawer.addLastCmtButton(postNBody);
 		return nodePost;
 
 	}
@@ -888,7 +923,7 @@ _Drawer.prototype = {
 			function(prev,domain){ return prev.concat(cView.contexts[domain].ids);}
 			,[]
 		).length > 1 ){
-			nodePostTo.cNodes["mu-login"].innerHTML = login.users.link;
+			nodePostTo.cNodes["mu-login"].innerHTML = login.domain + ": @" + login.users.username;
 			nodePostTo.cNodes["mu-login"].hidden = false;
 			victim.cNodes["add-sender"].hidden = false;
 			if (typeof victim.cNodes["add-sender"].ids === "undefined")

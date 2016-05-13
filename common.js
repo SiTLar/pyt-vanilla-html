@@ -333,6 +333,13 @@ _Common.prototype = {
 		});
 		cView.localStorage.setItem("logins", JSON.stringify(logins));
 	}
+	,"calcPostScore":function(post){
+		var cView = this.cView;
+		var context = cView.contexts[post.domain];
+		if (post.domain == gConfig.leadDomain) return 100;
+		else return 0;
+
+	}
 };
 return _Common;
 });

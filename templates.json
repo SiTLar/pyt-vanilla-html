@@ -8,7 +8,8 @@
 	]}
 	,{"c":"post"
 	,"children":[
-		{"c":"avatar"
+		{"c":"post-refl-menu"}
+		,{"c":"avatar"
 		,"children":[
 			{"c":"avatar-h","t":"a","e":{"click":["Actions","evtUserPopup"]}}
 		]}
@@ -708,6 +709,11 @@
 	,"children":[
 		{"c":"title","t":"h1", "txt":"unknown error"}
 		,{"c":"info"}
+	]}
+	,{"c":"reflect-menu-item"
+	,"children":[
+		{"c":"lable","t":"a", "e":{"click":["Actions","showRefl"]}}
+		,{"c":"victim-id","t":"input", "p":{"type":"hidden"}}
 	]}
 ]}
 

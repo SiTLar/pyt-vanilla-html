@@ -675,3 +675,6 @@ span.comment-controls::before {
 .pr-selected {
 	background-color:#fff;
 }
+.avatar img{
+	width:50;
+}

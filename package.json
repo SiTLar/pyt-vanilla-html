@@ -4,6 +4,7 @@
   "description": "The master branch is available at [http://moimosk.ru/frf/](http://moimosk.ru/frf/)",
   "main": "vanilla.js",
   "dependencies": {
+    "crc-32": "^0.4.0",
     "exports-loader": "^0.6.3",
     "json-loader": "^0.5.4",
     "openpgp": "^1.4.1",

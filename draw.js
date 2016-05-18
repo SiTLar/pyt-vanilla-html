@@ -501,47 +501,48 @@ _Drawer.prototype = {
 		node.title = txtdate.slice(0, txtdate.indexOf("(")).trim();
 		window.setTimeout(cView.Drawer.updateDate, 30000, node, cView);
 	}
-	 
+	,"makeMetapost": function(dups){ 
+		var cView = this.cView;
+		var nodeRefMenu = document.createElement("div");
+		var nodeMetapost = document.createElement("div");
+		nodeMetapost.className = "metapost";
+		var score = new Array(dups.length);
+		
+		dups.forEach(function(nodePost){
+			nodePost.hidden = true;
+			nodeMetapost.appendChild(nodePost);
+			score.push({
+				"s":cView.Common.calcPostScore(nodePost.rawData)
+				,"id": nodePost.id
+			});
+		});
+		score.sort(function(a,b){return b.s - a.s;});	
+		dups.forEach(function(nodePost){
+			dups.forEach(function(inner){
+				var post = inner.rawData;
+				var item = genMenuItem(post);
+				if(post.id == nodePost.rawData.id) 
+					item.className = "pr-selected";
+				nodePost.cNodes["post-refl-menu"].appendChild(item);
+			});
+			nodePost.hidden = (nodePost.id != score[0].id);
+		});
+		return nodeMetapost;
+		function genMenuItem(post){
+			var context = cView.contexts[post.domain];
+			var node = cView.gNodes["reflect-menu-item"].cloneAll();
+			node.cNodes["lable"].innerHTML = post.domain 
+				+ ": @" + context.gUsers[post.createdBy].username;
+			node.cNodes["victim-id"].value = context.domain + "-post-" + post.id;;
+			return node;
+		}
+	}
 	,"genPost":function(post){
 		var cView = this.cView;
 		var Drawer = cView.Drawer;
-		if (post.type == "metapost"){
-			var nodeRefMenu = document.createElement("div");
-			var nodeMetapost = document.createElement("div");
-			nodeMetapost.className = "metapost";
-			var dups = new Array(post.data.length);
-			var score = new Array(post.data.length);
-			
-			post.data.forEach(function(post){
-				var nodePost = Drawer.genPost(post);
-				nodePost.hidden = true;
-				nodeMetapost.appendChild(nodePost);
-				dups.push(nodePost);
-				score.push({
-					"s":cView.Common.calcPostScore(post)
-					,"id": nodePost.id
-				});
-			});
-			score.sort(function(a,b){return b.s - a.s;});	
-			dups.forEach(function(nodePost){
-				post.data.forEach(function(post){
-					var item = genMenuItem(post);
-					if(post.id == nodePost.rawData.id) 
-						item.className = "pr-selected";
-					nodePost.cNodes["post-refl-menu"].appendChild(item);
-				});
-				nodePost.hidden = (nodePost.id != score[0].id);
-			});
-			return nodeMetapost;
-			function genMenuItem(post){
-				var context = cView.contexts[post.domain];
-				var node = cView.gNodes["reflect-menu-item"].cloneAll();
-				node.cNodes["lable"].innerHTML = post.domain 
-					+ ": @" + context.gUsers[post.createdBy].username;
-				node.cNodes["victim-id"].value = context.domain + "-post-" + post.id;;
-				return node;
-			}
-		}
+		if (post.type == "metapost")
+			return Drawer.makeMetapost(post.data.map(Drawer.genPost, cView));
+		
 		var context = cView.contexts[post.domain];
 		var nodePost = cView.gNodes["post"].cloneAll();
 		var postNBody = nodePost.cNodes["post-body"];

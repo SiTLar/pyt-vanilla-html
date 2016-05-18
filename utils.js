@@ -87,6 +87,29 @@ _Promise.prototype = {
 			this.rejects.pop()(this.error);
 	}
 }
+function xhrReq (o){
+	return new _Promise(function( resolve, reject ){
+		var method = typeof o.method  !== "undefined"? o.method : "get";
+		var oReq = new XMLHttpRequest();
+		oReq.open(method ,o.url , true);
+		if(typeof o.token !== "undefined" )
+			oReq.setRequestHeader("X-Authentication-Token",o.token);
+		if(typeof o.headers !== "undefined" ) Object.keys(o.headers).forEach(function (header){
+			if((o.headers[header] !== undefined)&&(o.headers[header] !== null))
+				oReq.setRequestHeader(header,o.headers[header]);
+		});
+		oReq.onload = function(){
+			if(oReq.status < 400) resolve(oReq.response);
+			else reject({"code":oReq.status, "data":oReq.response});
+		}
+		oReq.onerror = function(){
+			reject({"code":oReq.status, "data":oReq.response});
+		};
+		if (typeof o.data  !== "undefined")  oReq.send(o.data);
+		else  oReq.send();
+	});
+}
+
 return {
 	/*source: http://stackoverflow.com/a/7516652 */
 	"relative_time": function(date) {
@@ -116,35 +139,16 @@ return {
 			r = 'a day ago';
 		} else if (delta < (24*60*60*30)) {
 			r = (parseInt(delta / 86400, 10)).toString() + ' days ago';
-		} else{
+		} else if (delta < (24*60*60*30*12)){
 			r = (parseInt(delta / 2592000, 10)).toString() + ' months ago';
+		} else {
+			r = (parseInt(delta / 31104000, 10)).toString() + ' years ago';
 		}
 		return 'about ' + r;
 	}
 	/**********************************************/
 	,"args2Arr": function(){return args2Arr.apply(this, arguments);}
-	,"xhrReq": function(o){
-		return new _Promise(function( resolve, reject ){
-			var method = typeof o.method  !== "undefined"? o.method : "get";
-			var oReq = new XMLHttpRequest();
-			oReq.open(method ,o.url , true);
-			if(typeof o.token !== "undefined" )
-				oReq.setRequestHeader("X-Authentication-Token",o.token);
-			if(typeof o.headers !== "undefined" ) Object.keys(o.headers).forEach(function (header){
-				if((o.headers[header] !== undefined)&&(o.headers[header] !== null))
-					oReq.setRequestHeader(header,o.headers[header]);
-			});
-			oReq.onload = function(){
-				if(oReq.status < 400) resolve(oReq.response);
-				else reject({"code":oReq.status, "data":oReq.response});
-			}
-			oReq.onerror = function(){
-				reject({"code":oReq.status, "data":oReq.response});
-			};
-			if (typeof o.data  !== "undefined")  oReq.send(o.data);
-			else  oReq.send();
-		});
-	}
+	,"xhrReq": xhrReq
 	,"err2html":function(err) {
 		var data = JSON.parse(err);
 		return Object.keys(data)

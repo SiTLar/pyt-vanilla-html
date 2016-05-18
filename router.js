@@ -1,6 +1,5 @@
 "use strinct";
 var gRoutes = require("json!./routes.json");
-var Simhash = require("exports?Simhash!./simhash.js");
 function is(val){return typeof val !== "undefined";};
 var chk = {
 	"token":function(contexts){
@@ -37,19 +36,23 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 			if(JSON.parse(cView.localStorage.getItem("rt"))) 
 				context.rtSubTimeline(data);
 		});
-		posts = undup(posts);
+		posts = undup(cView, posts);
 		posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
 		cView.Drawer.drawTimeline(posts,contexts);
 		cView.Drawer.updateReqs();
 	});
 }
-function undup (posts){
-	var simhash = new Simhash();
-	var hashes = posts.map(function(post){return simhash.of(post.body);});
+function undup (cView, posts){
+	posts.forEach(function(post,idx){
+		post.sign = cView.hasher.of(post.body);
+	});
+	//var hashes = posts.map(function(post){return hash.of(post.body);});
 	var duplicates = new Object();
-	for(var idx = 0; idx < hashes.length-1; idx++){
-		for(var v = idx+1; v < hashes.length; v++){
-			if( Simhash.similarity(hashes[idx],hashes[v])>0.65){
+	for(var idx = 0; idx < posts.length-1; idx++){
+		if(posts[idx].body.length < 4) continue;
+		for(var v = idx+1; v < posts.length; v++){
+			if(posts[v].body.length < 4) continue;
+			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>0.65){
 				var dups;
 				if (is(duplicates[idx]))dups = duplicates[idx];
 				else if (is(duplicates[v]))dups = duplicates[v];
@@ -92,8 +95,6 @@ function genMetapost(posts){
 		,"updatedAt":updatedAt
 		,"data":data
 	};
-
-
 }
 define("./router",[],function(){
 	function _Router(v){

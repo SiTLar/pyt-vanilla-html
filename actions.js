@@ -22,11 +22,20 @@ function regenAttaches(host){
 						,oAttach.file
 						,oAttach.name
 					).then(function(data){
-						var id = (Array.isArray(data.attachments)?
-							data.attachments[0]
-							:data.attachments
-						).id;
+						var payload = data.attachments;
+						var attachments = Array.isArray(payload)?payload[0]:payload ;
+						var id = attachments.id;
 						host.attachs[domain].arrId.push(id);
+						if (typeof host.nodeSpinner === "undefined") return data;
+						var nodeAtt = cView.doc.createElement("div");
+						nodeAtt.className = "att-img";
+						nodeAtt.innerHTML = '<a target="_blank" href="'
+							+attachments.url
+							+'" border=none ><img src="'
+							+attachments.thumbnailUrl
+							+'"></a>';
+						host.nodeSpinner.parentNode.replaceChild(nodeAtt, host.nodeSpinner);
+						delete host.nodeSpinner;
 						return data;
 					})
 				);
@@ -36,21 +45,9 @@ function regenAttaches(host){
 		});
 	})(nodesDest[idx].domain);
 	host.attP = cView.Utils._Promise.all(arrAttP).then( function(data){
-		if (typeof host.nodeSpinner === "undefined") return data;
 		host.nodeInput.value = "";
 		host.nodeInput.disabled = false;
 		host.buttonPost.disabled = false;
-		var payload = data[0].attachments;
-		var attachments = Array.isArray(payload)?payload[0]:payload ;
-		var nodeAtt = cView.doc.createElement("div");
-		nodeAtt.className = "att-img";
-		nodeAtt.innerHTML = '<a target="_blank" href="'
-			+attachments.url
-			+'" border=none ><img src="'
-			+attachments.thumbnailUrl
-			+'"></a>';
-		host.nodeSpinner.parentNode.replaceChild(nodeAtt, host.nodeSpinner);
-		delete host.nodeSpinner;
 		return data;
 	},function(data){
 		host.nodeInput.value = "";

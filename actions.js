@@ -6,26 +6,28 @@ function regenAttaches(host){
 	var nodesDest = host.childNodes;
 	delete host.attP;
 	var arrAttP = new Array();
-	for (var idx = 0; idx < nodesDest.length; idx++ )(function(domain){
+	for (var idx = 0; idx < nodesDest.length; idx++ )(function(domain, userid){
 		var context = cView.contexts[domain];
-		if (typeof host.attachs[domain] === "undefined") 
-			host.attachs[domain] = {
+		var fullId = domain +"-"+ userid;
+		if (typeof host.attachs[fullId] === "undefined") 
+			host.attachs[fullId] = {
 				"arrP":[]
 				,"arrId":[]
 				,"timestamps":[]
 			}
 		host.files.forEach(function(oAttach){
-			if (host.attachs[domain].timestamps.indexOf(oAttach.timestamp) == -1){
-				host.attachs[domain].arrP.push(
+			if (host.attachs[fullId].timestamps.indexOf(oAttach.timestamp) == -1){
+				var token = context.logins[userid].token;
+				host.attachs[fullId].arrP.push(
 					context.api.sendAttachment(
-						context.token
+						token
 						,oAttach.file
 						,oAttach.name
 					).then(function(data){
 						var payload = data.attachments;
 						var attachments = Array.isArray(payload)?payload[0]:payload ;
 						var id = attachments.id;
-						host.attachs[domain].arrId.push(id);
+						host.attachs[fullId].arrId.push(id);
 						if (typeof host.nodeSpinner === "undefined") return data;
 						var nodeAtt = cView.doc.createElement("div");
 						nodeAtt.className = "att-img";
@@ -39,11 +41,11 @@ function regenAttaches(host){
 						return data;
 					})
 				);
-				arrAttP = arrAttP.concat(host.attachs[domain].arrP);
-				host.attachs[domain].timestamps.push(oAttach.timestamp);
+				arrAttP = arrAttP.concat(host.attachs[fullId].arrP);
+				host.attachs[fullId].timestamps.push(oAttach.timestamp);
 			}
 		});
-	})(nodesDest[idx].domain);
+	})(nodesDest[idx].domain, nodesDest[idx].userid);
 	host.attP = cView.Utils._Promise.all(arrAttP).then( function(data){
 		host.nodeInput.value = "";
 		host.nodeInput.disabled = false;
@@ -133,7 +135,7 @@ _Actions.prototype = {
 			postdata.post.body = body;
 			postdata.meta.feeds = postTo.feeds ;
 			if(typeof postTo.parentNode.attachs !== "undefined")
-				postdata.post.attachments = postTo.parentNode.attachs[context.domain].arrId;
+				postdata.post.attachments = postTo.parentNode.attachs[context.domain+"-"+postTo.userid].arrId;
 
 			return context.api.sendPost(
 				context.logins[postTo.userid].token

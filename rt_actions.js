@@ -1,10 +1,12 @@
 "use strict";
 define("RtHandler", [], function(){
-var RtHandler = function (bump,oRTparams){
+var RtHandler = function (bump){
 	var that = this;
 	var cView = document.cView;
+	var rtParams = cView.localStorage.getItem("rt_params"); 
 	if(typeof bump !== "undefined") that.bump = bump;
-	if(typeof oRTparams !== "undefined"){
+	if( rtParams ){
+		var oRTparams = JSON.parse(rtParams);
 		that.bumpCooldown = oRTparams["rt-bump-cd"]*60000;
 		that.bumpInterval = oRTparams["rt-bump-int"]*60000;
 		that.bumpDelay = oRTparams["rt-bump-d"]*60000;
@@ -33,7 +35,8 @@ RtHandler.prototype = {
 		var height = node.clientHeight;
 		node.style.width = "auto";
 		node.style.height = 0;
-		if(node.className == "post")cView.Drawer.regenHides();
+		if(["metapost", "post"].indexOf(node.className) != -1)
+			cView.Drawer.regenHides();
 		node.style.position = "static";
 		node.style["transition-property"] = "height";
 		node.style["transition-duration"] = that.timeGrow;
@@ -68,19 +71,58 @@ RtHandler.prototype = {
 		data.posts.domain = context.domain;
 		var nodePost = cView.Drawer.genPost(data.posts);
 		nodePost.rawData.sign = cView.hasher.of(nodePost.rawData.body);
-		document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
-		that.insertSmooth(nodePost, document.posts.firstChild);
+		if ((nodePost.rawData.body.length >= cView.minBody) && cView.hiddenPosts.some(function(a){
+			if(cView.hasher.similarity(a.data.sign, nodePost.rawData.sign)>cView.threshold){
+				if(a.data.type  != "metapost"){
+					a.data = cView.Common.metapost([a.data]);
+				
+					var oldNode = document.getElementById([
+						a.data.dups[0].domain
+						,"post"
+						,a.data.dups[0].id
+					].join("-")); 
+				}else var oldNode = document.getElementById([
+					a.data.dups[0].domain
+					,"post"
+					,a.data.dups[0].id
+				].join("-")).parentNode; 
+
+				a.data.dups.push(nodePost.rawData);
+				if(a.is)return nodePost.isHidden = true;
+				var host = oldNode.parentNode;
+				var dummy = document.createElement("div");
+				var newNode = nodePost;
+				host.insertBefore(dummy, oldNode);
+				nodePost = cView.Drawer.makeMetapost( a.data.dups.map(function(post){
+					var node = document.getElementById(
+						[post.domain, "post", post.id].join("-")
+					);
+					return node; 
+				}).filter(function(node){return node;}).concat(nodePost));
+				host.replaceChild(nodePost, dummy);
+				cView.Common.markMetaMenu(newNode);
+				return true;
+			}else return false;
+		})){
+			if(!nodePost.isHidden)this.bumpPost(nodePost);
+		} else {
+			cView.hiddenPosts.unshift({
+				"is":nodePost.rawData.isHidden
+				,"data":nodePost.rawData
+			});
+			if (!nodePost.rawData.isHidden)that.insertSmooth(nodePost, document.posts.firstChild);
+		}
 	}
 	,bumpPost: function(nodePost){
 		var cView = document.cView;
 		if(cView.skip)return;
 		var that = this;
-		if(nodePost.cNodes["post-body"].isBeenCommented)
-			nodePost.cNodes["post-body"].bumpLater = function(){ that.bumpPost(nodePost);}
+		if(nodePost.rtCtrl.isBeenCommented)
+			nodePost.rtCtrl.bumpLater = function(){ that.bumpPost(nodePost);}
 		else {
 	 		var nodeParent = nodePost.parentNode;
-			document.hiddenPosts.splice(nodePost.rawData.idx,1);
-			document.hiddenPosts.unshift({"is":nodePost.rawData.isHidden,"data":nodePost.rawData});
+			var postInfo = cView.hiddenPosts.splice(nodePost.rawData.idx,1);
+			cView.hiddenPosts.unshift(postInfo[0]);
 			nodeParent.removeChild(nodePost);
 			that.insertSmooth(nodePost, nodeParent.firstChild);
 		}
@@ -117,7 +159,7 @@ RtHandler.prototype = {
 				setTimeout(function(){ cView.bumps.push(nodePost)},that.bumpDelay+1);
 			}
 			nodePost.rawData.updatedAt = Date.now();
-						
+			cView.Common.markMetaMenu(nodePost);
 		}else that.injectPost(data.comments.postId, context);
 	}
 	,"comment:update": function(data, context){
@@ -126,7 +168,13 @@ RtHandler.prototype = {
 		var postId = [context.domain,"post" ,data.comments.postId].join("-");
 		context.gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(commentId);
-		if (nodeComment) nodeComment.parentNode.replaceChild( cView.Drawer.genComment.call(context, data.comments), nodeComment);
+		if (nodeComment){
+			nodeComment.parentNode.replaceChild( 
+				cView.Drawer.genComment.call(context, data.comments)
+				, nodeComment
+			);
+			cView.Common.markMetaMenu(document.getElementById(postId));
+		}
 	}
 	,"comment:destroy": function(data, context){
 		var cView = document.cView;
@@ -141,6 +189,7 @@ RtHandler.prototype = {
 		var nodeComment = document.getElementById(commentId);
 		if(!nodeComment)return;
 		nodeComment.parentNode.removeChild(nodeComment);
+		cView.Common.markMetaMenu(nodePost);
 	}
 	,"like:new": function(data, context){
 		var that = this;
@@ -157,6 +206,7 @@ RtHandler.prototype = {
 			nodePost.rawData.likes.unshift(data.users.id);
 			cView.Drawer.genLikes(nodePost);
 			nodePost.rawData.updatedAt = Date.now();
+			cView.Common.markMetaMenu(nodePost);
 		}else that.injectPost(data.meta.postId, context);
 	}
 	,"like:remove": function(data, context){
@@ -169,6 +219,7 @@ RtHandler.prototype = {
 			cView.Drawer.genLikes(nodePost);
 			nodePost.cNodes["post-body"].cNodes["post-info"].nodeLike.innerHTML = "Like";
 			nodePost.cNodes["post-body"].cNodes["post-info"].nodeLike.action = true ;
+			cView.Common.markMetaMenu(nodePost);
 		}
 
 	}
@@ -187,6 +238,7 @@ RtHandler.prototype = {
 		if(!nodePost) return;
 		nodePost.getNode(["c","post-body"],["c","post-cont"]).innerHTML = context.digestText(data.posts.body);
 		nodePost.rawData.body = data.posts.body;
+		cView.Common.markMetaMenu(nodePost);
 	}
 	, "post:destroy" : function(data, context){
 		var postId = [context.domain,"post" ,data.meta.postId].join("-");
@@ -206,7 +258,7 @@ RtHandler.prototype = {
 		var postId = [context.domain,"post" ,data.meta.postId].join("-");
 		var nodePost = document.getElementById(postId);
 		if(!nodePost) 
-			document.hiddenPosts.forEach(function (item){
+			cView.hiddenPosts.forEach(function (item){
 				if (item.is && (item.data.id == data.meta.postId))nodePost = cView.Drawer.genPost(item.data);
 			});
 		if (nodePost) cView.Actions.doHide(nodePost, false, "rt");

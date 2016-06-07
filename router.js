@@ -49,10 +49,10 @@ function undup (cView, posts){
 	//var hashes = posts.map(function(post){return hash.of(post.body);});
 	var duplicates = new Object();
 	for(var idx = 0; idx < posts.length-1; idx++){
-		if(posts[idx].body.length < 4) continue;
+		if(posts[idx].body.length < cView.minBody) continue;
 		for(var v = idx+1; v < posts.length; v++){
-			if(posts[v].body.length < 4) continue;
-			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>0.65){
+			if(posts[v].body.length < cView.minBody) continue;
+			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>cView.threshold){
 				var dups;
 				if (is(duplicates[idx]))dups = duplicates[idx];
 				else if (is(duplicates[v]))dups = duplicates[v];
@@ -67,7 +67,7 @@ function undup (cView, posts){
 		idx = parseInt(idx);
 		if (!is(duplicates[idx]))return;
 		posts.push(
-			genMetapost(
+			cView.Common.metapost(
 				Object.keys( duplicates[idx]).map(function(v){
 					return posts[parseInt(v)];
 				})
@@ -83,18 +83,6 @@ function undup (cView, posts){
 	posts = posts.filter(function(post){return post != null;});
 	return posts;
 
-}
-function genMetapost(posts){
-	var updatedAt = posts[0].updatedAt;
-	var data = new Array();
-	posts.forEach(function(post){
-		if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
-		data.push(post);
-	});
-	return {"type": "metapost"
-		,"updatedAt":updatedAt
-		,"data":data
-	};
 }
 define("./router",[],function(){
 	function _Router(v){

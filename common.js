@@ -340,6 +340,39 @@ _Common.prototype = {
 		else return 0;
 
 	}
+	,"markMetaMenu": function(nodePost){
+		var host = nodePost.parentNode;
+		if ((nodePost.hidden != true) || (host.className != "metapost"))
+			return;
+		var menuItems = host.getElementsByClassName("reflect-menu-item");
+		for(var idx = 0; idx < menuItems.length; idx++)
+			if (menuItems[idx].cNodes["victim-id"].value == nodePost.id)
+				menuItems[idx].cNodes["star"].hidden = false;
+
+	}
+	,"metapost":function (posts){
+		var updatedAt = posts[0].updatedAt;
+		var dups = new Array();
+		var hidden = true;
+		posts.forEach(function(post){
+			if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
+			dups.push(post);
+			hidden = hidden && post.isHidden;
+		});
+		return {"type": "metapost"
+			,"updatedAt":updatedAt
+			,"dups":dups
+			,"sign":posts[0].sign
+			,"isHidden":hidden
+			,set "idx"(idx){
+				this.index = idx;
+				this.dups.forEach(function(dup){dup.idx = idx;});
+			}
+			,get "idx"(){
+				return this.index;
+			}
+		};
+	}
 };
 return _Common;
 });

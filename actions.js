@@ -116,6 +116,7 @@ _Actions.prototype = {
 						, cView.doc.posts.childNodes[0]
 					);
 			});
+			cView.Drawer.regenHides();
 		} ,function(err){
 			textField.disabled = false;
 			e.target.disabled = false;
@@ -284,9 +285,21 @@ _Actions.prototype = {
 			context.logins[victim.rawData.createdBy].token
 			,victim.rawData.id
 		).then(function(){
-			cView.doc.hiddenPosts.splice(victim.rawData.idx,1);
-			//victim.parentNode.removeChild(victim);
+			var host = victim.parentNode;	
+			host.removeChild(victim);
+			if(host.className == "metapost"){
+				cView.Drawer.regenMetapost(host);
+				var metapostData = cView.hiddenPosts[victim.rawData.idx].data;
+				metapostData.dups = metapostData.dups.filter(function(dup){ 
+					return dup.id != victim.rawData.id;
+				});
+				if (metapostData.dups.length == 1)
+					cView.hiddenPosts[victim.rawData.idx].data = metapostData.dups[0];
+			}
+			else cView.hiddenPosts.splice(victim.rawData.idx,1);
 			cView.Drawer.regenHides();
+		}, function(){
+			victim.hidden = false;
 		});/*
 		if(victim.isPrivate){
 			oReq.open("delete",matrix.cfg.srvurl+"delete",true);
@@ -423,7 +436,25 @@ _Actions.prototype = {
 			if(!cView.doc.hiddenCount)return;
 			var nodeHiddenPosts = cView.doc.createElement("div");
 			nodeHiddenPosts.id = "hidden-posts";
-			cView.doc.hiddenPosts.forEach(function(oHidden){if(oHidden.is)nodeHiddenPosts.appendChild(cView.Drawer.genPost(oHidden.data));});
+			cView.hiddenPosts.forEach(function(oHidden){
+				if(oHidden.data.type == "metapost"){
+					var nodeOut;
+					var hides = oHidden.data.dups.filter(function(post){
+						return post.isHidden;
+					});
+					if (hides.length == 0)return;
+					if (hides.length == 1) 
+						nodeOut = cView.Drawer.genPost(hides[0]);
+					else nodeOut = cView.Drawer.makeMetapost(
+						hides.map(cView.Drawer.genPost, cView)
+					);
+					return nodeHiddenPosts.appendChild(nodeOut);
+				}
+				if(!oHidden.is)return;
+				nodeHiddenPosts.appendChild(
+					cView.Drawer.genPost(oHidden.data)
+				);
+			});
 			e.target.parentNode.parentNode.insertBefore(nodeHiddenPosts , e.target.parentNode.nextSibling);
 			e.target.innerHTML =  "Collapse "+ cView.doc.hiddenCount + " hidden entries";
 		}else{
@@ -446,34 +477,75 @@ _Actions.prototype = {
 	,"doHide": function(victim, action){
 		var cView = document.cView;
 		var nodeHide = victim.getNode(["c","post-body"],["c","post-info"],["c","post-controls"],["c","controls"],["c","hide"]);
+		var host = victim.parentNode;
 		if(action != nodeHide.action) return;
-		victim.rawData.isHidden = action;
-		nodeHide.action = !action;
-		var nodeShow = cView.doc.getElementsByClassName("show-hidden")[0]
+		var oHidden = cView.hiddenPosts[victim.rawData.idx];
+		var nodeShow = cView.doc.getElementsByClassName("show-hidden")[0];
 		if (!nodeShow){
 			nodeShow = cView.gNodes["show-hidden"].cloneAll();
 			nodeShow.cNodes["href"].action = true;
 			cView.doc.getElementById("content").appendChild(nodeShow);
 		}
-		var aShow =  nodeShow.cNodes["href"];
+		var aShow = nodeShow.cNodes["href"];
+		var count = 1;
 		if(action){
-			cView.doc.hiddenPosts[victim.rawData.idx].is  = true;
-			victim.parentNode.removeChild(victim);
-			cView.doc.hiddenCount++;
+			host.removeChild(victim);
+			if(host.className != "metapost") oHidden.is = true;
+			else cView.Drawer.regenMetapost(host); 
+			if ((oHidden.data.type != "metapost")
+			|| !oHidden.data.dups.some(function(dup){return dup.isHidden == true;}))  
+				cView.doc.hiddenCount++;
 			aShow.action = false;
 			aShow.dispatchEvent(new Event("click"));
 		}else{
-			var count = 0;
-			var idx = victim.rawData.idx;
-			do if(cView.doc.hiddenPosts[idx--].is)count++;
-			while ( idx >0 );
-			if ((victim.rawData.idx - count+1) >= cView.doc.posts.childNodes.length )cView.doc.posts.appendChild(victim);
-			else cView.doc.posts.insertBefore(victim, cView.doc.posts.childNodes[victim.rawData.idx - count+1]);
 			nodeHide.innerHTML = "Hide";
-			cView.doc.hiddenPosts[victim.rawData.idx].is = false;
-			cView.doc.hiddenCount--;
-			if(cView.doc.hiddenCount) aShow.innerHTML = "Collapse "+ cView.doc.hiddenCount + " hidden entries";
+			cView.hiddenPosts[victim.rawData.idx].is = false;
+			if(oHidden.data.type == "metapost"){
+				var unhidden =  oHidden.data.dups.find(function(post){ 
+					return post.isHidden?0:1; 
+				});
+				if (typeof unhidden === "undefined" )
+					insertPost(victim);
+				else{
+					var dupId = [unhidden.domain,"post" ,unhidden.id].join("-");
+					var dup = document.getElementById(dupId);
+					var newHost = dup.parentNode;
+					if (newHost.className == "metapost" ){
+						newHost.appendChild(victim);
+						cView.Drawer.regenMetapost(newHost);
+					}else{
+						var dummy = document.createElement("div");
+						newHost.insertBefore(dummy, dup);
+						newHost.replaceChild(
+							cView.Drawer.makeMetapost([victim, dup])
+							,dummy
+						);
+					}
+				}
+				if((host.className != "metapost")|| !cView.Drawer.regenMetapost(host))
+					cView.doc.hiddenCount--;
+			}else{
+				insertPost(victim);
+				cView.doc.hiddenCount--;
+			}
+			if(cView.doc.hiddenCount) 
+				aShow.innerHTML = "Collapse "
+					+ cView.doc.hiddenCount 
+					+ " hidden entries";
 			else aShow.dispatchEvent(new Event("click"));
+		}
+		victim.rawData.isHidden = action;
+		nodeHide.action = !action;
+		function insertPost(victim){
+			var idx = victim.rawData.idx;
+			var count = 0;
+			do if(cView.hiddenPosts[idx--].is)count++;
+			while ( idx >0 );
+			if ((victim.rawData.idx - count+1) >= cView.doc.posts.childNodes.length )
+				cView.doc.posts.appendChild(victim);
+			else cView.doc.posts.insertBefore(victim
+				,cView.doc.posts.childNodes[victim.rawData.idx - count+1]
+			);
 		}
 
 	}
@@ -481,8 +553,8 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var nodePost = cView.Utils.getNode(e.target,["p","post"]);
 		var postNBody = nodePost.cNodes["post-body"];
-		if(postNBody.isBeenCommented === true)return;
-		postNBody.isBeenCommented = true;
+		if(nodePost.rtCtrl.isBeenCommented === true)return;
+		nodePost.rtCtrl.isBeenCommented = true;
 		var nodeComment = cView.Drawer.genAddComment(cView.contexts[nodePost.rawData.domain]);
 		postNBody.cNodes["comments"].appendChild(nodeComment);
 		nodeComment.getElementsByClassName("edit-txt-area")[0].focus();
@@ -541,9 +613,10 @@ _Actions.prototype = {
 	}
 	,"cancelNewComment": function(e){
 		var cView = document.cView;
-		var postNBody = e.target.getNode(["p", "post-body"]);
-		postNBody.isBeenCommented = false;
-		if(typeof postNBody.bumpLater !== "undefined")setTimeout(postNBody.bumpLater, 1000);
+		var nodePost = e.target.getNode(["p", "post"]);
+		nodePost.rtCtrl.isBeenCommented = false;
+		if(typeof nodePost.rtCtrl.bumpLater !== "undefined")
+			setTimeout(nodePost.rtCtrl.bumpLater, 1000);
 		var nodeComment = e.target.getNode(["p", "comment"]);
 		nodeComment.parentNode.removeChild(nodeComment);
 
@@ -566,8 +639,9 @@ _Actions.prototype = {
 		var nodeComment = textField.getNode(["p", "comment"]);
 		var nodePost = nodeComment.getNode(["p", "post"])
 		var context = cView.contexts[nodePost.rawData.domain];
-		nodePost.cNodes["post-body"].isBeenCommented = false;
-		if(typeof nodePost.cNodes["post-body"].bumpLater !== "undefined")setTimeout(nodePost.cNodes["post-body"].bumpLater, 1000);
+		nodePost.rtCtrl.isBeenCommented = false;
+		if(typeof nodePost.rtCtrl.bumpLater !== "undefined")
+			setTimeout(nodePost.rtCtrl.bumpLater, 1000);
 		textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 		var comment = new Object();
 		comment.body = cView.Common.urlsToCanonical(textField.value);
@@ -668,16 +742,17 @@ _Actions.prototype = {
 			cView.doc.getElementById(id).rawData = postUpd.posts;
 			var nodePB = cView.doc.getElementById(id).cNodes["post-body"];
 			var text = "";
-			if (nodePB.isBeenCommented == true)
+			if (nodePost.rtCtrl.isBeenCommented == true)
 				text = nodePB.getElementsByTagName("textarea")[0].value;	
-			if(typeof nodePB.bumpLater !== "undefined")setTimeout(postPB.bumpLater, 1000);
+			if(typeof nodePost.rtCtrl.bumpLater !== "undefined")
+				setTimeout(nodePost.rtCtrl.bumpLater, 1000);
 			nodePB.removeChild(nodePB.cNodes["comments"]);
 			nodePB.cNodes["comments"] = cView.doc.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";
 
 			postUpd.comments.forEach(function(cmt){context.gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(cView.Drawer.genComment.call(context, cmt))});
 			nodePB.appendChild(nodePB.cNodes["comments"]);
-			if (nodePB.isBeenCommented == true){ 
+			if (nodePost.rtCtrl.isBeenCommented == true){ 
 				var nodeComment = cView.Drawer.genAddComment(context);
 				nodePB.cNodes["comments"].appendChild(nodeComment);
 				nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
@@ -1371,13 +1446,19 @@ _Actions.prototype = {
 		+ gConfig.domains[e.target.value].msg;
 	}
 	,"showRefl": function(e){
-		var id = e.target.parentNode.cNodes["victim-id"].value;
-		var nodesPosts = e.target.getNode(["p","metapost"]).getElementsByClassName("post");
-		for (var idx = 0; idx < nodesPosts.length; idx++){
+		var id = e.target.getNode(["p","reflect-menu-item"],["c","victim-id"]).value;
+		var metapost = e.target.getNode(["p","metapost"])
+		var nodesPosts = metapost.getElementsByClassName("post");
+		for (var idx = 0; idx < nodesPosts.length; idx++)
 			nodesPosts[idx].hidden = (nodesPosts[idx].id != id);
+		var menuItems = metapost.getElementsByClassName("reflect-menu-item");
+		for (var idx = 0; idx < menuItems.length; idx++){
+			if (menuItems[idx].cNodes["c","victim-id"].value == id){
+				menuItems[idx].className = "reflect-menu-item pr-selected"; 
+				menuItems[idx].cNodes["star"].hidden = true;
+			}
+			else menuItems[idx].className = "reflect-menu-item pr-deselected"; 
 		}
-
-			
 	}
 };
 return _Actions;

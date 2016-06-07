@@ -36,6 +36,12 @@ _Minhash.prototype = {
 		var tokens = tokenize(str);
 		var shingles = tokens.map(crc32.str)
 				.map(function(hash){ return parseInt(hash, 16);});
+		return this.fArr.map(function(coef){
+			return Math.min.apply(null,shingles.map(function(shingle){
+				return (shingle*coef.a+coef.b) >> 32 ;
+			}));
+		});
+		/*
 		var out = new Object();
 		this.fArr.forEach(function(coef){
 			out[ Math.min.apply(null,shingles.map(function(shingle){
@@ -43,15 +49,19 @@ _Minhash.prototype = {
 			}))] = true;
 		});
 		return out;
+		*/
 		 
 	}
 	,"similarity": function(x,y){
-		var total = 0;
+		//return x.reduce(function(acc, hash, idx){return acc + ((y[idx]==hash)?1:0); },0)/x.length;
+		/*
 		var hashes = Object.keys(x);
-		for(var idx = 0; idx< hashes.length; idx++)
-			total += ((y[hashes[idx]] === true)?1:0);
-		return total/hashes.length;
-		//return x.reduce(function(acc, hash, idx){return acc + ((y.indexOf(hash) != -1)?1:0); },0)/x.length;
+		*/
+		var total = 0;
+		for(var idx = 0; idx< x.length; idx++)
+			total += ((y[idx] == x[idx] )?1:0);
+		return total/x.length;
+		
 	}
 }
 return {

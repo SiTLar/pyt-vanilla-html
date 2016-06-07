@@ -8,8 +8,7 @@
 	]}
 	,{"c":"post"
 	,"children":[
-		{"c":"post-refl-menu"}
-		,{"c":"avatar"
+		{"c":"avatar"
 		,"children":[
 			{"c":"avatar-h","t":"a","e":{"click":["Actions","evtUserPopup"]}}
 		]}
@@ -712,7 +711,11 @@
 	]}
 	,{"c":"reflect-menu-item"
 	,"children":[
-		{"c":"lable","t":"a", "e":{"click":["Actions","showRefl"]}}
+		{"c":"star", "t":"span", "p":{"hidden":true}
+		,"children":[
+			{"c":"fa fa-asterisk","t":"i"}
+		]}
+		,{"c":"lable","t":"a", "e":{"click":["Actions","showRefl"]}}
 		,{"c":"victim-id","t":"input", "p":{"type":"hidden"}}
 	]}
 ]}

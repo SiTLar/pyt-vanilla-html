@@ -671,12 +671,20 @@ span.comment-controls::before {
 .reflect-menu-item {
 	margin:0 .3em;
 	padding:0 .3em;
+}
+.pr-deselected {
 	background-color:#ddd;
-
 }
 .pr-selected {
 	background-color:#fff;
 }
-.avatar img{
-	width:50;
+.avatar img, .usr-avatar {
+	max-width:50;
+}
+.metapost .post{
+
+	margin-top: 0;
+}
+.metapost {
+	margin-top: 2em;
 }

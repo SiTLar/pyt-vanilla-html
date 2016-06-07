@@ -243,27 +243,37 @@ _Drawer.prototype = {
 		cView.doc.posts.className = "posts";
 		cView.doc.posts.id = "posts";
 		body.appendChild(cView.doc.posts);
-		cView.doc.hiddenPosts = new Array();
+		cView.hiddenPosts = new Array();
 		cView.doc.hiddenCount = 0;
 		var idx = 0;
 		posts.forEach(function(post){
+			var nodePost = null; 
 			post.idx = idx++;
-			if(post.isHidden){
-				cView.doc.hiddenCount++;
-			}else{
+			if (post.type == "metapost"){
+				var dups = post.dups.filter(function(post){
+					return post.isHidden != true;
+				});
+				if (dups.length == 1) 
+					nodePost = Drawer.genPost(dups[0]);
+				else if(dups.length != 0) 
+					nodePost = Drawer.makeMetapost( dups.map(Drawer.genPost, cView));
+				if (dups.length != post.dups.length) cView.doc.hiddenCount++;
+			}else if(post.isHidden) cView.doc.hiddenCount++;
+			else{
 				post.isHidden = false;
-				cView.doc.posts.appendChild(Drawer.genPost(post));
+				nodePost = Drawer.genPost(post);
 			}
-			cView.doc.hiddenPosts.push({"is":post.isHidden,"data":post});
+			if(nodePost)cView.doc.posts.appendChild(nodePost);
+			cView.hiddenPosts.push({"is":post.isHidden,"data":post});
 		});
 		var nodeShowHidden = cView.gNodes["show-hidden"].cloneAll();
 		nodeShowHidden.cNodes["href"].action = true;
 		body.appendChild(nodeShowHidden);
 		if(cView.doc.hiddenCount) nodeShowHidden.cNodes["href"].innerHTML= "Show "+ cView.doc.hiddenCount + " hidden entries";
 		body.appendChild(nodeMore);
+		/*
 		var drop = Math.floor(cView.skip/3);
 		var toAdd = drop + Math.floor(gConfig.offset/3);
-		/*
 		if((!gPrivTimeline.done)&& (cView.timeline == "home")&& matrix.ready){
 			gPrivTimeline.done = true;
 			new Promise(function (){addPosts(drop,toAdd,0);});
@@ -491,7 +501,7 @@ _Drawer.prototype = {
 	,"regenHides":function(){
 		var cView = this.cView;
 		var idx = 0;
-		cView.doc.hiddenPosts.forEach(function(victim){
+		cView.hiddenPosts.forEach(function(victim){
 			victim.data.idx = idx++;
 		});
 	}
@@ -501,47 +511,9 @@ _Drawer.prototype = {
 		node.title = txtdate.slice(0, txtdate.indexOf("(")).trim();
 		window.setTimeout(cView.Drawer.updateDate, 30000, node, cView);
 	}
-	,"makeMetapost": function(dups){ 
-		var cView = this.cView;
-		var nodeRefMenu = document.createElement("div");
-		var nodeMetapost = document.createElement("div");
-		nodeMetapost.className = "metapost";
-		var score = new Array(dups.length);
-		
-		dups.forEach(function(nodePost){
-			nodePost.hidden = true;
-			nodeMetapost.appendChild(nodePost);
-			score.push({
-				"s":cView.Common.calcPostScore(nodePost.rawData)
-				,"id": nodePost.id
-			});
-		});
-		score.sort(function(a,b){return b.s - a.s;});	
-		dups.forEach(function(nodePost){
-			dups.forEach(function(inner){
-				var post = inner.rawData;
-				var item = genMenuItem(post);
-				if(post.id == nodePost.rawData.id) 
-					item.className = "pr-selected";
-				nodePost.cNodes["post-refl-menu"].appendChild(item);
-			});
-			nodePost.hidden = (nodePost.id != score[0].id);
-		});
-		return nodeMetapost;
-		function genMenuItem(post){
-			var context = cView.contexts[post.domain];
-			var node = cView.gNodes["reflect-menu-item"].cloneAll();
-			node.cNodes["lable"].innerHTML = post.domain 
-				+ ": @" + context.gUsers[post.createdBy].username;
-			node.cNodes["victim-id"].value = context.domain + "-post-" + post.id;;
-			return node;
-		}
-	}
 	,"genPost":function(post){
 		var cView = this.cView;
 		var Drawer = cView.Drawer;
-		if (post.type == "metapost")
-			return Drawer.makeMetapost(post.data.map(Drawer.genPost, cView));
 		
 		var context = cView.contexts[post.domain];
 		var nodePost = cView.gNodes["post"].cloneAll();
@@ -549,6 +521,7 @@ _Drawer.prototype = {
 
 		var user = undefined;
 		if(post.createdBy) user = context.gUsers[post.createdBy];
+		nodePost.rtCtrl = new Object();
 		nodePost.homed = false;
 		nodePost.rawData = post;
 		nodePost.id = context.domain + "-post-" + post.id;
@@ -1113,6 +1086,62 @@ _Drawer.prototype = {
 				nodeInfo.hidden = false;
 			}
 		});
+	}
+	,"makeMetapost": function(dups){ 
+		var cView = this.cView;
+		var nodeRefMenu = document.createElement("div");
+		var nodeMetapost = document.createElement("div");
+		nodeMetapost.className = "metapost";
+		var score = new Array(dups.length);
+		var nodeMenu = document.createElement("div");
+		nodeMenu.className = "post-refl-menu";
+		nodeMetapost.appendChild(nodeMenu);	
+		dups.forEach(function(nodePost){
+			nodePost.hidden = true;
+			nodeMetapost.appendChild(nodePost);
+			nodeMenu.appendChild( genMenuItem(nodePost.rawData));
+			score.push({
+				"s":cView.Common.calcPostScore(nodePost.rawData)
+				,"node": nodePost
+			});
+		});
+		score.sort(function(a,b){return b.s - a.s;});	
+		nodeMetapost.rtCtrl = score[0].node.rtCtrl;
+		score[0].node.hidden = false;
+		var items = nodeMenu.getElementsByClassName("reflect-menu-item");
+		for (var idx = 0; idx < items.length; idx++ )
+			if(items[idx].cNodes["victim-id"].value === score[0].node.id)
+				items[idx].className += " pr-selected";
+			else items[idx].className += " pr-deselected";
+		nodeMetapost.rawData = new Object();
+		return nodeMetapost;
+		function genMenuItem(post){
+			var context = cView.contexts[post.domain];
+			var node = cView.gNodes["reflect-menu-item"].cloneAll();
+			node.cNodes["lable"].innerHTML = post.domain 
+				+ ": @" + context.gUsers[post.createdBy].username;
+			node.cNodes["victim-id"].value = context.domain + "-post-" + post.id;;
+			return node;
+		}
+	}
+	,"regenMetapost":function (host){
+		var cView = this.cView;
+		var nodes = host.getElementsByClassName("post");
+		var count = nodes.length;
+		if (count){
+			var newNode;
+			if(count > 1){
+				var arrNodes = new Array();
+				for(var idx = 0; idx < count; idx++)
+					arrNodes.push(nodes[idx]);
+				newNode = cView.Drawer.makeMetapost(arrNodes);
+			}else{
+				newNode = nodes[0];
+				newNode.hidden = false;
+			}
+			host.parentNode.replaceChild( newNode, host);
+		}else host.parentNode.removeChild(host);
+		return count;
 	}
 };
 return _Drawer;

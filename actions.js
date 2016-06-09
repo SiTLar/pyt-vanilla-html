@@ -1157,8 +1157,10 @@ _Actions.prototype = {
 		var context = cView.contexts[inpsLogin["domain"].value];
 		var userid = null;
 		var nodeMsg = nodeLogin.cNodes["msg-error"];
-		context.api.login(inpsLogin["login-username"].value ,inpsLogin["login-password"].value)
-		.then( function(res){
+		context.api.login(
+			inpsLogin["login-username"].value.trim()
+			,inpsLogin["login-password"].value.trim()
+		).then( function(res){
 			nodeMsg.hidden = true;
 			userid = res.users.id;
 			if(!context.ids)context.token = res.authToken;
@@ -1285,8 +1287,9 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var context = cView.leadContext;
 		var oReq = new XMLHttpRequest();
-		context.api.login(cView.doc.getElementById("a-user").value,
-			cView.doc.getElementById("a-pass").value
+		context.api.login(
+			cView.doc.getElementById("a-user").value.trim()
+			,cView.doc.getElementById("a-pass").value.trim()
 		).then(function(data){
 				cView.Common.setCookie(gConfig.domains[context.domain].tokenPrefix 
 					+ "authToken"

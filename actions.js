@@ -625,7 +625,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		e.target.disabled = true;
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
-		cView.Actions.sendComment(e.target.parentNode.previousSibling);
+		cView.Actions.sendComment(e.target.getNode(["p","edit"], ["c","edit-txt-area"]));
 		e.target.getNode(["p", "comments"]).cnt++;
 	}
 	,"deleteComment": function(e){
@@ -636,8 +636,8 @@ _Actions.prototype = {
 
 	,"sendComment": function (textField){
 		var cView = document.cView;
-		var nodeComment = textField.getNode(["p", "comment"]);
-		var nodePost = nodeComment.getNode(["p", "post"])
+		var nodeComment = cView.Utils.getNode(textField, ["p", "comment"]);
+		var nodePost = cView.Utils.getNode(nodeComment,["p", "post"])
 		var context = cView.contexts[nodePost.rawData.domain];
 		nodePost.rtCtrl.isBeenCommented = false;
 		if(typeof nodePost.rtCtrl.bumpLater !== "undefined")

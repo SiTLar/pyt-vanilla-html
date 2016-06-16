@@ -1463,6 +1463,12 @@ _Actions.prototype = {
 			else menuItems[idx].className = "reflect-menu-item pr-deselected"; 
 		}
 	}
+	,"toggleSidebar":function(e){
+		var sidebar = document.getElementById("sidebar");
+		var showSb = document.getElementById("show-sidebar");
+		sidebar.classList.toggle("sidebar-h");
+		showSb.classList.toggle("hidden");
+	}
 };
 return _Actions;
 });

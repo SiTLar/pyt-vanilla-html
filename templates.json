@@ -1,10 +1,31 @@
 {"nodes": [
-	{"c":"container", "p":{"id":"container"}
+	{"c":"main"
 	,"children":[
-		{"c":"controls"}
-		,{"c":"pagetitle", "t":"h1"}
-		,{"c":"details"}
-		,{"c":"up-controls"}
+		{"c":"sidebar", "p":{"id":"sidebar"} , "cl":["sidebar-h"]
+		,"children":[
+			{"c":"hide-sidebar","e":{"click":["Actions","toggleSidebar"]}
+			,"children":[
+				{"t":"a"
+				,"children":[
+					{"c":"fa fa-times fa-2x","t":"i"}
+				]}
+				
+			]}
+		]}
+		,{"c":"container", "p":{"id":"container"}
+		,"children":[
+			{"c":"controls"}
+			,{"c":"pagetitle", "t":"h1"}
+			,{"c":"details"}
+			,{"c":"up-controls"}
+		]}
+		,{"c":"show-sidebar" ,  "p":{"id":"show-sidebar"}
+		,"children":[
+			{"t":"a","e":{"click":["Actions","toggleSidebar"]}
+			,"children":[
+				{"c":"fa fa-list-alt fa-4x","t":"i"}
+			]}
+		]}
 	]}
 	,{"c":"post"
 	,"children":[
@@ -59,12 +80,6 @@
 	,"children":[
 		{"c":"user-home","t":"a","href":"#","txt":"home","e":{"mousedown":["Actions","home"]}}
 		,{"t":"span","txt":" &#8226; "}
-		,{"c":"user-me","t":"a","txt":"me","e":{"mousedown":["Actions","me"]}}
-		,{"t":"span","txt":" &#8226; "}
-		,{"c":"user-my","t":"a","txt":"my discussions","e":{"mousedown":["Actions","my"]}}
-		,{"t":"span","txt":" &#8226; "}
-		,{"c":"user-my","t":"a","txt":"direct messages","e":{"mousedown":["Actions","directs"]}}
-		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-priv","t":"a","txt":"settings","e":{"mousedown":["Actions","goSettings"]}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-logout","t":"a","txt":"logout","e":{"click":["Actions","logout"]}}
@@ -105,7 +120,7 @@
 		,"children":[
 			{"c":"date","t":"a"
 				,"children":[
-				{"c":"fa fa-comment-o icon","t":"i" }
+				{"c":"fa fa-comment icon","t":"i" }
 			]}
 		]}
 		,{"c":"comment-body"
@@ -717,6 +732,11 @@
 		]}
 		,{"c":"lable","t":"a", "e":{"click":["Actions","showRefl"]}}
 		,{"c":"victim-id","t":"input", "p":{"type":"hidden"}}
+	]}
+	,{"c":"sidebar-emt"
+	,"children":[
+		{"c":"sb-emt-title"}
+		,{"c":"sb-emt-content"}
 	]}
 ]}
 

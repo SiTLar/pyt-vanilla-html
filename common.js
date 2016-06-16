@@ -104,6 +104,7 @@ _Common.prototype = {
 				return newNode;
 			};
 			if(template.c)node.className = template.c;
+			if(template.cl)template.cl.forEach(function(c){node.classList.add(c);});
 			if(template.children)
 			cView.Common.genNodes(template.children).forEach(function(victim){
 				node.appendChild(victim);

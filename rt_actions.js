@@ -35,6 +35,7 @@ RtHandler.prototype = {
 		var height = node.clientHeight;
 		node.style.width = "auto";
 		node.style.height = 0;
+		node.style.overflow = "hidden";
 		if(["metapost", "post"].indexOf(node.className) != -1)
 			cView.Drawer.regenHides();
 		node.style.position = "static";
@@ -43,7 +44,10 @@ RtHandler.prototype = {
 		setTimeout(function(){
 			node.style.height = height;
 			node.style.opacity = 1; 
-			setTimeout(function(){ node.style.height = "auto"; } ,  that.timeGrow);
+			setTimeout(function(){ 
+				node.style.height = "auto";
+				node.style.overflow = "unset"; 
+			} ,  that.timeGrow);
 		}, 1);
 	}
 	,setBumpCooldown: function(cooldown){
@@ -124,6 +128,7 @@ RtHandler.prototype = {
 			var postInfo = cView.hiddenPosts.splice(nodePost.rawData.idx,1);
 			cView.hiddenPosts.unshift(postInfo[0]);
 			nodeParent.removeChild(nodePost);
+			if(nodePost.className == "metapost") nodePost = nodePost.parentNode;
 			that.insertSmooth(nodePost, nodeParent.firstChild);
 		}
 	}

@@ -38,7 +38,7 @@ dir=`mktemp -d`
 git clone -b master . $dir
 cd $dir
 npm install
-./node_modules/.bin/webpack --config config.js
+./node_modules/.bin/webpack --config config.js --define ___BUILD___=\"stable_`git log -n 1 --oneline |awk '{ print $1 }'`\"
 
 for file in $(ls *.js *.css *.json); do
 	MD5=`md5sum $file|awk '{ print $1 }'`

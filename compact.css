@@ -218,7 +218,7 @@ h1{
 .post-body a {
 	color: #555599;
 }
-	.attachments {
+.attachments {
 	overflow:hidden;
 	margin-bottom: 3px;
 }
@@ -229,6 +229,8 @@ h1{
 
 .atts-unfold {
 	text-align: center;
+	overflow:hidden;
+	width:100%;
 }
 .att-img {
 	border: 1px solid silver;
@@ -585,7 +587,6 @@ span.comment-controls::before {
 		display:block;
 	}
 }
-
 .subs-cont > div {
 	display:flex;
 	text-align: center;
@@ -660,12 +661,11 @@ span.comment-controls::before {
 	display:flex;
 }
 .reflect-menu-item {
-	margin:0 .3em
+	margin:0 .3em;
 	padding:0 .3em;
 }
 .pr-deselected {
 	background-color:#ddd;
-
 }
 .pr-selected {
 	background-color:#fff;
@@ -680,10 +680,29 @@ span.comment-controls::before {
 .metapost {
 	margin-top: 2em;
 }
+.sidebar {
+	float:right;
+	width: 10em;
+	top:0;
+	right:0;
+	margin: 0 .5em;
+	background-color:white;
+	border-radius:.2em;
+}
 @media (max-width: 35em) {
 	.sidebar{
-		position:absolute;
+		position:fixed;
+		overflow:auto;
 		float:none;
+		z-index:2;
+		width:100%;
+		height:100%;
+		background: rgba(200, 200,200, 0.8);
+
+	}
+	.sidebar-emt {
+		margin: 0 0.1em 0.3em auto;
+		width:80%
 	}
 	.sidebar-h{
 		display:none;
@@ -701,14 +720,6 @@ span.comment-controls::before {
 		display:none;
 	}
 }
-.sidebar {
-	float:right;
-	width: 10em;
-	top:0;
-	right:0;
-	margin: 0 .5em;
-	background-color:white;
-}
 .main{
 	margin: 0 auto;
 	width: 100%;
@@ -721,6 +732,7 @@ span.comment-controls::before {
 	box-shadow: 0.1em 0.1em 0.2em black;
 	margin-bottom: 0.5em;
 	padding: 0.3em;
+	background: white;
 }
 .sb-emt-title {
 	border-bottom: thin solid gray;
@@ -744,9 +756,7 @@ span.comment-controls::before {
 }
 .hide-sidebar{
 	border-radius:.2em;
-	background-color:#eee;
 	height:2em;
-	opacity:0.8;
 }
 .hidden{
 	display:none;

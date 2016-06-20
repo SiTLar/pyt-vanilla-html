@@ -6,9 +6,11 @@ module.exports = {
 	,"output":{
 		"filename":"vanilla.js"
 	}
-	,"plugins":[
+/*	,"plugins":[
 		new webpack.DefinePlugin({
 		"___BUILD___":build
 		})
 	]
+
+*/
 };

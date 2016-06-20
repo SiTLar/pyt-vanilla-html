@@ -1,16 +1,16 @@
 # pyt-vanilla-html
 The master branch is available at <http://myfeed.rocks/b/>
 ## Setup
-You may want to edit domains.json for information about supported back ends.
+You may want to edit `domains.json` for information about supported back ends.
 
 Use `tools/deploy.sh` to collect all the necessary stuff in a desired deployment directory
 
 You can do it manually, with the following steps:
 
 1. Install necessary npm modules: `$ npm install`
-1. Run webpack `webpack --config config.js` to make a bundle file
-1. Copy the files listed in release.lst to a deployment directory
-1. Optionally you can edit index.html and update md5 hash values of vanilla.js and config.json to prevent caching outdated files
+1. Run webpack `$ webpack --config config.js` to make a bundle file
+1. Copy the files listed in `release.lst` to a deployment directory
+1. Optionally you can edit `index.html` and update md5 hash values of `vanilla.js` and `config.json` to prevent caching outdated files
 
 Then put there and edit `config.josn`:
 - the path on your server as "front"

@@ -112,6 +112,9 @@ h1{
 	min-width: 100%;
 	padding: 3px;
 }
+.edit {
+	overflow: hidden;
+}
 .up-close{
 	float:right;
 }
@@ -761,3 +764,17 @@ span.comment-controls::before {
 .hidden{
 	display:none;
 }
+.main-avatar img{
+	max-width:50;
+}
+.main-avatar {
+	max-width:50;
+	margin:0 auto;
+}
+.edit-acc{
+	font-size:small;
+}
+.sidebar-acc-anon {
+	text-align: center;
+}
+

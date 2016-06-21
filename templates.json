@@ -90,7 +90,7 @@
 	]}
 	,{"c":"controls-anon","t":"div"
 	,"children":[
-		{"c":"user-signup","t":"a","txt":"Sign up","p":{"href":"https://beta.freefeed.net/signup"}}
+		{"c":"user-signup","t":"a","txt":"sign up","p":{"href":"https://freefeed.net/signup"}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-login","t":"a","txt":"login","e":{"click":["Common","auth"]}}
 	]}
@@ -737,6 +737,30 @@
 	,"children":[
 		{"c":"sb-emt-title"}
 		,{"c":"sb-emt-content"}
+	]}
+	,{"c":"sidebar-acc-anon","t":"div"
+	,"children":[
+		{
+		"children":[
+			{"c":"user-signup","t":"a","txt":"Sign up","p":{"href":"https://freefeed.net/signup"}}
+		]}
+		,{"t":"p", "txt":"OR"}
+		,{
+		"children":[
+			{"c":"user-login","t":"a","txt":"Login","e":{"click":["Common","auth"]}}
+		]}
+	]}
+	,{"c":"sidebar-acc"
+	,"children":[
+		{"c":"main-avatar"	
+		,"children":[
+			{"c":"img","t":"img"}	
+		]}
+		,{"c":"info"}
+		,{"c":"settings"
+		,"children":[
+			{"c":"edit-acc","t":"a", "txt":"Edit accounts"}
+		]}
 	]}
 ]}
 

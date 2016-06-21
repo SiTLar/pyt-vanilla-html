@@ -478,7 +478,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var nodeHide = victim.getNode(["c","post-body"],["c","post-info"],["c","post-controls"],["c","controls"],["c","hide"]);
 		var host = victim.parentNode;
-		if(action != nodeHide.action) return;
+		if(!host || (action != nodeHide.action)) return;
 		var oHidden = cView.hiddenPosts[victim.rawData.idx];
 		var nodeShow = cView.doc.getElementsByClassName("show-hidden")[0];
 		if (!nodeShow){
@@ -1267,7 +1267,7 @@ _Actions.prototype = {
 			host.parentNode.removeChild(host);
 			var nodeSR = cView.doc.getElementById("sr-info");
 			if(--cView.subReqsCount){
-				nodeSR.cNodes["sr-info-a"].innrHTML = "You have "
+				nodeSR.cNodes["sr-info-a"].innerHTML = "You have "
 				+ cView.subReqsCount
 				+ " subscription requests to review.";
 			}else{

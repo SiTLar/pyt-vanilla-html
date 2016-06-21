@@ -527,7 +527,8 @@ _Drawer.prototype = {
 		nodePost.id = context.domain + "-post-" + post.id;
 		nodePost.isPrivate = false;
 		nodePost.commentsModerated = false;
-		postNBody.cNodes["post-cont"].innerHTML =  context.digestText(post.body);
+		if( typeof post.body === "string")
+			postNBody.cNodes["post-cont"].innerHTML =  context.digestText(post.body);
 
 		var urlMatch ;		
 		var listBlocks = cView.blocks.blockPosts[context.domain];
@@ -791,7 +792,8 @@ _Drawer.prototype = {
 		var cUser = context.gUsers[comment.createdBy];
 		var nodeSpan = nodeComment.getNode(["c","comment-body"],["c","cmt-content"]);
 		nodeComment.userid = null;
-		nodeSpan.innerHTML = context.digestText(comment.body);
+		if( typeof comment.body === "string")
+			nodeSpan.innerHTML = context.digestText(comment.body);
 		nodeComment.id = context.domain + "-cmt-" + comment.id;
 		nodeComment.rawId = comment.id;
 		nodeComment.domain = context.domain;

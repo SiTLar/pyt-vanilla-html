@@ -218,6 +218,17 @@ define("./router",["./sidebar"],function(sidebar){
 				fn.call(cView, res[0],context); 
 			});
 		}
+		,"groups":function(contexts, path){
+			var cView = this.cView;
+			return cView.Utils._Promise.all(Object.keys(contexts).map(function(domain){
+				return contexts[domain].p;
+			})).then(function(res){
+				var body = cView.doc.getElementById("container");
+				body.cNodes["pagetitle"].innerHTML = path;
+				cView.doc.title = "My groups";
+				cView.Drawer.drawGroups(cView);
+			});
+		}
 		,"unmixed":function(contexts, path){
 			var cView = this.cView;
 			return new cView.Utils._Promise(function(resolve,reject){

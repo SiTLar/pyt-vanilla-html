@@ -102,7 +102,10 @@ return [
 				+ "</span>";
 				out.push(div);
 			}
-			return out;
+			div = cView.doc.createElement("div");
+			div.innerHTML = "<span class=\"sb-info\"><a href=\""
+				+gConfig.front + "groups\" >All groups</a></span>"
+			return out.concat(div);
 		}
 		,"test":isLogged	
 	}

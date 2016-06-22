@@ -146,7 +146,7 @@ _Drawer.prototype = {
 		return nodeProfile;
 	}
 	,"drawSettings":function(){
-		var cView = document.cView;
+		var cView = this.cView;
 		var body = cView.doc.getElementById("container");
 		body.cNodes["pagetitle"].innerHTML = "Settings";
 		cView.doc.title = "Settings";
@@ -309,7 +309,7 @@ _Drawer.prototype = {
 		*/
 	
 	,"drawRequests":function(){
-		var cView = document.cView;
+		var cView = this.cView;
 		var whoamis = new Array();
 		Object.keys(cView.contexts).forEach( function (domain){
 			var context = cView.contexts[domain];
@@ -378,13 +378,49 @@ _Drawer.prototype = {
 
 		}
 	}
+	,"drawGroups": function( ){
+		var cView = this.cView;
+		var out = cView.doc.createElement("div");
+		out.className = "subs-cont";
+		var domains = Object.keys(cView.contexts);
+		domains.forEach(function(domain){
+			var context = cView.contexts[domain];
+			if((context.gMe == null)
+			|| (typeof context.gMe.users.subscriptions === "undefined") ) 
+				return;
+			var subHead = cView.doc.createElement("h3");
+			subHead.innerHTML = domain;
+			out.appendChild(subHead);
+			var oSubscriptions = new Object();
+			context.gMe.subscriptions.forEach(function(sub){
+				oSubscriptions[sub.id] = sub;
+			});
+			var nodeGrps = cView.doc.createElement("div");
+			context.gMe.users.subscriptions.forEach(function(subid){
+				var sub = oSubscriptions[subid];
+				var user = context.gUsers[sub.user];
+				if((user.type == "user")||(sub.name != "Posts"))
+					return;
+				var node = cView.gNodes["sub-item"].cloneAll();
+				var a = node.cNodes["link"];
+				a.href = gConfig.front+ "as/" + context.domain+ "/" + user.username;
+				a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
+				a.cNodes["usr-title"].innerHTML = user.title;
+				nodeGrps.appendChild(node);
+			});
+			out.appendChild(nodeGrps);
+		});
+		cView.doc.getElementById("container").appendChild(out);
+		return cView.Utils._Promise.resolve();
+
+	}
 	,"drawFriends": function(content,context){
 		var cView = context.cView;
 		var out = cView.gNodes["subs-cont"].cloneAll();
 		content.subscriptions.forEach(function(sub){
+			if(sub.name != "Posts")return;
 			var node = cView.gNodes["sub-item"].cloneAll();
 			var a = node.cNodes["link"];
-			if(sub.name != "Posts")return;
 			var user = context.gUsers[sub.user];
 
 			a.href = gConfig.front+ "as/" + context.domain+ "/" + user.username;

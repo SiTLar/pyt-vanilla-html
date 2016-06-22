@@ -162,7 +162,7 @@
 	]}
 	,{"c":"new-post-to"
 	,"children":[
-		{"c":"mu-login", "t":"span"}
+		{"c":"mu-login", "t":"span", "p":{"hidden":true}}
 		,{"t":"span", "txt":"Post to:"}
 		,{"c":"new-post-feeds","t":"ul"
 		,"children":[

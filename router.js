@@ -226,7 +226,7 @@ define("./router",["./sidebar"],function(sidebar){
 				var body = cView.doc.getElementById("container");
 				body.cNodes["pagetitle"].innerHTML = path;
 				cView.doc.title = "My groups";
-				cView.Drawer.drawGroups(cView);
+				cView.Drawer.drawGroups();
 			});
 		}
 		,"unmixed":function(contexts, path){

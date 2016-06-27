@@ -11,6 +11,7 @@
 				]}
 				
 			]}
+			,{"c":"sidebar-left" , "e":{"click":["Actions","toggleSidebar"]}}
 		]}
 		,{"c":"container", "p":{"id":"container"}
 		,"children":[

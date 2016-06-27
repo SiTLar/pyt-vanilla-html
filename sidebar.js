@@ -51,10 +51,10 @@ return [
 		,"content":function(cView){
 			var nodeBuild = cView.doc.createElement("div");
 			nodeBuild.innerHTML = "<span class=\"sb-info\">"+___BUILD___+"</span>";
-			return [ ["https://myfeed.rocks/about.html", "Getting around"]
+			return [ ["https://myfeed.rocks/about", "What's goinig on?"]
 				,[gConfig.front+"as/FreeFeed/vanillaweb", "Feedback"]
 				,["https://freefeed.net/about","FreeFeed"]
-				,["https://myfeed.rocks/about.html#author","Author"]
+				,["https://myfeed.rocks/about#author","Author"]
 			].map(function(a){
 				var div = cView.doc.createElement("div");
 				var ahref = cView.doc.createElement("a");

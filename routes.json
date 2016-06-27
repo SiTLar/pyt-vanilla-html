@@ -13,7 +13,7 @@
 	}
 	,"vals":{
 		"as":{"reroute":["Router","routeContext"]}
-		,"groups":{"dest":["Drawer","drawGroups","token"] }
+		,"groups":{"dest":["Router","groups","token"] }
 		,"filter":{
 			"req":["token"]
 			,"vals":{ 

@@ -710,6 +710,10 @@ span.comment-controls::before {
 	.container{
 		margin: 0;
 	}
+	.sidebar-left{
+		display:relative;
+		width:20%;
+	}
 }
 
 @media (min-width: 35em) {
@@ -719,12 +723,16 @@ span.comment-controls::before {
 	.hide-sidebar{
 		display:none;
 	}
+	.sidebar-left{
+		display:none;
+	}
 }
 .main{
 	margin: 0 auto;
 	width: 100%;
 	position: relative;
 	max-width: 62em;
+	overflow:hidden;
 }
 
 .sidebar-emt {
@@ -776,4 +784,8 @@ span.comment-controls::before {
 }
 .sidebar-acc-anon {
 	text-align: center;
+}
+.sidebar-left{
+	display:none;
+	float:left;
 }

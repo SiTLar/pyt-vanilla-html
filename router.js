@@ -84,7 +84,7 @@ function undup (cView, posts){
 	return posts;
 
 }
-define("./router",[],function(){
+define("./router",["./sidebar"],function(sidebar){
 	function _Router(v){
 		this.cView = v;
 	};
@@ -92,7 +92,9 @@ define("./router",[],function(){
 		"route":function(contexts, path){
 			var cView = this.cView;
 			if (cView.doc.title == "") cView.doc.title = "Feeds";
-			var arrPath = path.split("/");
+			if (path.indexOf("#") != -1 )
+				var arrPath = path.substr(0,path.indexOf("#")).split("/");
+			else var arrPath = path.split("/");
 			var step = gRoutes;
 			for(var idx = 0; idx < arrPath.length; idx++){
 				var txtStep = arrPath[idx];
@@ -111,7 +113,14 @@ define("./router",[],function(){
 				cView.doc.getElementById("loading-msg").innerHTML = "Loading content";
 				if((step.dest.length == 3)&& chk[step.dest[2]](contexts) )
 					return new cView.Utils._Promise.reject(chk[step.dest[2]](contexts));
-				return cView[step.dest[0]][step.dest[1]](contexts, path);
+				return cView[step.dest[0]][step.dest[1]](contexts, path)
+				.then( function(res){ 
+					cView.Drawer.populateSidebar(
+						cView.doc.getElementById("sidebar")
+						,sidebar
+					); 
+					return res;
+				});
 			}
 			return new cView.Utils._Promise.reject();
 		}
@@ -209,6 +218,17 @@ define("./router",[],function(){
 				body.cNodes["pagetitle"].innerHTML = path;
 				cView.doc.title = "@"+path.split("/")[0]+ "'s  " + path.split("/")[1] + " ("+context.domain+")";
 				fn.call(cView, res[0],context); 
+			});
+		}
+		,"groups":function(contexts, path){
+			var cView = this.cView;
+			return cView.Utils._Promise.all(Object.keys(contexts).map(function(domain){
+				return contexts[domain].p;
+			})).then(function(res){
+				var body = cView.doc.getElementById("container");
+				body.cNodes["pagetitle"].innerHTML = path;
+				cView.doc.title = "My groups";
+				cView.Drawer.drawGroups();
 			});
 		}
 		,"unmixed":function(contexts, path){

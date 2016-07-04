@@ -13,6 +13,7 @@
 	}
 	,"vals":{
 		"as":{"reroute":["Router","routeContext"]}
+		,"groups":{"dest":["Router","groups","token"] }
 		,"filter":{
 			"req":["token"]
 			,"vals":{ 

@@ -146,7 +146,7 @@ _Drawer.prototype = {
 		return nodeProfile;
 	}
 	,"drawSettings":function(){
-		var cView = document.cView;
+		var cView = this.cView;
 		var body = cView.doc.getElementById("container");
 		body.cNodes["pagetitle"].innerHTML = "Settings";
 		cView.doc.title = "Settings";
@@ -309,7 +309,7 @@ _Drawer.prototype = {
 		*/
 	
 	,"drawRequests":function(){
-		var cView = document.cView;
+		var cView = this.cView;
 		var whoamis = new Array();
 		Object.keys(cView.contexts).forEach( function (domain){
 			var context = cView.contexts[domain];
@@ -330,61 +330,100 @@ _Drawer.prototype = {
 		function genRequests(context){
 			var cView = context.cView;
 			var body = cView.doc.getElementById("container");
-			context.ids.forEach(function(id){
-				var login = context.logins[id].data;
-				if(!Array.isArray(login.requests))return;
+			context.ids.forEach(function(loginId){
+				var login = context.logins[loginId].data;
+				if(!Array.isArray(login.requests)|| (login.requests.length == 0))
+					return;
 				var nodeH = cView.doc.createElement("h2");
 				nodeH.innerHTML = "@"+login.users.username+" requests";
 				body.appendChild(nodeH);
 				var nodeReqs = body.appendChild(cView.gNodes["req-body"].cloneAll());
 				login.requests.forEach( cView.Common.addUser, context);
-				if(Array.isArray(login.users.subscriptionRequests)){
-					nodeReqs.cNodes["req-body-pend"].hidden = false;
-					login.users.subscriptionRequests.forEach(function(req){
-						nodeReqs.cNodes["req-body-pend"].appendChild(genReqNode(req,id));
-					});
-				}
-				if(Array.isArray(login.users.pendingSubscriptionRequests)){
-					nodeReqs.cNodes["req-body-sent"].hidden = false;
-					login.users.pendingSubscriptionRequests.forEach(function(req){
-						var node = genReqNode({"userid": req, "id": req}, id);
+				login.requests.forEach(function(req){
+					var node = genReqNode(req, loginId);
+					if(req.src == loginId){
+						nodeReqs.cNodes["req-body-sent"].hidden = false;
 						node.cNodes["sr-ctrl"].hidden = true;
 						nodeReqs.cNodes["req-body-sent"].appendChild(node);
-					});
-				}
-
-
-			
+					}else{
+						nodeReqs.cNodes["req-body-pend"].hidden = false;
+						nodeReqs.cNodes["req-body-pend"].appendChild(node);
+					}
+				}); 
 			});
 			
-			function genReqNode(req, loginid){
+			function genReqNode(req, loginId){
 				var node = cView.gNodes["sub-request"].cloneAll();
-				var userid = (typeof req.userid !== "undefined")?req.userid:req;
-				var user = context.gUsers[userid];
-				node.cNodes["sr-name"].innerHTML = '<a href="'
+				var user = context.gUsers[req.id];
+				node.cNodes["sr-name"].innerHTML = user.link;
+				/*
+				'<a href="'
 					+gConfig.front + "as/"
 					+context.domain + "/"
 					+user.username + '">'
 					+user.screenName
 					+"</a>"
 					+" @" + user.username; 
+				*/
+				if(req.type == "group")
+					node.cNodes["sr-name"].innerHTML += "<br />to "
+					+ context.gUsers[req.dest].link;
 				node.cNodes["sr-avatar"].src =  user.profilePictureMediumUrl ;
 				node.cNodes["sr-user"].value = user.username;
-				node.cNodes["sr-id"].value = loginid;
-				node.cNodes["sr-reqid"].value = req.id;
+				node.cNodes["sr-id"].value = loginId;
+				node.cNodes["sr-src"].value = req.src;
+				node.cNodes["sr-dest"].value = req.dest;
+				node.cNodes["sr-reqid"].value = req.reqid;
+				node.cNodes["sr-type"].value = req.type;
 				node.cNodes["sr-domain"].value = context.domain;
 				return node;
 			}
 
 		}
 	}
+	,"drawGroups": function( ){
+		var cView = this.cView;
+		var out = cView.doc.createElement("div");
+		out.className = "subs-cont";
+		var domains = Object.keys(cView.contexts);
+		domains.forEach(function(domain){
+			var context = cView.contexts[domain];
+			if((context.gMe == null)
+			|| (typeof context.gMe.users.subscriptions === "undefined") ) 
+				return;
+			var subHead = cView.doc.createElement("h3");
+			subHead.innerHTML = domain;
+			out.appendChild(subHead);
+			var oSubscriptions = new Object();
+			context.gMe.subscriptions.forEach(function(sub){
+				oSubscriptions[sub.id] = sub;
+			});
+			var nodeGrps = cView.doc.createElement("div");
+			context.gMe.users.subscriptions.forEach(function(subid){
+				var sub = oSubscriptions[subid];
+				var user = context.gUsers[sub.user];
+				if((user.type == "user")||(sub.name != "Posts"))
+					return;
+				var node = cView.gNodes["sub-item"].cloneAll();
+				var a = node.cNodes["link"];
+				a.href = gConfig.front+ "as/" + context.domain+ "/" + user.username;
+				a.cNodes["usr-avatar"].src = user.profilePictureMediumUrl;
+				a.cNodes["usr-title"].innerHTML = user.title;
+				nodeGrps.appendChild(node);
+			});
+			out.appendChild(nodeGrps);
+		});
+		cView.doc.getElementById("container").appendChild(out);
+		return cView.Utils._Promise.resolve();
+
+	}
 	,"drawFriends": function(content,context){
 		var cView = context.cView;
 		var out = cView.gNodes["subs-cont"].cloneAll();
 		content.subscriptions.forEach(function(sub){
+			if(sub.name != "Posts")return;
 			var node = cView.gNodes["sub-item"].cloneAll();
 			var a = node.cNodes["link"];
-			if(sub.name != "Posts")return;
 			var user = context.gUsers[sub.user];
 
 			a.href = gConfig.front+ "as/" + context.domain+ "/" + user.username;
@@ -838,7 +877,7 @@ _Drawer.prototype = {
 			function(prev,domain){ return prev.concat(cView.contexts[domain].ids);}
 			,[]
 		).length > 1 ){
-			nodeDirectTo.cNodes["mu-login"].innerHTML = context.domain + ": " + login.users.link;
+			nodeDirectTo.cNodes["mu-login"].innerHTML = context.domain + ": @" + login.users.username;
 			nodeDirectTo.cNodes["mu-login"].hidden = false;
 			victim.cNodes["add-sender"].hidden = false;
 			if (typeof victim.cNodes["add-sender"].ids === "undefined")
@@ -854,8 +893,9 @@ _Drawer.prototype = {
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
 		if(cView.doc.location.hash && (cView.doc.location.hash != "")){
 			victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
-			nodeDirectTo.cNodes["new-direct-input"].value = cView.doc.location.hash.slice(1);
+			nodeDirectTo.cNodes["new-feed-input"].value = cView.doc.location.hash.slice(1);
 		}
+		var oSuggest = new Object();
 		var oDest = new Object();
 		if ((typeof login.users.subscribers !== "undefined") && (typeof login.users.subscriptions !== "undefined")){
 			for (var username in context.gUsers.byName){
@@ -864,19 +904,21 @@ _Drawer.prototype = {
 					|| !(login.users.subscribers.some(function(sub){return sub.id == userid;}) 
 						|| (context.gUsers.byName[username].type == "group")
 					)
-				)
-					continue;
-				var pos = oDest;
+				) continue;
+				oDest[username] = username;
+				var pos = oSuggest;
 				for(var idx = 0; idx < username.length; idx++){
-					if (typeof pos.arr === "undefined") pos.arr = new Array();
-					pos.arr.push(username);
 					if (typeof pos[username.charAt(idx)] === "undefined")
 						pos[username.charAt(idx)] = new Object();
 					pos = pos[username.charAt(idx)];
+					if (typeof pos.arr === "undefined") pos.arr = new Array();
+					pos.arr.push(username);
 				}
 			}
 		}
-		nodeDirectTo.cNodes["new-direct-input"].dest = oDest;
+		var input = nodeDirectTo.getNode(["c","new-feed-input"],["c","input"]);
+		input.dest = oDest;
+		input.suggest = oSuggest;
 		cView.updPostTo = function (login,clean){
 			if(clean == true) {
 				document.getElementsByClassName("add-sender")[0].ids = new Array();
@@ -905,26 +947,18 @@ _Drawer.prototype = {
 			if (typeof victim.cNodes["add-sender"].ids === "undefined")
 				victim.cNodes["add-sender"].ids = [context.gMe.users.id];
 		}
+
 		victim.cNodes["post-to"].appendChild(nodePostTo);
 		nodePostTo.feeds = new Array();
+		nodePostTo.feeds.push(init);
+		nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = init;
+		if(init != login.users.username)
+			nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = init;
 		nodePostTo.destType = "posts";
 		nodePostTo.parentNode.isPrivate  = false;
-		var select = cView.doc.createElement("select");
-		select.className = "new-post-feed-select";
-		select.hidden = nodePostTo.cNodes["new-post-feed-select"].hidden;
-		select.addEventListener("change",cView["Actions"]["newPostSelect"]);
-		nodePostTo.replaceChild(select, nodePostTo.cNodes["new-post-feed-select"]);
-		nodePostTo.cNodes["new-post-feed-select"] = select;
-		var option = cView.doc.createElement("option");
-		option.selected = true;
-		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
-		var option = cView.doc.createElement("option");
-		option.innerHTML = "My feed";
-		option.value = login.users.username;
-		chkInit(init, option, idx);
-		nodePostTo.cNodes["new-post-feed-select"].appendChild(option);
-		var groups = cView.doc.createElement("optgroup");
-		groups.label = "Groups";
+		nodePostTo.cNodes["new-feed-input"].addEventListener("focus", cView.Actions.newDirectInp, true);
+		var oDest = new Object();
+		var oSuggest = new Object();
 		if (typeof login.users.subscriptions !== "undefined"){
 			var oSubscriptions = new Object();
 			login.subscriptions.forEach(function(sub){if (sub.name == "Posts")oSubscriptions[sub.id] = sub; });
@@ -932,19 +966,27 @@ _Drawer.prototype = {
 				if (typeof oSubscriptions[subid] === "undefined") return;
 				var sub = context.gUsers[oSubscriptions[subid].user];
 				if((typeof sub !=="undefined") && (sub.type == "group")){
-					idx++;
-					option = cView.doc.createElement("option");
-					option.value = sub.username;
-					chkInit(init, option, idx);
-					option.innerHTML = sub.screenName + "("+ sub.username + ")";
-					groups.appendChild(option);
+					var title = sub.title.replace(/<(?:.|\n)*?>/gm, '').trim();
+					oDest[sub.username] = sub.username;
+					oDest[sub.screenName] = sub.username;
+					oDest[title] = sub.username;
+					[sub.username, sub.screenName].forEach(function(name){
+						var pos = oSuggest;
+						var nameLC = name.toLocaleLowerCase();
+						for(var idx = 0; idx < nameLC.length; idx++){
+							if (typeof pos[nameLC.charAt(idx)] === "undefined")
+								pos[nameLC.charAt(idx)] = new Object();
+							pos = pos[nameLC.charAt(idx)];
+							//if(idx == 0) continue;
+							if (typeof pos.arr === "undefined") 
+								pos.arr = new Array();
+							if(pos.arr.indexOf(title)== -1)
+								pos.arr.push(title);
+						}
+					});
 				}
 			});
-
 		};
-		if (groups.childNodes.length > 0 )
-			nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
-		groups = cView.doc.createElement("optgroup");
 		/*
 		groups.label = "Private groups";
 		for (var id in matrix.gSymKeys){
@@ -955,9 +997,9 @@ _Drawer.prototype = {
 			groups.appendChild(option);
 		}
 		*/
-		if (groups.childNodes.length > 0 )
-			nodePostTo.cNodes["new-post-feed-select"].appendChild(groups);
-
+		var input = nodePostTo.getNode(["c","new-feed-input"],["c","input"]);
+		input.suggest = oSuggest;
+		input.dest = oDest;
 		cView.updPostTo = function (login,clean, init){
 			if(clean == true) {
 				document.getElementsByClassName("add-sender")[0].ids = new Array();
@@ -966,20 +1008,12 @@ _Drawer.prototype = {
 			}
 			return cView.Drawer.genPostTo(victim, init,login);
 		};
+		
 		var rmSenders = victim.getElementsByClassName("rm-sender");
 		if(rmSenders.length > 1)
 			for (idx = 0; idx < rmSenders.length; idx++)rmSenders[idx].hidden = false;
 		nodePostTo.userid = login.users.id;
 		nodePostTo.domain = login.domain;
-		function chkInit(init, option, idx){
-			if (init != option.value) return;
-			option.disabled = true;
-			nodePostTo.cNodes["new-post-feeds"].firstChild.idx = idx;
-			nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = init;
-			if(init != login.users.username)
-				nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = "@" + init;
-			nodePostTo.feeds.push(init);
-		}
 		victim.getNode(["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 
 	}
@@ -1071,23 +1105,24 @@ _Drawer.prototype = {
 	}
 	,"updateReqs":function(){
 		var cView = this.cView;
+		cView.subReqsCount = 0;
 		Object.keys(cView.contexts).forEach(function(domain){
 			var context = cView.contexts[domain];
 			var ids = context.ids;
-			if(ids) cView.subReqsCount = ids.reduce(function(total, id){
+			if(ids) cView.subReqsCount += ids.reduce(function(total, id){
 				var profile = context.logins[id].data.users;
 				if (Array.isArray(profile.subscriptionRequests))
 					return total + profile.subscriptionRequests.length;
 				else return total;
-			},0); else cView.subReqsCount = 0;
-			if (cView.subReqsCount){
-				var nodeInfo = cView.doc.getElementById("sr-info");
-				nodeInfo.cNodes["sr-info-a"].innerHTML = "You have "
-				+ cView.subReqsCount
-				+ " subscription requests to review.";
-				nodeInfo.hidden = false;
-			}
+			},0);
 		});
+		if (cView.subReqsCount){
+			var nodeInfo = cView.doc.getElementById("sr-info");
+			nodeInfo.cNodes["sr-info-a"].innerHTML = "You have "
+			+ cView.subReqsCount
+			+ " subscription requests to review.";
+			nodeInfo.hidden = false;
+		}
 	}
 	,"makeMetapost": function(dups){ 
 		var cView = this.cView;
@@ -1144,6 +1179,16 @@ _Drawer.prototype = {
 			host.parentNode.replaceChild( newNode, host);
 		}else host.parentNode.removeChild(host);
 		return count;
+	}
+	,"populateSidebar": function(nodeSidebar, elements){
+		var cView = this.cView;
+		elements.forEach(function(elmt){
+			if(!elmt.test(cView))return;
+			var node = cView.gNodes["sidebar-emt"].cloneAll();
+			node.cNodes["sb-emt-title"].innerHTML = elmt.title;
+			elmt.content(cView).forEach(node.cNodes["sb-emt-content"].appendChild, node.cNodes["sb-emt-content"]);
+			nodeSidebar.appendChild(node);
+		});
 	}
 };
 return _Drawer;

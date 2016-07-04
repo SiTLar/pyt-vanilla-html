@@ -82,8 +82,7 @@ h1{
 	position:absolute;
 }
 .container{
-	max-width: 680;
-	width: 100%;
+	max-width: 42em;
 	padding: 0 1em;
 	margin: 0 auto;
 }
@@ -110,10 +109,14 @@ h1{
 	border-width: 1px;
 	margin-bottom: 0.5em;
 	height: 4em;
+	overflow: hidden;
 	width:100%;
 	max-width: 100%;
 	min-width: 100%;
 	padding: 3px;
+}
+.edit {
+	overflow: hidden;
 }
 .up-close{
 	float:right;
@@ -126,10 +129,8 @@ h1{
 	margin: 0 0.5em;
 }
 .up-controls{
-	clear:both;
 }
 .up-date{
-	clear:both;
 	display: block;
 }
 .user-popup label {
@@ -174,14 +175,13 @@ h1{
 	box-shadow: 5px 5px 5px 0 rgba(0,0,0,0.3) ;
 }
 .posts{
-	clear: both;
 }
 .post {
 	margin-bottom: 3.5em;
 	margin-top: 2em;
 	transition-property: height ;
 	transition-duration: 5s;
-	overflow:hidden;
+	background-color:white;
 }
 .post:after {
 	content: '';
@@ -224,10 +224,9 @@ h1{
 .post-body a {
 	color: #555599;
 }
-	.attachments {
+.attachments {
+	overflow:hidden;
 	margin-bottom: 3px;
-	clear: both;
-	overflow: hidden;
 }
 .atts-img {
 	display: flex;
@@ -236,6 +235,8 @@ h1{
 
 .atts-unfold {
 	text-align: center;
+	overflow:hidden;
+	width:100%;
 }
 .att-img {
 	border: 1px solid silver;
@@ -244,7 +245,6 @@ h1{
 	padding: 1px;
 }
 .att-audio{
-	clear:both;
 	margin-bottom: 0.5em;
 }
 .title {
@@ -261,6 +261,7 @@ h1{
 }
 
 .post-info {
+	overflow: hidden;
 	font-size: 14px;
 	line-height: 16px;
 }
@@ -321,7 +322,6 @@ span.comment-controls::before {
 	content: " \2022\00A0(";
 }
 .comments {
-	clear: both;
 	font-size: 14px;
 	line-height: 16px;
 }
@@ -439,7 +439,6 @@ span.comment-controls::before {
 }
 .priv-header{
 	font-size:x-large;
-	clear: both;
 	text-align: center;
 }
 .private-control p{
@@ -461,13 +460,12 @@ span.comment-controls::before {
 	margin-top: 0.7em;
 }
 .new-post{
-	clear:both;
+	overflow: hidden;
 }
 .new-post-to{
 	margin-top: 1.5em;
 	margin-bottom: 0.3em;
 	font-size: 13px;
-	clear:both;
 }
 .new-post-feed{
 	background-color: #f2f2f2;
@@ -490,8 +488,11 @@ span.comment-controls::before {
 	margin-left: 3px;
 	font-size: 13px;
 }
+.new-feed-input{
+	display:inline-block;
+	position: relative;
+}
 .sr-ctrl {
-	clear: both;
 	margin-top: 0.5em;
 }
 
@@ -515,6 +516,7 @@ span.comment-controls::before {
 .settings-profile{
 	margin-top:0.5em;
 	border-bottom: solid thin #e8e8e8;
+	overflow: hidden;
 } 
 .sp-username{
 	font-weight: bold;
@@ -597,7 +599,6 @@ span.comment-controls::before {
 		display:block;
 	}
 }
-
 .subs-cont > div {
 	display:flex;
 	text-align: center;
@@ -609,6 +610,9 @@ span.comment-controls::before {
 .sub-item *{
 	display:block;	
 	margin: 0 auto;
+}
+.sub-item img{
+	max-width:50;
 }
 .sub-item {
 	font-size: small;
@@ -659,12 +663,6 @@ span.comment-controls::before {
 .pr-selected {
 	background-color:#fff;
 }
-.debug{
-	position:absolute;
-	background-color: #fff;
-	z-index:5;
-	border: red thin solid;
-}
 .post-refl-menu{
 	display:flex;
 }
@@ -687,4 +685,113 @@ span.comment-controls::before {
 }
 .metapost {
 	margin-top: 2em;
+}
+.sidebar {
+	float:right;
+	width: 10em;
+	top:0;
+	right:0;
+	margin: 0 .5em;
+	background-color:white;
+	border-radius:.2em;
+}
+@media (max-width: 35em) {
+	.sidebar{
+		position:fixed;
+		overflow:auto;
+		float:none;
+		z-index:2;
+		width:100%;
+		height:100%;
+		background: rgba(200, 200,200, 0.8);
+
+	}
+	.sidebar-emt {
+		margin: 0 0.1em 0.3em auto;
+		width:80%
+	}
+	.sidebar-h{
+		display:none;
+	}
+	.container{
+		margin: 0;
+	}
+	.sidebar-left{
+		display:relative;
+		width:20%;
+	}
+}
+
+@media (min-width: 35em) {
+	.show-sidebar{
+		display:none;
+	}
+	.hide-sidebar{
+		display:none;
+	}
+	.sidebar-left{
+		display:none;
+	}
+}
+.main{
+	margin: 0 auto;
+	width: 100%;
+	position: relative;
+	max-width: 62em;
+	overflow:hidden;
+}
+
+.sidebar-emt {
+	border: thin solid gray;
+	box-shadow: 0.1em 0.1em 0.2em black;
+	margin-bottom: 0.5em;
+	padding: 0.3em;
+	background: white;
+}
+.sidebar-emt div {
+	margin-bottom:.5em;
+}
+.sb-emt-title {
+	border-bottom: thin solid gray;
+}
+.sb-info{
+	color:gray;
+	font-size:small;
+}
+.show-sidebar{
+	position:fixed;
+	top:3em;
+	opacity:0.8;
+	border-radius:.2em;
+	right:2em;
+}
+.show-sidebar *{
+	color:gray;
+}
+.hide-sidebar *{
+	float:right;
+}
+.hide-sidebar{
+	border-radius:.2em;
+	height:2em;
+}
+.hidden{
+	display:none;
+}
+.main-avatar img{
+	max-width:50;
+}
+.main-avatar {
+	max-width:50;
+	margin:0 auto;
+}
+.edit-acc{
+	font-size:small;
+}
+.sidebar-acc-anon {
+	text-align: center;
+}
+.sidebar-left{
+	float:left;
+	height:100%;
 }

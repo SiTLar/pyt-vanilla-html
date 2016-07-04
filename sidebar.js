@@ -15,12 +15,13 @@ return [
 			var domains = Object.keys(cView.contexts);
 			var nodeMainAcc = cView.gNodes["sidebar-acc"].cloneAll();
 			var mainLogin;
-			if(cView.contexts[gConfig.leadDomain].gMe) 
+			if(( typeof cView.contexts[gConfig.leadDomain] !== "undefined" )
+			&& cView.contexts[gConfig.leadDomain].gMe) 
 				mainLogin = cView.contexts[gConfig.leadDomain].gMe.users;
 			else domains.some(function(domain){
 				var context = cView.contexts[domain];
 				if(!context.gMe) return false;
-				mainLogin = context.gMe.data.users;
+				mainLogin = context.gMe.users;
 				return true; 
 			});
 			nodeMainAcc.getNode(["c", "main-avatar"],["c","img"]).src = mainLogin.profilePictureMediumUrl;
@@ -93,7 +94,7 @@ return [
 					});
 				});
 			});
-			groups.sort(function(a,b){return a.time<b.time});
+			groups.sort(function(a,b){return b.time - a.time;});
 			var length = groups.length;
 			length = length <5 ? length:5;
 			var out = new Array();

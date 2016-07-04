@@ -92,7 +92,9 @@ define("./router",["./sidebar"],function(sidebar){
 		"route":function(contexts, path){
 			var cView = this.cView;
 			if (cView.doc.title == "") cView.doc.title = "Feeds";
-			var arrPath = path.split("/");
+			if (path.indexOf("#") != -1 )
+				var arrPath = path.substr(0,path.indexOf("#")).split("/");
+			else var arrPath = path.split("/");
 			var step = gRoutes;
 			for(var idx = 0; idx < arrPath.length; idx++){
 				var txtStep = arrPath[idx];

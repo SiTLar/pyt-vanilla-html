@@ -10,6 +10,29 @@ return function(config){
 			}
 		);
 	}
+	function getAPI(token, req){
+		return utils.xhrReq( 
+			{ 	"url":config.serverApiURL + req+".json" 
+				,"headers":{"X-API-Token":token}
+			}
+		)
+	}
+	function getUser(token, req) {
+		return getAPI(token, "users/" + req )
+		.then(function(res){
+			res = JSON.parse(res);
+			res.type = "user";
+			return res
+		} ,function (){
+			return  getAPI(token, "groups/"+req)
+			.then(function(res){
+				res = JSON.parse(res);
+				res.type = "group";
+				res.id = "groups/" + res.id;
+				return res
+			});
+		});
+	}
 	function getAllSubs(token, username){
 		return utils._Promise.all([
 			get(token, username+"/subscribers")
@@ -17,21 +40,13 @@ return function(config){
 		]);
 	}
 	function getWhoami(token){
-		var pUser  = utils.xhrReq( 
-			{ 	"url":config.serverApiURL +"whoami.json" 
-				,"headers":{"X-API-Token":token}
-			}
-		).then(function(res){
+		var pUser = getAPI(token, "whoami").then(function(res){
 			return JSON.parse(res); 
 		});
 		var pSubs = pUser.then(function(whoami){
 			return getAllSubs(token, whoami.user.name);
 		});
-		var pReqs = utils.xhrReq( 
-			{ 	"url":config.serverApiURL +"subscription_requests.json" 
-				,"headers":{"X-API-Token":token}
-			}
-		);
+		var pReqs = getAPI(token, "subscription_requests");
 
 		return utils._Promise.all([pUser, pSubs, pReqs]).then(function(res){
 			var whoami = res[0];
@@ -67,8 +82,10 @@ return function(config){
 			var subscription_requests = JSON.parse(res[2]).subscription_requests;
 			subscription_requests.forEach(function(req){
 				whoami.user.subscriptionRequests.push({
-					"userid":req.request.user_id.toString()
-					, "id":req.request.uuid
+					"src":req.request.user_id.toString()
+					,"id":req.request.uuid
+					,"type":req.request.what
+					,"dest":req.request.their_id
 				});
 				whoami.requests.push(req.from_user);
 			});
@@ -115,7 +132,7 @@ return function(config){
 			}
 			,"getTimeline": function(token, timeline, skip) {
 				var len = timeline.lebngth;
-				if(timeline.charAt(len - 1) == '/')timeline = timeline.slice(0,-1);
+				if(timeline.charAt(len - 1) == "/")timeline = timeline.slice(0,-1);
 				if (timeline == "home")timeline = "index";
 				return get(token, timeline, Math.ceil(skip/gConfig.offset)+1)
 				.then(function(res){
@@ -124,11 +141,9 @@ return function(config){
 					|| Object.keys(res.users).some(isThere, res.users)
 					|| Object.keys(res.groups).some(isThere, res.groups))
 						return res;
-					return utils.xhrReq( {
-						"url":config.serverApiURL +"users/"+ timeline +".json"
-						,"headers":{"X-API-Token":token}
-					}).then(function(user){
-						user = JSON.parse(user);
+					return getUser(token, timeline)
+					.then( function (user){
+						if(typeof user === "string")user = JSON.parse(user);
 						if(typeof res.users === "undefined") 
 							res.users = new Object();
 						res.users[user.id] = user;
@@ -243,7 +258,7 @@ return function(config){
 					}
 				);
 			}
-			,"getUser": function(token, req) {return get(token, "users/" + req );}
+			,"getUser": getUser 
 			,"doBan": function(token, username, action){
 				return utils.xhrReq(
 					{ 	"url": config.serverApiURL 
@@ -355,21 +370,25 @@ return function(config){
 					}
 				);
 			}
-			,"reqSub": function(token,username ){
+			,"reqSub": function(token,username, type ){
 				return utils.xhrReq(
-					{ 	"url": config.serverApiURL 
-							+ "users/" + username 
-							+ "/subscribers.json" 
+					{ 	"url": [config.serverApiURL, 
+							,type
+							,"s/"
+							,username 
+							,"/subscribers.json"].join("")
 						,"headers":{"X-API-Token":token}
 						,"method": "post"
 					}
 				);
 			}
-			,"evtSub": function(token,username, subscribed ){
+			,"evtSub": function(token,username, subscribed,type ){
 				return utils.xhrReq(
-					{ 	"url": config.serverApiURL 
-							+ "users/" + username 
-							+ "/subscribers.json" 
+					{ 	"url": [config.serverApiURL, 
+							,type
+							,"s/"
+							,username 
+							,"/subscribers.json"].join("")
 						,"headers":{"X-API-Token":token}
 						,"method": subscribed?"DELETE":"post"
 					}
@@ -497,7 +516,8 @@ return function(config){
 	
 				}
 				,"requests":{"out":"", "post":function(user){
-						user.type = "user";
+						if(typeof user.type === "undefined")
+							user.type = "user";
 						return user;
 					}
 				}
@@ -541,12 +561,16 @@ return function(config){
 				,"updated_at":{"out":"updatedAt","a":"mutate","f":Date.parse,"single":true}
 				,"user_id":{"out":"createdBy","a":"str"}
 				,"user":{"out":"users", "post":function(user){
-						user.type = "user";
+						if(typeof user.type === "undefined")
+							user.type = "user";
 						return user;
 					}
 				}
 				,"users":{"out":"", "pre":obj2arr, "post":function(users){
-						users.forEach(function(user){user.type = "user";});
+						users.forEach(function(user){
+							if(typeof user.type === "undefined")
+								user.type = "user";
+						});
 						return users;
 					}
 				}

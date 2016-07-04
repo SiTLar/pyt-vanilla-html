@@ -261,6 +261,7 @@ h1{
 }
 
 .post-info {
+	overflow: hidden;
 	font-size: 14px;
 	line-height: 16px;
 }
@@ -487,6 +488,10 @@ span.comment-controls::before {
 	margin-left: 3px;
 	font-size: 13px;
 }
+.new-feed-input{
+	display:inline-block;
+	position: relative;
+}
 .sr-ctrl {
 	margin-top: 0.5em;
 }
@@ -511,6 +516,7 @@ span.comment-controls::before {
 .settings-profile{
 	margin-top:0.5em;
 	border-bottom: solid thin #e8e8e8;
+	overflow: hidden;
 } 
 .sp-username{
 	font-weight: bold;
@@ -786,6 +792,6 @@ span.comment-controls::before {
 	text-align: center;
 }
 .sidebar-left{
-	display:none;
 	float:left;
+	height:100%;
 }

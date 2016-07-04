@@ -56,6 +56,9 @@ _Common.prototype = {
 			return localUser;
 		}
 		var className = "not-my-link";
+		user.screenName = user.screenName.replace(/&/g,"&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;");
 		user.domain = context.domain;
 		if(typeof user.isPrivate !== "undefined")user.isPrivate = JSON.parse(user.isPrivate);
 		if (cView.mode == null) cView.mode = "screen";

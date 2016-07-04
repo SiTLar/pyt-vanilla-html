@@ -89,7 +89,7 @@
 			{"c":"sr-info-a","t":"a","e":{"mousedown":["Actions","goRequests"]}}
 		]}
 	]}
-	,{"c":"controls-anon","t":"div"
+	,{"c":"controls-anon"
 	,"children":[
 		{"c":"user-signup","t":"a","txt":"sign up","p":{"href":"https://freefeed.net/signup"}}
 		,{"t":"span","txt":" &#8226; "}
@@ -182,10 +182,18 @@
 		,{"t":"span", "txt":"Post to:"}
 		,{"c":"new-post-feeds","t":"ul"
 		,"children":[
-			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":["Actions","newPostRemoveFeed"]} }
+			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":["Actions","newDirectRemoveFeed"]} }
 		]}
-		,{"c":"new-post-feed-select", "t": "select","p":{"hidden":"1"}, "e":{"change":["Actions","newPostSelect"]}  }
-		,{"c":"new-post-add","t":"a","txt":"Add", "e":{"click":["Actions","newPostAddFeed"]} }
+		,{"c":"new-feed-input" 
+		,"children":[
+			{"c":"input", "t": "input","p":{"hidden":"1"}
+				,"e":{
+					"input":["Actions","newDirectInp"]
+					,"keyup":["Actions","newDirectInp"]
+				} 
+			}
+		]}
+		,{"c":"new-feed-add","t":"a","txt":"Add", "e":{"click":["Actions","newPostAddFeed"]} }
 		,{"c":"rm-sender", "t":"a", "txt":"&cross;Remove sender", "p":{"hidden":true}, "e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"new-direct-to"
@@ -193,22 +201,35 @@
 		{"c":"mu-login", "t":"span"}
 		,{"t":"span", "txt":"Direct message to:"}
 		,{"c":"new-post-feeds","t":"ul"}
-		,{"c":"new-direct-input", "t": "input","e":{"input":["Actions","newDirectInp"], "keyup":["Actions","newDirectInp"]}  }
-		,{"c":"new-direct-add","t":"a","txt":"Add", "e":{"click":["Actions","newDirectAddFeed"]} }
+		,{"c":"new-feed-input" 
+		,"children":[
+			{"c":"input", "t": "input"
+				,"e":{
+					"input":["Actions","newDirectInp"]
+					, "keyup":["Actions","newDirectInp"]
+				}  
+			}
+		]}
+		,{"c":"new-feed-add","t":"a","txt":"Add", "e":{"click":["Actions","newDirectAddFeed"]} }
 		,{"c":"rm-sender","t":"a","txt":"&#10008;Remove sender", "p":{"hidden":true},"e":{"click":["Actions","newPostRmSender"]} }
 	]}
-	,{"c":"friends-tip","e":{"mouseleave":["Actions","ftClose"],"click":["Actions","ftClose"] }
+	,{"c":"new-post-feed", "t":"li", "e":{"click":["Actions","newDirectRemoveFeed"]}}
+	,{"c":"friends-tip","e":{"mouseleave":["Actions","ftClose"]}
 	,"children":[
-		{"c":"priv-close"
+		{"c":"priv-close", "e":{"click":["Actions","ftClose"] }
 		,"children":[
 			{"t":"a"
 			,"children":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
+		,{ "children":[
+			{"c":"fa fa-search", "t":"i"}
+			,{"t":"span", "txt":"&nbsp;&hellip;"}
+		]}
 		,{"c":"ft-list","t":"ul"}
 	]}
-	,{"c":"ft-i", "t":"li", "e":{"click":["Actions","selectFriend"]}}
+	,{"c":"ft-i", "t":"li", "e":{"click":["Actions","selectFeed"]}}
 	,{"c":"likes-smile","t":"span"
 	,"children":[
 		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"}
@@ -504,7 +525,7 @@
 				{"t":"input" ,"p":{"type":"radio" ,"name":"is-main"}
 					,"e":{"change":["Actions","setMainProfile"]}
 				}
-				,{"t":"span","txt":"Main profile: this one does likes & logs in to other frontends." }
+				,{"t":"span","txt":"Main profile: this one retrieves posts & does likes." }
 			]}
 		]}
 		,{"c":"chng-avatar"
@@ -584,7 +605,10 @@
 		{"c":"sr-avatar", "t":"img"}
 		,{"c":"sr-name"}
 		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-src", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-dest", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-id", "t":"input","p":{"type":"hidden"}}
+		,{"c":"sr-type", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-reqid", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-domain", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-ctrl"

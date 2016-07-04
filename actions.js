@@ -133,6 +133,12 @@ _Actions.prototype = {
 			var postdata = new Object();
 			postdata.meta = new Object();
 			postdata.post = new Object();
+			var input = postTo.getNode(["c","new-feed-input"],["c", "input"]);
+			var feed = input.value;
+			if((feed != "") && (typeof input.dest[feed] !== "undefined") 
+			&& (postTo.feeds.indexOf(input.dest[feed]) == -1) ){
+				postTo.feeds.push(input.dest[feed]);
+			}
 			postdata.post.body = body;
 			postdata.meta.feeds = postTo.feeds ;
 			if(typeof postTo.parentNode.attachs !== "undefined")
@@ -406,7 +412,11 @@ _Actions.prototype = {
 		var loginId = e.target.getNode(["p","up-c-mu"]).loginId;
 		var domain = e.target.getNode(["p","up-controls"]).domain;
 		var context = cView.contexts[domain];
-		context.api.reqSub( context.logins[loginId].token,username ).then( function(){
+		context.api.reqSub( 
+			context.logins[loginId].token
+			,username
+			,context.gUsers.byName[username].type 
+		).then( function(){
 			var span = cView.doc.createElement("span");
 			span.innerHTML = "Request sent";
 			e.target.parentNode.replaceChild(span, e.target);
@@ -423,7 +433,12 @@ _Actions.prototype = {
 		var username = nodeUC.user;
 		var loginId = nodeParent.getNode(["p","up-c-mu"]).loginId;
 		var context = cView.contexts[nodeUC.domain];
-		context.api.evtSub( context.logins[loginId].token,username, target.subscribed ).then( function(res){
+		context.api.evtSub(
+			context.logins[loginId].token
+			,username
+			,target.subscribed
+			,context.gUsers.byName[username].type 
+		).then( function(res){
 			context.logins[loginId].data = res;
 			cView.Common.refreshLogin(loginId,context);
 			cView.Utils.setChild(nodeParent.getNode(["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(context.gUsers.byName[username]));
@@ -792,43 +807,50 @@ _Actions.prototype = {
 	}
 	,"newDirectInp": function(e){
 		var cView = document.cView;
-		if (e.target.value){
-			var victim =e.target; do victim = victim.parentNode; while(victim.className != "new-post");
-			victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
-			if(e.which == "13") cView.Actions.newDirectAddFeed(e);
-			else{
-				var txt = e.target.value.toLowerCase();
-				var nodeTip = cView.gNodes["friends-tip"].cloneAll();
-				var oDest = e.target.dest;
-				var pos = oDest;
-				for(var idx = 0; idx < txt.length; idx++){
-					if (typeof pos[txt.charAt(idx)] !== "undefined")
-						pos = pos[txt.charAt(idx)];
-					else{
-						pos = null;
-						break;
-					}
-				}
-				if(pos && pos.arr)pos.arr.forEach(function(user){
-					var li = cView.gNodes["ft-i"].cloneAll();
-					li.innerHTML = user;
-					nodeTip.cNodes["ft-list"].appendChild(li);
-				});
-				nodeTip.inp = e.target;
-				nodeTip.style.top = e.target.offsetTop+e.target.offsetHeight;
-				nodeTip.style.left =  e.target.offsetLeft;
-				nodeTip.style.width = e.target.clientWidth;
-				if((typeof e.target.tip !== "undefined") && e.target.tip.parentNode) {
-					cView.doc.body.replaceChild(nodeTip, e.target.tip);
-					e.target.tip = nodeTip;
-				}else e.target.tip = cView.doc.body.appendChild(nodeTip);
-			}
-		}else if(e.target.tip){
-			cView.doc.body.removeChild(e.target.tip);
-			e.target.tip = undefined;
+		var nodeP = e.target.getNode(["p","new-post-to"]);
+		var victim = e.target.getNode(["p", "new-post"]);
+		if(e.which == "13") return cView.Actions.newDirectAddFeed(e);
+
+		var nodeTip = cView.gNodes["friends-tip"].cloneAll();
+		nodeTip.inp = e.target;
+		nodeTip.style.top = e.target.offsetHeight;
+		nodeTip.style.left = 0;// e.target.offsetLeft ;
+		nodeTip.style.width = e.target.offsetWidth;
+		if((typeof e.target.tip !== "undefined") && e.target.tip.parentNode) {
+			e.target.parentNode.replaceChild(nodeTip, e.target.tip);
+			e.target.tip = nodeTip;
+		}else e.target.tip =  e.target.parentNode.appendChild(nodeTip);
+		var myFeed = cView.contexts[nodeP.domain].logins[nodeP.userid].data.users.username;
+		if((nodeP.destType == "posts") && (nodeP.feeds.indexOf(myFeed) == -1 )){
+			li = document.createElement("li");
+			li.innerHTML = "My Feed";
+			nodeTip.cNodes["ft-list"].appendChild(li);
+			li.addEventListener("click",function(e){
+				var li = cView.gNodes["new-post-feed"].cloneAll();
+				li.innerHTML = "My Feed";
+				li.oValue = myFeed;
+				nodeP.cNodes["new-post-feeds"].appendChild(li);
+				nodeP.feeds.push(myFeed);
+				nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
+			});
 		}
-
-
+	
+		var txt = e.target.value.toLocaleLowerCase();
+		var pos =  e.target.suggest;
+		for(var idx = 0; idx < txt.length; idx++){
+			if (typeof pos[txt.charAt(idx)] !== "undefined")
+				pos = pos[txt.charAt(idx)];
+			else{
+				pos = null;
+				break;
+			}
+		}
+		if(pos && pos.arr)pos.arr.forEach(function(user){
+			var li = cView.gNodes["ft-i"].cloneAll();
+			li.innerHTML = user;
+			nodeTip.cNodes["ft-list"].appendChild(li);
+		});
+		
 	}
 	,"doBan": function(e){
 		var cView = document.cView;
@@ -914,16 +936,17 @@ _Actions.prototype = {
 	}
 	,"ftClose": function(e){
 		var cView = document.cView;
-		var victim =e.target.getNode(["p","friends-tip"]);
+		var victim =cView.Utils.getNode(e.target,["p","friends-tip"]);
 		victim.inp.tip = undefined;
-		cView.doc.body.removeChild(victim);
+		victim.parentNode.removeChild(victim);
 
 	}
-	,"selectFriend": function(e){
+	,"selectFeed": function(e){
 		var cView = document.cView;
-		var victim =e.target.getNode(["p","friends-tip"]);
-		victim.inp.value = e.target.innerHTML;
-
+		var input = e.target.getNode(["p","friends-tip"]).inp;
+		input.value = e.target.innerHTML;
+		var event = new Event("click");
+		input.getNode(["p","new-post-to"],["c","new-feed-add"]).dispatchEvent(event);
 	}
 	,"postDirect": function(e){
 		var cView = document.cView;
@@ -932,7 +955,7 @@ _Actions.prototype = {
 		for (var idx = 0; idx<nodesSenders.length; idx++){
 			var nodeSender = nodesSenders[idx];
 			var context = cView.contexts[nodeSender.domain];
-			var input = nodeSender.cNodes["new-direct-input"].value;
+			var input = nodeSender.getNode(["c","new-feed-input"],["c","input"]).value;
 			if ((input != "") && (typeof context.gUsers.byName[input] !== "undefined")
 			&& context.gUsers.byName[input].friend 
 			&& (context.gUsers.byName[input].subscriber||context.gUsers.byName[input].type == "group"))
@@ -957,7 +980,7 @@ _Actions.prototype = {
 	,"newPostRemoveFeed": function(e){
 		var cView = document.cView;
 		var nodeP = e.target.parentNode.parentNode;
-		nodeP.cNodes["new-post-feed-select"][e.target.idx].disabled = false;
+		nodeP.cNodes["new-feed-input"][e.target.idx].disabled = false;
 		for(var idx = 0; idx < nodeP.feeds.length; idx++){
 			if(nodeP.feeds[idx] == e.target.oValue){
 				nodeP.feeds.splice(idx,1);
@@ -970,36 +993,47 @@ _Actions.prototype = {
 	}
 	,"newDirectRemoveFeed": function(e){
 		var cView = document.cView;
-		var nodeP = e.target.parentNode.parentNode;
-		for(var idx = 0; idx < nodeP.feeds.length; idx++){
-			if(nodeP.feeds[idx] == e.target.oValue){
-				nodeP.feeds.splice(idx,1);
-				break;
-			}
-		}
+		var nodeP = cView.Utils.getNode(e.target,["p","new-post-to"]);
+		var idx = nodeP.feeds.indexOf(e.target.oValue);
+		if(idx != -1 ) nodeP.feeds.splice(idx,1);
 		e.target.parentNode.removeChild(e.target);
-		if((nodeP.feeds.length == 0)&&(nodeP.cNodes["new-direct-input"].value == ""))
+		var input = nodeP.getNode(["c","new-feed-input"],["c", "input"]);
+		if((nodeP.feeds.length == 0)
+		&&((input.value == "")||(typeof input.dest[input.value] === "undefined" ) ))
 			nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = true;
 	}
 	,"newPostAddFeed": function(e){
 		var cView = document.cView;
-		e.target.parentNode.cNodes["new-post-feed-select"].hidden = false;
+		var nodeP = e.target.getNode(["p", "new-post-to"]);
+		var input = nodeP.getNode(["c","new-feed-input"],["c", "input"]);
+		input.hidden = false;
+		var feed = input.value;
+		if((feed != "") && (typeof input.dest[feed] !== "undefined") 
+		&& (nodeP.feeds.indexOf(input.dest[feed]) == -1) ){
+			nodeP.feeds.push(input.dest[feed]);
+			var li = cView.gNodes["new-post-feed"].cloneAll();
+			li.innerHTML = input.dest[feed];
+			li.oValue = input.dest[feed];
+			nodeP.cNodes["new-post-feeds"].appendChild(li);
+			input.value = "";
+		}
 	}
 	,"newDirectAddFeed": function(e){
 		var cView = document.cView;
-		var nodeP = e.target.parentNode;
-		var option = nodeP.cNodes["new-direct-input"];
-		if (option.value == "") return;
-		if(typeof option.tip !== "undefined")cView.doc.body.removeChild(option.tip);
-		nodeP.feeds.push(option.value);
-		var li = cView.doc.createElement("li");
-		li.innerHTML = option.value;
-		li.className = "new-post-feed";
-		li.oValue = option.value;
-		li.idx = e.target.selectedIndex;
-		li.addEventListener("click",cView["Actions"]["newDirectRemoveFeed"]);
+		var nodeP = e.target.getNode(["p","new-post-to"]);
+		var input = nodeP.getNode(["c","new-feed-input"],["c", "input"]);
+		if (input.value == "") return;
+		var username = input.dest[input.value];
+		if (nodeP.feeds.indexOf(username) != -1 ) return;
+		if(typeof input.tip !== "undefined")
+			input.tip.parentNode.removeChild(input.tip);
+		nodeP.feeds.push(username);
+		var li = cView.gNodes["new-post-feed"].cloneAll();
+		li.innerHTML = username;
+		li.oValue = username;
 		nodeP.cNodes["new-post-feeds"].appendChild(li);
-		option.value = "";
+		input.value = "";
+		nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 	}
 	,"newPostSelect": function(e){
 		var cView = document.cView;
@@ -1262,7 +1296,9 @@ _Actions.prototype = {
 		context.api.reqResp(context.logins[host.cNodes["sr-id"].value].token
 			,host.cNodes["sr-user"].value
 			,action
-			,host.cNodes["sr-reqid"].value 
+			,host.cNodes["sr-reqid"].value
+			,host.cNodes["sr-type"].value
+			,context.gUsers[host.cNodes["sr-dest"].value].username
 		).then(function() {
 			host.parentNode.removeChild(host);
 			var nodeSR = cView.doc.getElementById("sr-info");

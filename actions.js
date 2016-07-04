@@ -1071,10 +1071,20 @@ _Actions.prototype = {
 		var user = context.gUsers[node.userid];
 		if(cView.doc.getElementById("userPopup" + context.domain+ node.userid))return;
 		var nodePopup = cView.Drawer.genUserPopup(node, user);
+		nodePopup.style.opacity = 0;
+		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
+		nodePopup.style.top = 0;
+		nodePopup.style.left = 0;
+		var width = nodePopup.offsetWidth;
 		nodePopup.style.top = e.pageY;
 		nodePopup.style.left = e.pageX;
-		nodePopup.style["z-index"] = 1;
-		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
+		console.log('e.target.pageY = '+ e.target.pageY+ "\ne.target.pageX = "+e.target.pageX);
+		if(nodePopup.offsetLeft + width > window.innerWidth){
+			nodePopup.style.left = "auto";
+			nodePopup.style.right = 0;
+		}
+		nodePopup.style["z-index"] = 2;
+		nodePopup.style.opacity = 1;
 	}
 	,"upClose": function(e){
 		var cView = document.cView;
@@ -1422,9 +1432,6 @@ _Actions.prototype = {
 		var nodeMore = cView.gNodes["adv-cmts"].cloneAll();
 		nodeMore.className = "user-popup"; 
 		nodeMore.user = node.user;
-		node.appendChild(nodeMore);
-		nodeMore.style.top =  e.target.offsetTop;
-		nodeMore.style.left = e.target.offsetLeft;
 		nodeMore.style["z-index"] = 2;
 		var nodeDisCmt = nodeMore.getElementsByClassName("disable-cmts")[0];
 		var nodeModCmt = nodeMore.getElementsByClassName("moderate-cmts")[0];
@@ -1439,6 +1446,21 @@ _Actions.prototype = {
 			nodeModCmt.innerHTML = "Stop moderating comments";
 			nodeModCmt.action = false;
 		}else nodeModCmt.action = true;
+
+		nodeMore.style.opacity = 0;
+		node.appendChild(nodeMore);
+		nodeMore.style.top = 0;
+		nodeMore.style.left = 0;
+		var width = nodeMore.offsetWidth;
+		nodeMore.style.top = e.target.offsetTop;
+		nodeMore.style.left = e.target.offsetLeft;
+		if(nodeMore.offsetLeft + width > window.innerWidth){
+			nodeMore.style.left = "auto";
+			nodeMore.style.right = 0;
+		}
+		if(nodeMore.offsetLeft < 0)
+			nodeMore.style.left = 0;
+		nodeMore.style.opacity = 1;
 
 	}
 	,"showDelete": function(e){

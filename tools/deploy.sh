@@ -46,7 +46,8 @@ for file in $(ls *.js *.css *.json); do
 done
 if [ $SRVPATH ]
 then
-	sed -i -e "s?s/?$SRVPATH/s/?" index.htm
+	SRVPATH=`echo $SRVPATH| sed -e 's%^/%%' -e 's%/$%%'`
+	sed -i -e "s?/s/?/$SRVPATH/s/?" index.htm
 fi
 if [ $backup ] 
 then

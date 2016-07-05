@@ -2,6 +2,7 @@
 	"FreeFeed":{ "api":"freefeed"
 		,"server":{
 			 "serverURL":"https://freefeed.net/v1/"
+			,"serverURLV2":"https://freefeed.net/v2/"
 			,"rtURL":"https://freefeed.net/socket.io/"
 		}
 		,"tokenPrefix":"freefeed_"
@@ -32,6 +33,7 @@
 	,"micropeppa":{ "api":"freefeed"
 		,"server":{
 			 "serverURL":"https://candy.freefeed.net/v1/"
+			 ,"serverURLV2":"https://candy.freefeed.net/v2/"
 			,"rtURL":"https://candy.freefeed.net/socket.io/"
 		}
 		,"tokenPrefix":"test_"

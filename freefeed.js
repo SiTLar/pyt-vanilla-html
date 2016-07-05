@@ -110,7 +110,47 @@ return function(config){
 				);
 			}
 			,"_getWhoami": function(token){
-				return utils.xhrReq( { "url":config.serverURL +"users/whoami" ,"token":token });
+				var whoami = utils.xhrReq( { 
+					"url":config.serverURL +"users/whoami" 
+					,"token":token 
+				});
+				var groupReqs = utils.xhrReq( { 
+					"url":config.serverURLV2 +"managedGroups" 
+					,"token":token 
+				});
+				return utils._Promise.all([whoami,groupReqs])
+				.then(function(res){
+					var whoami = JSON.parse(res[0]);
+					if (!Array.isArray(whoami.requests))
+						whoami.requests = new Array();
+					 if (!Array.isArray(whoami.users.subscriptionRequests))
+						whoami.users.subscriptionRequests = new Array();
+					whoami.requests.forEach(function(req){
+						req.type = "user";
+						if (whoami.users.subscriptionRequests.indexOf(req.id ) != -1){
+							req.dest = whoami.users.id;
+							req.src = req.id;
+						} else {
+							req.dest = req.id;
+							req.src = whoami.users.id;
+						}
+					});
+					var grps = JSON.parse(res[1]);
+					var grpReqs = new Array();
+					grps.forEach(function(grp){
+						grp.requests.forEach(function(req){
+							req.type = "group";
+							req.dest = grp.id;
+							res.src = req.id;
+							grpReqs.push(req);
+							whoami.users.subscriptionRequests.push(grp.id);
+						});
+					
+					});
+					whoami.requests = whoami.requests.concat(grpReqs); 
+					return whoami;
+				
+				});
 			}
 			,"login":function(username, password){
 				var data = "username="+utils.encodeURIForm(username)
@@ -181,12 +221,12 @@ return function(config){
 					}
 				);
 			}
-			,"reqResp": function(token, user, action){
+			,"reqResp": function(token, user, action, reqid, type, dest){
+				var req = (type == "user"? [type + "s", action, user]
+					:[type + "s", dest, action, user]
+				).join("/");
 				return utils.xhrReq(
-					{ 	"url": config.serverURL 
-							+ "users/" 
-							+ action + "/" 
-							+ user
+					{ 	"url": config.serverURL + req
 						,"token": token 
 						,"method": "post"
 					}

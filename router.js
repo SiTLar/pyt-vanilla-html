@@ -49,10 +49,10 @@ function undup (cView, posts){
 	//var hashes = posts.map(function(post){return hash.of(post.body);});
 	var duplicates = new Object();
 	for(var idx = 0; idx < posts.length-1; idx++){
-		if(posts[idx].body.length < 4) continue;
+		if(posts[idx].body.length < cView.minBody) continue;
 		for(var v = idx+1; v < posts.length; v++){
-			if(posts[v].body.length < 4) continue;
-			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>0.65){
+			if(posts[v].body.length < cView.minBody) continue;
+			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>cView.threshold){
 				var dups;
 				if (is(duplicates[idx]))dups = duplicates[idx];
 				else if (is(duplicates[v]))dups = duplicates[v];
@@ -67,7 +67,7 @@ function undup (cView, posts){
 		idx = parseInt(idx);
 		if (!is(duplicates[idx]))return;
 		posts.push(
-			genMetapost(
+			cView.Common.metapost(
 				Object.keys( duplicates[idx]).map(function(v){
 					return posts[parseInt(v)];
 				})
@@ -84,19 +84,7 @@ function undup (cView, posts){
 	return posts;
 
 }
-function genMetapost(posts){
-	var updatedAt = posts[0].updatedAt;
-	var data = new Array();
-	posts.forEach(function(post){
-		if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
-		data.push(post);
-	});
-	return {"type": "metapost"
-		,"updatedAt":updatedAt
-		,"data":data
-	};
-}
-define("./router",[],function(){
+define("./router",["./sidebar"],function(sidebar){
 	function _Router(v){
 		this.cView = v;
 	};
@@ -104,7 +92,9 @@ define("./router",[],function(){
 		"route":function(contexts, path){
 			var cView = this.cView;
 			if (cView.doc.title == "") cView.doc.title = "Feeds";
-			var arrPath = path.split("/");
+			if (path.indexOf("#") != -1 )
+				var arrPath = path.substr(0,path.indexOf("#")).split("/");
+			else var arrPath = path.split("/");
 			var step = gRoutes;
 			for(var idx = 0; idx < arrPath.length; idx++){
 				var txtStep = arrPath[idx];
@@ -123,7 +113,14 @@ define("./router",[],function(){
 				cView.doc.getElementById("loading-msg").innerHTML = "Loading content";
 				if((step.dest.length == 3)&& chk[step.dest[2]](contexts) )
 					return new cView.Utils._Promise.reject(chk[step.dest[2]](contexts));
-				return cView[step.dest[0]][step.dest[1]](contexts, path);
+				return cView[step.dest[0]][step.dest[1]](contexts, path)
+				.then( function(res){ 
+					cView.Drawer.populateSidebar(
+						cView.doc.getElementById("sidebar")
+						,sidebar
+					); 
+					return res;
+				});
 			}
 			return new cView.Utils._Promise.reject();
 		}
@@ -221,6 +218,17 @@ define("./router",[],function(){
 				body.cNodes["pagetitle"].innerHTML = path;
 				cView.doc.title = "@"+path.split("/")[0]+ "'s  " + path.split("/")[1] + " ("+context.domain+")";
 				fn.call(cView, res[0],context); 
+			});
+		}
+		,"groups":function(contexts, path){
+			var cView = this.cView;
+			return cView.Utils._Promise.all(Object.keys(contexts).map(function(domain){
+				return contexts[domain].p;
+			})).then(function(res){
+				var body = cView.doc.getElementById("container");
+				body.cNodes["pagetitle"].innerHTML = path;
+				cView.doc.title = "My groups";
+				cView.Drawer.drawGroups();
 			});
 		}
 		,"unmixed":function(contexts, path){

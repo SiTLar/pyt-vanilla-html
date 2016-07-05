@@ -1,11 +1,7 @@
 var gConfig = {
-  "serverURL":"https://freefeed.net/v1/"
-, "front":"https://myfeed.rocks/"
+ "front":"https://myfeed.rocks/"
 , "static":"https://myfeed.rocks/s/"
-, "rtURL":"https://freefeed.net/socket.io/"
 , "offset":"30"
-, "likesFold":4
-, "tokenPrefix":"test_"
 , "ga":"UA-0-1"
 , "leadDomain":"micropeppa"
 , "domains":["FreeFeed", "micropeppa", "Mokum"]

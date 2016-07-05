@@ -21,8 +21,8 @@ window.browserDoc = function(){
 	}
 	setLocalSettings();
 	cView.Common.loadLogins();
-	var body = cView.gNodes["container"].cloneAll();
-	cView.Utils.setChild(body, "controls",(
+	var body = cView.gNodes["main"].cloneAll();
+	cView.Utils.setChild(body.cNodes["container"], "controls",(
 		Object.keys(cView.contexts).some(function(domain){return cView.contexts[domain].token})?
 		cView.gNodes["controls-login"].cloneAll()
 		:cView.gNodes["controls-anon"].cloneAll()

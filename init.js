@@ -129,7 +129,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 		cView.Drawer = new _Drawer(cView);
 		cView.Actions = new _Actions(cView);
 		cView.Router = new _Router(cView);
-		cView.hasher = new _Hasher["_Minhash"]({"fnum":300});
+		cView.hasher = new _Hasher["_Minhash"]({"fnum":1000});
 		//cView.SecretActions = new _SecretActions(cView);
 		var Url2link =  require("./url2link");
 		cView.autolinker = new Url2link({ "truncate":25
@@ -160,6 +160,8 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			,"cTxt": null
 			,"subReqsCount":0
 			,"blocks": {"blockPosts":{},"blockComments":{}}
+			,"threshold":0.63
+			,"minBody": 8
 		}
 		,"Utils":Utils
 	};

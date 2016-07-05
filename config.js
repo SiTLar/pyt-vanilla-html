@@ -1,6 +1,7 @@
 var webpack = require("webpack");
 var process = require("process");
-var build = process.env["___BUILD___"] || "\"unstable\"";
+var build = process.env["___BUILD___"] || "unstable";
+build = "\"" + build + "\"";
 module.exports = {
 	"target":"web"
 	,"entry": "./browser.js"

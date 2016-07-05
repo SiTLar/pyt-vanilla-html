@@ -52,7 +52,7 @@ return [
 		,"content":function(cView){
 			var nodeBuild = cView.doc.createElement("div");
 			nodeBuild.innerHTML = "<span class=\"sb-info\">"+___BUILD___+"</span>";
-			return [ ["https://myfeed.rocks/about", "What's goinig on?"]
+			return [ ["https://myfeed.rocks/about", "What's going on?"]
 				,[gConfig.front+"as/FreeFeed/vanillaweb", "Feedback"]
 				,["https://freefeed.net/about","FreeFeed"]
 				,["https://myfeed.rocks/about#author","Author"]

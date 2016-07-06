@@ -168,8 +168,11 @@
 			,"e":{"click":["Actions","addSender"]} 
 		}
 		,{"c":"post-to"}
+		,{"c":"new-post-cont"
+		,"children":[
 			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
 			,{"c":"attachments"}
+		]}
 		,{"c":"edit-buttons"
 		,"children":[
 			{"c":"edit-buttons-upload","t":"input","p":{"type":"file" }, "e":{"change":["Actions","sendAttachment"] }}

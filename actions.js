@@ -72,7 +72,7 @@ _Actions.prototype = {
 	*/
 	,"newPost": function(e){
 		var cView = document.cView;
-		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
+		var textField = e.target.getNode(["p","new-post"],["c","new-post-cont"],["c","edit-txt-area"]);
 		if (textField.value == ""){
 			alert("you should provide some text");
 			return;
@@ -103,7 +103,6 @@ _Actions.prototype = {
 			arrPostsTo.forEach(function(postTo,idx){
 				res[idx].posts.domain = postTo.domain;
 				var context = cView.contexts[postTo.domain];
-				cView.updPostTo(context.gMe, true, context.gMe.users.username);
 				cView.Common.loadGlobals(res[idx], context);
 				var nodePostId = [
 					context.domain
@@ -116,6 +115,14 @@ _Actions.prototype = {
 						, cView.doc.posts.childNodes[0]
 					);
 			});
+			var login;
+			if (cView.leadContext.gMe)
+				login = cView.leadContext.gMe;
+			else Object.keys(cView.contexts).some(function(domain){
+					return login = cView.contexts[domain].gMe;
+				});
+			
+			cView.updPostTo(login, true);
 			cView.Drawer.regenHides();
 		} ,function(err){
 			textField.disabled = false;
@@ -622,7 +629,7 @@ _Actions.prototype = {
 			e.preventDefault();
 			e.stopImmediatePropagation();
 			//if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);
-			e.target.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].dispatchEvent(new Event("click"));
+			e.target.parentNode.parentNode.getElementsByClassName("edit-buttons-post")[0].dispatchEvent(new Event("click"));
 		}
 
 	}
@@ -824,6 +831,7 @@ _Actions.prototype = {
 		if((nodeP.destType == "posts") && (nodeP.feeds.indexOf(myFeed) == -1 )){
 			li = document.createElement("li");
 			li.innerHTML = "My Feed";
+			li.className = "ft-i";
 			nodeTip.cNodes["ft-list"].appendChild(li);
 			li.addEventListener("click",function(e){
 				var li = cView.gNodes["new-post-feed"].cloneAll();
@@ -831,7 +839,7 @@ _Actions.prototype = {
 				li.oValue = myFeed;
 				nodeP.cNodes["new-post-feeds"].appendChild(li);
 				nodeP.feeds.push(myFeed);
-				nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
+				nodeP.getNode(["p","new-post"], ["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 			});
 		}
 	
@@ -851,6 +859,8 @@ _Actions.prototype = {
 			nodeTip.cNodes["ft-list"].appendChild(li);
 		});
 		
+		if(typeof e.target.dest[txt] !== "undefined")
+			nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 	}
 	,"doBan": function(e){
 		var cView = document.cView;
@@ -1007,6 +1017,7 @@ _Actions.prototype = {
 		var nodeP = e.target.getNode(["p", "new-post-to"]);
 		var input = nodeP.getNode(["c","new-feed-input"],["c", "input"]);
 		input.hidden = false;
+		if (input.value == "") return;
 		var feed = input.value;
 		if((feed != "") && (typeof input.dest[feed] !== "undefined") 
 		&& (nodeP.feeds.indexOf(input.dest[feed]) == -1) ){
@@ -1017,6 +1028,7 @@ _Actions.prototype = {
 			nodeP.cNodes["new-post-feeds"].appendChild(li);
 			input.value = "";
 		}
+		nodeP.getNode(["p","new-post"],["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 	}
 	,"newDirectAddFeed": function(e){
 		var cView = document.cView;
@@ -1375,7 +1387,7 @@ _Actions.prototype = {
 	}
 	,"addSender": function(e){
 		var cView = document.cView;
-		if(document.getElementById("add_sender"))return
+		if(document.getElementById("add_sender"))return;
 		var nodePopup = cView.Drawer.genAddSender(function(id,context){
 			if ((typeof id !== "undefined")&&(e.target.ids.indexOf(id) == -1 ) ){
 				e.target.ids.push(id);
@@ -1400,7 +1412,7 @@ _Actions.prototype = {
 		ids.splice(ids.indexOf(e.target.parentNode.userid),1);
 		host.removeChild(e.target.parentNode);
 		var rmSenders = host.getElementsByClassName("rm-sender");
-		if(rmSenders.length = 1)rmSenders[0].hidden = true;
+		if(rmSenders.length == 1)rmSenders[0].hidden = true;
 		regenAttaches(host);
 	}
 	,"unfoldUserDet":function(e){

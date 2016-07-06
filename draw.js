@@ -937,6 +937,7 @@ _Drawer.prototype = {
 		var context = cView.contexts[login.domain];
 		var nodePostTo = cView.gNodes["new-post-to"].cloneAll();
 		var idx = 1;
+		var dest = ( init ? init : login.users.username );
 		if( Object.keys(cView.contexts).reduce(
 			function(prev,domain){ return prev.concat(cView.contexts[domain].ids);}
 			,[]
@@ -950,10 +951,10 @@ _Drawer.prototype = {
 
 		victim.cNodes["post-to"].appendChild(nodePostTo);
 		nodePostTo.feeds = new Array();
-		nodePostTo.feeds.push(init);
-		nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = init;
-		if(init != login.users.username)
-			nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = init;
+		nodePostTo.feeds.push(dest);
+		nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = dest;
+		if(dest != login.users.username)
+			nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = dest;
 		nodePostTo.destType = "posts";
 		nodePostTo.parentNode.isPrivate  = false;
 		nodePostTo.cNodes["new-feed-input"].addEventListener("focus", cView.Actions.newDirectInp, true);
@@ -1000,7 +1001,7 @@ _Drawer.prototype = {
 		var input = nodePostTo.getNode(["c","new-feed-input"],["c","input"]);
 		input.suggest = oSuggest;
 		input.dest = oDest;
-		cView.updPostTo = function (login,clean, init){
+		cView.updPostTo = function (login,clean){
 			if(clean == true) {
 				document.getElementsByClassName("add-sender")[0].ids = new Array();
 				var victims = document.getElementsByClassName("new-post-to");

@@ -125,10 +125,13 @@ RtHandler.prototype = {
 			nodePost.rtCtrl.bumpLater = function(){ that.bumpPost(nodePost);}
 		else {
 	 		var nodeParent = nodePost.parentNode;
+			if(nodeParent.className == "metapost"){
+				nodePost = nodeParent;
+				nodeParent = nodePost.parentNode;
+			}
 			var postInfo = cView.hiddenPosts.splice(nodePost.rawData.idx,1);
 			cView.hiddenPosts.unshift(postInfo[0]);
 			nodeParent.removeChild(nodePost);
-			if(nodePost.className == "metapost") nodePost = nodePost.parentNode;
 			that.insertSmooth(nodePost, nodeParent.firstChild);
 		}
 	}

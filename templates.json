@@ -161,12 +161,14 @@
 	]}
 	,{"c":"new-post"
 	,"children":[
-		{"c":"add-sender"
-			,"t":"a"
-			,"txt":"&#10133; Add sender"
-			,"p":{"hidden":true}
-			,"e":{"click":["Actions","addSender"]} 
-		}
+		{"c":"add-sender" ,"p":{"hidden":true}
+		,"children":[
+			{
+				"t":"a"
+				,"txt":"&#10133; Add sender"
+				,"e":{"click":["Actions","addSender"]}
+			}
+		]}
 		,{"c":"post-to"}
 		,{"c":"new-post-cont"
 		,"children":[

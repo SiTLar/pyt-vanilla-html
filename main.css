@@ -459,7 +459,7 @@ span.comment-controls::before {
 	cursor: pointer;
 	margin-top: 0.7em;
 }
-.new-post{
+.new-post-cont{
 	overflow: hidden;
 }
 .new-post-to{
@@ -541,9 +541,12 @@ span.comment-controls::before {
 	font-weight:bold;
 	margin-right:1em;
 }
-.add-sender{
-	float:right;
+
+.add-sender {
+	display: block;
 	margin-bottom: 1.5em;
+	text-align: right;
+	width: 100%;
 }
 .asu-info{
 	margin-left:3px;
@@ -717,7 +720,7 @@ span.comment-controls::before {
 		margin: 0;
 	}
 	.sidebar-left{
-		display:relative;
+		display:block;
 		width:20%;
 	}
 }
@@ -759,11 +762,12 @@ span.comment-controls::before {
 	font-size:small;
 }
 .show-sidebar{
-	position:fixed;
+	position:absolute;
 	top:3em;
-	opacity:0.8;
-	border-radius:.2em;
+	border-radius:.5em;
 	right:2em;
+	background-color: white;
+	padding: .2em .5em;
 }
 .show-sidebar *{
 	color:gray;
@@ -792,6 +796,6 @@ span.comment-controls::before {
 	text-align: center;
 }
 .sidebar-left{
-	float:left;
+	position:fixed;
 	height:100%;
 }

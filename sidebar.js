@@ -73,6 +73,7 @@ return [
 			var groups = new Array();
 			domains.forEach(function(domain){
 				var context = cView.contexts[domain];
+				var ids = new Object();
 				context.ids.forEach(function(id){
 					if (typeof  context.logins[id].data.users.subscriptions === "undefined")
 						return;
@@ -86,10 +87,13 @@ return [
 						if( (group.type == "group") && (sub.name == "Posts")){
 							if(typeof group.updatedAt === "undefined")
 								group.updatedAt = 0;
-							groups.push({ 
-								"link":group.link
-								,"time":Number(group.updatedAt)
-							});
+							if(ids[sub.user] !== true){
+								groups.push({ 
+									"link":group.link
+									,"time":Number(group.updatedAt)
+								});
+								ids[sub.user] = true;
+							}
 						}
 					});
 				});

@@ -24,7 +24,7 @@
 		,"children":[
 			{"t":"a","e":{"click":["Actions","toggleSidebar"]}
 			,"children":[
-				{"c":"fa fa-list-alt fa-4x","t":"i"}
+				{"c":"fa fa-bars fa-2x","t":"i"}
 			]}
 		]}
 	]}
@@ -162,15 +162,20 @@
 	]}
 	,{"c":"new-post"
 	,"children":[
-		{"c":"add-sender"
-			,"t":"a"
-			,"txt":"&#10133; Add sender"
-			,"p":{"hidden":true}
-			,"e":{"click":["Actions","addSender"]} 
-		}
+		{"c":"add-sender" ,"p":{"hidden":true}
+		,"children":[
+			{
+				"t":"a"
+				,"txt":"&#10133; Add sender"
+				,"e":{"click":["Actions","addSender"]}
+			}
+		]}
 		,{"c":"post-to"}
-		,{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
-		,{"c":"attachments"}
+		,{"c":"new-post-cont"
+		,"children":[
+			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
+			,{"c":"attachments"}
+		]}
 		,{"c":"edit-buttons"
 		,"children":[
 			{"c":"edit-buttons-upload","t":"input","p":{"type":"file" }, "e":{"change":["Actions","sendAttachment"] }}

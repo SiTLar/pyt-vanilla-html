@@ -164,7 +164,7 @@ define("./router",["./sidebar"],function(sidebar){
 					contexts[gConfig.leadDomain]:contexts[domains[0]];
 				mainContext.p.then(function () {
 					cView.Drawer.genPostTo(nodeAddPost
-						,mainContext.gMe.users.username
+						,null
 						,mainContext.gMe);
 				});
 				cView.Router.timeline(contexts, "home" ).then(resolve,reject);
@@ -179,7 +179,7 @@ define("./router",["./sidebar"],function(sidebar){
 				contexts[gConfig.leadDomain]:contexts[domains[0]];
 			mainContext.p.then(function () {
 				cView.Drawer.genPostTo(nodeAddPost
-					,mainContext.gMe.users.username
+					,null
 					,mainContext.gMe);
 			});
 			body.appendChild(nodeAddPost);
@@ -258,7 +258,7 @@ define("./router",["./sidebar"],function(sidebar){
 						body.replaceChild(nodeAddPost, nodeDummy);
 						cView.Drawer.genPostTo( 
 							nodeAddPost 
-							,feed.username 
+							,null
 							,context.logins[context.gUsers.byName[feed.username].id].data
 						);
 					}

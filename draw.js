@@ -1181,16 +1181,6 @@ _Drawer.prototype = {
 		}else host.parentNode.removeChild(host);
 		return count;
 	}
-	,"populateSidebar": function(nodeSidebar, elements){
-		var cView = this.cView;
-		elements.forEach(function(elmt){
-			if(!elmt.test(cView))return;
-			var node = cView.gNodes["sidebar-emt"].cloneAll();
-			node.cNodes["sb-emt-title"].innerHTML = elmt.title;
-			elmt.content(cView).forEach(node.cNodes["sb-emt-content"].appendChild, node.cNodes["sb-emt-content"]);
-			nodeSidebar.appendChild(node);
-		});
-	}
 };
 return _Drawer;
 });

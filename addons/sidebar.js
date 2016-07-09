@@ -1,6 +1,6 @@
 "use strict";
 
-define("./sidebar", [],function(){
+define("./addons/sidebar", [],function(){
 function isLogged (cView){
 	var domains = Object.keys(cView.contexts);
 	return domains.some(function(domain){
@@ -8,7 +8,17 @@ function isLogged (cView){
 	});
 }
 function always(){return true;};
-return [
+
+function populateSidebar(cView, nodeSidebar, elements){
+	elements.forEach(function(elmt){
+		if(!elmt.test(cView))return;
+		var node = cView.gNodes["sidebar-emt"].cloneAll();
+		node.cNodes["sb-emt-title"].innerHTML = elmt.title;
+		elmt.content(cView).forEach(node.cNodes["sb-emt-content"].appendChild, node.cNodes["sb-emt-content"]);
+		nodeSidebar.appendChild(node);
+	});
+}
+var payload = [
 	{"title":"Account"
 		,"content":function(cView){
 			if(!isLogged(cView)) return [cView.gNodes["sidebar-acc-anon"].cloneAll()]; 
@@ -117,4 +127,12 @@ return [
 		}
 		,"test":isLogged	
 	}
-]});
+];
+return function(cView){
+	populateSidebar(
+		cView
+		,cView.doc.getElementById("sidebar")
+		,payload
+	);
+}
+});

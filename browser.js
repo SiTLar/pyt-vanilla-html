@@ -2,6 +2,7 @@
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var matrix  = new Object();
 var Init = require("./init.js")
+var Addons = require("./addons.js");
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;
@@ -98,6 +99,7 @@ function postInit(){
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");
+	Addons.commit(cView);
 }
 window.srvDoc = function(){
 	var cView = document.cView;

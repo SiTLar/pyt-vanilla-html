@@ -193,7 +193,7 @@ _Actions.prototype = {
 		host.nodeInput = e.target;
 		host.nodeSpinner = nodeSpinner;
 		nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
-		e.target.parentNode.parentNode.cNodes["attachments"].appendChild(nodeSpinner);
+		e.target.getNode(["p","new-post"],["c", "new-post-cont"],["c","attachments"]).appendChild(nodeSpinner);
 		if (typeof host.files === "undefined") host.files = new Array(); 
 		if (typeof host.attachs === "undefined") host.attachs = new Object(); 
 		host.files.push({ 

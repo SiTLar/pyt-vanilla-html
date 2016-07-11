@@ -15,6 +15,7 @@
 		]
 		,"search":"http://search.pepyatka.com/s?q="
 		,"msg":"<a href=\"https://freefeed.net/about\">FreeFeed.net</a>"
+		,"urlSkip":[]
 	}		
 	,"Mokum":{ "api":"mokum"
 		,"server":{
@@ -29,6 +30,7 @@
 		]
 		,"search":"https://mokum.place/s?q="
 		,"msg":"<a href=\"https://mokum.place/about\">Mokum <small>.place</small></a><br/>Use an <a href=\"https://mokum.place/settings/apitokens\">API token</a> as password"
+		,"urlSkip":["system"]
 	}
 	,"micropeppa":{ "api":"freefeed"
 		,"server":{
@@ -45,5 +47,6 @@
 		]
 		,"search":"https://search.micropeppa.freefeed.net?s="
 		,"msg":"FrF test server"
+		,"urlSkip":[]
 	}		
 }

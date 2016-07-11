@@ -1388,15 +1388,17 @@ _Actions.prototype = {
 	,"addSender": function(e){
 		var cView = document.cView;
 		if(document.getElementById("add_sender"))return;
+		var host = e.target.getNode(["p","add-sender"]);
 		var nodePopup = cView.Drawer.genAddSender(function(id,context){
-			if ((typeof id !== "undefined")&&(e.target.ids.indexOf(id) == -1 ) ){
-				e.target.ids.push(id);
+			if ((typeof id !== "undefined")&&(host.ids.indexOf(id) == -1 ) ){
+				host.ids.push(id);
 				cView.updPostTo(context.logins[id].data,false, context.logins[id].data.users.username);
 				var victim = document.getElementById("add_sender");
 				victim.parentNode.removeChild(victim);
 				regenAttaches(document.getElementsByClassName("post-to")[0]);
 			}
 		});
+
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
 		nodePopup.className = "user-popup";
 		nodePopup.style.top = e.pageY;

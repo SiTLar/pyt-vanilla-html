@@ -129,10 +129,15 @@ var payload = [
 	}
 ];
 return function(cView){
-	populateSidebar(
-		cView
-		,cView.doc.getElementById("sidebar")
-		,payload
-	);
+	return{
+		"run":function(){
+			populateSidebar(
+				cView
+				,cView.doc.getElementById("sidebar")
+				,payload
+			);
+		}
+		,"settings":function(){return cView.doc.createElement("span");}
+	}
 }
 });

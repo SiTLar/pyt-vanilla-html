@@ -2,4 +2,5 @@
 config.json
 node_modules
 vanilla*.js
-css/*
+compact.css
+expanded.css

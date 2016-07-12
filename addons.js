@@ -14,7 +14,13 @@ define("./addons", [ "./utils"
 	addons.shift();
 return{
 	"commit":function(cView){
-		addons.forEach(function (addon){addon(cView)});
+		addons.forEach(function (addon){
+			addon = addon(cView);
+			addon.run();
+			cView.addons.all.push(addon);
+		});
+		cView.addons.ok();
+
 	}
 }
 });

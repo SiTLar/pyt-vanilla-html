@@ -130,6 +130,12 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 		cView.Actions = new _Actions(cView);
 		cView.Router = new _Router(cView);
 		cView.hasher = new _Hasher["_Minhash"]({"fnum":1000});
+		cView.addons = { 
+			"all":new Array()
+			,"ok": function(){}
+			,"pr": new Utils._Promise(function(resolve){setAddons(resolve);})
+		}
+		function setAddons(pr){cView.addons.ok = pr;};
 		//cView.SecretActions = new _SecretActions(cView);
 		var Url2link =  require("./url2link");
 		cView.autolinker = new Url2link({ "truncate":25

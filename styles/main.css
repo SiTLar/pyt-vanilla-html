@@ -614,7 +614,7 @@ span.comment-controls::before {
 	background-color:#fff;
 	border-bottom-style: none;
 }
-.sh-displ, .sh-acc{
+.sh-displ, .sh-acc, .sh-addons{
 	border-top-left-radius:1em;
 	border-style: solid;
 	background-color:#ddd;
@@ -689,4 +689,10 @@ span.comment-controls::before {
 }
 .edit-acc{
 	font-size:small;
+}
+.warning::before{
+	content:"\26a0";
+	background-color:gold;
+	font-size:x-large;
+	margin-right:0.3em;
 }

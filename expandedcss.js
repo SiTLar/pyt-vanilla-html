@@ -1,1 +1,1 @@
-require("./styles/expanded.css");
+require("./styles/_expanded.css");

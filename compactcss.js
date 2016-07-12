@@ -1,1 +1,1 @@
-require("./styles/compact.css");
+require("./styles/_compact.css");

@@ -611,7 +611,7 @@ span.comment-controls::before {
 	background-color: #fff;
 	border-bottom-style: none;
 }
-.sh-displ, .sh-acc {
+.sh-displ, .sh-acc, .sh-addons {
 	border-top-left-radius: 1em;
 	border-style: solid;
 	background-color: #ddd;
@@ -684,6 +684,12 @@ span.comment-controls::before {
 .edit-acc {
 	font-size: small;
 }
+.warning::before {
+	content: "\26A0";
+	background-color: gold;
+	font-size: x-large;
+	margin-right: 0.3em;
+}
 .sidebar {
 	float: right;
 	width: 10em;
@@ -727,14 +733,8 @@ span.comment-controls::before {
 	}
 }
 .sidebar-emt {
-	border: thin solid gray;
-	box-shadow: 0.1em 0.1em 0.2em black;
-	margin-bottom: 0.5em;
 	padding: 0.3em;
 	background: white;
-}
-.sidebar-emt div {
-	margin-bottom: .5em;
 }
 .sb-emt-title {
 	border-bottom: thin solid gray;
@@ -764,9 +764,22 @@ span.comment-controls::before {
 .like-comm {
 	margin: 0 .3em;
 	color: red;
+	display: inline-block;
 }
 .like-comm::after {
+	margin-left: .3em;
 	content: "\597D";
+}
+.sidebar-emt div {
+	margin-bottom: .5em;
+}
+.sidebar-emt {
+	border: thin solid gray;
+	box-shadow: 0.1em 0.1em 0.2em black;
+	margin-bottom: 0.5em;
+}
+.sb-emt-title {
+	border-bottom: thin solid gray;
 }
 .pagetitle {
 	border-top: 1px solid #ccc;

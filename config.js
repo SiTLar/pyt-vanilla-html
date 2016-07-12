@@ -17,7 +17,7 @@ module.exports = {
 		new webpack.DefinePlugin({
 		"___BUILD___":build
 		})
-		,new ExtractTextPlugin("css/[name].css")
+		,new ExtractTextPlugin("[name].css")
 	]
 	,"module": {
 		"loaders": [

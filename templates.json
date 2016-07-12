@@ -404,6 +404,10 @@
 		,"children":[
 			{"t":"a","txt":"Accounts","e":{"mousedown":["Actions","goSetAccounts"]}}
 		]}
+		,{"c":"sh-addons"
+		,"children":[
+			{"t":"a","txt":"Addons","e":{"mousedown":["Actions","goSetAddons"]}}
+		]}
 		,{"c":"sh-end"}
 	]}
 	,{"c":"accaunts-settings"
@@ -424,7 +428,7 @@
 		,{"c":"radio", "t":"label"
 		,"children":[
 			{"t":"input"
-				,"p":{"type":"radio", "value":"main.css", "name":"display_theme"}
+				,"p":{"type":"radio", "value":"expanded.css", "name":"display_theme"}
 				,"e":{"change":["Actions","setRadioOption"]}
 			}
 			,{"t":"span","txt":"Expanded"}
@@ -760,7 +764,7 @@
 		,"children":[
 			{"c":"fa fa-asterisk","t":"i"}
 		]}
-		,{"c":"lable","t":"a", "e":{"click":["Actions","showRefl"]}}
+		,{"c":"label","t":"a", "e":{"click":["Actions","showRefl"]}}
 		,{"c":"victim-id","t":"input", "p":{"type":"hidden"}}
 	]}
 	,{"c":"sidebar-emt"

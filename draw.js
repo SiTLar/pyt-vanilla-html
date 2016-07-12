@@ -156,6 +156,9 @@ _Drawer.prototype = {
 		case "accounts":
 			drawAcc();
 			break;
+		case "addons":
+			drawAddons();	
+			break;
 		case "display":
 		default:
 			drawDisp();
@@ -178,6 +181,16 @@ _Drawer.prototype = {
 				});
 			});
 		}
+		function drawAddons(){
+			nodeSettingsHead.cNodes["sh-addons"].className = "sh-selected";
+			cView.addons.pr.then(function(){
+				cView.addons.all.forEach(function(addon){
+					var node = addon.settings();
+					node.className = "post";
+					body.appendChild(node); 
+				});
+			});
+		}
 		function drawDisp(){
 			nodeSettingsHead.cNodes["sh-displ"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["display-settings"].cloneAll();
@@ -186,7 +199,7 @@ _Drawer.prototype = {
 			var mode = cView.localStorage.getItem("display_name");
 			if (mode == null) mode = "screen";
 			var theme = cView.localStorage.getItem("display_theme");
-			if (theme  == null) mode = "main.css";
+			if (theme  == null) mode = "expanded.css";
 			var nodes = nodeSettings.getElementsByTagName("input");
 			for(var idx = 0; idx < nodes.length; idx++){
 				var node = nodes[idx];
@@ -1156,7 +1169,7 @@ _Drawer.prototype = {
 		function genMenuItem(post){
 			var context = cView.contexts[post.domain];
 			var node = cView.gNodes["reflect-menu-item"].cloneAll();
-			node.cNodes["lable"].innerHTML = post.domain 
+			node.cNodes["label"].innerHTML = post.domain 
 				+ ": @" + context.gUsers[post.createdBy].username;
 			node.cNodes["victim-id"].value = context.domain + "-post-" + post.id;;
 			return node;

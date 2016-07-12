@@ -193,7 +193,7 @@ _Actions.prototype = {
 		host.nodeInput = e.target;
 		host.nodeSpinner = nodeSpinner;
 		nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
-		e.target.parentNode.parentNode.cNodes["attachments"].appendChild(nodeSpinner);
+		e.target.getNode(["p","new-post"],["c", "new-post-cont"],["c","attachments"]).appendChild(nodeSpinner);
 		if (typeof host.files === "undefined") host.files = new Array(); 
 		if (typeof host.attachs === "undefined") host.attachs = new Object(); 
 		host.files.push({ 
@@ -1389,15 +1389,17 @@ _Actions.prototype = {
 	,"addSender": function(e){
 		var cView = document.cView;
 		if(document.getElementById("add_sender"))return;
+		var host = e.target.getNode(["p","add-sender"]);
 		var nodePopup = cView.Drawer.genAddSender(function(id,context){
-			if ((typeof id !== "undefined")&&(e.target.ids.indexOf(id) == -1 ) ){
-				e.target.ids.push(id);
+			if ((typeof id !== "undefined")&&(host.ids.indexOf(id) == -1 ) ){
+				host.ids.push(id);
 				cView.updPostTo(context.logins[id].data,false, context.logins[id].data.users.username);
 				var victim = document.getElementById("add_sender");
 				victim.parentNode.removeChild(victim);
 				regenAttaches(document.getElementsByClassName("post-to")[0]);
 			}
 		});
+
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
 		nodePopup.className = "user-popup";
 		nodePopup.style.top = e.pageY;

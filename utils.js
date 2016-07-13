@@ -1,5 +1,5 @@
 "use strinct";
-define([], function(){
+define("./utils", [], function(){
 function args2Arr(){
 	//.length is just an integer, this doesn't leak
 	//the arguments object itself
@@ -87,7 +87,7 @@ _Promise.prototype = {
 			this.rejects.pop()(this.error);
 	}
 }
-function xhrReq (o){
+function xhr (o){
 	return new _Promise(function( resolve, reject ){
 		var method = typeof o.method  !== "undefined"? o.method : "get";
 		var oReq = new XMLHttpRequest();
@@ -148,7 +148,7 @@ return {
 	}
 	/**********************************************/
 	,"args2Arr": function(){return args2Arr.apply(this, arguments);}
-	,"xhrReq": xhrReq
+	,"xhr": xhr
 	,"err2html":function(err) {
 		var data = JSON.parse(err);
 		return Object.keys(data)

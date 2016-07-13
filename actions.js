@@ -754,7 +754,7 @@ _Actions.prototype = {
 		var id = nodePost.id;
 		var spUnfold = e.target.parentNode.appendChild(cView.doc.createElement("i"));
 		spUnfold.className = "fa fa-spinner fa-pulse";
-		context.api.getPost(context.token
+		return context.api.getPost(context.token
 			, context.gUsers[nodePost.rawData.createdBy].username
 				+ "/" + nodePost.rawData.id 
 			, ["comments"]
@@ -781,6 +781,7 @@ _Actions.prototype = {
 			}
 			cView.Drawer.addLastCmtButton(nodePB);
 			nodePB.cNodes["comments"].cnt = postUpd.comments.length;
+			return postUpd;
 
 		},function(res){
 			spUnfold.parentNode.removeChild(spUnfold);
@@ -793,8 +794,9 @@ _Actions.prototype = {
 	}
 	,"calcCmtTime": function(e){
 		var cView = document.cView;
-		if (typeof(e.target.parentNode.parentNode.parentNode.createdAt) !== "undefined" ){
-			var absUxTime = e.target.getNode(["p","comment"]).createdAt*1;
+		var nodeCmt = cView.Utils.getNode(e.target,["p","comment"]);
+		if (typeof(nodeCmt.createdAt) !== "undefined" ){
+			var absUxTime = nodeCmt.createdAt*1;
 			var txtdate = new Date(absUxTime ).toString();
 
 			e.target.title =  cView.Utils.relative_time(absUxTime) + " ("+ txtdate.slice(0, txtdate.indexOf("(")).trim()+ ")";
@@ -1090,7 +1092,6 @@ _Actions.prototype = {
 		var width = nodePopup.offsetWidth;
 		nodePopup.style.top = e.pageY;
 		nodePopup.style.left = e.pageX;
-		console.log('e.target.pageY = '+ e.target.pageY+ "\ne.target.pageX = "+e.target.pageX);
 		if(nodePopup.offsetLeft + width > window.innerWidth){
 			nodePopup.style.left = "auto";
 			nodePopup.style.right = 0;
@@ -1513,6 +1514,9 @@ _Actions.prototype = {
 	,"goSetAccounts": function(e){
 		e.target.href = gConfig.front+"settings/accounts";
 	}
+	,"goSetAddons": function(e){
+		e.target.href = gConfig.front+"settings/addons";
+	}
 	,"goSetDisplay": function(e){
 		e.target.href = gConfig.front+"settings/display";
 	}
@@ -1541,6 +1545,12 @@ _Actions.prototype = {
 		sidebar.classList.toggle("sidebar-h");
 		showSb.classList.toggle("hidden");
 	}
+	,"setChkboxOption":function(e){
+		var cView = document.cView;
+
+		cView.localStorage.setItem(e.target.value, e.target.checked );
+	}
+
 };
 return _Actions;
 });

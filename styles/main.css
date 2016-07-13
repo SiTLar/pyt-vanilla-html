@@ -72,12 +72,6 @@ a:hover {
 h1{
 	margin-bottom: 0.3em;
 }
-.pagetitle {
-	border-top: 1px solid #ccc;
-	margin-top: 0;
-	padding-top: 0.67em;
-		
-}
 .friends-tip{
 	position:absolute;
 }
@@ -176,13 +170,6 @@ h1{
 }
 .posts{
 }
-.post {
-	margin-bottom: 3.5em;
-	margin-top: 2em;
-	transition-property: height ;
-	transition-duration: 5s;
-	background-color:white;
-}
 .post:after {
 	content: '';
 	display: block;
@@ -197,12 +184,6 @@ h1{
 .title a{
 	color: #000088;
 	font-weight: bold;
-}
-.post-body {
-	color: #666;
-	line-height: 19px;
-	padding-bottom:1em;
-	margin-bottom: 1em;
 }
 @media (min-width: 400px) {
 	.post-body {
@@ -542,12 +523,6 @@ span.comment-controls::before {
 	margin-right:1em;
 }
 
-.add-sender {
-	display: block;
-	margin-bottom: 1.5em;
-	text-align: right;
-	width: 100%;
-}
 .asu-info{
 	margin-left:3px;
 	margin-bottom: 0.5em;
@@ -639,7 +614,7 @@ span.comment-controls::before {
 	background-color:#fff;
 	border-bottom-style: none;
 }
-.sh-displ, .sh-acc{
+.sh-displ, .sh-acc, .sh-addons{
 	border-top-left-radius:1em;
 	border-style: solid;
 	background-color:#ddd;
@@ -689,95 +664,18 @@ span.comment-controls::before {
 .metapost {
 	margin-top: 2em;
 }
-.sidebar {
-	float:right;
-	width: 10em;
-	top:0;
-	right:0;
-	margin: 0 .5em;
-	background-color:white;
-	border-radius:.2em;
-}
 @media (max-width: 35em) {
-	.sidebar{
-		position:fixed;
-		overflow:auto;
-		float:none;
-		z-index:2;
-		width:100%;
-		height:100%;
-		background: rgba(200, 200,200, 0.8);
-
-	}
-	.sidebar-emt {
-		margin: 0 0.1em 0.3em auto;
-		width:80%
-	}
-	.sidebar-h{
-		display:none;
-	}
 	.container{
 		margin: 0;
 	}
-	.sidebar-left{
-		display:block;
-		width:20%;
-	}
 }
 
-@media (min-width: 35em) {
-	.show-sidebar{
-		display:none;
-	}
-	.hide-sidebar{
-		display:none;
-	}
-	.sidebar-left{
-		display:none;
-	}
-}
 .main{
 	margin: 0 auto;
 	width: 100%;
 	position: relative;
 	max-width: 62em;
 	overflow:hidden;
-}
-
-.sidebar-emt {
-	border: thin solid gray;
-	box-shadow: 0.1em 0.1em 0.2em black;
-	margin-bottom: 0.5em;
-	padding: 0.3em;
-	background: white;
-}
-.sidebar-emt div {
-	margin-bottom:.5em;
-}
-.sb-emt-title {
-	border-bottom: thin solid gray;
-}
-.sb-info{
-	color:gray;
-	font-size:small;
-}
-.show-sidebar{
-	position:absolute;
-	top:3em;
-	border-radius:.5em;
-	right:2em;
-	background-color: white;
-	padding: .2em .5em;
-}
-.show-sidebar *{
-	color:gray;
-}
-.hide-sidebar *{
-	float:right;
-}
-.hide-sidebar{
-	border-radius:.2em;
-	height:2em;
 }
 .hidden{
 	display:none;
@@ -792,10 +690,12 @@ span.comment-controls::before {
 .edit-acc{
 	font-size:small;
 }
-.sidebar-acc-anon {
-	text-align: center;
+.warning::before{
+	content:"\26a0";
+	background-color:gold;
+	font-size:x-large;
+	margin-right:0.3em;
 }
-.sidebar-left{
-	position:fixed;
-	height:100%;
+.inline-control{
+	display:inline-block;
 }

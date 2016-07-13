@@ -2,6 +2,7 @@
 var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noDecipher":{},nCmts:0,"posts":[] };
 var matrix  = new Object();
 var Init = require("./init.js")
+var Addons = require("./addons.js");
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;
@@ -98,6 +99,7 @@ function postInit(){
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");
+	Addons.commit(cView);
 }
 window.srvDoc = function(){
 	var cView = document.cView;
@@ -223,7 +225,15 @@ function setLocalSettings(){
 	var cView = document.cView;
 	cView.mode = cView.localStorage.getItem("display_name");
 	var cssTheme = cView.localStorage.getItem("display_theme");
-	if(cssTheme) document.getElementById("main-stylesheet").href = gConfig.static + cssTheme;
+	if (cssTheme == "main.css") {
+		cssTheme = "expanded.css";
+		cView.localStorage.setItem("display_theme", cssTheme)
+	}
+	if(cssTheme) 
+		document.getElementById("main-stylesheet").href = gConfig.static 
+		+ cssTheme 
+		+ "?build=" 
+		+ encodeURIComponent(___BUILD___); 
 	 
 	if(cView.localStorage.getItem("show_link_preview") == "1"){
 		var nodeEmScript =  document.createElement("script");

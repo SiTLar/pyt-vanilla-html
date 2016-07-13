@@ -3,7 +3,7 @@ define(["./utils", "./freefeed_rt"],function(utils, RtUpdate ){
 
 return function(config){
 	function get(token, url){
-		return 	utils.xhrReq( {"url":config.serverURL +url ,"token":token });
+		return 	utils.xhr( {"url":config.serverURL +url ,"token":token });
 	}
 	return{
 		"protocol":{
@@ -28,7 +28,7 @@ return function(config){
 				return get(token, "posts/"+ id + suffix);
 			}
 			,"sendPost": function(token, postdata){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "posts"
 						,"token": token 
 						,"method": "post"
@@ -38,7 +38,7 @@ return function(config){
 				);
 			}
 			,"editPost": function(token, id, postdata){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "posts/"+id
 						,"token": token 
 						,"method": "put"
@@ -48,7 +48,7 @@ return function(config){
 				);
 			}
 			,"deletePost": function(token, id){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "posts/"+id
 						,"token": token 
 						,"method": "delete"
@@ -56,7 +56,7 @@ return function(config){
 				);
 			}
 			,"switchCmts": function(token, id, action){
-				return utils.xhrReq(
+				return utils.xhr(
 					{	"url":config.serverURL 
 							+"posts/" + post.id 
 							+ (action?"/disableComments":"/enableComments")
@@ -66,7 +66,7 @@ return function(config){
 				);	
 			}
 			,"sendHide": function(token, id, action){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL 
 							+ "posts/" + id + "/" 
 							+ (action?"hide":"unhide")
@@ -78,7 +78,7 @@ return function(config){
 			,"getUser": function(token, req) {return get(token, "users/" + req );}
 			,"getSubs": function(token, req) {return get(token, "users/" + req );}
 			,"doBan": function(token, username, action){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL 
 							+ "users/" + username + "/" 
 							+ (action?"ban":"unban")
@@ -89,7 +89,7 @@ return function(config){
 			}
 			,"get": function(token, timeline) {return get(token, timeline);}
 			,"updProfile" : function(token, id, data){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "users/" + id
 						,"token": token 
 						,"method": "put"
@@ -101,7 +101,7 @@ return function(config){
 			,"chngAvatar": function (token, file){
 				var data = new FormData();
 				data.append( "file",file) ;
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "users/updateProfilePicture"
 						,"token": token 
 						,"method": "post"
@@ -110,11 +110,11 @@ return function(config){
 				);
 			}
 			,"_getWhoami": function(token){
-				var whoami = utils.xhrReq( { 
+				var whoami = utils.xhr( { 
 					"url":config.serverURL +"users/whoami" 
 					,"token":token 
 				});
-				var groupReqs = utils.xhrReq( { 
+				var groupReqs = utils.xhr( { 
 					"url":config.serverURLV2 +"managedGroups" 
 					,"token":token 
 				});
@@ -155,7 +155,7 @@ return function(config){
 			,"login":function(username, password){
 				var data = "username="+utils.encodeURIForm(username)
 				+ "&password="+utils.encodeURIForm(password);
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "session"
 						,"headers":{"Content-type":"application/x-www-form-urlencoded"}
 						,"method": "post"
@@ -164,7 +164,7 @@ return function(config){
 				);
 			}
 			,"sendLike": function(token, id, action){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL 
 							+ "posts/" + id + "/" 
 							+ (action?"like":"unlike")  
@@ -174,7 +174,7 @@ return function(config){
 				);
 			}
 			,"sendComment": function(token, postdata){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "comments"
 						,"token": token 
 						,"method": "post"
@@ -184,7 +184,7 @@ return function(config){
 				);
 			}
 			,"editComment": function(token, id, postdata){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "comments/"+id
 						,"token": token 
 						,"method": "put"
@@ -194,7 +194,7 @@ return function(config){
 				);
 			}
 			,"deleteComment": function(token, id){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "comments/"+id
 						,"token": token 
 						,"method": "delete"
@@ -202,7 +202,7 @@ return function(config){
 				);
 			}
 			,"reqSub": function(token,username ){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL 
 							+ "users/" + username 
 							+ "/sendRequest/" 
@@ -212,7 +212,7 @@ return function(config){
 				);
 			}
 			,"evtSub": function(token,username, subscribed ){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL 
 							+ "users/" + username 
 							+ (subscribed?"/unsubscribe":"/subscribe") 
@@ -225,7 +225,7 @@ return function(config){
 				var req = (type == "user"? [type + "s", action, user]
 					:[type + "s", dest, action, user]
 				).join("/");
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + req
 						,"token": token 
 						,"method": "post"
@@ -236,7 +236,7 @@ return function(config){
 				var data = new FormData();
 				data.append( "name", "attachment[file]");
 				data.append( "attachment[file]",file, filename);
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverURL + "attachments"
 						,"token": token 
 						,"method": "post"

@@ -4,14 +4,14 @@ define(["./utils","./mokum_rt"],function(utils, RtUpdate){
 return function(config){
 	function get(token, url, pagenum){
 		var skip =((typeof pagenum !== "undefined")&& (pagenum != 1)) ?("?page=" + pagenum):"";
-		return 	utils.xhrReq( {
+		return 	utils.xhr( {
 				"url":config.serverURL +url+".json" + skip
 				,"headers":{"X-API-Token":token}
 			}
 		);
 	}
 	function getAPI(token, req){
-		return utils.xhrReq( 
+		return utils.xhr( 
 			{ 	"url":config.serverApiURL + req+".json" 
 				,"headers":{"X-API-Token":token}
 			}
@@ -199,7 +199,7 @@ return function(config){
 				if(type == "directs") prefix = "direct:";
 				dests.forEach(function(dest){ post.timelines.push(prefix+dest); });
 				var data  = JSON.stringify({"post": post});
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL + "posts.json"
 						,"method": "post"
 						,"data": data
@@ -215,7 +215,7 @@ return function(config){
 			}
 			,"editPost": function(token, id, postdata){
 				var data = JSON.stringify({"post":{"text":postdata.post.body }});
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL + "posts/"+id+".json"
 						,"method": "PATCH"
 						,"data": data
@@ -226,7 +226,7 @@ return function(config){
 				).then(function(inp){return {"entries":JSON.parse(inp)};});
 			}
 			,"deletePost": function(token, id){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL + "posts/"+id+".json"
 						,"headers":{"X-API-Token":token}
 						,"method": "DELETE"
@@ -235,7 +235,7 @@ return function(config){
 			}
 			,"switchCmts": function(token, id, action){
 				var data = JSON.stringify({"post":{"comments_disable":action?1:0}});
-				return utils.xhrReq(
+				return utils.xhr(
 					{	"url":config.serverApiURL +"posts/" + id + ".json"
 						,"headers":{"X-API-Token":token
 							,"Content-Type": "application/json"
@@ -246,7 +246,7 @@ return function(config){
 				);	
 			}
 			,"sendHide": function(token, id, action){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL 
 							+ "posts/" 
 							+ id 
@@ -260,7 +260,7 @@ return function(config){
 			}
 			,"getUser": getUser 
 			,"doBan": function(token, username, action){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL 
 							+ "users/" 
 							+ username 
@@ -281,7 +281,7 @@ return function(config){
 
 				};
 				var data = JSON.stringify({"user":user});
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL + "users/" + id + ".json"
 						,"method": "PATCH"
 						,"data": data
@@ -294,7 +294,7 @@ return function(config){
 			,"chngAvatar": function (token, file){
 				var data = new FormData();
 				data.append( "avatar[avatar]",file) ;
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL + "avatars"
 						,"headers":{"X-API-Token":token
 							,"Accept": "application/json, text/javascript, ?/?; q=0.01" 
@@ -307,7 +307,7 @@ return function(config){
 			,"_getWhoami":getWhoami
 			,"login":function(username, token){
 				return new utils._Promise(function(resolve,reject){
-					utils.xhrReq( 
+					utils.xhr( 
 						{ 	"url":config.serverApiURL +"whoami.json" 
 							,"headers":{"X-API-Token":token}
 						}
@@ -322,7 +322,7 @@ return function(config){
 				});
 			}
 			,"sendLike": function(token, id, action){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL + "posts/" + id + "/likes.json" 
 						,"headers":{"X-API-Token":token}
 						,"method": action?"post":"DELETE"
@@ -331,7 +331,7 @@ return function(config){
 			}
 			,"sendComment": function(token, postdata){
 				var data = JSON.stringify({"comment":{"text":postdata.comment.body}});
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL 
 							+ "posts/" 
 							+ postdata.comment.postId 
@@ -346,7 +346,7 @@ return function(config){
 			}
 			,"editComment": function(token, id, postdata, postId){
 				var data = JSON.stringify({"comment":{"text":postdata.comment.body}});
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL 
 							+ "posts/" 
 							+ postId 
@@ -360,7 +360,7 @@ return function(config){
 				).then(function(res){return{"comments":JSON.parse(res)}});
 			}
 			,"deleteComment": function(token, id, postId){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL
 							+ "posts/" 
 							+ postId 
@@ -371,7 +371,7 @@ return function(config){
 				);
 			}
 			,"reqSub": function(token,username, type ){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": [config.serverApiURL, 
 							,type
 							,"s/"
@@ -383,7 +383,7 @@ return function(config){
 				);
 			}
 			,"evtSub": function(token,username, subscribed,type ){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": [config.serverApiURL, 
 							,type
 							,"s/"
@@ -395,7 +395,7 @@ return function(config){
 				).then(function(){return getWhoami(token);});
 			}
 			,"reqResp": function(token, user, action, id){
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL 
 							+ "subscription_requests/"
 							+ id
@@ -411,7 +411,7 @@ return function(config){
 
 				data.append( "X-API-Token", token);
 				data.append( "attachment[attachment][]",file, filename);
-				return utils.xhrReq(
+				return utils.xhr(
 					{ 	"url": config.serverApiURL + "attachments.json"
 						,"method": "post"
 						,"data": data
@@ -424,7 +424,7 @@ return function(config){
 					return new utils._Promise(function(resolve,reject){
 						var pulling = setInterval(pull,1000);
 						function pull(){ 
-							utils.xhrReq({ 	
+							utils.xhr({ 	
 								"url": config.serverApiURL 
 									+ "attachments.json" 
 								,"headers":{"X-API-Token":token}

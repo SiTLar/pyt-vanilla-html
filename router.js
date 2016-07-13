@@ -84,7 +84,7 @@ function undup (cView, posts){
 	return posts;
 
 }
-define("./router",["./sidebar"],function(sidebar){
+define("./router",[],function(){
 	function _Router(v){
 		this.cView = v;
 	};
@@ -113,14 +113,7 @@ define("./router",["./sidebar"],function(sidebar){
 				cView.doc.getElementById("loading-msg").innerHTML = "Loading content";
 				if((step.dest.length == 3)&& chk[step.dest[2]](contexts) )
 					return new cView.Utils._Promise.reject(chk[step.dest[2]](contexts));
-				return cView[step.dest[0]][step.dest[1]](contexts, path)
-				.then( function(res){ 
-					cView.Drawer.populateSidebar(
-						cView.doc.getElementById("sidebar")
-						,sidebar
-					); 
-					return res;
-				});
+				return cView[step.dest[0]][step.dest[1]](contexts, path);
 			}
 			return new cView.Utils._Promise.reject();
 		}

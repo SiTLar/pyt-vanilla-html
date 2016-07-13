@@ -1,0 +1,28 @@
+@import "main.css";
+@import "expanded_addons.css";
+.pagetitle {
+	border-top: 1px solid #ccc;
+	margin-top: 0;
+	padding-top: 0.67em;
+		
+}
+
+.post {
+	margin-bottom: 3.5em;
+	margin-top: 2em;
+	transition-property: height ;
+	transition-duration: 5s;
+	background-color:white;
+}
+.post-body {
+	color: #666;
+	line-height: 19px;
+	padding-bottom:1em;
+	margin-bottom: 1em;
+}
+.add-sender {
+	display: block;
+	margin-bottom: 1.5em;
+	text-align: right;
+	width: 100%;
+}

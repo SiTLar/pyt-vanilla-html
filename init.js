@@ -173,7 +173,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 	};
 	function init(doc){
 		var cView = new _cView(doc);
-		cView.Common.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.className] = node; });
+		cView.Common.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.classList[0]] = node; });
 		cView.Common.setIcon("throbber-16.gif");
 		return cView;
 	}

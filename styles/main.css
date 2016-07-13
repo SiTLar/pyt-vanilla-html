@@ -696,3 +696,6 @@ span.comment-controls::before {
 	font-size:x-large;
 	margin-right:0.3em;
 }
+.inline-control{
+	display:inline-block;
+}

@@ -1545,6 +1545,12 @@ _Actions.prototype = {
 		sidebar.classList.toggle("sidebar-h");
 		showSb.classList.toggle("hidden");
 	}
+	,"setChkboxOption":function(e){
+		var cView = document.cView;
+
+		cView.localStorage.setItem(e.target.value, e.target.checked );
+	}
+
 };
 return _Actions;
 });

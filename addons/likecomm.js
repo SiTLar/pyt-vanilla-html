@@ -57,7 +57,7 @@ function apply (likeInfo){
 		,span
 	);
 	if(!auth) return;
-	nodeControl.cNodes["span"].hidden = false;
+	nodeControl.cNodes["spacer"].hidden = false;
 	nodeControl.cNodes["action"].action = (likeInfo.my_likes == "0");
 	nodeControl.cNodes["action"].innerHTML =  (likeInfo.my_likes == "0"?"like":"un-like");
 };
@@ -82,7 +82,7 @@ function loadLikes(arrCmts){
 		node.cNodes["comment-body"].appendChild(nodeControl );
 		node.cNodes["comment-body"].cNodes["like-comm"] = nodeControl;
 		if(!auth) return;
-		nodeControl.cNodes["span"].hidden = false;
+		nodeControl.cNodes["spacer"].hidden = false;
 		nodeControl.cNodes["action"].action = true;
 		nodeControl.cNodes["action"].innerHTML =  "like";
 	});

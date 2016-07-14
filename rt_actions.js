@@ -116,7 +116,11 @@ RtHandler.prototype = {
 			});
 			if (!nodePost.rawData.isHidden)that.insertSmooth(nodePost, document.posts.firstChild);
 		}
+		var evt = new CustomEvent("newNode", {"detail":nodePost});
+		window.dispatchEvent(evt);
+
 	}
+
 	,bumpPost: function(nodePost){
 		var cView = document.cView;
 		if(cView.skip)return;
@@ -159,7 +163,7 @@ RtHandler.prototype = {
 				nodePost.rawData.comments = new Array();
 			nodePost.rawData.comments.push(data.comments.id);
 			if(!document.getElementById(commentId))
-				nodePost.cNodes["post-body"].cNodes["comments"].appendChild(
+				var nodeComment = nodePost.cNodes["post-body"].cNodes["comments"].appendChild(
 					cView.Drawer.genComment.call(context, data.comments)
 				);
 			if (that.bump && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown) < Date.now())){
@@ -168,6 +172,8 @@ RtHandler.prototype = {
 			}
 			nodePost.rawData.updatedAt = Date.now();
 			cView.Common.markMetaMenu(nodePost);
+			var evt = new CustomEvent("newNode", {"detail":nodeComment});
+			window.dispatchEvent(evt);
 		}else that.injectPost(data.comments.postId, context);
 	}
 	,"comment:update": function(data, context){

@@ -7,7 +7,7 @@ var nodes = new Object();
 var template = [
 {"c":"settings"
 , "children":[
-	{"t":"h1", "txt":"&#22909; Like commetns"}
+	{"t":"h1", "txt":"&#22909; Like comments"}
 	,{"t":"label"
 	,"children":[
 		{"t":"input" ,"p":{"type":"checkbox","name":"auth", "value":"addons-likecomm-auth"}, "e":{"click":["Actions","setChkboxOption"]} }
@@ -40,17 +40,30 @@ var handlers = {
 		});
 	}
 }
-function apply (likeInfo){
+function setControls(node){
+	var nodeControl = nodes["control"].cloneAll();
+	node.cNodes["comment-body"].appendChild(nodeControl );
+	node.cNodes["comment-body"].cNodes["like-comm"] = nodeControl;
+	if(auth){ 
+		nodeControl.cNodes["spacer"].hidden = false;
+		nodeControl.cNodes["action"].action = true;
+		nodeControl.cNodes["action"].innerHTML =  "like";
+	}
+	return nodeControl;
+
+}
+function apply (likeInfo, node){
 	var id = likeInfo.id;
-	var node = cView.doc.getElementById([domain,"cmt",id].join("-"));
+	if(typeof node === "undefined")
+		node = cView.doc.getElementById([domain,"cmt",id].join("-"));
 	if(!node) return;
-		var span = cView.doc.createElement("span");
-		var nodeControl = node.getNode( ["c","comment-body"] ,["c","like-comm"]);
+	var span = cView.doc.createElement("span");
+	var nodeControl = node.getNode( ["c","comment-body"] ,["c","like-comm"]);
+	if (!nodeControl) nodeControl= setControls(node);
 	if(likeInfo.likes){
 		span.className = "like-comm";
 		span.innerHTML = likeInfo.likes;
 	}	
-	node.cNodes["comment-body"].appendChild(span);
 	cView.Utils.setChild( 
 		nodeControl
 		,"display"
@@ -61,41 +74,87 @@ function apply (likeInfo){
 	nodeControl.cNodes["action"].action = (likeInfo.my_likes == "0");
 	nodeControl.cNodes["action"].innerHTML =  (likeInfo.my_likes == "0"?"like":"un-like");
 };
+function evtNewNode(e){
+	var node = e.detail;
+	if(!node)return;
+	if(node.classList[0] == "comment"){
+		if (node.domain != domain)return;
+		var options = {
+			"url":srvUrl + "all-likes?updated_after=0"
+			,"data":JSON.stringify([node.rawId])
+			,"method":"post"
+		};
+		if(auth) options.token = cView.contexts[domain].token;
+		utils.xhr(options).then(function(res){
+			res = JSON.parse(res);
+			if((res.status != "error") && res.data.length)
+				apply(res.data[0],node);
+		});
+		return;
+	}
+	if (node.rawData.domain != domain)return;
+	var comments = node.getElementsByClassName("comment");
+	var byId = new Object();
+	for (var idx = 0; idx < comments.length; idx++ )
+		if(typeof comments[idx].rawId !== "undefined")
+			byId[comments[idx].rawId] = comments[idx];
+	var ids = Object.keys(byId);
+	while(ids.length){
+		var options = {
+			"url":srvUrl + "all-likes?updated_after=0"
+			,"data":JSON.stringify(ids.splice(0,100))
+			,"method":"post"
+		};
+		if(auth) options.token = cView.contexts[domain].token;
+		utils.xhr(options).then(function(res){
+			res = JSON.parse(res);
+			if(res.status != "error") 
+				res.data.forEach(function(likeInfo){
+					apply(likeInfo,byId[likeInfo.id]);
+				});
+		});
+		return;
+	}
+	
+
+
+}
 function initLikes(){
 	cView.Common.genNodes(template).forEach(function(node){
 		nodes[node.classList[0]] = node;
 	});
 	cView["addons-like-comm"] = handlers;
 	if(typeof cView.contexts[domain] === "undefined") return;
-	var arrCmts = Object.keys(cView.contexts[domain].gComments);
 	auth = JSON.parse(cView.localStorage.getItem("addons-likecomm-auth"));
+	var genCmt = cView.Drawer.genComment;
+	cView.Drawer.genComment = function(comment){
+		var nodeComment = genCmt.call(this, comment);
+		if (this.domain == domain) setControls(nodeComment);
+		return nodeComment;
+	}
 	if (!cView.contexts[domain].gMe) auth = false;
+	var arrCmts = Object.keys(cView.contexts[domain].gComments);
 	if (!arrCmts.length) return;
+	arrCmts.forEach(function(id){
+		node = cView.doc.getElementById([domain,"cmt",id].join("-"));
+		if(node)setControls( node);
+	});
 	loadLikes(arrCmts);
 
 }
 function loadLikes(arrCmts){
-	arrCmts.forEach(function(id){
-		var node = cView.doc.getElementById([domain,"cmt",id].join("-"));
-		if(!node) return;
-		var nodeControl = nodes["control"].cloneAll();
-		node.cNodes["comment-body"].appendChild(nodeControl );
-		node.cNodes["comment-body"].cNodes["like-comm"] = nodeControl;
-		if(!auth) return;
-		nodeControl.cNodes["spacer"].hidden = false;
-		nodeControl.cNodes["action"].action = true;
-		nodeControl.cNodes["action"].innerHTML =  "like";
-	});
-	var options = {
-		"url":srvUrl + "all-likes?updated_after=0"
-		,"data":JSON.stringify(arrCmts)
-		,"method":"post"
-	};
-	if(auth) options.token = cView.contexts["FreeFeed"].token;
-	utils.xhr(options).then(function(res){
-		res = JSON.parse(res);
-		if(res.status != "error") res.data.forEach(apply);
-	});
+	do{
+		var options = {
+			"url":srvUrl + "all-likes?updated_after=0"
+			,"data":JSON.stringify(arrCmts.splice(0,100))
+			,"method":"post"
+		};
+		if(auth) options.token = cView.contexts[domain].token;
+		utils.xhr(options).then(function(res){
+			res = JSON.parse(res);
+			if(res.status != "error") res.data.forEach(function(likeInfo){apply(likeInfo);});
+		});
+	}while(arrCmts.length);
 }
 function connect(token){
 	if (token) token = JSON.parse(token).data;
@@ -138,6 +197,7 @@ return function(cV){
 					,"token":cView.contexts[domain].token
 				}).then(connect);
 			}else connect(null);
+			window.addEventListener("newNode", evtNewNode);
 		}
 		,"settings": function(){return makeSettings(cView);}
 	}

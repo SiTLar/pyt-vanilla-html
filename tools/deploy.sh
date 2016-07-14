@@ -51,7 +51,7 @@ then
 fi
 if [ $backup ] 
 then
-	if [ ! -d $backup]
+	if [ ! -d $backup ]
 	then
 		mkdir $backup
 	fi

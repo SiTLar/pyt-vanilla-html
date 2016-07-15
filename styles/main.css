@@ -699,3 +699,6 @@ span.comment-controls::before {
 .inline-control{
 	display:inline-block;
 }
+.buttons > input {
+	margin: 1em;
+}

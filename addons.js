@@ -5,6 +5,7 @@
 define("./addons", [ "./utils"
 	,"./addons/sidebar"
 	,"./addons/likecomm"
+	,"./addons/srvsave"
 ]
 ,function( utils
 	,sidebar

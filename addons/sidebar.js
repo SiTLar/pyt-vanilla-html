@@ -4,7 +4,7 @@ define("./addons/sidebar", [],function(){
 function isLogged (cView){
 	var domains = Object.keys(cView.contexts);
 	return domains.some(function(domain){
-		return cView.contexts[domain].ids.length > 0;
+		return cView.contexts[domain].token;
 	});
 }
 function always(){return true;};
@@ -24,19 +24,22 @@ var payload = [
 			if(!isLogged(cView)) return [cView.gNodes["sidebar-acc-anon"].cloneAll()]; 
 			var domains = Object.keys(cView.contexts);
 			var nodeMainAcc = cView.gNodes["sidebar-acc"].cloneAll();
-			var mainLogin;
+			var mainContext;
 			if(( typeof cView.contexts[gConfig.leadDomain] !== "undefined" )
-			&& cView.contexts[gConfig.leadDomain].gMe) 
-				mainLogin = cView.contexts[gConfig.leadDomain].gMe.users;
+			&& cView.contexts[gConfig.leadDomain].token) 
+				mainContext = cView.contexts[gConfig.leadDomain];
 			else domains.some(function(domain){
 				var context = cView.contexts[domain];
-				if(!context.gMe) return false;
-				mainLogin = context.gMe.users;
+				if(!context.token) return false;
+				 mainContext = context;
 				return true; 
 			});
-			nodeMainAcc.getNode(["c", "main-avatar"],["c","img"]).src = mainLogin.profilePictureMediumUrl;
-			nodeMainAcc.getNode(["c", "info"]).innerHTML = mainLogin.link;
-			nodeMainAcc.getNode(["c", "settings"], ["c", "edit-acc"]).href = gConfig.front + "settings/accounts"
+			mainContext.p.then(function(){
+				var mainLogin = mainContext.gMe.users;
+				nodeMainAcc.getNode(["c", "main-avatar"],["c","img"]).src = mainLogin.profilePictureMediumUrl;
+				nodeMainAcc.getNode(["c", "info"]).innerHTML = mainLogin.link;
+				nodeMainAcc.getNode(["c", "settings"], ["c", "edit-acc"]).href = gConfig.front + "settings/accounts"
+			});
 			return [nodeMainAcc];
 		}
 		,"test":always  

@@ -28,6 +28,8 @@
 	.sidebar-left{
 		display:block;
 		width:20%;
+		position:fixed;
+		height:100%;
 	}
 }
 @media (min-width: 35em) {

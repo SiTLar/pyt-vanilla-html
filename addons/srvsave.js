@@ -97,7 +97,8 @@ var handlers = {
 					};
 				});
 				var mainId = oSettings.mainIds[domain];
-				context.token = context.logins[mainId].token;
+				if (typeof mainId !== "undefined")
+					context.token = context.logins[mainId].token;
 			});
 			cView.Common.saveLogins();
 			location.reload();

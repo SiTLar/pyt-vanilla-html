@@ -3,7 +3,7 @@ var cView;
 var srvUrl = "https://davidmz.me/frfrfr/likecomm/";
 var domain = "FreeFeed";
 var auth = false;
-var nodes = new Object();
+var nodesT = new Object();
 var template = [
 {"c":"settings"
 , "children":[
@@ -41,7 +41,7 @@ var handlers = {
 	}
 }
 function setControls(node){
-	var nodeControl = nodes["control"].cloneAll();
+	var nodeControl = nodesT["control"].cloneAll();
 	node.cNodes["comment-body"].appendChild(nodeControl );
 	node.cNodes["comment-body"].cNodes["like-comm"] = nodeControl;
 	if(auth){ 
@@ -121,7 +121,7 @@ function evtNewNode(e){
 }
 function initLikes(){
 	cView.Common.genNodes(template).forEach(function(node){
-		nodes[node.classList[0]] = node;
+		nodesT[node.classList[0]] = node;
 	});
 	cView["addons-like-comm"] = handlers;
 	if(typeof cView.contexts[domain] === "undefined") return;
@@ -168,7 +168,7 @@ function connect(token){
 	};
 }
 function makeSettings(){
-	var node = nodes["settings"].cloneAll();
+	var node = nodesT["settings"].cloneAll();
 	cView.Utils.getInputsByName(node)["auth"].checked = JSON.parse(cView.localStorage.getItem("addons-likecomm-auth"));
 	return node;
 }

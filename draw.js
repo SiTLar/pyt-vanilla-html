@@ -186,7 +186,7 @@ _Drawer.prototype = {
 			cView.addons.pr.then(function(){
 				cView.addons.all.forEach(function(addon){
 					var node = addon.settings();
-					node.className = "post";
+					node.classList.add( "post");
 					body.appendChild(node); 
 				});
 			});

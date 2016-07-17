@@ -702,3 +702,6 @@ span.comment-controls::before {
 .buttons > input {
 	margin: 1em;
 }
+.long-text{
+	white-space:pre-wrap;
+}

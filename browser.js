@@ -12,6 +12,17 @@ window.browserDoc = function(){
 	var locationSearch = document.location.search;
 	if (locationSearch == "")locationSearch = "?offset=0";
 	cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
+	if (!JSON.parse(cView.localStorage.getItem("show_newlines"))){
+		var sheet;
+		var idx;
+		for ( idx = 0 ; idx< document.styleSheets.length; idx ++)
+			if( document.styleSheets[idx].ownerNode.id == "main-stylesheet")
+		sheet = document.styleSheets[idx]; 
+		for (var idx = 0; idx < sheet.cssRules.length; idx ++) 
+			if(sheet.cssRules[idx].selectorText == ".long-text") break;
+		sheet.cssRules[idx].style["white-space"]= "normal";
+	}
+		
 	var arrLocationPath = locationPath.split("/");
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(JSON.parse(cView.localStorage.getItem("blocks")))

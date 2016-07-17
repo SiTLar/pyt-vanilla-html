@@ -127,9 +127,10 @@ _Common.prototype = {
 				args.unshift(node);
 				return cView.Utils.getNode.apply(node, args);
 			};
-			for(var idx = 0; idx <  node.childNodes.length; idx++){
-				genCNodes(node.childNodes[idx], proto.childNodes[idx]);
-				node.cNodes[node.childNodes[idx].className] = node.childNodes[idx];
+			for(var idx = 0; idx <  node.children.length; idx++){
+				genCNodes(node.children[idx], proto.children[idx]);
+				if(typeof node.children[idx].classList !== "undefined")
+					node.cNodes[node.children[idx].classList[0]] = node.children[idx];
 			}
 			if (typeof proto.e  == "undefined"  ) return;
 			Object.keys(proto.e).forEach(function(evt){

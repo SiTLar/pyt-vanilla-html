@@ -624,7 +624,7 @@ _Actions.prototype = {
 		cView.cTxt = e.target;
 		if (e.target.scrollHeight > e.target.clientHeight)
 			e.target.style.height = e.target.scrollHeight + "px";
-		if (e.which == "13"){
+		if (!e.shiftKey && (e.key == "Enter")){
 			var text = e.target.value;
 			e.preventDefault();
 			e.stopImmediatePropagation();
@@ -1547,7 +1547,6 @@ _Actions.prototype = {
 	}
 	,"setChkboxOption":function(e){
 		var cView = document.cView;
-
 		cView.localStorage.setItem(e.target.value, e.target.checked );
 	}
 

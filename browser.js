@@ -12,21 +12,11 @@ window.browserDoc = function(){
 	var locationSearch = document.location.search;
 	if (locationSearch == "")locationSearch = "?offset=0";
 	cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
-	if (!JSON.parse(cView.localStorage.getItem("show_newlines"))){
-		var sheet;
-		var idx;
-		for ( idx = 0 ; idx< document.styleSheets.length; idx ++)
-			if( document.styleSheets[idx].ownerNode.id == "main-stylesheet")
-		sheet = document.styleSheets[idx]; 
-		for (var idx = 0; idx < sheet.cssRules.length; idx ++) 
-			if(sheet.cssRules[idx].selectorText == ".long-text") break;
-		sheet.cssRules[idx].style["white-space"]= "normal";
-	}
 		
 	var arrLocationPath = locationPath.split("/");
-	var nameMode = cView.localStorage.getItem("screenname");
 	if(JSON.parse(cView.localStorage.getItem("blocks")))
 		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
+	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
 		cView.localStorage.removeItem("screenname");
@@ -107,6 +97,7 @@ function postInit(){
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	}
+	cView.Drawer.applyReadMore( cView.doc.getElementsByClassName("long-text"), 10);
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");
@@ -235,18 +226,28 @@ function setAttr(nodes, name){
 function setLocalSettings(){
 	var cView = document.cView;
 	cView.mode = cView.localStorage.getItem("display_name");
+	cView.readMore = JSON.parse(cView.localStorage.getItem("read_more"));
 	var cssTheme = cView.localStorage.getItem("display_theme");
 	if (cssTheme == "main.css") {
 		cssTheme = "expanded.css";
 		cView.localStorage.setItem("display_theme", cssTheme)
 	}
+	var sheet;
+	var idx;
+	for ( idx = 0 ; idx< document.styleSheets.length; idx ++)
+		if( document.styleSheets[idx].title == "local")
+			sheet = document.styleSheets[idx]; 
+	if (JSON.parse(cView.localStorage.getItem("show_newlines")))
+		sheet.insertRule(".long-text{white-space:pre-wrap;}",0);
+	else
+		sheet.insertRule(".long-text{white-space:normal;}",0);
+	
 	if(cssTheme) 
 		document.getElementById("main-stylesheet").href = gConfig.static 
 		+ cssTheme 
 		+ "?build=" 
 		+ encodeURIComponent(___BUILD___); 
-	 
-	if(cView.localStorage.getItem("show_link_preview") == "1"){
+	if(JSON.parse(cView.localStorage.getItem("show_link_preview") == "1")){
 		var nodeEmScript =  document.createElement("script");
 		(function(w, d){
 			var id='embedly-platform', n = 'script';

@@ -216,7 +216,7 @@ _Actions.prototype = {
 		var context = cView.contexts[victim.rawData.domain]
 		var postCNode = cView.doc.createElement("div");
 		postCNode.innerHTML = context.digestText(victim.rawData.body);
-		postCNode.className = "post-cont";
+		postCNode.className = "post-cont long-text";
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 
@@ -253,7 +253,7 @@ _Actions.prototype = {
 			}
 			*/
 			postCNode.innerHTML = context.digestText(post.body);
-			postCNode.className = "post-cont";
+			postCNode.className = "post-cont long-text";
 			nodePost.rawData.body = post.body;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
@@ -779,8 +779,9 @@ _Actions.prototype = {
 				nodePB.cNodes["comments"].appendChild(nodeComment);
 				nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
 			}
-			cView.Drawer.addLastCmtButton(nodePB);
 			nodePB.cNodes["comments"].cnt = postUpd.comments.length;
+			cView.Drawer.applyReadMore( nodePB.getElementsByClassName("long-text"), 10);
+			cView.Drawer.addLastCmtButton(nodePB);
 			return postUpd;
 
 		},function(res){
@@ -788,9 +789,6 @@ _Actions.prototype = {
 			console.log(res);
 
 		});
-
-
-
 	}
 	,"calcCmtTime": function(e){
 		var cView = document.cView;
@@ -1296,11 +1294,6 @@ _Actions.prototype = {
 		cView.localStorage.setItem("rtbump",bump?1:0);
 		cView.doc.getElementById("rt-params").hidden = !bump;
 	}
-	,"linkPreviewSwitch": function (e){
-		var cView = document.cView;
-		if(e.target.checked )cView.localStorage.setItem("show_link_preview",1);
-		else cView.localStorage.setItem("show_link_preview",0);
-	}
 	,"srAccept": function (e){
 		var cView = document.cView;
 		cView.Actions.sendReqResp(e.target, "acceptRequest" );
@@ -1548,6 +1541,11 @@ _Actions.prototype = {
 	,"setChkboxOption":function(e){
 		var cView = document.cView;
 		cView.localStorage.setItem(e.target.value, e.target.checked );
+	}
+	,"unfoldReadMore":function(e){
+		var cView = document.cView;
+		var victim = cView.Utils.getNode(e.target,["p","long-text"]);
+		victim.innerHTML = victim.words;
 	}
 
 };

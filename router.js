@@ -275,6 +275,7 @@ define("./router",[],function(){
 				context.api.getPost(context.token, path, ["comments"])
 				,context.p
 			]).then( function (res){
+				cView.doc.getElementById("loading-msg").innerHTML = "Building page";
 				cView.Common.loadGlobals(res[0], context);
 				var post = res[0].posts;
 				if(Array.isArray(post))post = post[0];

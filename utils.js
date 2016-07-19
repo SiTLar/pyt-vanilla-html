@@ -164,12 +164,12 @@ return {
 		var arrPath =  args2Arr.apply(this,arguments);
 		arrPath.shift();
 		arrPath.forEach(function(step){
-			if (node.className == step[1])return;
+			if (node.classList.contains( step[1]))return;
 			var className = step[1];
 			switch(step[0]){
 			case "p":
 				do node = node.parentNode; 
-				while(node.classList[0] != className);
+				while(!node.classList.contains(className));
 				break;
 			case "c":
 				node = node.cNodes[className];

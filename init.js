@@ -83,11 +83,24 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			return ids;
 		}
 		,"digestText":function(text){
-			return this.cView.autolinker.link(text.replace(/&/g,"&amp;")
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;")
-			).replace(/___CONTEXT_PATH___/g,gConfig.front+"as/"+this.domain)
-			.replace(/___CONTEXT_SEARCH___/g,gConfig.domains[this.domain].search);
+			var context = this;
+			var arr = context.cView.autolinker.link(
+				text.replace(/&/g,"&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;")
+				,"array"
+			).reduce(function(prev,curr){return prev.concat(curr);},[]);
+			arr.forEach(function(txt){
+				txt = txt.replace(
+					/___CONTEXT_PATH___/g
+					,gConfig.front+"as/"+context.domain
+				).replace(
+					/___CONTEXT_SEARCH___/g
+					,gConfig.domains[context.domain].search
+				);
+			});
+			arr.toString = function(){return this.join(" ");};
+			return arr;
 		}
 		,"getWhoami": function(token){
 			var context = this;
@@ -142,6 +155,14 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			,"url":{
 				"actions":[
 					["pre",cView.Common.setFrontUrl]
+				]
+			}
+			,"text":{
+				"actions":[
+					["post",function(text){
+						return text.replace(/\n/g," \n").split(" ")
+							.filter(function(txt){return txt!="";});
+					}]
 				]
 			}
 		});

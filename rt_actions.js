@@ -41,6 +41,7 @@ RtHandler.prototype = {
 		node.style.position = "static";
 		node.style["transition-property"] = "height";
 		node.style["transition-duration"] = that.timeGrow;
+		cView.Drawer.applyReadMore(node.getElementsByClassName("long-text"),10);
 		setTimeout(function(){
 			node.style.height = height;
 			node.style.opacity = 1; 
@@ -166,6 +167,7 @@ RtHandler.prototype = {
 				var nodeComment = nodePost.cNodes["post-body"].cNodes["comments"].appendChild(
 					cView.Drawer.genComment.call(context, data.comments)
 				);
+			cView.Drawer.applyReadMore(nodeComment.getElementsByClassName("long-text"),10);
 			if (that.bump && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown) < Date.now())){
 				if(!Array.isArray(cView.bumps))cView.bumps = new Array();
 				setTimeout(function(){ cView.bumps.push(nodePost)},that.bumpDelay+1);
@@ -183,9 +185,12 @@ RtHandler.prototype = {
 		context.gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(commentId);
 		if (nodeComment){
-			nodeComment.parentNode.replaceChild( 
-				cView.Drawer.genComment.call(context, data.comments)
-				, nodeComment
+			var isReadmore = nodeComment.getElementsByClassName("unfold").length != 0;
+			var newComment = cView.Drawer.genComment.call(context, data.comments);
+			nodeComment.parentNode.replaceChild( newComment , nodeComment);
+			cView.Drawer.applyReadMore(
+				newComment.getElementsByClassName("long-text")
+				,isReadmore?10:0
 			);
 			cView.Common.markMetaMenu(document.getElementById(postId));
 		}
@@ -250,7 +255,14 @@ RtHandler.prototype = {
 		var postId = [context.domain,"post" ,data.posts.id].join("-");
 		var nodePost = document.getElementById(postId);
 		if(!nodePost) return;
-		nodePost.getNode(["c","post-body"],["c","post-cont"]).innerHTML = context.digestText(data.posts.body);
+
+		var nodeCont = nodePost.getNode(["c","post-body"],["c","post-cont"]);
+		var isReadmore = nodeCont.getElementsByClassName("unfold").length == 0;
+		nodeCont[(isReadmore?"words":"innerHTML")] = context.digestText(data.posts.body);
+		if(isReadmore){
+			nodeCont.innerHTML = "";
+			cView.Drawer.applyReadMore( [nodeCont] ,isReadmore?10:0);
+		}
 		nodePost.rawData.body = data.posts.body;
 		cView.Common.markMetaMenu(nodePost);
 	}

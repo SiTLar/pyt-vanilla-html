@@ -1204,8 +1204,9 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var high  = words.length - 1;
 		var low = 0;
+		if (node.innerHTML != "") return;
 		node.innerHTML = words.join(" ");
-		if(node.offsetHeight < height) return;
+		if((node.offsetHeight < height)||!height) return;
 		do{
 			var idx = Math.ceil((high+low)/2);
 			node.innerHTML = words

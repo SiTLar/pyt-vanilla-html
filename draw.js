@@ -1223,7 +1223,11 @@ _Drawer.prototype = {
 	}
 	,"applyReadMore": function(nodes, lines){
 		var cView = this.cView;
-		var height = Number(getComputedStyle(document.body, "")["line-height"].match(/(\d*(\.\d*)?)px/)[1])* lines;
+		var dummy = cView.gNodes["one-line"].cloneAll();
+		document.body.appendChild(dummy);
+		
+		var height = dummy.offsetHeight * lines;
+		document.body.removeChild(dummy);
 		for(var idx = 0; idx<nodes.length; idx++)
 			if(Array.isArray(nodes[idx].words))
 				cView.Drawer.makeReadMore(nodes[idx],height,nodes[idx].words );

@@ -49,6 +49,8 @@ var settingsNames = [
 	,"rt_params"
 	,"rtbump"
 	,"show_link_preview"
+	,"show_newlines"
+	,"read_more"
 ];
 function netError(res){
 	nodeMsg.className = "msg-error";

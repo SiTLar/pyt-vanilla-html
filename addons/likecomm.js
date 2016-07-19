@@ -187,8 +187,8 @@ return function(cV){
 			}
 			var nodes = cView.doc.getElementsByClassName("comments-load");
 			for(var idx = 0; idx < nodes.length; idx++){
-				nodes[idx].removeEventListener("click", cView.Actions.unfoldComm);
-				nodes[idx].addEventListener("click", unfoldComm)
+				nodes[idx].cNodes["a"].removeEventListener("click", cView.Actions.unfoldComm, false);
+				nodes[idx].cNodes["a"].addEventListener("click", unfoldComm);
 			}
 			if(auth) {
 				utils.xhr({

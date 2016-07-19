@@ -112,7 +112,7 @@ _Url2link.prototype = {
 			return '<a '+(host["hashtag"].newtab?'target="_blank"':"") +' href="___CONTEXT_SEARCH___%23' + match.slice(1)+'" >' + match+ '</a>' ;
 		}]
 	}
-	,"link": function(input){
+	,"link": function(input, format){
 		var that = this;
 		var matches = new Array();
 		var out = new Array({"type":"text", "val":input});
@@ -201,14 +201,28 @@ _Url2link.prototype = {
 		out.push(text.slice(lastPos));
 		return out.join("");
 	*/
-		return out.reduce(function(prev,curr){
-			return prev 
-				+that[curr.type]
+		switch(format){
+		case "array":
+			return out.map(function(curr){
+				return that[curr.type]
 					.actions
 					.reduce(function(prev,action){ 
 						return action(prev, that);
 					}, curr.val);
-		},"");
+			});
+			break;
+
+		case "text":
+		default:
+			return out.reduce(function(prev,curr){
+				return prev 
+					+that[curr.type]
+						.actions
+						.reduce(function(prev,action){ 
+							return action(prev, that);
+						}, curr.val);
+			},"");
+		}
 	}
 };
 return _Url2link;

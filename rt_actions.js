@@ -163,11 +163,12 @@ RtHandler.prototype = {
 			if(!Array.isArray( nodePost.rawData.comments))
 				nodePost.rawData.comments = new Array();
 			nodePost.rawData.comments.push(data.comments.id);
-			if(!document.getElementById(commentId))
+			if(!document.getElementById(commentId)){
 				var nodeComment = nodePost.cNodes["post-body"].cNodes["comments"].appendChild(
 					cView.Drawer.genComment.call(context, data.comments)
 				);
-			cView.Drawer.applyReadMore(nodeComment);
+				cView.Drawer.applyReadMore(nodeComment);
+			}
 			if (that.bump && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown) < Date.now())){
 				if(!Array.isArray(cView.bumps))cView.bumps = new Array();
 				setTimeout(function(){ cView.bumps.push(nodePost)},that.bumpDelay+1);

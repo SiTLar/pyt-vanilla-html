@@ -39,19 +39,7 @@ var template = [
 	,{"c":"update-status" }
 ]}
 ];
-var settingsNames = [
-	"addons-likecomm-auth"
-	,"addons-save-blocks"
-	,"blocks"
-	,"display_name"
-	,"display_theme"
-	,"rt"
-	,"rt_params"
-	,"rtbump"
-	,"show_link_preview"
-	,"show_newlines"
-	,"read_more"
-];
+var settingsNames = require("json!../settings.json");;
 function netError(res){
 	nodeMsg.className = "msg-error";
 	nodeMsg.innerHTML = "Got error: ";

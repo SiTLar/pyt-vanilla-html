@@ -416,7 +416,7 @@
 		]}
 		,{"c":"sh-end"}
 	]}
-	,{"c":"accaunts-settings"
+	,{"c":"accaunts-settings", "cl":["global-settings"]
 	,"children":[
 		{"c":"settings-profiles"}
 		,{"c":"gs-add-acc"
@@ -428,7 +428,7 @@
 			]}
 		]}
 	]}
-	,{"c":"display-settings"
+	,{"c":"display-settings", "cl":["global-settings"]
 	,"children":[
 		{"t":"h3","txt":"Theme"}
 		,{"c":"radio", "t":"label"

@@ -154,6 +154,9 @@ _Drawer.prototype = {
 		var nodeSettingsHead = cView.gNodes["settings-head"].cloneAll();
 		body.appendChild(nodeSettingsHead);
 		switch(cView.doc.location.pathname.split("/").pop()){
+		case "raw":
+			drawRaw();
+			break;
 		case "accounts":
 			drawAcc();
 			break;
@@ -166,10 +169,22 @@ _Drawer.prototype = {
 		}
 		cView.Common.setIcon("favicon.ico");
 		return new cView.Utils._Promise(function(resolve,reject){resolve();});
+		function drawRaw(){
+			var settingsNames = require("json!./settings.json");
+			var node = cView.doc.createElement("div");
+			body.appendChild(node);
+			cView.doc.location.search.substr(1).split("&").forEach(function(item){
+				item = decodeURIComponent(item).split("=");
+				if ((item.length != 2) || (settingsNames.indexOf(item[0]) == -1)) return;
+				cView.localStorage.setItem(item[0], item[1]);
+			});
+			settingsNames.forEach(function(name){
+				node.innerHTML += name + "=" + cView.localStorage.getItem(name) + "<br />";
+			});
+		}
 		function drawAcc(){
 			nodeSettingsHead.cNodes["sh-acc"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["accaunts-settings"].cloneAll();
-			nodeSettings.className += " global-settings";
 			body.appendChild(nodeSettings);
 			Object.keys(cView.contexts).forEach(function (domain){
 				var context = cView.contexts[domain];
@@ -195,7 +210,6 @@ _Drawer.prototype = {
 		function drawDisp(){
 			nodeSettingsHead.cNodes["sh-displ"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["display-settings"].cloneAll();
-			nodeSettings.className += " global-settings";
 			body.appendChild(nodeSettings);
 			var mode = cView.localStorage.getItem("display_name");
 			if (mode == null) mode = "screen";

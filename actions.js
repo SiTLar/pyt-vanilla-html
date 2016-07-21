@@ -110,9 +110,11 @@ _Actions.prototype = {
 					,res[idx].posts.id
 				].join("-");
 				if(!cView.doc.getElementById(nodePostId))
-					cView.doc.posts.insertBefore(
-						cView.Drawer.genPost(res[idx].posts)
-						, cView.doc.posts.childNodes[0]
+					cView.Drawer.applyReadMore(
+						cView.doc.posts.insertBefore(
+							cView.Drawer.genPost(res[idx].posts)
+							, cView.doc.posts.childNodes[0]
+						)
 					);
 			});
 			var login;
@@ -688,9 +690,12 @@ _Actions.prototype = {
 		context.api.sendComment(token,postdata).then(function(res){
 			var comment = res.comments;
 			context.gComments[comment.id] = comment;
-			if( nodeComment.parentNode.childNodes.length > 4 )cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
-			if(!document.getElementById(context.domain + "-cmt-" + comment.id))nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, comment),nodeComment);
-			else nodeComment.parentNode.removeChild(nodeComment);
+			if( nodeComment.parentNode.children.length > 4 )cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
+			if(!document.getElementById(context.domain + "-cmt-" + comment.id)){
+				var newComment = cView.Drawer.genComment.call(context, comment);
+				nodeComment.parentNode.replaceChild(newComment ,nodeComment);
+				cView.Drawer.applyReadMore(newComment);
+			} else nodeComment.parentNode.removeChild(nodeComment);
 		});
 		
 	}
@@ -780,7 +785,7 @@ _Actions.prototype = {
 				nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
 			}
 			nodePB.cNodes["comments"].cnt = postUpd.comments.length;
-			cView.Drawer.applyReadMore( nodePB.getElementsByClassName("long-text"), 10);
+			cView.Drawer.applyReadMore( nodePB);
 			cView.Drawer.addLastCmtButton(nodePB);
 			return postUpd;
 
@@ -1518,11 +1523,13 @@ _Actions.prototype = {
 		+ gConfig.domains[e.target.value].msg;
 	}
 	,"showRefl": function(e){
+		var cView = document.cView;
 		var id = e.target.getNode(["p","reflect-menu-item"],["c","victim-id"]).value;
 		var metapost = e.target.getNode(["p","metapost"])
 		var nodesPosts = metapost.getElementsByClassName("post");
 		for (var idx = 0; idx < nodesPosts.length; idx++)
 			nodesPosts[idx].hidden = (nodesPosts[idx].id != id);
+		cView.Drawer.applyReadMore(document.getElementById(id));
 		var menuItems = metapost.getElementsByClassName("reflect-menu-item");
 		for (var idx = 0; idx < menuItems.length; idx++){
 			if (menuItems[idx].cNodes["c","victim-id"].value == id){
@@ -1546,6 +1553,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var victim = cView.Utils.getNode(e.target,["p","long-text"]);
 		victim.innerHTML = victim.words;
+		victim.isUnfolded = true;
 	}
 
 };

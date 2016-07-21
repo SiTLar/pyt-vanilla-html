@@ -97,7 +97,7 @@ function postInit(){
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	}
-	cView.Drawer.applyReadMore( cView.doc.getElementsByClassName("long-text"), 10);
+	cView.Drawer.applyReadMore( cView.doc);
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");
@@ -227,6 +227,10 @@ function setLocalSettings(){
 	var cView = document.cView;
 	cView.mode = cView.localStorage.getItem("display_name");
 	cView.readMore = JSON.parse(cView.localStorage.getItem("read_more"));
+	//default
+	if (cView.localStorage.getItem("read_more_height") == null) cView.localStorage.setItem("read_more_height", 10);
+	cView.readMoreHeight = cView.readMore? JSON.parse(cView.localStorage.getItem("read_more_height")):0;
+	
 	var cssTheme = cView.localStorage.getItem("display_theme");
 	if (cssTheme == "main.css") {
 		cssTheme = "expanded.css";

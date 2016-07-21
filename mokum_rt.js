@@ -131,7 +131,7 @@ RtUpdate.prototype = {
 
 		myPost.body = newPost.body;
 
-		nodePost.getNode(["c","post-body"],["c","post-cont"]).innerHTML = rt.context.digestText(myPost.body);
+		nodePost.getNode(["c","post-body"],["c","post-cont"]).words = rt.context.digestText(myPost.body);
 		myPost.likes = newPost.likes;
 		myPost.omittedLikes = newPost.omittedLikes;
 		cView.Drawer.genLikes(nodePost);
@@ -140,11 +140,18 @@ RtUpdate.prototype = {
 		if(Array.isArray(newPost.comments))newPost.comments.forEach(function(cmt){
 			var commentId = [rt.context.domain,"cmt" ,cmt].join("-");
 			var nodeCmt = document.getElementById(commentId);
-			if (nodeCmt)
+			if (nodeCmt){
+				var unfolded = nodeCmt.isUnfolded;
+				var nodeNewCmt = cView.Drawer.genComment.call(
+					rt.context
+					,rt.context.gComments[cmt]
+				);
+				nodeNewCmt.isUnfolded = unfolded;
 				nodeCmt.parentNode.replaceChild(
-					cView.Drawer.genComment.call(rt.context,rt.context.gComments[cmt])
+					nodeNewCmt
 					,nodeCmt
 				);
+			}
 		});
 			
 		if(Array.isArray(myPost.comments)
@@ -161,6 +168,7 @@ RtUpdate.prototype = {
 				}
 			});	
 		}
+		cView.Drawer.applyReadMore(nodePost);
 
 		//if ()
 

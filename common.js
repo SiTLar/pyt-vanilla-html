@@ -148,16 +148,30 @@ _Common.prototype = {
 		for(var idx = 0; idx< links.length; idx++)
 			links[idx].outerHTML = user.link;
 		var login = context.logins[id].data;
+		if(typeof login.subscribers !== "undefined")
+			Object.keys(login.subscribers).forEach(function(id){
+				cView.Common.addUser.call(context, login.subscribers[id]);
+			});
+		
 		login.oFriends = new Object();
-		if ((typeof user.subscribers !== "undefined") 
-		&& (typeof user.subscriptions !== "undefined")){
-			var oSubscriptions = new Object();
-			login.subscribers.forEach(cView.Common.addUser,context);
+		var oSubscriptions = new Object();
+		if(typeof login.subscriptions !== "undefined" ){
 			login.subscriptions.forEach(function(sub){
 				if(sub.name == "Posts"){
 					oSubscriptions[sub.id] = sub.user;
 				}
 			});
+		}
+		
+		if (typeof user.subscriptions !== "undefined"){
+			user.subscriptions.forEach(function(subid){
+				var userid = oSubscriptions[subid];
+				login.oFriends[userid] = true;
+			})
+		}
+		if ((typeof user.subscribers !== "undefined") 
+		&& (typeof user.subscriptions !== "undefined")){
+			login.subscribers.forEach(cView.Common.addUser,context);
 			user.subscribers.forEach(function(sub){
 				cView.Common.addUser.call(context, sub);
 				context.gUsers[sub.id].subscriber = true;
@@ -165,10 +179,8 @@ _Common.prototype = {
 			user.subscriptions.forEach(function(subid){
 				var userid = oSubscriptions[subid];
 				if (typeof userid !== "undefined") {
-					if (typeof context.gUsers[userid] !== "undefined") {
+					if (typeof context.gUsers[userid] !== "undefined") 
 						context.gUsers[userid].friend = true;
-						login.oFriends[userid] = true;
-					}
 				}
 			});
 		}

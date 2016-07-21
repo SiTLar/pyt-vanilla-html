@@ -90,7 +90,8 @@ _Drawer.prototype = {
 		nodeInfo.getNode(["c","ud-avatar"],["c","ud-avatar-img"]).src = user.profilePictureMediumUrl;
 		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
 		if(typeof user.description === "string")
-			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = context.digestText(user.description);
+			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"])[(cView.readMore?"words":"innerHTML")] = context.digestText(user.description);
+			//nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = context.digestText(user.description);
 		if (user.type == "group") 
 			["uds-subs","uds-likes","uds-com"].forEach(function(key){
 			nodeInfo.getNode(["c","ud-stats"],["c",key]).style.display = "none";
@@ -153,6 +154,9 @@ _Drawer.prototype = {
 		var nodeSettingsHead = cView.gNodes["settings-head"].cloneAll();
 		body.appendChild(nodeSettingsHead);
 		switch(cView.doc.location.pathname.split("/").pop()){
+		case "raw":
+			drawRaw();
+			break;
 		case "accounts":
 			drawAcc();
 			break;
@@ -165,10 +169,22 @@ _Drawer.prototype = {
 		}
 		cView.Common.setIcon("favicon.ico");
 		return new cView.Utils._Promise(function(resolve,reject){resolve();});
+		function drawRaw(){
+			var settingsNames = require("json!./settings.json");
+			var node = cView.doc.createElement("div");
+			body.appendChild(node);
+			cView.doc.location.search.substr(1).split("&").forEach(function(item){
+				item = decodeURIComponent(item).split("=");
+				if ((item.length != 2) || (settingsNames.indexOf(item[0]) == -1)) return;
+				cView.localStorage.setItem(item[0], item[1]);
+			});
+			settingsNames.forEach(function(name){
+				node.innerHTML += name + "=" + cView.localStorage.getItem(name) + "<br />";
+			});
+		}
 		function drawAcc(){
 			nodeSettingsHead.cNodes["sh-acc"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["accaunts-settings"].cloneAll();
-			nodeSettings.className += " global-settings";
 			body.appendChild(nodeSettings);
 			Object.keys(cView.contexts).forEach(function (domain){
 				var context = cView.contexts[domain];
@@ -194,7 +210,6 @@ _Drawer.prototype = {
 		function drawDisp(){
 			nodeSettingsHead.cNodes["sh-displ"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["display-settings"].cloneAll();
-			nodeSettings.className += " global-settings";
 			body.appendChild(nodeSettings);
 			var mode = cView.localStorage.getItem("display_name");
 			if (mode == null) mode = "screen";
@@ -203,16 +218,17 @@ _Drawer.prototype = {
 			var nodes = nodeSettings.getElementsByTagName("input");
 			for(var idx = 0; idx < nodes.length; idx++){
 				var node = nodes[idx];
-				if(node.type == "radio" ){
+				switch(node.type){
+				case "radio" :
 					if (( node.name == "display_name") &&(node.value == mode)
 					|| ( node.name == "display_theme") &&(node.value == theme))
 						node.checked = true;
+					break;
+				case "checkbox":
+					node.checked = JSON.parse (cView.localStorage.getItem(node.value));
+					break;
 				}
 			};
-			var nodeLinkPreview =  cView.doc.getElementById("link-preview");
-			if(JSON.parse(cView.localStorage.getItem("show_link_preview")))
-				nodeLinkPreview.checked = true;
-			else nodeLinkPreview.checked = false;
 			cView.doc.getElementById("rt-chkbox").checked = JSON.parse(cView.localStorage.getItem("rt"));
 			var bump = JSON.parse(cView.localStorage.getItem("rtbump"));
 			cView.doc.getElementById("rt-params").hidden = !bump;
@@ -579,8 +595,10 @@ _Drawer.prototype = {
 		nodePost.id = context.domain + "-post-" + post.id;
 		nodePost.isPrivate = false;
 		nodePost.commentsModerated = false;
+	
 		if( typeof post.body === "string")
-			postNBody.cNodes["post-cont"].innerHTML =  context.digestText(post.body);
+			//postNBody.cNodes["post-cont"].innerHTML =  context.digestText(post.body);
+			postNBody.cNodes["post-cont"][(cView.readMore?"words":"innerHTML")] = context.digestText(post.body);
 
 		var urlMatch ;		
 		var listBlocks = cView.blocks.blockPosts[context.domain];
@@ -679,8 +697,8 @@ _Drawer.prototype = {
 				var nodeComment = cView.gNodes["comment"].cloneAll();
 				nodeComment.cNodes["comment-date"].innerHTML = "";
 				var nodeLoad = cView.gNodes["comments-load"].cloneAll();
-				nodeLoad.cNodes["num"].innerHTML = post.omittedComments;
-				nodeComment.cNodes["comment-body"].appendChild(nodeLoad);
+				nodeLoad.getNode(["c","a"],["c","num"]).innerHTML = post.omittedComments;
+				cView.Utils.setChild(nodeComment, "comment-body", nodeLoad);
 				postNBody.cNodes["comments"].appendChild(nodeComment);
 				if(post.comments[1])
 					postNBody.cNodes["comments"].appendChild(Drawer.genComment.call(context, context.gComments[post.comments[1]]));
@@ -841,27 +859,29 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var context = this;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
+		var listBlocks = cView.blocks.blockComments[context.domain];
 		var cUser = context.gUsers[comment.createdBy];
+		if(( typeof listBlocks!== "undefined") 
+		&& ( listBlocks!= null) 
+		&& (listBlocks[cUser.id])){
+			nodeComment.innerHTML = "---";
+			return nodeComment;
+		}
 		var nodeSpan = nodeComment.getNode(["c","comment-body"],["c","cmt-content"]);
 		nodeComment.userid = null;
 		if( typeof comment.body === "string")
-			nodeSpan.innerHTML = context.digestText(comment.body);
+			nodeSpan[(cView.readMore?"words":"innerHTML")] = context.digestText(comment.body);
 		nodeComment.id = context.domain + "-cmt-" + comment.id;
 		nodeComment.rawId = comment.id;
 		nodeComment.domain = context.domain;
 		nodeComment.createdAt = comment.createdAt;
 		nodeComment.userid = cUser.id;
-		nodeSpan.innerHTML += " - " + cUser.link ;
+		nodeComment.getNode(["c","comment-body"],["c","cmt-author"]).innerHTML = cUser.link ;
 		if(context.ids.length){
 			if(context.ids.indexOf(cUser.id) != -1)
 				cView.Utils.setChild(nodeComment.cNodes["comment-body"],"comment-controls",cView.gNodes["comment-controls"].cloneAll());
 			else if(!cUser.friend) nodeComment.cNodes["comment-date"].cNodes["date"].style.color = "#787878";
 		}
-		var listBlocks = cView.blocks.blockComments[context.domain];
-		if(( typeof listBlocks!== "undefined") 
-		&& ( listBlocks!= null) 
-		&& (listBlocks[cUser.id]))
-			nodeComment.innerHTML = "---";
 		return nodeComment;
 	}
 	,"addLastCmtButton":function(postNBody){
@@ -1102,7 +1122,7 @@ _Drawer.prototype = {
 	,"genAddComment": function(context){
 		var cView = context.cView;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
-		nodeComment.cNodes["comment-body"].appendChild(cView.Drawer.genEditNode(cView.Actions.postNewComment,cView.Actions.cancelNewComment));
+		cView.Utils.setChild(nodeComment, "comment-body", cView.Drawer.genEditNode(cView.Actions.postNewComment,cView.Actions.cancelNewComment));
 		if(context.ids.length > 1 ){
 			nodeComment.getElementsByClassName("select-user")[0].hidden = false;
 			var nodeSelectUsr = nodeComment.getElementsByClassName("select-user-ctrl")[0];
@@ -1193,6 +1213,43 @@ _Drawer.prototype = {
 			host.parentNode.replaceChild( newNode, host);
 		}else host.parentNode.removeChild(host);
 		return count;
+	}
+	,"applyReadMore": function(host, flag){
+		var cView = this.cView;
+		var lines = (flag === false)?0:cView.readMoreHeight;
+		var dummy = cView.gNodes["one-line"].cloneAll();
+
+		document.body.appendChild(dummy);
+		var lineHeight = dummy.offsetHeight;	
+		var height = lineHeight* lines;
+		document.body.removeChild(dummy);
+		var nodes = host.getElementsByClassName("long-text");
+		for(var idx = 0; idx<nodes.length; idx++)
+			if(Array.isArray(nodes[idx].words))
+				makeReadMore(nodes[idx],height,nodes[idx].words );
+
+		function makeReadMore(node, height, words){
+			var high  = words.length - 1;
+			var low = 0;
+			if((node.offsetTop == 0) || (node.innerHTML != "")) return;
+			node.innerHTML = words.join(" ");
+			if (typeof node.isUnfolded === "undefined" ) node.isUnfolded = false;
+			if((node.offsetHeight < (height + lineHeight))||!height||node.isUnfolded ) return;
+			do{
+				var idx = Math.ceil((high+low)/2);
+				node.innerHTML = words
+					.slice(0,idx+1)
+					.concat('<b>&hellip; <a class="unfold">Read&nbsp;more</a></b>')
+					.join(" ");
+				if(node.offsetHeight < height) low = idx;
+				else if (node.offsetHeight > height)high = idx;
+				else break;
+			}while((high - low) > 1);
+			node.getElementsByClassName("unfold")[0].addEventListener(
+				"click"
+				,cView.Actions.unfoldReadMore
+			);
+		}
 	}
 };
 return _Drawer;

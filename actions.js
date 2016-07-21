@@ -110,9 +110,11 @@ _Actions.prototype = {
 					,res[idx].posts.id
 				].join("-");
 				if(!cView.doc.getElementById(nodePostId))
-					cView.doc.posts.insertBefore(
-						cView.Drawer.genPost(res[idx].posts)
-						, cView.doc.posts.childNodes[0]
+					cView.Drawer.applyReadMore(
+						cView.doc.posts.insertBefore(
+							cView.Drawer.genPost(res[idx].posts)
+							, cView.doc.posts.childNodes[0]
+						)
 					);
 			});
 			var login;
@@ -216,7 +218,7 @@ _Actions.prototype = {
 		var context = cView.contexts[victim.rawData.domain]
 		var postCNode = cView.doc.createElement("div");
 		postCNode.innerHTML = context.digestText(victim.rawData.body);
-		postCNode.className = "post-cont";
+		postCNode.className = "post-cont long-text";
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 
@@ -253,7 +255,7 @@ _Actions.prototype = {
 			}
 			*/
 			postCNode.innerHTML = context.digestText(post.body);
-			postCNode.className = "post-cont";
+			postCNode.className = "post-cont long-text";
 			nodePost.rawData.body = post.body;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
@@ -624,7 +626,7 @@ _Actions.prototype = {
 		cView.cTxt = e.target;
 		if (e.target.scrollHeight > e.target.clientHeight)
 			e.target.style.height = e.target.scrollHeight + "px";
-		if (e.which == "13"){
+		if (!e.shiftKey && (e.key == "Enter")){
 			var text = e.target.value;
 			e.preventDefault();
 			e.stopImmediatePropagation();
@@ -688,9 +690,12 @@ _Actions.prototype = {
 		context.api.sendComment(token,postdata).then(function(res){
 			var comment = res.comments;
 			context.gComments[comment.id] = comment;
-			if( nodeComment.parentNode.childNodes.length > 4 )cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
-			if(!document.getElementById(context.domain + "-cmt-" + comment.id))nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, comment),nodeComment);
-			else nodeComment.parentNode.removeChild(nodeComment);
+			if( nodeComment.parentNode.children.length > 4 )cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
+			if(!document.getElementById(context.domain + "-cmt-" + comment.id)){
+				var newComment = cView.Drawer.genComment.call(context, comment);
+				nodeComment.parentNode.replaceChild(newComment ,nodeComment);
+				cView.Drawer.applyReadMore(newComment);
+			} else nodeComment.parentNode.removeChild(nodeComment);
 		});
 		
 	}
@@ -779,8 +784,9 @@ _Actions.prototype = {
 				nodePB.cNodes["comments"].appendChild(nodeComment);
 				nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
 			}
-			cView.Drawer.addLastCmtButton(nodePB);
 			nodePB.cNodes["comments"].cnt = postUpd.comments.length;
+			cView.Drawer.applyReadMore( nodePB);
+			cView.Drawer.addLastCmtButton(nodePB);
 			return postUpd;
 
 		},function(res){
@@ -788,9 +794,6 @@ _Actions.prototype = {
 			console.log(res);
 
 		});
-
-
-
 	}
 	,"calcCmtTime": function(e){
 		var cView = document.cView;
@@ -1296,11 +1299,6 @@ _Actions.prototype = {
 		cView.localStorage.setItem("rtbump",bump?1:0);
 		cView.doc.getElementById("rt-params").hidden = !bump;
 	}
-	,"linkPreviewSwitch": function (e){
-		var cView = document.cView;
-		if(e.target.checked )cView.localStorage.setItem("show_link_preview",1);
-		else cView.localStorage.setItem("show_link_preview",0);
-	}
 	,"srAccept": function (e){
 		var cView = document.cView;
 		cView.Actions.sendReqResp(e.target, "acceptRequest" );
@@ -1525,11 +1523,13 @@ _Actions.prototype = {
 		+ gConfig.domains[e.target.value].msg;
 	}
 	,"showRefl": function(e){
+		var cView = document.cView;
 		var id = e.target.getNode(["p","reflect-menu-item"],["c","victim-id"]).value;
 		var metapost = e.target.getNode(["p","metapost"])
 		var nodesPosts = metapost.getElementsByClassName("post");
 		for (var idx = 0; idx < nodesPosts.length; idx++)
 			nodesPosts[idx].hidden = (nodesPosts[idx].id != id);
+		cView.Drawer.applyReadMore(document.getElementById(id));
 		var menuItems = metapost.getElementsByClassName("reflect-menu-item");
 		for (var idx = 0; idx < menuItems.length; idx++){
 			if (menuItems[idx].cNodes["c","victim-id"].value == id){
@@ -1547,8 +1547,13 @@ _Actions.prototype = {
 	}
 	,"setChkboxOption":function(e){
 		var cView = document.cView;
-
 		cView.localStorage.setItem(e.target.value, e.target.checked );
+	}
+	,"unfoldReadMore":function(e){
+		var cView = document.cView;
+		var victim = cView.Utils.getNode(e.target,["p","long-text"]);
+		victim.innerHTML = victim.words;
+		victim.isUnfolded = true;
 	}
 
 };

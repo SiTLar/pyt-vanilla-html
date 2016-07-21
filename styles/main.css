@@ -224,6 +224,7 @@ h1{
 	float: left;
 	margin: 0 8px 8px 0;
 	padding: 1px;
+	max-height:500;
 }
 .att-audio{
 	margin-bottom: 0.5em;
@@ -499,6 +500,9 @@ span.comment-controls::before {
 	border-bottom: solid thin #e8e8e8;
 	overflow: hidden;
 } 
+.settings-login {
+	overflow: hidden;
+}
 .sp-username{
 	font-weight: bold;
 }
@@ -701,4 +705,10 @@ span.comment-controls::before {
 }
 .buttons > input {
 	margin: 1em;
+}
+.long-text{
+}
+.one-line{
+	position:absolute;
+	opacity:0;
 }

@@ -9,13 +9,16 @@ window.browserDoc = function(){
 	var locationPath = /(https?:\/\/[^\?]*)/.exec(document.location)[1].slice(gConfig.front.length);
 	if (locationPath == "")locationPath = "home";
 	cView.fullPath = locationPath;
-	var locationSearch = document.location.search;
-	if (locationSearch == "")locationSearch = "?offset=0";
-	cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
 	var arrLocationPath = locationPath.split("/");
-	var nameMode = cView.localStorage.getItem("screenname");
+	if(arrLocationPath[0].toLowerCase() != "settings"){
+		var locationSearch = document.location.search;
+		if (locationSearch == "")locationSearch = "?offset=0";
+		cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
+	}
+		
 	if(JSON.parse(cView.localStorage.getItem("blocks")))
 		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
+	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
 		cView.localStorage.removeItem("screenname");
@@ -96,6 +99,7 @@ function postInit(){
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	}
+	cView.Drawer.applyReadMore( cView.doc);
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");
@@ -224,18 +228,32 @@ function setAttr(nodes, name){
 function setLocalSettings(){
 	var cView = document.cView;
 	cView.mode = cView.localStorage.getItem("display_name");
+	cView.readMore = JSON.parse(cView.localStorage.getItem("read_more"));
+	//default
+	if (cView.localStorage.getItem("read_more_height") == null) cView.localStorage.setItem("read_more_height", 10);
+	cView.readMoreHeight = cView.readMore? JSON.parse(cView.localStorage.getItem("read_more_height")):0;
+	
 	var cssTheme = cView.localStorage.getItem("display_theme");
 	if (cssTheme == "main.css") {
 		cssTheme = "expanded.css";
 		cView.localStorage.setItem("display_theme", cssTheme)
 	}
+	var sheet;
+	var idx;
+	for ( idx = 0 ; idx< document.styleSheets.length; idx ++)
+		if( document.styleSheets[idx].title == "local")
+			sheet = document.styleSheets[idx]; 
+	if (JSON.parse(cView.localStorage.getItem("show_newlines")))
+		sheet.insertRule(".long-text{white-space:pre-wrap;}",0);
+	else
+		sheet.insertRule(".long-text{white-space:normal;}",0);
+	
 	if(cssTheme) 
 		document.getElementById("main-stylesheet").href = gConfig.static 
 		+ cssTheme 
 		+ "?build=" 
 		+ encodeURIComponent(___BUILD___); 
-	 
-	if(cView.localStorage.getItem("show_link_preview") == "1"){
+	if(JSON.parse(cView.localStorage.getItem("show_link_preview") == "1")){
 		var nodeEmScript =  document.createElement("script");
 		(function(w, d){
 			var id='embedly-platform', n = 'script';

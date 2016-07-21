@@ -97,7 +97,9 @@ var payload = [
 					context.logins[id].data.users.subscriptions.forEach(function(subid){
 						var sub = subscriptions[subid];
 						var group = context.gUsers[sub.user];
-						if( (group.type == "group") && (sub.name == "Posts")){
+						if( (typeof group !== "undefined")
+							&&(group.type == "group") 
+							&& (sub.name == "Posts")){
 							if(typeof group.updatedAt === "undefined")
 								group.updatedAt = 0;
 							if(ids[sub.user] !== true){

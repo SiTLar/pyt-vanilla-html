@@ -90,8 +90,8 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 					.replace(/>/g, "&gt;")
 				,"array"
 			).reduce(function(prev,curr){return prev.concat(curr);},[]);
-			arr.forEach(function(txt){
-				txt = txt.replace(
+			arr.forEach(function(txt,idx,arr){
+				arr[idx] = txt.replace(
 					/___CONTEXT_PATH___/g
 					,gConfig.front+"as/"+context.domain
 				).replace(

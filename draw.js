@@ -846,13 +846,13 @@ _Drawer.prototype = {
 		var context = this;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
 		var listBlocks = cView.blocks.blockComments[context.domain];
+		var cUser = context.gUsers[comment.createdBy];
 		if(( typeof listBlocks!== "undefined") 
 		&& ( listBlocks!= null) 
 		&& (listBlocks[cUser.id])){
 			nodeComment.innerHTML = "---";
 			return nodeComment;
 		}
-		var cUser = context.gUsers[comment.createdBy];
 		var nodeSpan = nodeComment.getNode(["c","comment-body"],["c","cmt-content"]);
 		nodeComment.userid = null;
 		if( typeof comment.body === "string")
@@ -1108,7 +1108,7 @@ _Drawer.prototype = {
 	,"genAddComment": function(context){
 		var cView = context.cView;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
-		nodeComment.cNodes["comment-body"].appendChild(cView.Drawer.genEditNode(cView.Actions.postNewComment,cView.Actions.cancelNewComment));
+		cView.Utils.setChild(nodeComment, "comment-body", cView.Drawer.genEditNode(cView.Actions.postNewComment,cView.Actions.cancelNewComment));
 		if(context.ids.length > 1 ){
 			nodeComment.getElementsByClassName("select-user")[0].hidden = false;
 			var nodeSelectUsr = nodeComment.getElementsByClassName("select-user-ctrl")[0];
@@ -1200,38 +1200,42 @@ _Drawer.prototype = {
 		}else host.parentNode.removeChild(host);
 		return count;
 	}
-	,"makeReadMore":function(node, height, words){
+	,"applyReadMore": function(host, flag){
 		var cView = this.cView;
-		var high  = words.length - 1;
-		var low = 0;
-		if (node.innerHTML != "") return;
-		node.innerHTML = words.join(" ");
-		if((node.offsetHeight < height)||!height) return;
-		do{
-			var idx = Math.ceil((high+low)/2);
-			node.innerHTML = words
-				.slice(0,idx+1)
-				.concat('<b>&hellip; <a class="unfold">Read&nbsp;more</a></b>')
-				.join(" ");
-			if(node.offsetHeight < height) low = idx;
-			else if (node.offsetHeight > height)high = idx;
-			else break;
-		}while((high - low) > 1);
-		node.getElementsByClassName("unfold")[0].addEventListener(
-			"click"
-			,cView.Actions.unfoldReadMore
-		);
-	}
-	,"applyReadMore": function(nodes, lines){
-		var cView = this.cView;
+		var lines = (flag === false)?0:cView.readMoreHeight;
 		var dummy = cView.gNodes["one-line"].cloneAll();
+
 		document.body.appendChild(dummy);
-		
-		var height = dummy.offsetHeight * lines;
+		var lineHeight = dummy.offsetHeight;	
+		var height = lineHeight* lines;
 		document.body.removeChild(dummy);
+		var nodes = host.getElementsByClassName("long-text");
 		for(var idx = 0; idx<nodes.length; idx++)
 			if(Array.isArray(nodes[idx].words))
-				cView.Drawer.makeReadMore(nodes[idx],height,nodes[idx].words );
+				makeReadMore(nodes[idx],height,nodes[idx].words );
+
+		function makeReadMore(node, height, words){
+			var high  = words.length - 1;
+			var low = 0;
+			if((node.offsetTop == 0) || (node.innerHTML != "")) return;
+			node.innerHTML = words.join(" ");
+			if (typeof node.isUnfolded === "undefined" ) node.isUnfolded = false;
+			if((node.offsetHeight < (height + lineHeight))||!height||node.isUnfolded ) return;
+			do{
+				var idx = Math.ceil((high+low)/2);
+				node.innerHTML = words
+					.slice(0,idx+1)
+					.concat('<b>&hellip; <a class="unfold">Read&nbsp;more</a></b>')
+					.join(" ");
+				if(node.offsetHeight < height) low = idx;
+				else if (node.offsetHeight > height)high = idx;
+				else break;
+			}while((high - low) > 1);
+			node.getElementsByClassName("unfold")[0].addEventListener(
+				"click"
+				,cView.Actions.unfoldReadMore
+			);
+		}
 	}
 };
 return _Drawer;

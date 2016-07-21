@@ -500,6 +500,9 @@ span.comment-controls::before {
 	border-bottom: solid thin #e8e8e8;
 	overflow: hidden;
 } 
+.settings-login {
+	overflow: hidden;
+}
 .sp-username{
 	font-weight: bold;
 }

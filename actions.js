@@ -626,8 +626,7 @@ _Actions.prototype = {
 		cView.cTxt = e.target;
 		if (e.target.scrollHeight > e.target.clientHeight)
 			e.target.style.height = e.target.scrollHeight + "px";
-		if (!e.shiftKey && (e.key == "Enter")){
-			var text = e.target.value;
+		if (e.ctrlKey && (e.which == "13")){
 			e.preventDefault();
 			e.stopImmediatePropagation();
 			//if(text.charAt(text.length-1) == "\n") e.target.value = text.slice(0, -1);

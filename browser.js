@@ -9,11 +9,13 @@ window.browserDoc = function(){
 	var locationPath = /(https?:\/\/[^\?]*)/.exec(document.location)[1].slice(gConfig.front.length);
 	if (locationPath == "")locationPath = "home";
 	cView.fullPath = locationPath;
-	var locationSearch = document.location.search;
-	if (locationSearch == "")locationSearch = "?offset=0";
-	cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
-		
 	var arrLocationPath = locationPath.split("/");
+	if(arrLocationPath[0].toLowerCase() != "settings"){
+		var locationSearch = document.location.search;
+		if (locationSearch == "")locationSearch = "?offset=0";
+		cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
+	}
+		
 	if(JSON.parse(cView.localStorage.getItem("blocks")))
 		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
 	var nameMode = cView.localStorage.getItem("screenname");

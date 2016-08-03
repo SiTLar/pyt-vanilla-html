@@ -237,6 +237,7 @@ define("./router",[],function(){
 				var username = path.split("/")[0];
 				cView.Router.timeline(cs, path).then(function(){ 
 					var feed =  context.gUsers.byName[username];
+					if(feed.type == "user")cView.noBlocks = true;
 					//cView.Common.addUser.call(context, feed);
 					cView.doc.title = "@"+feed.username + ", a " + context.domain + " feed.";
 					cView.Utils.setChild(body, "details", cView.Drawer.genUserDetails(feed.username, context));
@@ -270,6 +271,7 @@ define("./router",[],function(){
 		}
 		,"singlePost":function(contexts,path){
 			var cView = this.cView;
+			cView.noBlocks = true;
 			var context = Object.keys(contexts).map(function(d){ return contexts[d];})[0];
 			return cView.Utils._Promise.all( [
 				context.api.getPost(context.token, path, ["comments"])
@@ -286,8 +288,25 @@ define("./router",[],function(){
 					context.timelineId = res[0].timelines.id;
 			});
 		}
-		,"timeline":function(contexts, path){
+		,"routeSearch":function(contexts){
 			var cView = this.cView;
+			var search = cView.search.match(/qs=([^&]+)/);
+
+			if(!search){ 
+				cView.Drawer.drawSearch("");
+				return cView.Utils._Promise.resolve();
+			}
+			return this.timeline(
+				contexts
+				,search[1]
+				,"getSearch"
+			).then(function(){
+				cView.Drawer.drawSearch(decodeURIComponent(search[1].replace("+", " ")));
+			});
+		}
+		,"timeline":function(contexts, path, source ){
+			var cView = this.cView;
+			source = (typeof source !== "undefined")?source:"getTimeline";
 			var arrContent = new Array();
 			var prConts = new Array();
 			var prContxt = new Array();
@@ -295,7 +314,7 @@ define("./router",[],function(){
 			domains.forEach(function(domain){ 
 				var context = contexts[domain];
 				prContxt.push(context.p);
-				prConts.push(context.api.getTimeline(context.token,path, cView.skip));
+				prConts.push(context.api[source](context.token,path, cView.skip));
 			});
 			var prAllT = cView.Utils._Promise.all(prConts);
 			var prAllC = cView.Utils._Promise.all(prContxt);

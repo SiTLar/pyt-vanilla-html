@@ -116,7 +116,11 @@ _Common.prototype = {
 			});
 			if(template.txt) node.innerHTML = template.txt;
 			if(template.e) node.e = template.e;
-			if(template.p) for( var p in template.p) node[p] =  template.p[p];
+			var dummy = cView.doc.createElement("span");
+			if(template.p) for( var p in template.p){
+				dummy.innerHTML = template.p[p];
+				node[p] = dummy.textContent;
+			}
 			nodes.push(node);
 		} );
 		return nodes;
@@ -377,6 +381,7 @@ _Common.prototype = {
 		var hidden = true;
 		posts.forEach(function(post){
 			if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
+			if (post.isHidden !== true) post.isHidden = false;
 			dups.push(post);
 			hidden = hidden && post.isHidden;
 		});

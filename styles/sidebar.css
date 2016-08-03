@@ -73,3 +73,6 @@
 	border-radius:.2em;
 	height:2em;
 }
+input.search{
+	width:100%;
+}

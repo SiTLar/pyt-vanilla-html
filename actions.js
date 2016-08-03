@@ -1359,10 +1359,7 @@ _Actions.prototype = {
 	,"showUnfolder":function(e){
 		var cView = document.cView;
 		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
-		cView.Utils.unscroll(function(){
 			e.target.style.height = "auto";
-			return nodeImgAtt;
-		});
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	

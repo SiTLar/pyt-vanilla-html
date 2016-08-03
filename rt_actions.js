@@ -76,7 +76,7 @@ RtHandler.prototype = {
 		data.posts.domain = context.domain;
 		var nodePost = cView.Drawer.genPost(data.posts);
 		nodePost.rawData.sign = cView.hasher.of(nodePost.rawData.body);
-		if ((nodePost.rawData.body.length >= cView.minBody) && cView.hiddenPosts.some(function(a){
+		if ((nodePost.rawData.body.length >= cView.minBody) && cView.posts.some(function(a){
 			if(cView.hasher.similarity(a.data.sign, nodePost.rawData.sign)>cView.threshold){
 				if(a.data.type  != "metapost"){
 					a.data = cView.Common.metapost([a.data]);
@@ -111,7 +111,7 @@ RtHandler.prototype = {
 		})){
 			if(!nodePost.isHidden)this.bumpPost(nodePost);
 		} else {
-			cView.hiddenPosts.unshift({
+			cView.posts.unshift({
 				"is":nodePost.rawData.isHidden
 				,"data":nodePost.rawData
 			});
@@ -134,8 +134,8 @@ RtHandler.prototype = {
 				nodePost = nodeParent;
 				nodeParent = nodePost.parentNode;
 			}
-			var postInfo = cView.hiddenPosts.splice(nodePost.rawData.idx,1);
-			cView.hiddenPosts.unshift(postInfo[0]);
+			var postInfo = cView.posts.splice(nodePost.rawData.idx,1);
+			cView.posts.unshift(postInfo[0]);
 			nodeParent.removeChild(nodePost);
 			that.insertSmooth(nodePost, nodeParent.firstChild);
 		}
@@ -277,8 +277,8 @@ RtHandler.prototype = {
 		var postId = [context.domain,"post" ,data.meta.postId].join("-");
 		var nodePost = document.getElementById(postId);
 		if(!nodePost) 
-			cView.hiddenPosts.forEach(function (item){
-				if (item.is && (item.data.id == data.meta.postId))nodePost = cView.Drawer.genPost(item.data);
+			cView.posts.forEach(function (item){
+				if (item.hidden && (item.data.id == data.meta.postId))nodePost = cView.Drawer.genPost(item.data);
 			});
 		if (nodePost) cView.Actions.doHide(nodePost, false, "rt");
 	}

@@ -8,6 +8,16 @@ function isLogged (cView){
 	});
 }
 function always(){return true;};
+function genLinks (cView, a, head,tail){
+	var linkHead = (typeof head !== "undefined")?head:"";
+	var linkTail = (typeof tail !== "undefined")?tail:"";
+	var div = cView.doc.createElement("div");
+	var ahref = cView.doc.createElement("a");
+	ahref.href = linkHead +a[0]+linkTail;
+	ahref.innerHTML = a[1];
+	div.appendChild(ahref);
+	return div;
+}
 
 function populateSidebar(cView, nodeSidebar, elements){
 	elements.forEach(function(elmt){
@@ -44,20 +54,28 @@ var payload = [
 		}
 		,"test":always  
 	}
+	,{"title":"Search"
+		,"content":function(cView){
+			var input = cView.gNodes["search-input"].cloneAll();
+			input.getElementsByTagName("form")[0].action = gConfig.front+"search";
+			return [input].concat( 
+				Object.keys(cView.contexts).map(
+					function(domain){ 
+						return [cView.contexts[domain].search, domain]; 
+					}
+				).map(function(url){return genLinks(cView, url);})
+			);
+		}
+		,"test":always  
+	
+	}
 	,{"title":"Filters"
 		,"content":function(cView){
 			var linkHead = gConfig.front+"filter/";
 			return [ ["me","My posts"]
 				,["discussions","My discussions"]
 				,["direct","Direct messages"]
-			].map(function(a){
-				var div = cView.doc.createElement("div");
-				var ahref = cView.doc.createElement("a");
-				ahref.href = linkHead +a[0];
-				ahref.innerHTML = a[1];
-				div.appendChild(ahref);
-				return div;
-			});
+			].map(function(a){return genLinks(cView, a,linkHead);});
 		}
 		,"test":isLogged	
 	}

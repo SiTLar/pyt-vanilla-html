@@ -138,9 +138,10 @@ return function(config){
 				.then(function(res){
 					res = JSON.parse(res);
 					if( res.entries.length 
-					|| Object.keys(res.users).some(isThere, res.users)
-					|| Object.keys(res.groups).some(isThere, res.groups))
-						return res;
+						|| Object.keys(res.users).some(isThere, res.users)
+						|| Object.keys(res.groups).some(isThere, res.groups)
+						|| (timeline.slice(0,6) == "filter")
+					) return res;
 					return getUser(token, timeline)
 					.then( function (user){
 						if(typeof user === "string")user = JSON.parse(user);
@@ -181,6 +182,15 @@ return function(config){
 					data.entries = data.entries[0];
 					return data;
 				});
+			}
+			,"getSearch": function (token, search, skip){
+				var pagenum = Math.ceil(skip/gConfig.offset)+1
+				skip =((typeof pagenum !== "undefined")&& (pagenum != 1)) ?("&page=" + pagenum):"";
+				return 	utils.xhr( {
+						"url":config.serverURL + "s.json?q=" + search + skip
+						,"headers":{"X-API-Token":token}
+					}
+				);
 			}
 			,"sendPost": function(token, postdata, sender, type, timelineId){
 				var post = {

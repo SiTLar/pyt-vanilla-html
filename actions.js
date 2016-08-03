@@ -304,14 +304,14 @@ _Actions.prototype = {
 			host.removeChild(victim);
 			if(host.className == "metapost"){
 				cView.Drawer.regenMetapost(host);
-				var metapostData = cView.hiddenPosts[victim.rawData.idx].data;
+				var metapostData = cView.posts[victim.rawData.idx].data;
 				metapostData.dups = metapostData.dups.filter(function(dup){ 
 					return dup.id != victim.rawData.id;
 				});
 				if (metapostData.dups.length == 1)
-					cView.hiddenPosts[victim.rawData.idx].data = metapostData.dups[0];
+					cView.posts[victim.rawData.idx].data = metapostData.dups[0];
 			}
-			else cView.hiddenPosts.splice(victim.rawData.idx,1);
+			else cView.posts.splice(victim.rawData.idx,1);
 			cView.Drawer.regenHides();
 		}, function(){
 			victim.hidden = false;
@@ -460,10 +460,10 @@ _Actions.prototype = {
 			if(!cView.doc.hiddenCount)return;
 			var nodeHiddenPosts = cView.doc.createElement("div");
 			nodeHiddenPosts.id = "hidden-posts";
-			cView.hiddenPosts.forEach(function(oHidden){
-				if(oHidden.data.type == "metapost"){
+			cView.posts.forEach(function(oPost){
+				if(oPost.data.type == "metapost"){
 					var nodeOut;
-					var hides = oHidden.data.dups.filter(function(post){
+					var hides = oPost.data.dups.filter(function(post){
 						return post.isHidden;
 					});
 					if (hides.length == 0)return;
@@ -474,9 +474,9 @@ _Actions.prototype = {
 					);
 					return nodeHiddenPosts.appendChild(nodeOut);
 				}
-				if(!oHidden.is)return;
+				if(!oPost.hidden)return;
 				nodeHiddenPosts.appendChild(
-					cView.Drawer.genPost(oHidden.data)
+					cView.Drawer.genPost(oPost.data)
 				);
 			});
 			e.target.parentNode.parentNode.insertBefore(nodeHiddenPosts , e.target.parentNode.nextSibling);
@@ -503,7 +503,7 @@ _Actions.prototype = {
 		var nodeHide = victim.getNode(["c","post-body"],["c","post-info"],["c","post-controls"],["c","controls"],["c","hide"]);
 		var host = victim.parentNode;
 		if(!host || (action != nodeHide.action)) return;
-		var oHidden = cView.hiddenPosts[victim.rawData.idx];
+		var oPost = cView.posts[victim.rawData.idx];
 		var nodeShow = cView.doc.getElementsByClassName("show-hidden")[0];
 		if (!nodeShow){
 			nodeShow = cView.gNodes["show-hidden"].cloneAll();
@@ -514,18 +514,18 @@ _Actions.prototype = {
 		var count = 1;
 		if(action){
 			host.removeChild(victim);
-			if(host.className != "metapost") oHidden.is = true;
+			if(host.className != "metapost") oPost.hidden = true;
 			else cView.Drawer.regenMetapost(host); 
-			if ((oHidden.data.type != "metapost")
-			|| !oHidden.data.dups.some(function(dup){return dup.isHidden == true;}))  
+			if ((oPost.data.type != "metapost")
+			|| !oPost.data.dups.some(function(dup){return dup.isHidden == true;}))  
 				cView.doc.hiddenCount++;
 			aShow.action = false;
 			aShow.dispatchEvent(new Event("click"));
 		}else{
 			nodeHide.innerHTML = "Hide";
-			cView.hiddenPosts[victim.rawData.idx].is = false;
-			if(oHidden.data.type == "metapost"){
-				var unhidden =  oHidden.data.dups.find(function(post){ 
+			cView.posts[victim.rawData.idx].hidden = false;
+			if(oPost.data.type == "metapost"){
+				var unhidden =  oPost.data.dups.find(function(post){ 
 					return post.isHidden?0:1; 
 				});
 				if (typeof unhidden === "undefined" )
@@ -563,7 +563,7 @@ _Actions.prototype = {
 		function insertPost(victim){
 			var idx = victim.rawData.idx;
 			var count = 0;
-			do if(cView.hiddenPosts[idx--].is)count++;
+			do if(cView.posts[idx--].hidden)count++;
 			while ( idx >0 );
 			if ((victim.rawData.idx - count+1) >= cView.doc.posts.childNodes.length )
 				cView.doc.posts.appendChild(victim);
@@ -1359,6 +1359,10 @@ _Actions.prototype = {
 	,"showUnfolder":function(e){
 		var cView = document.cView;
 		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
+		cView.Utils.unscroll(function(){
+			e.target.style.height = "auto";
+			return nodeImgAtt;
+		});
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	

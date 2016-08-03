@@ -84,7 +84,7 @@ _Drawer.prototype = {
 	,"genUserDetails":function(username, context){
 		var cView = this.cView;
 		var user = context.gUsers.byName[username];
-		var nodeUD = cView.gNodes["user-detailes"].cloneAll();
+		var nodeUD = cView.gNodes["user-details"].cloneAll();
 		var nodeInfo = nodeUD.cNodes["ud-info"];
 		nodeInfo.cNodes["ud-username"].value = user.username;
 		nodeInfo.getNode(["c","ud-avatar"],["c","ud-avatar-img"]).src = user.profilePictureMediumUrl;
@@ -178,6 +178,7 @@ _Drawer.prototype = {
 				if ((item.length != 2) || (settingsNames.indexOf(item[0]) == -1)) return;
 				cView.localStorage.setItem(item[0], item[1]);
 			});
+			node.style["font-family"] = "monospace";
 			settingsNames.forEach(function(name){
 				node.innerHTML += name + "=" + cView.localStorage.getItem(name) + "<br />";
 			});
@@ -244,35 +245,56 @@ _Drawer.prototype = {
 		}
 
 	}
+	,"drawSearch":function(search){
+		var cView = this.cView;
+		cView.doc.getElementById("container").cNodes["pagetitle"]
+			.innerHTML = "Search: " + search;
+		cView.doc.title ="Search: " + search;
+		var node = cView.gNodes["search-big"].cloneAll();
+		cView.Utils.setChild(node, "search-input", cView.gNodes["search-input"].cloneAll());
+		cView.Utils.getInputsByName(node)["qs"].value = search;
+		node.getElementsByTagName("form")[0].target = "_self";
+		cView.Utils.setChild(cView.doc.getElementById("container"), "details", node);
+		if(!cView.doc.getElementsByClassName("post").length){
+			var node = cView.gNodes["nothig-found"].cloneAll();
+			node.innerHTML += search;
+			cView.doc.posts.appendChild(node);
+		}else node.removeChild(node.cNodes["search-info"]);
+
+
+	}
 	,"drawTimeline":function(posts,contexts){
 		var cView = this.cView;
 		var Drawer = cView.Drawer;
 		var body = cView.doc.getElementById("container");
 		var nodeMore = cView.doc.createElement("div");
-		nodeMore.className = "more-node";
-		var htmlPrefix = '<a href="' + gConfig.front+cView.fullPath;
-		var htmlForward;
-		var htmlBackward;
-		//var fLastPage = (content.posts.length != cView.offset);
-		var backward = cView.skip*1 - gConfig.offset*1;
-		var forward = cView.skip*1 + gConfig.offset*1;
-		if (cView.skip){
-			if (backward>=0) htmlBackward = htmlPrefix + "?offset="
-				+ backward*1+ "&limit="+gConfig.offset*1
-				+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
-			nodeMore.innerHTML = htmlBackward ;
+		if(posts.length){
+			nodeMore.className = "more-node";
+			var htmlPrefix = '<a href="' + gConfig.front+cView.fullPath + "?";
+			if( cView.search != "") htmlPrefix += cView.search+"&";
+			var htmlForward;
+			var htmlBackward;
+			//var fLastPage = (content.posts.length != cView.offset);
+			var backward = cView.skip*1 - gConfig.offset*1;
+			var forward = cView.skip*1 + gConfig.offset*1;
+			if (cView.skip){
+				if (backward>=0) htmlBackward = htmlPrefix + "offset="
+					+ backward*1+ "&limit="+gConfig.offset*1
+					+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
+				nodeMore.innerHTML = htmlBackward ;
+			}
+			htmlForward = htmlPrefix + "offset="
+			+ forward*1 + "&limit="+gConfig.offset*1
+			+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
+			if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
+			nodeMore.innerHTML += htmlForward;
+			body.appendChild(nodeMore.cloneNode(true));
 		}
-		htmlForward = htmlPrefix + "?offset="
-		+ forward*1 + "&limit="+gConfig.offset*1
-		+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
-		if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
-		nodeMore.innerHTML +=  htmlForward;
-		body.appendChild(nodeMore.cloneNode(true));
 		cView.doc.posts = cView.doc.createElement("div");
 		cView.doc.posts.className = "posts";
 		cView.doc.posts.id = "posts";
 		body.appendChild(cView.doc.posts);
-		cView.hiddenPosts = new Array();
+		cView.posts = new Array();
 		cView.doc.hiddenCount = 0;
 		var idx = 0;
 		posts.forEach(function(post){
@@ -293,7 +315,7 @@ _Drawer.prototype = {
 				nodePost = Drawer.genPost(post);
 			}
 			if(nodePost)cView.doc.posts.appendChild(nodePost);
-			cView.hiddenPosts.push({"is":post.isHidden,"data":post});
+			cView.posts.push({"hidden":post.isHidden,"data":post});
 		});
 		var nodeShowHidden = cView.gNodes["show-hidden"].cloneAll();
 		nodeShowHidden.cNodes["href"].action = true;
@@ -568,9 +590,8 @@ _Drawer.prototype = {
 
 	,"regenHides":function(){
 		var cView = this.cView;
-		var idx = 0;
-		cView.hiddenPosts.forEach(function(victim){
-			victim.data.idx = idx++;
+		cView.posts.forEach(function(victim,idx){
+			victim.data.idx = idx;
 		});
 	}
 	,"updateDate":function(node, cView){
@@ -583,6 +604,7 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var Drawer = cView.Drawer;
 		
+		if (post.isHidden !== true) post.isHidden = false;
 		var context = cView.contexts[post.domain];
 		var nodePost = cView.gNodes["post"].cloneAll();
 		var postNBody = nodePost.cNodes["post-body"];
@@ -602,7 +624,11 @@ _Drawer.prototype = {
 
 		var urlMatch ;		
 		var listBlocks = cView.blocks.blockPosts[context.domain];
-		if(( typeof listBlocks !== "undefined")&& ( listBlocks != null)&& (listBlocks[ user.id])){
+		if(!cView.noBlocks 
+			&&( typeof listBlocks !== "undefined")
+			&& ( listBlocks != null)
+			&& (listBlocks[ user.id])
+		){
 			nodePost.hidden = true  ;
 		}
 		nodePost.gotLock  = false;
@@ -629,6 +655,7 @@ _Drawer.prototype = {
 					nodeA.border = "none";
 					var nodeImg = cView.doc.createElement("img");
 					nodeImg.src = oAtt.thumbnailUrl;
+					nodeImg.style.height = 0;
 					nodeImg.addEventListener("load", cView.Actions.showUnfolder);
 					nodeA.appendChild(nodeImg);
 					nodeAtt.appendChild(nodeA);
@@ -1058,8 +1085,10 @@ _Drawer.prototype = {
 		var nodesPosts = cView.doc.getElementsByClassName("post");
 		for(var idx = 0; idx < nodesPosts.length; idx++){
 			if((nodesPosts[idx].rawData.createdBy == user.id)
-			&& (nodesPosts[idx].rawData.domain == user.domain))
+			&& (nodesPosts[idx].rawData.domain == user.domain)){
 				nodesPosts[idx].hidden = action;
+				if (!action)cView.Drawer.applyReadMore(nodesPosts[idx]);
+			}
 		}
 	}
 	,"blockComments":function(node, action){

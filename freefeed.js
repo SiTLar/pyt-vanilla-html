@@ -11,6 +11,16 @@ return function(config){
 			,"getTimeline": function(token, timeline, skip) {
 				return get(token, "timelines/"+ timeline + "?offset="+skip); 
 			}
+			,"getSearch": function(token, search, skip) {
+				return 	utils.xhr( {
+					"url":config.serverURLV2 +"search?qs=" + search + "&offset="+skip
+					,"token":token 
+				}).then(function(res){
+					res = JSON.parse(res);
+					res.timelines = {"id":search};
+					return res;
+				});
+			}
 			,"getPost": function(token, path, arrOptions) {
 				var id = path.split("/")[1];
 				var likes = "0";

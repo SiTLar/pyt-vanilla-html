@@ -11,9 +11,10 @@ window.browserDoc = function(){
 	cView.fullPath = locationPath;
 	var arrLocationPath = locationPath.split("/");
 	if(arrLocationPath[0].toLowerCase() != "settings"){
-		var locationSearch = document.location.search;
-		if (locationSearch == "")locationSearch = "?offset=0";
-		cView.skip = JSON.parse(locationSearch.match(/offset=([0-9]*).*/)[1]);
+		cView.search = document.location.search.slice(1);
+		var matchOffset = cView.search.match(/offset=(\d+)/);
+		if(matchOffset) cView.skip = matchOffset[1];
+		cView.search = cView.search.replace(/offset=\d+&?/,"").replace(/limit=\d+&?/,"")
 	}
 		
 	if(JSON.parse(cView.localStorage.getItem("blocks")))

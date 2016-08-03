@@ -88,15 +88,13 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 				text.replace(/&/g,"&amp;")
 					.replace(/</g, "&lt;")
 					.replace(/>/g, "&gt;")
+					.replace(/\n{2,}/g, "\n\n")
 				,"array"
 			).reduce(function(prev,curr){return prev.concat(curr);},[]);
 			arr.forEach(function(txt,idx,arr){
 				arr[idx] = txt.replace(
 					/___CONTEXT_PATH___/g
 					,gConfig.front+"as/"+context.domain
-				).replace(
-					/___CONTEXT_SEARCH___/g
-					,gConfig.domains[context.domain].search
 				);
 			});
 			arr.toString = function(){return this.join(" ");};
@@ -165,6 +163,16 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 					}]
 				]
 			}
+			,"hashtag":{
+				"actions":[
+					["post",function(text){
+						return text.replace(
+							/___CONTEXT_SEARCH___/
+							, gConfig.front+"search?qs="
+						);
+					}]
+				]
+			}
 		});
 		var domains = new Object();
 		var confDomains = Array.isArray(gConfig.domains)?gConfig.domains:Object.keys(gConfig.domains);
@@ -188,7 +196,9 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			,"subReqsCount":0
 			,"blocks": {"blockPosts":{},"blockComments":{}}
 			,"threshold":0.63
+			,"skip":0
 			,"minBody": 8
+			,"noBlocks":false
 		}
 		,"Utils":Utils
 	};

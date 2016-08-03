@@ -13,7 +13,7 @@
 			,"beta.freefeed.net"
 			,"gamma.freefeed.net"
 		]
-		,"search":"http://search.pepyatka.com/s?q="
+		,"search":"https://freefeed.net/search"
 		,"msg":"<a href=\"https://freefeed.net/about\">FreeFeed.net</a>"
 		,"urlSkip":[]
 	}		
@@ -28,7 +28,7 @@
 		,"fronts":["mokum.place"
 			 ,"mokum.ru"
 		]
-		,"search":"https://mokum.place/s?q="
+		,"search":"https://mokum.place/s"
 		,"msg":"<a href=\"https://mokum.place/about\">Mokum <small>.place</small></a><br/>Use an <a href=\"https://mokum.place/settings/apitokens\">API token</a> as password"
 		,"urlSkip":["system"]
 	}
@@ -45,7 +45,7 @@
 			,"george.freefeed.net"
 			,"candy.freefeed.net"
 		]
-		,"search":"https://search.micropeppa.freefeed.net?s="
+		,"search":"https://micropeppa.freefeed.net/search"
 		,"msg":"FrF test server"
 		,"urlSkip":[]
 	}		

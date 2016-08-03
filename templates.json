@@ -697,7 +697,7 @@
 		
 	
 	]}
-	,{"c":"user-detailes"
+	,{"c":"user-details"
 	,"children":[
 		{"c":"ud-unfold","t":"p"
 		,"children":[
@@ -820,5 +820,25 @@
 		]}
 	]}
 	,{"c":"one-line", "txt":"QWERTYUIOP"}
+	,{"c":"search-input"
+	,"children":[
+		{"t":"form", "p":{"target":"_blank"}
+		,"children":[
+			{"c":"search", "t":"input", "p":{"name":"qs", "placeholder":" &#x1F50D; Search request"}}
+		]}
+	]}
+	,{"c":"nothig-found", "t":"h2", "txt":"No results found for "}
+	,{"c":"search-big"
+	,"children":[
+		{"c":"search-input"}
+		,{"c":"search-info"
+		,"children":[
+			{"t":"p", "txt":"<b>Advanced search operators</b>"}
+			,{"t":"p", "txt":"<b>\"double-quotes\"</b> return entries having exact match, e.g.: opensource \"social network\""}
+			,{"t":"p", "txt":"<b>from:</b> return entries from a specific user, e.g.: from:freefeed<br/>"}
+			,{"t":"p", "txt":"<b>group:</b> return entries from a specific group, e.g.: group:travel"}
+		
+		]}
+	]}
 ]}
 

@@ -211,5 +211,24 @@ return {
 		return ret;
 	}
 	,"_Promise": _Promise
+	,"unscroll":function(inp){
+		var node;
+		var offset;
+		var screenM = (window.scrollY + window.innerHeight/2);
+		if (typeof inp === "function" ){
+			var prevDocHeight = document.body.scrollHeight;
+			var arrArgs =  args2Arr.apply(this,arguments);
+			arrArgs.shift();
+			node = inp.apply(this, arrArgs);
+			offset = document.body.scrollHeight - prevDocHeight;
+		} else {
+			node = inp;
+			var dim = node.getBoundingClientRect();
+			offset = dim.bottom-dim.top;
+		}
+		if(screenM > node.offsetTop)
+			window.scrollBy(0,offset);
+		return node;
+	}
 }
 });

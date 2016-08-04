@@ -18,12 +18,39 @@ var chk = {
 		return null;
 	}
 }
+function some(_Promise,arr ){
+	return new _Promise(function(resolve, reject){
+		var count = arr.length;
+		var failed = true;
+		if(!count)resolve();
+		var reses = new Array(count);
+		var failes = new Array(count);
+		function alldone(ok, data,idx){
+			if (ok) {
+				failed = false;
+				reses[idx] = data;
+			}else failes[idx] = data;
+			if (--count)return;
+			(!failed)?resolve(reses):reject(failes);
+		}
+
+		arr.forEach(function(item, idx){
+			function success(res){alldone(true, res,idx);};
+			function fail(res){alldone(false, res ,idx);};
+			if( typeof item.then !== "function")item = _Promise.resolve(item);
+			item.then(success, fail);
+		});	
+	
+	});
+}
+
 function mixedTimelines (cView, contexts, prAllT,prAllC){
 	return cView.Utils._Promise.all([prAllT,prAllC]).then( function (res){
 		var domains = Object.keys(contexts);
 		var posts = new Array();
 		cView.doc.getElementById("loading-msg").innerHTML = "Building page";
 		res[0].forEach(function(data,idx){
+			if(typeof data === "undefined" )return;
 			var context = contexts[domains[idx]];
 			cView.Common.loadGlobals( data, context);
 			if(typeof data.posts !== "undefined" ){
@@ -316,7 +343,7 @@ define("./router",[],function(){
 				prContxt.push(context.p);
 				prConts.push(context.api[source](context.token,path, cView.skip));
 			});
-			var prAllT = cView.Utils._Promise.all(prConts);
+			var prAllT = some(cView.Utils._Promise, prConts);
 			var prAllC = cView.Utils._Promise.all(prContxt);
 			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
 			cView.doc.title +=": " + path;

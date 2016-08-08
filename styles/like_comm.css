@@ -1,4 +1,4 @@
-.like-comm{
+a.like-comm{
 	margin: 0 .3em;
 	color: red;
 	display:inline-block;
@@ -6,4 +6,7 @@
 .like-comm::after{
 	margin-left: .3em;
 	content:"\597d";
+}
+a.like-comm-action{
+	color:currentcolor;
 }

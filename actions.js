@@ -1388,10 +1388,12 @@ _Actions.prototype = {
 		var cView = document.cView;
 		if(document.getElementById("add_sender"))return;
 		var host = e.target.getNode(["p","add-sender"]);
-		var nodePopup = cView.Drawer.genAddSender(function(id,context){
-			if ((typeof id !== "undefined")&&(host.ids.indexOf(id) == -1 ) ){
-				host.ids.push(id);
-				cView.updPostTo(context.logins[id].data,false, context.logins[id].data.users.username);
+		var nodePopup = cView.Drawer.genAddSender(function(login,context){
+			if(typeof login === "undefined")return;
+			var globalId = login.domain + "-" + login.id;
+			if (host.ids.indexOf(globalId) == -1 ) {
+				host.ids.push(globalId);
+				cView.updPostTo(login,false, login.users.username);
 				var victim = document.getElementById("add_sender");
 				victim.parentNode.removeChild(victim);
 				regenAttaches(document.getElementsByClassName("post-to")[0]);

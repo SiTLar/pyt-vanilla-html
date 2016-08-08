@@ -268,28 +268,28 @@ _Drawer.prototype = {
 		var Drawer = cView.Drawer;
 		var body = cView.doc.getElementById("container");
 		var nodeMore = cView.doc.createElement("div");
+		nodeMore.className = "more-node";
+		var htmlPrefix = '<a href="' + gConfig.front+cView.fullPath + "?";
+		if( cView.search != "") htmlPrefix += cView.search+"&";
+		var htmlForward= "";  
+		var htmlBackward = "";
+		//var fLastPage = (content.posts.length != cView.offset);
+		var backward = cView.skip*1 - gConfig.offset*1;
+		var forward = cView.skip*1 + gConfig.offset*1;
+		if (cView.skip){
+			if (backward>=0) htmlBackward = htmlPrefix + "offset="
+				+ backward*1+ "&limit="+gConfig.offset*1
+				+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
+			nodeMore.innerHTML = htmlBackward ;
+		}
 		if(posts.length){
-			nodeMore.className = "more-node";
-			var htmlPrefix = '<a href="' + gConfig.front+cView.fullPath + "?";
-			if( cView.search != "") htmlPrefix += cView.search+"&";
-			var htmlForward;
-			var htmlBackward;
-			//var fLastPage = (content.posts.length != cView.offset);
-			var backward = cView.skip*1 - gConfig.offset*1;
-			var forward = cView.skip*1 + gConfig.offset*1;
-			if (cView.skip){
-				if (backward>=0) htmlBackward = htmlPrefix + "offset="
-					+ backward*1+ "&limit="+gConfig.offset*1
-					+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
-				nodeMore.innerHTML = htmlBackward ;
-			}
 			htmlForward = htmlPrefix + "offset="
 			+ forward*1 + "&limit="+gConfig.offset*1
 			+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
-			if (htmlBackward) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
-			nodeMore.innerHTML += htmlForward;
-			body.appendChild(nodeMore.cloneNode(true));
 		}
+		if ( (htmlBackward != "") && (htmlForward != "")) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
+		nodeMore.innerHTML += htmlForward;
+		body.appendChild(nodeMore.cloneNode(true));
 		cView.doc.posts = cView.doc.createElement("div");
 		cView.doc.posts.className = "posts";
 		cView.doc.posts.id = "posts";

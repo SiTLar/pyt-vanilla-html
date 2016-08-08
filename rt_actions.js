@@ -143,17 +143,15 @@ RtHandler.prototype = {
 			var host = oldNode.parentNode;
 			var dummy = document.createElement("div");
 			var newNode = nodePost;
-			host.insertBefore(dummy, oldNode);
-			nodePost = cView.Drawer.makeMetapost( 
-				a.data.dups.map(function(post){
-					return document.getElementById( 
-						post.domain
-						+ "-post-"
-						+ post.id
-					);
-				}).filter(function(node){return node;}).concat(nodePost)
-			);
-			host.replaceChild(nodePost, dummy);
+			var posts = targetMeta.data.dups.map(function(post){
+				return document.getElementById( 
+					post.domain
+					+ "-post-"
+					+ post.id
+				);
+			}).filter(function(node){return node;}).concat(nodePost)
+			nodePost = cView.Drawer.makeMetapost( posts);
+			host.replaceChild(nodePost,oldNode );
 			cView.Common.markMetaMenu(newNode);
 			return nodePost;
 		}

@@ -19,8 +19,9 @@ var template = [
 ,"children":[
 	{"c":"spacer","t":"span","txt":"&mdash;", "p":{"hidden":true}}
 	,{"c":"display","t":"span" }
-	,{"c":"action", "t":"a", "e":{"click":["addons-like-comm","action"]}}
+	,{"c":"action", "t":"a", "cl":["like-comm-action"], "e":{"click":["addons-like-comm","action"]}}
 ]}
+,{"c":"display", "cl":["like-comm"], "t":"a", "e":{"click":["addons-like-comm","show"]}}
 ];
 var handlers = {
 	"action":function(e){
@@ -39,6 +40,30 @@ var handlers = {
 			e.target.innerHTML = (!action?"like":"un-like");
 		});
 	}
+	,"show":function(e){
+		var id = e.target.getNode(["p","comment"]).rawId;
+		utils.xhr({
+			"url":srvUrl + "likes" + "?comm_id=" + id
+			,"token":cView.contexts[domain].token
+		}).then(function(res){
+			res = JSON.parse(res);
+			if(res.status == "error") return;
+			var popup = cView.gNodes["user-popup"].cloneAll();
+			popup.style.top =  e.target.offsetTop;
+			popup.style.left = e.target.offsetLeft;
+			popup.cNodes["up-info"].innerHTML = "<b>Liked by:</b>";
+			res.data.forEach(function(uname){
+				var div = cView.doc.createElement("div");
+				var link = cView.doc.createElement("a");
+				link.innerHTML = "@" + uname;
+				link.href = gConfig.front + "/as/"+domain+uname; 
+				div.appendChild(link);
+				popup.cNodes["up-info"].appendChild(div);
+				e.target.parentNode.appendChild(popup);
+			});
+		});
+	}
+
 }
 function setControls(node){
 	var nodeControl = nodesT["control"].cloneAll();
@@ -47,7 +72,7 @@ function setControls(node){
 	if(auth){ 
 		nodeControl.cNodes["spacer"].hidden = false;
 		nodeControl.cNodes["action"].action = true;
-		nodeControl.cNodes["action"].innerHTML =  "like";
+		nodeControl.cNodes["action"].innerHTML =  "&#22909;";
 	}
 	return nodeControl;
 
@@ -55,24 +80,31 @@ function setControls(node){
 function apply (likeInfo, node){
 	var id = likeInfo.id;
 	if(typeof node === "undefined")
-		node = cView.doc.getElementById([domain,"cmt",id].join("-"));
+		node = cView.doc.getElementById(domain+"-cmt-"+id);
 	if(!node) return;
-	var span = cView.doc.createElement("span");
 	var nodeControl = node.getNode( ["c","comment-body"] ,["c","like-comm"]);
 	if (!nodeControl) nodeControl= setControls(node);
+	var nodeLike = cView.doc.createElement("span"); 
 	if(likeInfo.likes){
-		span.className = "like-comm";
-		span.innerHTML = likeInfo.likes;
-	}	
+		var nodeLike = nodesT["display"].cloneAll();
+		nodeLike.innerHTML = likeInfo.likes;
+			
+		if(auth){ 
+			nodeControl.cNodes["spacer"].hidden = false;
+			nodeControl.cNodes["action"].action = (likeInfo.my_likes == "0");
+			nodeControl.cNodes["action"].innerHTML =  (likeInfo.my_likes == "0"?"like":"un-like");
+		}
+	}else if(auth){ 
+		nodeControl.cNodes["spacer"].hidden = false;
+		nodeControl.cNodes["action"].action = false;
+		nodeControl.cNodes["action"].innerHTML = "&#22909;";
+	}
 	cView.Utils.setChild( 
 		nodeControl
 		,"display"
-		,span
+
+		,nodeLike
 	);
-	if(!auth) return;
-	nodeControl.cNodes["spacer"].hidden = false;
-	nodeControl.cNodes["action"].action = (likeInfo.my_likes == "0");
-	nodeControl.cNodes["action"].innerHTML =  (likeInfo.my_likes == "0"?"like":"un-like");
 };
 function evtNewNode(e){
 	var node = e.detail;

@@ -1142,7 +1142,7 @@ _Drawer.prototype = {
 				unit.getNode(["c","up-avatar"],["c","avatar-img"]).src = login.users.profilePictureMediumUrl;
 				unit.getNode(["c","asu-info"],["c","username"]).innerHTML = "@" + login.users.username;
 				unit.getNode(["c","asu-info"],["c","screen-name"]).innerHTML = login.users.screenName;
-				unit.addEventListener("click", function(){cb(id,context)});
+				unit.addEventListener("click", function(){cb(login,context)});
 				popup.cNodes["units"].appendChild(unit);
 			});
 		});

@@ -61,7 +61,7 @@ var payload = [
 			return [input].concat( 
 				Object.keys(cView.contexts).map(
 					function(domain){ 
-						return [cView.contexts[domain].search, domain]; 
+						return [gConfig.domains[domain].search, domain]; 
 					}
 				).map(function(url){return genLinks(cView, url);})
 			);

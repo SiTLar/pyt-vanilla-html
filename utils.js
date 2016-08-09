@@ -214,20 +214,32 @@ return {
 	,"unscroll":function(inp){
 		var node;
 		var offset;
-		var screenM = (window.scrollY + window.innerHeight/2);
+		var fScroll = false;
 		if (typeof inp === "function" ){
-			var prevDocHeight = document.body.scrollHeight;
+			var div_array = Array.prototype.slice.call(
+				document.body.querySelectorAll(".post, .comment")
+			);
+			var refNode = div_array.filter(function(a){
+				return a.getBoundingClientRect().top > 0;
+			}).sort(function(a,b){
+				return a.getBoundingClientRect().top - b.getBoundingClientRect().top;;
+			})[0];
+			var refTop = refNode.getBoundingClientRect().top;
 			var arrArgs =  args2Arr.apply(this,arguments);
 			arrArgs.shift();
 			node = inp.apply(this, arrArgs);
-			offset = document.body.scrollHeight - prevDocHeight;
+			offset = refNode.getBoundingClientRect().top - refTop;
+			fScroll = node.getBoundingClientRect().top < refTop;
 		} else {
 			node = inp;
-			var dim = node.getBoundingClientRect();
-			offset = dim.bottom-dim.top;
+			fScroll = (window.scrollY + window.innerHeight/2) > node.offsetTop;
+			var prevDocHeight = document.body.scrollHeight;
+			node.style.position = "absolute"; 
+			offset = document.body.scrollHeight - prevDocHeight;
+			node.style.position = "static"; 
 		}
-		if(screenM > node.offsetTop)
-			window.scrollBy(0,offset);
+		
+		if(fScroll) window.scrollBy(0,offset);
 		return node;
 	}
 }

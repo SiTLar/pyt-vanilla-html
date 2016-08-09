@@ -675,12 +675,12 @@ _Drawer.prototype = {
 			});		
 		}else 
 		if(((urlMatch = post.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
-		&&(cView.localStorage.getItem("show_link_preview") == "1")){
+		&&(JSON.parse(cView.localStorage.getItem("show_link_preview")))){
 			cView.gEmbed.p.then(function(oEmbedPr){
 				Drawer.embedPreview(oEmbedPr
 					,urlMatch[0]
 					,postNBody.cNodes["attachments"] 
-				);
+				).then(cView.Utils.unscroll);
 			});
 		}
 		var anchorDate = cView.doc.createElement("a");
@@ -770,10 +770,11 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var oEmbedURL;
 		var m;
+		var fake = {"then":function(){}};
 		var blacklist = gConfig.domains["FreeFeed"].fronts;
-		if(blacklist.some(function(item){return victim.indexOf(item)!= -1;})) return;
+		if(blacklist.some(function(item){return victim.indexOf(item)!= -1;})) return fake;
 		if((m = /^https:\/\/(?:docs\.google\.com\/(?:document|spreadsheets|presentation|drawings)|drive\.google\.com\/file)\/d\/([^\/]+)/.exec(victim)) !== null) {
-			new Promise(function(resolve,reject){
+			return new Promise(function(resolve,reject){
 				var oReq = new XMLHttpRequest();
 				oReq.onload = function(){
 					if(oReq.status < 400)
@@ -797,14 +798,14 @@ _Drawer.prototype = {
 				node.appendChild(nodeA);
 				target.appendChild(node);
 				img.onerror=function(){nodeA.hidden = true;};
+				return node;
 			});
-			return;	
 		}else if (/^https?:\/\/(www\.)?pinterest.com\/pin\/.*/.exec(victim) !== null){
 			var node = cView.doc.createElement("div");
 			node.className = "att-img";
 			node.innerHTML = '<a data-pin-do="embedPin" href="' + victim + '"></a>';
 			target.appendChild(node);
-			return;
+			return Promise.resolve(node);
 		}
 		var bIsOEmbed = oEmbedPrs.some(function(o){
 			return o.endpoints.some(function(endp){
@@ -824,7 +825,7 @@ _Drawer.prototype = {
 		});
 
 		if(bIsOEmbed){
-			new Promise(function(resolve,reject){
+			return new Promise(function(resolve,reject){
 				var oReq = new XMLHttpRequest();
 				oReq.onload = function(){
 					if(oReq.status < 400)
@@ -835,28 +836,28 @@ _Drawer.prototype = {
 				oReq.open("get",oEmbedURL,true);
 				oReq.send();
 			}).then(function(qoEmbed){
-				if (!qoEmbed.query.count) return;
+				if (!qoEmbed.query.count) return null;
 				var oEmbed = qoEmbed.query.results.json;
 				if(oEmbed.type == "photo"){
-					target.appendChild(oEmbedImg(oEmbed.url,victim));
+					return target.appendChild(oEmbedImg(oEmbed.url,victim));
 				}else if (typeof oEmbed.html !== "undefined"){
 					if(oEmbed.html.indexOf("iframe") == 1){
 						var node = cView.doc.createElement("div");
 						node.innerHTML = oEmbed.html;
-						target.appendChild(node);
+						return target.appendChild(node);
 					}else if(typeof oEmbed.thumbnail_url !== "undefined"){
-						target.appendChild(oEmbedImg(oEmbed.thumbnail_url,victim));
+						return target.appendChild(oEmbedImg(oEmbed.thumbnail_url,victim));
 					}else{
 						var iframe = cView.doc.createElement("iframe");	
 						iframe.sandbox = true;
 						iframe.srcdoc = oEmbed.html;
 						iframe.style.width = oEmbed.width;
 						iframe.style.height = oEmbed.height;
-						target.appendChild(iframe);
+						return target.appendChild(iframe);
 					}
 				}
 			},doEmbedly );
-		}else doEmbedly();
+		}else return doEmbedly();
 		function oEmbedImg(url,victim){
 			if(!url.match(/^['"]?https?/)) return cView.doc.createElement("img");
 			var img = cView.doc.createElement("img");
@@ -872,6 +873,7 @@ _Drawer.prototype = {
 			aEmbed.href = victim;
 			aEmbed.className = "embedly-card";
 			target.appendChild(aEmbed);
+			return fake; 
 		}
 	}
 	,"genEditNode":function(post,cancel){
@@ -1238,6 +1240,7 @@ _Drawer.prototype = {
 			}else{
 				newNode = nodes[0];
 				newNode.hidden = false;
+				cView.Drawer.applyReadMore(newNode);
 			}
 			host.parentNode.replaceChild( newNode, host);
 		}else host.parentNode.removeChild(host);

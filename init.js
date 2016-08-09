@@ -85,7 +85,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 		,"digestText":function(text){
 			var context = this;
 			var arr = context.cView.autolinker.link(
-				text.replace(/&/g,"&amp;")
+				text.trim().replace(/&/g,"&amp;")
 					.replace(/</g, "&lt;")
 					.replace(/>/g, "&gt;")
 					.replace(/\n{2,}/g, "\n\n")

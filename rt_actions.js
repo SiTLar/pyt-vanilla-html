@@ -44,6 +44,12 @@ RtHandler.prototype = {
 			} ,  that.timeGrow);
 		}, 1);
 		*/
+		if(document.getElementsByClassName("posts").length == 0){
+			console.log("%s, %s",node.id, nodePos.id);
+			console.log( cView.posts);
+			throw "Same shit again";
+		
+		}
 		return node;
 	}
 	,setBumpCooldown: function(cooldown){
@@ -107,7 +113,7 @@ RtHandler.prototype = {
 				else return false;
 			}); 
 			if(typeof targetMeta !== "undefined")
-				targetMeta.dups = targetMeta.dups.filter(function(dup){
+				targetMeta.data.dups = targetMeta.data.dups.filter(function(dup){
 					return dup.id != nodePost.rawData.id;
 				});
 			else {
@@ -121,20 +127,20 @@ RtHandler.prototype = {
 			if(typeof targetMeta === "undefined") return nodePost;
 
 			var oldNode = null;
-			if(targetMeta.data.type  != "metapost"){
+			if(targetMeta.data.type  == "metapost"){
+				oldNode = document.getElementById(
+					targetMeta.data.dups[0].domain
+					+"-post-"
+					+targetMeta.data.dups[0].id
+				).parentNode; 
+			}else {
 				targetMeta.data = cView.Common.metapost([targetMeta.data]);
-			
 				oldNode = document.getElementById(
 					targetMeta.data.dups[0].domain
 					+"-post-"
 					+targetMeta.data.dups[0].id
 				);
-			}else oldNode = document.getElementById(
-				targetMeta.data.dups[0].domain
-				+"-post-"
-				+targetMeta.data.dups[0].id
-			).parentNode; 
-
+			}
 			targetMeta.data.dups.push(nodePost.rawData);
 			if(targetMeta.hidden){
 				nodePost.isHidden = true;
@@ -143,6 +149,7 @@ RtHandler.prototype = {
 			var host = oldNode.parentNode;
 			var dummy = document.createElement("div");
 			var newNode = nodePost;
+			host.insertBefore(dummy,oldNode );
 			var posts = targetMeta.data.dups.map(function(post){
 				return document.getElementById( 
 					post.domain
@@ -150,8 +157,9 @@ RtHandler.prototype = {
 					+ post.id
 				);
 			}).filter(function(node){return node;}).concat(nodePost)
+			host.removeChild(oldNode);
 			nodePost = cView.Drawer.makeMetapost( posts);
-			host.replaceChild(nodePost,oldNode );
+			host.replaceChild(nodePost, dummy);
 			cView.Common.markMetaMenu(newNode);
 			return nodePost;
 		}
@@ -160,7 +168,7 @@ RtHandler.prototype = {
 
 	,bumpPost: function(nodePost){
 		var cView = document.cView;
-		if(cView.skip)return;
+		if(cView.skip || (nodePost.rawData.idx === 0))return;
 		var that = this;
 		if(nodePost.rtCtrl.isBeenCommented)
 			nodePost.rtCtrl.bumpLater = function(){ that.bumpPost(nodePost);}
@@ -320,13 +328,30 @@ RtHandler.prototype = {
 	, "post:destroy" : function(data, context){
 		var cView = document.cView;
 		var postId = context.domain+"-post-" +data.meta.postId;
-		var nodePost = document.getElementById(postId);
-		if(!nodePost) return;
-		cView.Utils.unscroll(function(){
+		var victim = document.getElementById(postId);
+		if(!victim) return;
+		var host = victim.parentNode;
+		if(host.classList[0] == "metapost"){
+			cView.Utils.unscroll(function(){
+				host.removeChild(victim);
+				cView.Drawer.regenMetapost(host);
+				return host;
+			});
+			var metapostData = cView.posts[victim.rawData.idx].data;
+			metapostData.dups = metapostData.dups.filter(function(dup){ 
+				return dup.id != victim.rawData.id;
+			});
+			if (metapostData.dups.length == 1)
+				cView.posts[victim.rawData.idx].data = metapostData.dups[0];
+		}else{
 			var dummy = document.createElement("div");
-			nodePost.parentNode.replaceChild(dummy, nodePost);
-			return dummy; 
-		});
+			cView.Utils.unscroll(function(){
+				victim.parentNode.replaceChild(dummy, victim);
+				return dummy; 
+			});
+			dummy.parentNode.removeChild(dummy);
+			cView.posts.splice(victim.rawData.idx,1);
+		}
 
 	}
 	, "post:hide" : function(data, context){

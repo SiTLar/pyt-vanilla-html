@@ -310,8 +310,7 @@ _Actions.prototype = {
 				});
 				if (metapostData.dups.length == 1)
 					cView.posts[victim.rawData.idx].data = metapostData.dups[0];
-			}
-			else cView.posts.splice(victim.rawData.idx,1);
+			} else cView.posts.splice(victim.rawData.idx,1);
 			cView.Drawer.regenHides();
 		}, function(){
 			victim.hidden = false;

@@ -60,6 +60,7 @@ var handlers = {
 				div.appendChild(link);
 				popup.cNodes["up-info"].appendChild(div);
 				e.target.parentNode.appendChild(popup);
+				cView.Utils.fixPopupPos(popup);
 			});
 		});
 	}

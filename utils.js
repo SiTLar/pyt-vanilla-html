@@ -211,5 +211,21 @@ return {
 		return ret;
 	}
 	,"_Promise": _Promise
+	,"fixPopupPos":function(node){
+		var x = node.parentNode.offsetLeft;
+		var y = node.parentNode.offsetTop
+		node.style.opacity = 0;
+		node.style.top = 0;
+		node.style.left = 0;
+		var width = node.offsetWidth;
+		node.style.top = y; 
+		node.style.left = x;
+		if(node.offsetLeft + width > window.innerWidth){
+			node.style.left = "auto";
+			node.style.right = 0;
+		}
+		if(node.offsetLeft < 0) node.style.left = 0;
+		node.style.opacity = 1;
+	}
 }
 });

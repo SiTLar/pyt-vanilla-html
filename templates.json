@@ -760,7 +760,7 @@
 
 		]}
 	]}
-	,{"c":"adv-cmts","e":{"mouseleave":["Actions","destroy"]}
+	,{"c":"adv-cmts", "cl":["user-popup"],"e":{"mouseleave":["Actions","destroy"]}
 	,"children":[
 		{"c":"up-close","e":{"click":["Actions","upClose"]}
 		,"children":[

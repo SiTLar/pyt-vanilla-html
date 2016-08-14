@@ -715,3 +715,6 @@ span.comment-controls::before {
 	position:absolute;
 	opacity:0;
 }
+.search-big{
+	overflow:hidden;
+}

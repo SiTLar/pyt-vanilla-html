@@ -310,8 +310,7 @@ _Actions.prototype = {
 				});
 				if (metapostData.dups.length == 1)
 					cView.posts[victim.rawData.idx].data = metapostData.dups[0];
-			}
-			else cView.posts.splice(victim.rawData.idx,1);
+			} else cView.posts.splice(victim.rawData.idx,1);
 			cView.Drawer.regenHides();
 		}, function(){
 			victim.hidden = false;
@@ -1359,7 +1358,10 @@ _Actions.prototype = {
 	,"showUnfolder":function(e){
 		var cView = document.cView;
 		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
+		cView.Utils.unscroll(function(){
 			e.target.style.height = "auto";
+			return nodeImgAtt;
+		});
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	
@@ -1445,7 +1447,6 @@ _Actions.prototype = {
 		var node = e.target.parentNode;
 		var nodePost = e.target.getNode(["p","post"]);
 		var nodeMore = cView.gNodes["adv-cmts"].cloneAll();
-		nodeMore.className = "user-popup"; 
 		nodeMore.user = node.user;
 		nodeMore.style["z-index"] = 2;
 		var nodeDisCmt = nodeMore.getElementsByClassName("disable-cmts")[0];
@@ -1461,21 +1462,9 @@ _Actions.prototype = {
 			nodeModCmt.innerHTML = "Stop moderating comments";
 			nodeModCmt.action = false;
 		}else nodeModCmt.action = true;
+		e.target.appendChild(nodeMore);
+		cView.Utils.fixPopupPos(nodeMore);
 
-		nodeMore.style.opacity = 0;
-		node.appendChild(nodeMore);
-		nodeMore.style.top = 0;
-		nodeMore.style.left = 0;
-		var width = nodeMore.offsetWidth;
-		nodeMore.style.top = e.target.offsetTop;
-		nodeMore.style.left = e.target.offsetLeft;
-		if(nodeMore.offsetLeft + width > window.innerWidth){
-			nodeMore.style.left = "auto";
-			nodeMore.style.right = 0;
-		}
-		if(nodeMore.offsetLeft < 0)
-			nodeMore.style.left = 0;
-		nodeMore.style.opacity = 1;
 
 	}
 	,"showDelete": function(e){

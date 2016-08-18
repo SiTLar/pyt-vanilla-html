@@ -139,7 +139,7 @@ h1{
 	background: white none repeat scroll 0 0;
 	border: thin solid gray;
 	padding: 0.5em;
-	margin:1em;
+	margin-top:1.5em;
 	min-height:60px;
 	z-index:2;
 }
@@ -714,4 +714,7 @@ span.comment-controls::before {
 .one-line{
 	position:absolute;
 	opacity:0;
+}
+.search-big{
+	overflow:hidden;
 }

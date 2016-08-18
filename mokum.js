@@ -282,7 +282,7 @@ return function(config){
 					}
 				);
 			}
-			,"get": function(token, timeline) {return get(token, timeline);}
+			,"get": get
 			,"updProfile" : function(token, id, data){
 				var user = {
 					"description":data.user.description

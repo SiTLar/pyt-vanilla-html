@@ -79,7 +79,7 @@ function postInit(){
 	ga("send", "pageview");
 
 	//if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
-	if(cView.localStorage.getItem("show_link_preview") == "1"){
+	if(JSON.parse(cView.localStorage.getItem("show_link_preview"))){
 		(function(a,b,c){
 			var d,e,f;
 			f="PIN_"+~~((new Date).getTime()/864e5),
@@ -172,7 +172,7 @@ window.srvDoc = function(){
 	
 	});
 	var urlMatch;
-	if(cView.localStorage.getItem("show_link_preview") == "1"){
+	if(JSON.parse(cView.localStorage.getItem("show_link_preview"))){
 		var nodesPost = document.getElementsByClassName("post");
 		for(idx = 0; idx < nodesPost.length; idx ++){
 			if(((urlMatch = nodesPost[idx].rawData.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null) 
@@ -254,7 +254,7 @@ function setLocalSettings(){
 		+ cssTheme 
 		+ "?build=" 
 		+ encodeURIComponent(___BUILD___); 
-	if(JSON.parse(cView.localStorage.getItem("show_link_preview") == "1")){
+	if(JSON.parse(cView.localStorage.getItem("show_link_preview"))){
 		var nodeEmScript =  document.createElement("script");
 		(function(w, d){
 			var id='embedly-platform', n = 'script';
@@ -273,6 +273,9 @@ function setLocalSettings(){
 				//align: 'right',
 				//chrome: 0
 			}
+		});
+		embedly('on', 'card.rendered', function(iframe){
+			cView.Utils.unscroll(iframe);
 		});
 
 		cView.gEmbed.p = new Promise(function(resolve,reject){

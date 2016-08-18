@@ -310,8 +310,7 @@ _Actions.prototype = {
 				});
 				if (metapostData.dups.length == 1)
 					cView.posts[victim.rawData.idx].data = metapostData.dups[0];
-			}
-			else cView.posts.splice(victim.rawData.idx,1);
+			} else cView.posts.splice(victim.rawData.idx,1);
 			cView.Drawer.regenHides();
 		}, function(){
 			victim.hidden = false;
@@ -1359,7 +1358,10 @@ _Actions.prototype = {
 	,"showUnfolder":function(e){
 		var cView = document.cView;
 		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
+		cView.Utils.unscroll(function(){
 			e.target.style.height = "auto";
+			return nodeImgAtt;
+		});
 		if(cView.Utils.chkOverflow(nodeImgAtt))
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	

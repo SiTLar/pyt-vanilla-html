@@ -119,7 +119,7 @@ RtUpdate.prototype = {
 		var rt = this;
 		var cView = document.cView;
 		data = rt.context.api.parse(data);
-		var postId = [rt.context.domain,"post" ,data.posts.id].join("-");
+		var postId = rt.context.domain + "-post-" + data.posts.id;
 		var nodePost = document.getElementById(postId);
 		if (!nodePost){
 			rt.handlers["post:new"](data, rt.context);
@@ -128,32 +128,34 @@ RtUpdate.prototype = {
 		var newPost = data.posts;
 		var myPost = nodePost.rawData;
 		cView.Common.loadGlobals(data, rt.context);
-
-		myPost.body = newPost.body;
-
-		nodePost.getNode(["c","post-body"],["c","post-cont"]).words = rt.context.digestText(myPost.body);
-		myPost.likes = newPost.likes;
-		myPost.omittedLikes = newPost.omittedLikes;
-		cView.Drawer.genLikes(nodePost);
-		nodePost.rawData.updatedAt = Date.now();
-
-		if(Array.isArray(newPost.comments))newPost.comments.forEach(function(cmt){
-			var commentId = [rt.context.domain,"cmt" ,cmt].join("-");
-			var nodeCmt = document.getElementById(commentId);
-			if (nodeCmt){
-				var unfolded = nodeCmt.isUnfolded;
-				var nodeNewCmt = cView.Drawer.genComment.call(
-					rt.context
-					,rt.context.gComments[cmt]
-				);
-				nodeNewCmt.isUnfolded = unfolded;
-				nodeCmt.parentNode.replaceChild(
-					nodeNewCmt
-					,nodeCmt
-				);
-			}
-		});
 			
+		cView.Utils.unscroll(function(){
+			myPost.body = newPost.body;
+
+			nodePost.getNode(["c","post-body"],["c","post-cont"]).words = rt.context.digestText(myPost.body);
+			myPost.likes = newPost.likes;
+			myPost.omittedLikes = newPost.omittedLikes;
+			cView.Drawer.genLikes(nodePost);
+			nodePost.rawData.updatedAt = Date.now();
+
+			if(Array.isArray(newPost.comments))newPost.comments.forEach(function(cmt){
+				var commentId = [rt.context.domain,"cmt" ,cmt].join("-");
+				var nodeCmt = document.getElementById(commentId);
+				if (nodeCmt){
+					var unfolded = nodeCmt.isUnfolded;
+					var nodeNewCmt = cView.Drawer.genComment.call(
+						rt.context
+						,rt.context.gComments[cmt]
+					);
+					nodeNewCmt.isUnfolded = unfolded;
+					nodeCmt.parentNode.replaceChild(
+						nodeNewCmt
+						,nodeCmt
+					);
+				}
+			});
+			return nodePost;
+		});
 		if(Array.isArray(myPost.comments)
 		&&((myPost.comments.length+myPost.omittedComments) 
 		< (newPost.comments.length+newPost.omittedComments))){
@@ -168,7 +170,10 @@ RtUpdate.prototype = {
 				}
 			});	
 		}
-		cView.Drawer.applyReadMore(nodePost);
+		cView.Utils.unscroll(function(){
+			cView.Drawer.applyReadMore(nodePost);
+			return nodePost;
+		});
 
 		//if ()
 

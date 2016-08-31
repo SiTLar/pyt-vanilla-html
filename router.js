@@ -120,12 +120,11 @@ define("./router",[],function(){
 			var cView = this.cView;
 			if (cView.doc.title == "") cView.doc.title = "Feeds";
 			if (path.indexOf("#") != -1 )
-				var arrPath = path.substr(0,path.indexOf("#")).split("/");
-			else var arrPath = path.split("/");
+				path = path.substr(0,path.indexOf("#"));
+			var arrPath = path.split("/").filter(function(str){return str != "";});
 			var step = gRoutes;
 			for(var idx = 0; idx < arrPath.length; idx++){
 				var txtStep = arrPath[idx];
-				if (txtStep == "")continue;
 				if (is(step.req) && chk[step.req](contexts))
 					return new cView.Utils._Promise.reject(chk[step.req](contexts));
 
@@ -166,7 +165,7 @@ define("./router",[],function(){
 		}
 		,"routeContext":function(contexts, path){
 			var cView = this.cView;
-			var arrPath = path.split("/");
+			var arrPath = path.split("/").filter(function(str){return str != "";});
 			var singleContext = new Object();
 			singleContext[arrPath[1]] = contexts[arrPath[1]];
 			cView.doc.title = arrPath[1];

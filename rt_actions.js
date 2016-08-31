@@ -75,6 +75,7 @@ RtHandler.prototype = {
 			return;
 		cView.Common.loadGlobals(data, context);
 		data.posts.domain = context.domain;
+		data.posts.src = "rt";
 		var nodePost = manageMeta(cView.Drawer.genPost(data.posts));
 		
 		if(nodePost.classList[0] == "metapost" ){

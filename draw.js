@@ -656,7 +656,10 @@ _Drawer.prototype = {
 					var nodeImg = cView.doc.createElement("img");
 					nodeImg.src = oAtt.thumbnailUrl;
 					nodeImg.style.height = 0;
-					nodeImg.addEventListener("load", cView.Actions.showUnfolder);
+					var showUnfolder =  (post.src === "rt")?	
+						cView.Actions.showUnfolderRt
+						:cView.Actions.showUnfolder
+					nodeImg.addEventListener("load", showUnfolder);
 					nodeA.appendChild(nodeImg);
 					nodeAtt.appendChild(nodeA);
 					attsNode.cNodes["atts-img"].appendChild(nodeAtt);
@@ -953,9 +956,11 @@ _Drawer.prototype = {
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].removeEventListener("click", cView["Actions"]["newPost"]);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].addEventListener("click", cView["Actions"]["postDirect"]);
 		victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
-		if(cView.doc.location.hash && (cView.doc.location.hash != "")){
+		var hash;
+		if((cView.fullPath.indexOf("#") != -1) 
+		&& ((hash = cView.fullPath.substr(cView.fullPath.indexOf("#")+1)) != "")){
 			victim.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = false;
-			nodeDirectTo.cNodes["new-feed-input"].value = cView.doc.location.hash.slice(1);
+			nodeDirectTo.getNode(["c","new-feed-input"],["c","input"]).value = hash;
 		}
 		var oSuggest = new Object();
 		var oDest = new Object();

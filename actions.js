@@ -221,6 +221,7 @@ _Actions.prototype = {
 		postCNode.className = "post-cont long-text";
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
+		cView.Drawer.applyReadMore(postCNode);
 
 	}
 	,"postEditedPost": function(e){
@@ -618,7 +619,9 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var nodeComment = e.target.getNode(["p","comment"]);
 		var context = cView.contexts[nodeComment.getNode(["p","post"]).rawData.domain];
-		nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, context.gComments[nodeComment.rawId]),nodeComment);
+		var newNodeComment = cView.Drawer.genComment.call(context, context.gComments[nodeComment.rawId]);
+		nodeComment.parentNode.replaceChild(newNodeComment,nodeComment);
+		cView.Drawer.applyReadMore(newNodeComment);
 	}
 	,"processText": function(e) {
 		var cView = document.cView;
@@ -1356,6 +1359,14 @@ _Actions.prototype = {
 		});
 	}
 	,"showUnfolder":function(e){
+		var cView = document.cView;
+		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
+		e.target.style.height = "auto";
+		if(cView.Utils.chkOverflow(nodeImgAtt))
+			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+	
+	}
+	,"showUnfolderRt":function(e){
 		var cView = document.cView;
 		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
 		cView.Utils.unscroll(function(){

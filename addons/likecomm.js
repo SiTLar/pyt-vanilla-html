@@ -56,7 +56,7 @@ var handlers = {
 				var div = cView.doc.createElement("div");
 				var link = cView.doc.createElement("a");
 				link.innerHTML = "@" + uname;
-				link.href = gConfig.front + "/as/"+domain+uname; 
+				link.href = gConfig.front + "as/"+domain+"/"+uname; 
 				div.appendChild(link);
 				popup.cNodes["up-info"].appendChild(div);
 				e.target.parentNode.appendChild(popup);

@@ -84,6 +84,10 @@ _Actions.prototype = {
 		var arrPostsTo = new Array(postsTo.length);
 		var body = cView.Common.urlsToCanonical(textField.value);
 		for (var idx = 0; idx < postsTo.length; idx++)arrPostsTo[idx] = postsTo[idx];
+
+		var nodeError = e.target.parentNode.getElementsByClassName("msg-error")[0];
+		if(typeof nodeError !== "undefined") nodeError.parentNode.removeChild(nodeError);
+
 		cView.Utils._Promise.all(arrPostsTo.map(send)).then(function(res){
 			var nodeAtt = cView.doc.createElement("div");
 			var nodePostTo =  e.target.getNode(["p", "new-post"],["c","post-to"]);
@@ -129,12 +133,10 @@ _Actions.prototype = {
 		} ,function(err){
 			textField.disabled = false;
 			e.target.disabled = false;
-			var errmsg = "";
 			try{
 				e.target.parentNode.removeChild(nodeSpinner );
-				errmsg = err.err;
 			}catch(e){};
-			//TODO
+			cView.Drawer.makeErrorMsg(err,e.target.parentNode);
 		});
 
 		function send(postTo){
@@ -649,25 +651,14 @@ _Actions.prototype = {
 	,"postNewComment": function(e){
 		var cView = document.cView;
 		e.target.disabled = true;
-		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
-		cView.Actions.sendComment(e.target.getNode(["p","edit"], ["c","edit-txt-area"]));
-		e.target.getNode(["p", "comments"]).cnt++;
-	}
-	,"deleteComment": function(e){
-		var cView = document.cView;
-		var nodeComment = e.target.getNode(["p", "comment"]);
-		cView.Actions.deleteNode(nodeComment,cView.Actions.doDeleteComment);
-	}
-
-	,"sendComment": function (textField){
-		var cView = document.cView;
+		var textField = e.target.getNode(["p","edit"], ["c","edit-txt-area"]);
+		var spinner = cView.gNodes["spinner"].cloneNode(true);
+		var nodeEButtons = textField.parentNode.cNodes["edit-buttons"];
+		var butCancel = e.target.parentNode.replaceChild(spinner,e.target.parentNode.cNodes["edit-buttons-cancel"] );
 		var nodeComment = cView.Utils.getNode(textField, ["p", "comment"]);
 		var nodePost = cView.Utils.getNode(nodeComment,["p", "post"])
 		var context = cView.contexts[nodePost.rawData.domain];
-		nodePost.rtCtrl.isBeenCommented = false;
-		if(typeof nodePost.rtCtrl.bumpLater !== "undefined")
-			setTimeout(nodePost.rtCtrl.bumpLater, 1000);
-		textField.parentNode.cNodes["edit-buttons"].cNodes["edit-buttons-post"].disabled = true;
+		nodeEButtons.cNodes["edit-buttons-post"].disabled = true;
 		var comment = new Object();
 		comment.body = cView.Common.urlsToCanonical(textField.value);
 		comment.postId = nodePost.rawData.id;
@@ -688,7 +679,13 @@ _Actions.prototype = {
 			}
 		}else token = context.token;
 
+		var nodeError = nodeEButtons.getElementsByClassName("msg-error")[0];
+		if(typeof nodeError !== "undefined") nodeError.parentNode.removeChild(nodeError);
+
 		context.api.sendComment(token,postdata).then(function(res){
+			nodePost.rtCtrl.isBeenCommented = false;
+			if(typeof nodePost.rtCtrl.bumpLater !== "undefined")
+				setTimeout(nodePost.rtCtrl.bumpLater, 1000);
 			var comment = res.comments;
 			context.gComments[comment.id] = comment;
 			if( nodeComment.parentNode.children.length > 4 )cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
@@ -697,9 +694,19 @@ _Actions.prototype = {
 				nodeComment.parentNode.replaceChild(newComment ,nodeComment);
 				cView.Drawer.applyReadMore(newComment);
 			} else nodeComment.parentNode.removeChild(nodeComment);
+		},function(err){
+			nodeEButtons.cNodes["edit-buttons-post"].disabled = false;
+			nodeEButtons.replaceChild(butCancel,spinner );
+			cView.Drawer.makeErrorMsg(err,nodeEButtons);
 		});
 		
 	}
+	,"deleteComment": function(e){
+		var cView = document.cView;
+		var nodeComment = e.target.getNode(["p", "comment"]);
+		cView.Actions.deleteNode(nodeComment,cView.Actions.doDeleteComment);
+	}
+
 	,"deleteNode": function(node,doDelete){
 		var cView = document.cView;
 		var nodeConfirm = cView.doc.createElement("div");
@@ -785,7 +792,6 @@ _Actions.prototype = {
 				nodePB.cNodes["comments"].appendChild(nodeComment);
 				nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
 			}
-			nodePB.cNodes["comments"].cnt = postUpd.comments.length;
 			cView.Drawer.applyReadMore( nodePB);
 			cView.Drawer.addLastCmtButton(nodePB);
 			return postUpd;

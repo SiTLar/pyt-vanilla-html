@@ -739,8 +739,7 @@ _Drawer.prototype = {
 				.appendChild(Drawer.genComment.call(context, context.gComments[commentId]))
 			});
 		}
-		postNBody.cNodes["comments"].cnt = postNBody.cNodes["comments"].childNodes.length;
-		if (postNBody.cNodes["comments"].cnt > 4)
+		if (postNBody.cNodes["comments"].childNodes.length > 4)
 				Drawer.addLastCmtButton(postNBody);
 		return nodePost;
 
@@ -1288,6 +1287,16 @@ _Drawer.prototype = {
 				,cView.Actions.unfoldReadMore
 			);
 		}
+	}
+	,"makeErrorMsg":function(err,nodeEButtons){
+		var cView = this.cView;
+		var node = cView.doc.createElement("div");
+		node.className = "msg-error";
+		var msg;
+		try{msg = JSON.parse(err.data).err;}
+		catch(e){msg = err.data;}
+		node.innerHTML = err.code?("Error #"+err.code+": "+msg):"Looks like a network error";
+		nodeEButtons.appendChild(node);
 	}
 };
 return _Drawer;

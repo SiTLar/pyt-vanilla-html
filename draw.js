@@ -255,6 +255,7 @@ _Drawer.prototype = {
 		cView.Utils.getInputsByName(node)["qs"].value = search;
 		node.getElementsByTagName("form")[0].target = "_self";
 		cView.Utils.setChild(cView.doc.getElementById("container"), "details", node);
+		if(search == "")return;
 		if(!cView.doc.getElementsByClassName("post").length){
 			var node = cView.gNodes["nothig-found"].cloneAll();
 			node.innerHTML += search;

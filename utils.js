@@ -105,8 +105,10 @@ function xhr (o){
 		oReq.onerror = function(){
 			reject({"code":oReq.status, "data":oReq.response});
 		};
-		if (typeof o.data  !== "undefined")  oReq.send(o.data);
-		else  oReq.send();
+		try{
+			if (typeof o.data  !== "undefined")  oReq.send(o.data);
+			else  oReq.send();
+		}catch(e){reject({"code":-1, "data":"Unknown error"});console.log(e);}
 	});
 }
 

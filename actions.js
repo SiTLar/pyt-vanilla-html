@@ -211,8 +211,11 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var victim = e.target.getNode(["p","post"]);
 		var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditedPost,cView.Actions.cancelEditPost);
-		nodeEdit.cNodes["edit-txt-area"].value = victim.rawData.body;
+		var textArea = nodeEdit.cNodes["edit-txt-area"]
+		textArea.value = victim.rawData.body;
 		victim.cNodes["post-body"].replaceChild( nodeEdit, victim.cNodes["post-body"].cNodes["post-cont"]);
+		if (textArea.scrollHeight > textArea.clientHeight)
+			textArea.style.height = textArea.scrollHeight + "px";
 	}
 	,"cancelEditPost": function(e){
 		var cView = document.cView;
@@ -590,11 +593,15 @@ _Actions.prototype = {
 		var victim = e.target.getNode(["p", "comment"]);
 		var context = cView.contexts[victim.domain];
 		var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditComment,cView.Actions.cancelEditComment);
-		nodeEdit.cNodes["edit-txt-area"].value = context.gComments[victim.rawId].body;
+		var textArea = nodeEdit.cNodes["edit-txt-area"];
+		textArea.value = context.gComments[victim.rawId].body;
+	
 		victim.replaceChild( nodeEdit, victim.cNodes["comment-body"]);
 		victim.cNodes["comment-body"] = nodeEdit;
 		nodeEdit.className = "comment-body";
 		victim.getElementsByClassName("edit-txt-area")[0].focus();
+		if (textArea.scrollHeight > textArea.clientHeight)
+			textArea.style.height = textArea.scrollHeight + "px";
 	}
 	,"postEditComment": function(e){
 		var cView = document.cView;

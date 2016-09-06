@@ -58,6 +58,17 @@ var payload = [
 		,"content":function(cView){
 			var input = cView.gNodes["search-input"].cloneAll();
 			input.getElementsByTagName("form")[0].action = gConfig.front+"search";
+			var arrSkipDomains = (new Array()).concat(cView.localStorage.getItem("skip_domains"));
+			Object.keys(cView.contexts).forEach(function(domain){
+				if(arrSkipDomains.indexOf(domain) != -1) return;
+				var el = cView.doc.createElement("input");
+				el.type = "hidden";
+				el.value = domain;
+				el.name = "d";
+				input.getElementsByClassName("search-domains")[0].appendChild(el);
+
+			});
+
 			return [input].concat( 
 				Object.keys(cView.contexts).map(
 					function(domain){ 

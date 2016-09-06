@@ -314,20 +314,44 @@ define("./router",[],function(){
 					context.timelineId = res[0].timelines.id;
 			});
 		}
-		,"routeSearch":function(contexts){
+		,"routeSearch":function(contextsIn){
 			var cView = this.cView;
 			var search = cView.search.match(/qs=([^&]+)/);
+			var domains = new Array();
+			var reDomains = /d=([^&]+)/g;
+			var match = null;
+			while((match = reDomains.exec(cView.search)) !== null)
+				domains.push(match[1]);
+			if (!domains.length){
+				var arrSkipDomains = (new Array()).concat(JSON.parse(cView.localStorage.getItem("skip_domains")));
+				domains =Object.keys(contextsIn).filter(function(domain){
+					return arrSkipDomains.indexOf(domain) == -1;
+				});
+			}
 
 			if(!search){ 
-				cView.Drawer.drawSearch("");
+				cView.Drawer.drawSearch({"query":"","domains":domains});
 				return cView.Utils._Promise.resolve();
 			}
+			var contextsOut = new Object();
+			Object.keys(contextsIn).forEach(function(domain){
+				if(domains.indexOf(domain) != -1) 
+					contextsOut[domain] = contextsIn[domain];
+			});
+			if(!Object.keys(contextsOut).length){
+				contextsOut = contextsIn;
+				domains = Object.keys(contextsIn);
+			}
+
 			return this.timeline(
-				contexts
+				contextsOut
 				,search[1]
 				,"getSearch"
 			).then(function(){
-				cView.Drawer.drawSearch(decodeURIComponent(search[1].replace("+", " ")));
+				cView.Drawer.drawSearch({
+					"query":decodeURIComponent(search[1].replace("+", " "))
+					,"domains":domains
+				})
 			});
 		}
 		,"timeline":function(contexts, path, source ){

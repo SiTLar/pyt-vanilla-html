@@ -724,3 +724,6 @@ span.comment-controls::before {
 	line-height:1em;
 	height:1em;
 }
+.search-domain {
+	margin: 0.5em;
+}

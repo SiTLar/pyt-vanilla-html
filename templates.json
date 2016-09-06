@@ -830,8 +830,8 @@
 	]}
 	,{"c":"search-domain", "t":"label"
 	,"children":[
-		{"t":"input" ,"p":{"type":"checkbox", "name":"skip"}}
-		,{"c":"span", "t":"span"}
+		{"c":"i","t":"input" ,"p":{"type":"checkbox", "name":"d"}}
+		,{"c":"s","t":"span"}
 	]}
 	,{"c":"nothig-found", "t":"h2", "txt":"No results found for "}
 	,{"c":"search-big"

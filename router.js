@@ -349,7 +349,7 @@ define("./router",[],function(){
 				,"getSearch"
 			).then(function(){
 				cView.Drawer.drawSearch({
-					"query":decodeURIComponent(search[1].replace("+", " "))
+					"query":decodeURIComponent(search[1].replace(/\+/g, " "))
 					,"domains":domains
 				})
 			});

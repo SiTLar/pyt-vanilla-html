@@ -248,17 +248,24 @@ _Drawer.prototype = {
 	,"drawSearch":function(search){
 		var cView = this.cView;
 		cView.doc.getElementById("container").cNodes["pagetitle"]
-			.innerHTML = "Search: " + search;
-		cView.doc.title ="Search: " + search;
+			.innerHTML = "Search: " + search.query;
+		cView.doc.title ="Search: " + search.query;
 		var node = cView.gNodes["search-big"].cloneAll();
 		cView.Utils.setChild(node, "search-input", cView.gNodes["search-input"].cloneAll());
-		cView.Utils.getInputsByName(node)["qs"].value = search;
 		node.getElementsByTagName("form")[0].target = "_self";
+		Object.keys(cView.contexts).forEach(function(domain){
+			var el = cView.gNodes["search-domain"].cloneAll(true);
+			el.cNodes["i"].checked =  (search.domains.indexOf(domain) != -1);
+			el.cNodes["i"].value = domain;
+			el.cNodes["s"].innerHTML = domain;
+			node.getElementsByClassName("search-domains")[0].appendChild(el);
+		});
 		cView.Utils.setChild(cView.doc.getElementById("container"), "details", node);
-		if(search == "")return;
+		if(search.query == "")return;
+		cView.Utils.getInputsByName(node)["qs"].value = search.query ;
 		if(!cView.doc.getElementsByClassName("post").length){
 			var node = cView.gNodes["nothig-found"].cloneAll();
-			node.innerHTML += search;
+			node.innerHTML += search.query;
 			cView.doc.posts.appendChild(node);
 		}else node.removeChild(node.cNodes["search-info"]);
 

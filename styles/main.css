@@ -315,6 +315,7 @@ span.comment-controls::before {
 	margin-right: 0.5em;
 }
 .likes-smile {
+	margin-left: -0.25em;
 	float: left;
 	height: auto;
 	width: 1.2em;
@@ -717,4 +718,9 @@ span.comment-controls::before {
 }
 .search-big{
 	overflow:hidden;
+}
+.add-cmt-icon.fa-stack{
+	width:1em;
+	line-height:1em;
+	height:1em;
 }

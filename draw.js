@@ -922,14 +922,22 @@ _Drawer.prototype = {
 		var aAddComment = cView.doc.createElement("a");
 		var aIcon = cView.doc.createElement("a");
 		aAddComment.className = "post-control-comment";
-		aIcon.className = "fa-stack fa-1x";
+		aIcon.className = "add-cmt-icon fa-stack fa-1x";
 		aIcon.innerHTML = '<i class="fa fa-comment-o fa-stack-1x"></i>'
 		+'<i class="fa fa-square fa-inverse fa-stack-1x" style="left: 3px; top: 3px; font-size: 60%"></i>'
 		+'<i class="fa fa-plus fa-stack-1x" style="left: 3px; top: 3px; font-size: 60%"></i>';
 		aAddComment.innerHTML  = "Add comment";
 		aAddComment.addEventListener("click",cView["Actions"]["addComment"]);
-		postNBody.appendChild(aIcon);
-		postNBody.appendChild(aAddComment );
+		var nodeCtrl = cView.gNodes["comment"].cloneAll(true);
+		var div = cView.doc.createElement("div");
+		div.appendChild(aIcon);
+		div.className = "comment-date";
+		cView.Utils.setChild(nodeCtrl, "comment-date", div);
+		div = cView.doc.createElement("div");
+		div.appendChild(aAddComment);
+		div.className = "comment-body";
+		cView.Utils.setChild(nodeCtrl,"comment-body",div);
+		postNBody.appendChild(nodeCtrl);
 		postNBody.lastCmtButton = true;
 	}
 	,"genDirectTo":function(victim, login){

@@ -171,7 +171,7 @@
 		,"children":[
 			{
 				"t":"a"
-				,"txt":"&#10133; Add sender"
+				,"txt":"&#10133; Post to another account"
 				,"e":{"click":["Actions","addSender"]}
 			}
 		]}

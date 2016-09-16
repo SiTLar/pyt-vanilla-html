@@ -9,6 +9,16 @@ return function(config){
 		"protocol":{
 			"get": get
 			,"getTimeline": function(token, timeline, skip) {
+				if (timeline == "filter/best_of") return utils.xhr( {
+					"url":config.serverURLV2 + "bestof" + "?offset="+skip
+					,"token":token 
+				}).then(function(res){
+					res = JSON.parse(res);
+					if (typeof res.timelines == "undefined")
+						res.timelines = {"id":"bestof"};
+					return res;
+				});
+
 				return get(token, "timelines/"+ timeline + "?offset="+skip); 
 			}
 			,"getSearch": function(token, search, skip) {

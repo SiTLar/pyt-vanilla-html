@@ -86,6 +86,7 @@ var payload = [
 			return [ ["me","My posts"]
 				,["discussions","My discussions"]
 				,["direct","Direct messages"]
+				,["best_of", "Best of"]
 			].map(function(a){return genLinks(cView, a,linkHead);});
 		}
 		,"test":isLogged	

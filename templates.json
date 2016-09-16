@@ -402,17 +402,21 @@
 	]}
 	,{"c":"settings-head"
 	,"children":[
-		{"c":"sh-displ"
+		{"c":"sh-displ", "cl":["sh-item"]
 		,"children":[
 			{"t":"a","txt":"Display","e":{"mousedown":["Actions","goSetDisplay"]}}
 		]}
-		,{"c":"sh-acc"
+		,{"c":"sh-acc", "cl":["sh-item"]
 		,"children":[
 			{"t":"a","txt":"Accounts","e":{"mousedown":["Actions","goSetAccounts"]}}
 		]}
-		,{"c":"sh-addons"
+		,{"c":"sh-addons", "cl":["sh-item"]
 		,"children":[
 			{"t":"a","txt":"Addons","e":{"mousedown":["Actions","goSetAddons"]}}
+		]}
+		,{"c":"sh-blocks", "cl":["sh-item"]
+		,"children":[
+			{"t":"a","txt":"Block content","e":{"mousedown":["Actions","goSetBlocks"]}}
 		]}
 		,{"c":"sh-end"}
 	]}
@@ -845,6 +849,41 @@
 			,{"t":"p", "txt":"<b>group:</b> return entries from a specific group, e.g.: group:travel"}
 		
 		]}
+	]}
+	,{"c":"blocks-settings-page"
+	,"children":[
+		{"c":"title","t":"h2"}
+		,{"c":"domain", "t":"input", "p":{"type":"hidden", "name":"domain"}}
+		,{"c":"strings"
+		,"children":[
+			{ "txt":"Block content with those strings:"}
+			,{"c":"content", "t":"ul"}
+			,{"c":"controls"
+			,"children":[
+				{"t":"span", "txt":"add a string"}
+				,{"t":"input", "p":{"name":"strToBlock"}, "e":{"keydown":["Actions","addBlockingString"]}}
+				,{"t":"button", "txt":"add", "e":{"click":["Actions","addBlockingString"]}}
+				,{"t":"button", "txt":"copy", "e":{"click":["Actions","copyBlockingStrings"]}}
+				,{"c":"paste", "t":"button", "txt":"paste", "p":{"disabled":true}, "e":{"click":["Actions","pasteBlockingStrings"]}}
+			]}
+
+		]}
+		,{"c":"cmts"
+		,"children":[
+			{"txt":"Block comments from following users:"}
+			,{"c":"content", "t":"ul"}
+		]}
+		,{"c":"posts"
+		,"children":[
+			{"txt":"Block posts from following users:"}
+			,{"c":"content", "t":"ul"}
+		]}
+	]}
+	,{"c":"blocks-item", "t":"il", "e":{"click":["Actions","remBlockingItem"]} 
+	,"children":[
+		{"t":"input", "p":{"name":"val", "type":"hidden"}}	
+		,{"t":"input", "p":{"name":"type", "type":"hidden"}}	
+		,{"c":"title","t":"span"}
 	]}
 ]}
 

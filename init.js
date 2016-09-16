@@ -194,7 +194,8 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			,"rtSub" : {}
 			,"cTxt": null
 			,"subReqsCount":0
-			,"blocks": {"blockPosts":{},"blockComments":{}}
+			,"blocks": {"blockPosts":{},"blockComments":{},"blockStrings":{}}
+			,"blockLists": {"cmts":"blockComments", "posts":"blockPosts"}
 			,"threshold":0.63
 			,"skip":0
 			,"minBody": 8

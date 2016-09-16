@@ -15,12 +15,11 @@ define("./addons", [ "./utils"
 	addons.shift();
 return{
 	"commit":function(cView){
-		addons.forEach(function (addon){
+		return cView.Utils._Promise.all(addons.map(function (addon){
 			addon = addon(cView);
-			addon.run();
 			cView.addons.all.push(addon);
-		});
-		cView.addons.ok();
+			return addon.run();
+		})).then(cView.addons.ok);
 
 	}
 }

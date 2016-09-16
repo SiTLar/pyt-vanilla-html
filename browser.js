@@ -15,10 +15,15 @@ window.browserDoc = function(){
 		var matchOffset = cView.search.match(/offset=(\d+)/);
 		if(matchOffset) cView.skip = matchOffset[1];
 		cView.search = cView.search.replace(/offset=\d+&?/,"").replace(/limit=\d+&?/,"")
+	}else if(locationPath.indexOf("settings/raw") != -1){
+		var nodeSplash = document.getElementById("splash");
+		cView.Drawer.drawRaw(nodeSplash);
 	}
 		
 	if(JSON.parse(cView.localStorage.getItem("blocks")))
 		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
+	if(typeof cView.blocks.blockStrings === "undefined")
+		cView.blocks.blockStrings = new Object();
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
@@ -104,7 +109,23 @@ function postInit(){
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");
-	Addons.commit(cView);
+	Addons.commit(cView).then(function(){
+		var lists = cView.blockLists;
+		Object.keys(cView.contexts).forEach(function (domain){
+			var context = cView.contexts[domain];
+			Object.keys(lists).forEach(function(type){
+				var list = cView.blocks[lists[type]][domain]; 
+				if(typeof list !== "undefined") Object.keys(list).forEach(function(id){
+					if(list[id] !== true) return;
+					var user = context.gUsers[id];
+					if(typeof user === "undefined") return;
+					list[id] = user.username;
+				});
+
+			});
+		});
+		cView.Common.updateBlockList();
+	});
 }
 window.srvDoc = function(){
 	var cView = document.cView;

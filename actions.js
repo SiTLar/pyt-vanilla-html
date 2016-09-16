@@ -936,13 +936,15 @@ _Actions.prototype = {
 	,"doBlockCom": function(e){
 		var cView = document.cView;
 		var nodeUPC = e.target.getNode(["p" ,"up-controls"]);
-		cView.Common.updateBlockList("blockComments" ,nodeUPC ,e.target.checked);
+		var id = cView.contexts[nodeUPC.domain].gUsers.byName[nodeUPC.user].id; 
+		cView.Common.updateBlockList("blockComments" ,nodeUPC.domain, id ,e.target.checked);
 		cView.Drawer.blockComments( nodeUPC ,e.target.checked);
 	}
 	,"doBlockPosts": function(e){
 		var cView = document.cView;
 		var nodeUPC = e.target.getNode(["p" ,"up-controls"]);
-		cView.Common.updateBlockList("blockPosts" ,nodeUPC ,e.target.checked);
+		var id = cView.contexts[nodeUPC.domain].gUsers.byName[nodeUPC.user].id; 
+		cView.Common.updateBlockList("blockPosts" ,nodeUPC.domain, id  ,e.target.checked);
 		cView.Drawer.blockPosts( nodeUPC,e.target.checked );
 	}
 	,"setRadioOption": function(e){
@@ -1530,6 +1532,9 @@ _Actions.prototype = {
 	,"goSetAddons": function(e){
 		e.target.href = gConfig.front+"settings/addons";
 	}
+	,"goSetBlocks": function(e){
+		e.target.href = gConfig.front+"settings/blocks";
+	}
 	,"goSetDisplay": function(e){
 		e.target.href = gConfig.front+"settings/display";
 	}
@@ -1570,7 +1575,82 @@ _Actions.prototype = {
 		victim.innerHTML = victim.words;
 		victim.isUnfolded = true;
 	}
+	,"remBlockingItem":function(e){
+		var cView = document.cView;
+		var victim = cView.Utils.getNode(e.target,["p","blocks-item"]);
+		var domain = victim.getNode(["p","blocks-settings-page"],["c","domain"]).value;
+		var inputs = cView.Utils.getInputsByName(victim);
+		switch(inputs.type.value){
+		case "str":
+			var strings = cView.blocks.blockStrings[domain];
+			var idx = strings.indexOf(inputs.val.value);
+			if(idx != -1) strings.splice(idx, 1);
+			cView.Common.updateBlockList("blockStrings", domain, inputs.val.value, false);
+			break;
+		case "posts":
+		case "cmts":
+			cView.Common.updateBlockList(
+				cView.blockLists[inputs.type.value]
+				,domain
+				,inputs.val.value
+				,false
+			);
+			break;
+		}
+		victim.parentNode.removeChild(victim);
+	}
+	,"addBlockingString":function(e){
+		var cView = document.cView;
+		if((e.type != "click")&& (e.which != "13")) return ;
+		var str = cView.Utils.getInputsByName(e.target.getNode(["p","controls"]))["strToBlock"].value.trim();
+		var host = e.target.getNode(["p","blocks-settings-page"]);
+		var domain = host.getNode(["c","domain"]).value;
+		var item = cView.gNodes["blocks-item"].cloneAll();
+		var inputs = cView.Utils.getInputsByName(item);
+		if((typeof cView.blocks.blockStrings[domain] !== "undefined")
+		&& (cView.blocks.blockStrings[domain].indexOf(str) != -1 ))return;
+		inputs["type"].value = "str";
+		inputs["val"].value  = str;
+		item.cNodes["title"].innerHTML = str;
+		host.getNode(["c","strings"],["c","content"]).appendChild(item);
+		cView.Common.updateBlockList("blockStrings", domain, str, true);
+	}
+	,"copyBlockingStrings": function(e){
+		var cView = document.cView;
+		var host = e.target.getNode(["p","blocks-settings-page"]);
+		var domain = host.getNode(["c","domain"]).value;
+		cView.tmp = cView.blocks.blockStrings[domain];
+		var buttons = cView.doc.getElementsByTagName("button");
+		for (var idx = 0; idx < buttons.length; idx++) {
+			if(buttons[idx].className == "paste")buttons[idx].disabled = false;
+		}
 
+	
+	}
+	,"pasteBlockingStrings": function(e){
+		var cView = document.cView;
+		var host = e.target.getNode(["p","blocks-settings-page"]);
+		var domain = host.getNode(["c","domain"]).value;
+		if(!Array.isArray(cView.blocks.blockStrings[domain]))
+			cView.blocks.blockStrings[domain] = new Array();
+		var arr = cView.blocks.blockStrings[domain];
+		cView.blocks.blockStrings[domain] = arr.concat(
+			cView.tmp.filter(function (item) { return arr.indexOf(item) < 0; })
+		);
+		var buttons = cView.doc.getElementsByTagName("button");
+		for (var idx = 0; idx < buttons.length; idx++) {
+			if(buttons[idx].className == "paste")buttons[idx].disabled = true;
+		}
+		delete cView.tmp;
+		cView.Utils.setChild(
+			host.cNodes["strings"]
+			,"content"
+			,cView.Drawer.genBlockStrPage(domain)
+		);	
+		cView.Common.updateBlockList();
+
+
+	}
 };
 return _Actions;
 });

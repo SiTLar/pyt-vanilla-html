@@ -162,17 +162,20 @@ return function(cV){
 			cView["addons-srvsave"] = handlers;
 			if (JSON.parse(cView.localStorage.getItem("addons-save-blocks"))){
 				var savContext = cView.contexts[savDomain];
-				savContext.getWhoami(savContext.token).then(function(){
+				return savContext.getWhoami(savContext.token).then(function(){
 					var oSettings = savContext.gMe.users.frontendPreferences.vanilla;
-					cView.localStorage.setItem("blocks",oSettings["blocks"]);
-					var ub = cView.Common.updateBlockList;
-					cView.Common.updateBlockList = function(){
+					cView.blocks = JSON.parse(oSettings["blocks"]); 
+					if(typeof cView.blocks.blockStrings === "undefined")
+						cView.blocks.blockStrings = new Object();
+					localStorage.setItem("blocks",JSON.stringify(cView.blocks));
+				var ub = cView.Common.updateBlockList;
+				cView.Common.updateBlockList = function(){
 						ub.apply(cView, arguments);
 						save();
 					}
 
 				});
-			}
+			}else return cView.Utils._Promise.resolve();
 		}
 		,"settings": function(){return makeSettings(cView);}
 	}

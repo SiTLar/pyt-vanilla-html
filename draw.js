@@ -685,7 +685,7 @@ _Drawer.prototype = {
 				}
 			});		
 		}else 
-		if(((urlMatch = post.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
+		if(((urlMatch = post.body.match(/(^|[^!])https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
 		&&(JSON.parse(cView.localStorage.getItem("show_link_preview")))){
 			cView.gEmbed.p.then(function(oEmbedPr){
 				Drawer.embedPreview(oEmbedPr

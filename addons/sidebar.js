@@ -114,6 +114,7 @@ var payload = [
 		,"content":function(cView){
 			var domains = Object.keys(cView.contexts);
 			var groups = new Array();
+			cView.regenGrps = arguments.callee;
 			domains.forEach(function(domain){
 				var context = cView.contexts[domain];
 				var ids = new Object();
@@ -150,10 +151,12 @@ var payload = [
 			for (var idx = 0; idx < length; idx++){
 				var div = cView.doc.createElement("div");
 				div.innerHTML = groups[idx].link + "<br/>" 
-				+ "<span class=\"sb-info\">" 
-				+cView.Utils.relative_time( groups[idx].time) 
-				+ "</span>";
+				var spanTime = cView.doc.createElement("span");
+				spanTime.className = "sb-info";
+				div.appendChild(spanTime);
 				out.push(div);
+				spanTime.date = groups[idx].time; 
+				window.setTimeout(cView.Drawer.updateDate, 10,spanTime, cView);
 			}
 			div = cView.doc.createElement("div");
 			div.innerHTML = "<span class=\"sb-info\"><a href=\""

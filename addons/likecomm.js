@@ -231,6 +231,7 @@ return function(cV){
 				}).then(connect);
 			}else connect(null);
 			window.addEventListener("newNode", evtNewNode);
+			return cView.Utils._Promise.resolve();
 		}
 		,"settings": function(){return makeSettings(cView);}
 	}

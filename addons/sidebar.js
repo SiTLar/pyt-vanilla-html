@@ -171,6 +171,7 @@ return function(cView){
 				,cView.doc.getElementById("sidebar")
 				,payload
 			);
+			return cView.Utils._Promise.resolve();
 		}
 		,"settings":function(){return cView.doc.createElement("span");}
 	}

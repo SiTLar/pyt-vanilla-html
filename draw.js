@@ -155,7 +155,7 @@ _Drawer.prototype = {
 		body.appendChild(nodeSettingsHead);
 		switch(cView.doc.location.pathname.split("/").pop()){
 		case "raw":
-			drawRaw();
+			cView.addons.pr.then(function(){cView.Drawer.drawRaw(body)});
 			break;
 		case "accounts":
 			drawAcc();
@@ -163,26 +163,15 @@ _Drawer.prototype = {
 		case "addons":
 			drawAddons();	
 			break;
+		case "blocks":
+			drawBlocks();
+			break;
 		case "display":
 		default:
 			drawDisp();
 		}
 		cView.Common.setIcon("favicon.ico");
-		return new cView.Utils._Promise(function(resolve,reject){resolve();});
-		function drawRaw(){
-			var settingsNames = require("json!./settings.json");
-			var node = cView.doc.createElement("div");
-			body.appendChild(node);
-			cView.doc.location.search.substr(1).split("&").forEach(function(item){
-				item = decodeURIComponent(item).split("=");
-				if ((item.length != 2) || (settingsNames.indexOf(item[0]) == -1)) return;
-				cView.localStorage.setItem(item[0], item[1]);
-			});
-			node.style["font-family"] = "monospace";
-			settingsNames.forEach(function(name){
-				node.innerHTML += name + "=" + cView.localStorage.getItem(name) + "<br />";
-			});
-		}
+		return cView.Utils._Promise.resolve();
 		function drawAcc(){
 			nodeSettingsHead.cNodes["sh-acc"].className = "sh-selected";
 			var nodeSettings = cView.gNodes["accaunts-settings"].cloneAll();
@@ -207,6 +196,55 @@ _Drawer.prototype = {
 					body.appendChild(node); 
 				});
 			});
+		}
+		function drawBlocks(){
+			var lists = cView.blockLists;
+			nodeSettingsHead.cNodes["sh-blocks"].className = "sh-selected";
+			Object.keys(cView.contexts).forEach(function (domain){
+				var context = cView.contexts[domain];
+				var page = cView.gNodes["blocks-settings-page"].cloneAll(true);
+				page.cNodes["title"].innerHTML = domain;
+				page.cNodes["domain"].value = domain;
+				cView.Utils.setChild(
+					page.cNodes["strings"]
+					,"content"
+					,cView.Drawer.genBlockStrPage(domain)
+				);	
+				var appendUser = function(user){ 
+					page.getNode(["c","posts"],["c","content"]).appendChild(genBUser(user, "posts"));
+				};
+				Object.keys(lists).forEach(function(type){
+					var count = 0;
+					var list = cView.blocks[lists[type]][domain]; 
+					if(typeof list !== "undefined") Object.keys(list).forEach(function(id){
+						var username;
+						if(list[id] === true){
+							var user = context.gUsers[id];
+							if (typeof user === "undefined"){
+								count++;
+								return;
+							}else username = user.username;
+						}else username = list[id];
+						var item = cView.gNodes["blocks-item"].cloneAll(true);
+						var inputs = cView.Utils.getInputsByName(item);
+						inputs["type"].value = type;
+						inputs["val"].value  = id;
+						item.cNodes["title"].innerHTML = "@"+username;
+						page.getNode(["c",type],["c","content"]).appendChild(item);
+
+					});
+					if(count){
+						var span = cView.doc.createElement("span");
+						span.innerHTML = count + " unrecognized useres";
+						page.getNode(["c",type],["c","content"]).appendChild(span);
+					}
+				});
+
+				cView.Common.updateBlockList();
+				body.appendChild(page);
+			});
+
+			
 		}
 		function drawDisp(){
 			nodeSettingsHead.cNodes["sh-displ"].className = "sh-selected";
@@ -631,11 +669,23 @@ _Drawer.prototype = {
 			postNBody.cNodes["post-cont"][(cView.readMore?"words":"innerHTML")] = context.digestText(post.body);
 
 		var urlMatch ;		
-		var listBlocks = cView.blocks.blockPosts[context.domain];
+		var listBlockByUsr = cView.blocks.blockPosts[context.domain];
+		var listBlockByStr = cView.blocks.blockStrings[context.domain];
 		if(!cView.noBlocks 
-			&&( typeof listBlocks !== "undefined")
-			&& ( listBlocks != null)
-			&& (listBlocks[ user.id])
+			&&(
+				(
+					( typeof listBlockByUsr !== "undefined")
+					&& ( listBlockByUsr != null)
+					&& (listBlockByUsr[ user.id])
+				)||(
+					( typeof listBlockByStr!== "undefined")
+					&& ( listBlockByStr != null)
+					&& listBlockByStr.some(function(str){
+						return post.body.toLowerCase().indexOf(str.toLowerCase()) != -1;		
+					})
+				)
+				
+			)
 		){
 			nodePost.hidden = true  ;
 		}
@@ -685,7 +735,7 @@ _Drawer.prototype = {
 				}
 			});		
 		}else 
-		if(((urlMatch = post.body.match(/https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
+		if(((urlMatch = post.body.match(/(^|[^!])https?:\/\/[^\s\/$.?#].[^\s]*/i) )!= null)
 		&&(JSON.parse(cView.localStorage.getItem("show_link_preview")))){
 			cView.gEmbed.p.then(function(oEmbedPr){
 				Drawer.embedPreview(oEmbedPr
@@ -898,11 +948,20 @@ _Drawer.prototype = {
 		var cView = this.cView;
 		var context = this;
 		var nodeComment = cView.gNodes["comment"].cloneAll();
-		var listBlocks = cView.blocks.blockComments[context.domain];
+		var listBlocksUsr = cView.blocks.blockComments[context.domain];
+		var listBlocksStr = cView.blocks.blockStrings[context.domain];
 		var cUser = context.gUsers[comment.createdBy];
-		if(( typeof listBlocks!== "undefined") 
-		&& ( listBlocks!= null) 
-		&& (listBlocks[cUser.id])){
+		if(( typeof listBlocksUsr!== "undefined") 
+		&& ( listBlocksUsr!= null) 
+		&& (listBlocksUsr[cUser.id])){
+			nodeComment.innerHTML = "---";
+			return nodeComment;
+		}
+		if(( typeof listBlocksStr!== "undefined") 
+		&& ( listBlocksStr!= null) 
+		&& (listBlocksStr.some(function(str){
+			return comment.body.toLowerCase().indexOf(str.toLowerCase())!= -1;
+		}))){
 			nodeComment.innerHTML = "---";
 			return nodeComment;
 		}
@@ -1124,13 +1183,11 @@ _Drawer.prototype = {
 				if(action) nodesCmts[idx].innerHTML = "---";
 				else{
 					var id = nodesCmts[idx].rawId; 
-					nodesCmts[idx].parentNode.replaceChild(
-						cView.Drawer.genComment.call(
-							context
-							,context.gComments[id]
-						)
-						, nodesCmts[idx]
+					var nodeNewCmt = cView.Drawer.genComment.call( context
+						,context.gComments[id]
 					);
+					nodesCmts[idx].parentNode.replaceChild( nodeNewCmt , nodesCmts[idx]);
+					cView.Drawer.applyReadMore(nodeNewCmt);
 				}
 			}
 		}
@@ -1312,6 +1369,35 @@ _Drawer.prototype = {
 		catch(e){msg = err.data;}
 		node.innerHTML = err.code?("Error #"+err.code+": "+msg):"Looks like a network error";
 		nodeEButtons.appendChild(node);
+	}
+	,"genBlockStrPage":function(domain){
+		var cView = this.cView;
+		var blockStrings = cView.blocks.blockStrings[domain]
+		var page = cView.doc.createElement("div");
+		if(Array.isArray(blockStrings))blockStrings.forEach(function(str){
+			var item = cView.gNodes["blocks-item"].cloneAll(true);
+			var inputs = cView.Utils.getInputsByName(item);
+			inputs["type"].value = "str";
+			inputs["val"].value  = str;
+			item.cNodes["title"].innerHTML = str;
+			page.appendChild(item);
+		});
+		return page;
+	}
+	,"drawRaw": function (output){
+		var cView = this.cView;
+		var settingsNames = require("json!./settings.json");
+		cView.doc.location.search.substr(1).split("&").forEach(function(item){
+			item = decodeURIComponent(item).split("=");
+			if ((item.length != 2) || (settingsNames.indexOf(item[0]) == -1)) return;
+			cView.localStorage.setItem(item[0], item[1]);
+		});
+		var node = cView.doc.createElement("div");
+		output.appendChild(node);
+		node.style["font-family"] = "monospace";
+		settingsNames.forEach(function(name){
+			node.innerHTML += name + "=" + cView.localStorage.getItem(name) + "<br />";
+		});
 	}
 };
 return _Drawer;

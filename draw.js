@@ -217,6 +217,7 @@ _Drawer.prototype = {
 					var count = 0;
 					var list = cView.blocks[lists[type]][domain]; 
 					if(typeof list !== "undefined") Object.keys(list).forEach(function(id){
+						page.getNode(["c",type]).hidden = false;
 						var username;
 						if(list[id] === true){
 							var user = context.gUsers[id];

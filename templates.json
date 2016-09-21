@@ -868,12 +868,12 @@
 			]}
 
 		]}
-		,{"c":"cmts"
+		,{"c":"cmts", "p":{"hidden":true}
 		,"children":[
 			{"txt":"Block comments from following users:"}
 			,{"c":"content", "t":"ul"}
 		]}
-		,{"c":"posts"
+		,{"c":"posts", "p":{"hidden":true}
 		,"children":[
 			{"txt":"Block posts from following users:"}
 			,{"c":"content", "t":"ul"}
@@ -884,6 +884,7 @@
 		{"t":"input", "p":{"name":"val", "type":"hidden"}}	
 		,{"t":"input", "p":{"name":"type", "type":"hidden"}}	
 		,{"c":"title","t":"span"}
+		, {"c":"fa fa-times m-l","t":"i"}
 	]}
 ]}
 

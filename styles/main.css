@@ -584,6 +584,13 @@ span.comment-controls::before {
 	.ud-unfold{
 		display:block;
 	}
+
+
+
+	.settings-head {
+		flex-flow: column nowrap;
+	}
+
 }
 .subs-cont > div {
 	display:flex;
@@ -727,11 +734,12 @@ span.comment-controls::before {
 .search-domain {
 	margin: 0.5em;
 }
-
 .blocks-settings-page div {
 	margin: 0.5em 0;
 }
-
 .blocks-settings-page input,button {
 	margin: 0 0.5em;
+}
+.m-l{
+	margin-left: 0.3em; 
 }

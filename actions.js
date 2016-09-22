@@ -224,6 +224,7 @@ _Actions.prototype = {
 		var postCNode = cView.doc.createElement("div");
 		postCNode.innerHTML = context.digestText(victim.rawData.body);
 		postCNode.className = "post-cont long-text";
+		postCNode.dir = "auto";
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 		cView.Drawer.applyReadMore(postCNode);
@@ -262,6 +263,7 @@ _Actions.prototype = {
 			*/
 			postCNode.innerHTML = context.digestText(post.body);
 			postCNode.className = "post-cont long-text";
+			postCNode.dir = "auto";
 			nodePost.rawData.body = post.body;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;

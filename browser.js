@@ -52,13 +52,16 @@ window.browserDoc = function(){
 	Object.keys(cView.contexts).forEach(function(domain){contexts[domain] = cView.contexts[domain];});
 	cView.Router.route(contexts, locationPath).then(postInit,function(err){
 		console.log(err);
+		if (Array.isArray(err))
+			err = err.filter(function(item){return typeof item !== "undefined"})[0];
+		
 		if( typeof err === "string") switch(err){
 			case "token":
 				cView.Common.auth();
 			break;
 		}else {
 			var nodeMsg = cView.gNodes["global-failure"].cloneAll();
-			body.appendChild(nodeMsg);
+			body.getNode(["c","container"],["c","details"]).appendChild(nodeMsg);
 			try{
 				nodeMsg.cNodes["title"].innerHTML = "Error " + err.code;
 				nodeMsg.cNodes["info"].innerHTML = cView.Utils.err2html(err.data);

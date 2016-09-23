@@ -70,20 +70,27 @@ var payload = [
 			});
 			var out = [input];
 			if(isLogged(cView)){
-				var username;
-				var user = cView.contexts[gConfig.leadDomain].gMe;
+				var context;
 
-				if(user) username = user.users.username;
+				if(cView.contexts[gConfig.leadDomain].token) 
+					context = cView.contexts[gConfig.leadDomain];
 				else{
 					var domains = Object.keys(cView.contexts);
 					domains.some(function(domain){
 						if(cView.contexts[domain].token != null){
-							username = cView.contexts[domain].gMe.users.username;
+							context = cView.contexts[domain];
 							return true;
 						}else return false;
 					});
 				}
-				out.push(genLinks(cView, [gConfig.front+"search?qs="+username ,"Vanity search"]));
+
+				var vLink = genLinks(cView, ["#","Vanity search"]);
+				out.push(vLink);
+				context.p.then(function(){
+					vLink.href = gConfig.front
+						+"search?qs="
+						+context.gMe.users.username;
+				});
 			}
 			return out.concat( 
 				Object.keys(cView.contexts).map(

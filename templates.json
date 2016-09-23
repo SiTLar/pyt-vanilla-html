@@ -38,7 +38,7 @@
 		,{"c":"post-body"
 		,"children":[
 			{"c":"title"}
-			,{"c":"post-cont", "cl":["long-text"]}
+			,{"c":"post-cont", "cl":["long-text"], "p":{"dir":"auto"}}
 			,{"c":"attachments"
 			,"children":[
 				{"c":"atts-img"}
@@ -127,7 +127,7 @@
 		]}
 		,{"c":"comment-body"
 		,"children":[
-			{"c":"cmt-content", "t":"span","cl":["long-text"]}
+			{"c":"cmt-content", "t":"span","cl":["long-text"], "p":{"dir":"auto"}}
 			,{"c":"spacer","t":"span","txt":"&mdash;"}
 			,{"c":"cmt-author", "t":"span"}
 			,{"c":"comment-controls", "t":"span","p":{"hidden":true}
@@ -152,7 +152,7 @@
 	]}
 	,{"c":"edit"
 	,"children":[
-		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
 		,{"c":"edit-buttons"
 		,"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"}
@@ -178,7 +178,7 @@
 		,{"c":"post-to"}
 		,{"c":"new-post-cont"
 		,"children":[
-			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
+			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
 			,{"c":"attachments"}
 		]}
 		,{"c":"edit-buttons"
@@ -580,7 +580,7 @@
 		,{"t":"p", "txt":"Email:"}
 		,{"c":"gs-input","t":"input","p":{"name":"email"}}
 		,{"t":"p", "txt":"Description"}
-		,{"c":"gs-descr","t":"textarea"}
+		,{"c":"gs-descr","t":"textarea", "p":{"dir":"auto"}}
 		,{"t":"label"
 		,"children":[
 			{"t":"input" ,"p":{"type":"checkbox" ,"name":"is-private"}}
@@ -721,7 +721,7 @@
 			,{"c":"ud-text"
 			,"children":[
 				{"c":"ud-title"}
-				,{"c":"ud-desc", "cl":["long-text"]}
+				,{"c":"ud-desc", "cl":["long-text"], "p":{"dir":"auto"}}
 			]}
 			,{"c":"ud-stats"
 			,"children":[

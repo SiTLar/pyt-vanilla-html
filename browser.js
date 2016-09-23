@@ -48,7 +48,9 @@ window.browserDoc = function(){
 		,locationPath 
 		,gConfig.front.length].join("<br>");
 	*/
-	cView.Router.route(cView.contexts, locationPath).then(postInit,function(err){
+	var contexts = new Object();
+	Object.keys(cView.contexts).forEach(function(domain){contexts[domain] = cView.contexts[domain];});
+	cView.Router.route(contexts, locationPath).then(postInit,function(err){
 		console.log(err);
 		if( typeof err === "string") switch(err){
 			case "token":

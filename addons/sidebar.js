@@ -68,8 +68,31 @@ var payload = [
 				input.getElementsByClassName("search-domains")[0].appendChild(el);
 
 			});
+			var out = [input];
+			if(isLogged(cView)){
+				var context;
 
-			return [input].concat( 
+				if(cView.contexts[gConfig.leadDomain].token) 
+					context = cView.contexts[gConfig.leadDomain];
+				else{
+					var domains = Object.keys(cView.contexts);
+					domains.some(function(domain){
+						if(cView.contexts[domain].token != null){
+							context = cView.contexts[domain];
+							return true;
+						}else return false;
+					});
+				}
+
+				var vLink = genLinks(cView, ["#","Vanity search"]);
+				out.push(vLink);
+				context.p.then(function(){
+					vLink.href = gConfig.front
+						+"search?qs="
+						+context.gMe.users.username;
+				});
+			}
+			return out.concat( 
 				Object.keys(cView.contexts).map(
 					function(domain){ 
 						return [gConfig.domains[domain].search, domain]; 

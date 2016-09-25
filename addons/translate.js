@@ -60,11 +60,13 @@ var handlers = {
 		if(!node)return;
 		var nodePost = node.getNode(["p","post"]);
 		if(nodePost.translated !== true) return;
-		var victim;
-		if (node.classList[0] == "post")
-			victim = nodePost.getNode(["c","post-body"],["c","post-cont"]);
-		else victim = node;
-		translate(victim.getElementsByClassName("long-text"));
+		var nodes;
+		if(node.classList.contains("long-text")) 
+			nodes = [node];
+		else if(node.classList.contains("post"))
+			nodes =  [nodePost.getNode(["c","post-body"],["c","post-cont"])];
+		else nodes =  node.getElementsByClassName("long-text");
+		translate(nodes);
 	}
 	,"setAPIKey": function (e){
 		e.preventDefault();

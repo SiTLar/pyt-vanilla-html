@@ -65,49 +65,26 @@ var handlers = {
 		});
 	}
 	,"evtNewNode":function (e){
-		var node = e.detail;
-		if(!node)return;
-		if(node.classList[0] == "comment"){
-			if (node.domain != domain)return;
-			var options = {
-				"url":srvUrl + "all-likes?updated_after=0"
-				,"data":JSON.stringify([node.rawId])
-				,"method":"post"
-			};
-			if(auth) options.token = cView.contexts[domain].token;
-			utils.xhr(options).then(function(res){
-				res = JSON.parse(res);
-				if((res.status != "error") && res.data.length)
-					apply(res.data[0],node);
-			});
-			return;
-		}
-		if (node.rawData.domain != domain)return;
-		var comments = node.getElementsByClassName("comment");
-		var byId = new Object();
-		for (var idx = 0; idx < comments.length; idx++ )
-			if(typeof comments[idx].rawId !== "undefined")
-				byId[comments[idx].rawId] = comments[idx];
-		var ids = Object.keys(byId);
-		while(ids.length){
-			var options = {
-				"url":srvUrl + "all-likes?updated_after=0"
-				,"data":JSON.stringify(ids.splice(0,100))
-				,"method":"post"
-			};
-			if(auth) options.token = cView.contexts[domain].token;
-			utils.xhr(options).then(function(res){
-				res = JSON.parse(res);
-				if(res.status != "error") 
-					res.data.forEach(function(likeInfo){
-						apply(likeInfo,byId[likeInfo.id]);
-					});
-			});
-			return;
-		}
-		
-
-
+		var arrNodes = e.detail;
+		if(!arrNodes)return;
+		arrNodes = Array.isArray(arrNodes)?arrNodes:[arrNodes];
+		var cmts = new Array();
+		arrNodes.forEach(function(node){
+			switch(node.classList[0]){
+			case "post":
+				if (node.rawData.domain != domain)return;
+				var comments = node.getElementsByClassName("comment");
+				for (var idx = 0; idx < comments.length; idx++ )
+					if(typeof comments[idx].rawId !== "undefined")
+						cmts.push( comments[idx]);
+				break;
+			case "comment":
+				if (node.domain != domain)return;
+				cmts.push(node);
+				break;
+			}
+		});
+		if(cmts.length) loadLikes(cmts.map(function(node){return node.rawId;}));
 	}
 
 }
@@ -169,7 +146,7 @@ function initLikes(){
 	var arrCmts = Object.keys(cView.contexts[domain].gComments);
 	if (!arrCmts.length) return;
 	arrCmts.forEach(function(id){
-		node = cView.doc.getElementById([domain,"cmt",id].join("-"));
+		node = cView.doc.getElementById(domain+"-cmt-"+id);
 		if(node)setControls( node);
 	});
 	loadLikes(arrCmts);
@@ -216,11 +193,6 @@ return function(cV){
 				}));
 				return res;
 			}
-			var arrNodes = new Array();
-			var nodes = cView.doc.getElementsByClassName("comments-load");
-			for(var idx = 0; idx < nodes.length; idx++)
-				arrNodes.push(nodes[idx].cNodes["a"]);
-			utils.injectHandler("click", cView.Actions, "unfoldComm", addLikes, arrNodes);
 
 			if(auth) {
 				utils.xhr({

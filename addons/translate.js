@@ -33,13 +33,27 @@ var handlers = {
 		translate(host.getElementsByClassName("long-text"));
 	}
 	,"evtNewNode": function (e){
-		var node = e.detail;
-		if(!node)return;
-		if (node.classList[0] == "post")
-			return node.getElementsByClassName(["controls"])[0].appendChild(nodesT["control"].cloneAll());
-		var nodePost = node.getNode(["p","post"]);
-		if (nodePost.translated === true)
-			translate(node.getElementsByClassName("long-text"));
+		var arrNodes = e.detail;
+		if(!arrNodes)return;
+		var qNodes = new Array();
+		arrNodes = Array.isArray(arrNodes)?arrNodes:[arrNodes];
+		arrNodes.forEach(function(node){
+			switch(node.classList[0]){
+			case "post":
+				node.getElementsByClassName(["controls"])[0]
+					.appendChild(nodesT["control"].cloneAll());
+				break;
+			case "comment":
+				var nodePost = node.getNode(["p","post"]);
+				if (nodePost.translated === true){
+					var nodesHC = node.getElementsByClassName("long-text");
+					for(var idx = 0; idx < nodesHC.length; idx++ )
+						qNodes.push(nodesHC[idx]);
+				}
+				break;
+			}
+		});
+		translate(qNodes);
 	}
 	,"evtUpdNode": function (e){
 		var node = e.detail;
@@ -136,31 +150,6 @@ return function(cV){
 			var postCtrls = cView.doc.getElementsByClassName("post-controls");
 			for (var idx = 0; idx < postCtrls.length; idx++)
 				postCtrls[idx].cNodes["controls"].appendChild(nodesT["control"].cloneAll());
-			
-			
-			function unfoldC (res){
-				var nodePost = cView.doc.getElementById( res.posts.domain + "-post-" + res.posts.id);
-				if(nodePost.translated === true) 
-					translate(nodePost.getNode(["c","comments"]).getElementsByClassName("long-text"));
-				return res;
-			};
-			var nodes = cView.doc.getElementsByClassName("comments-load");
-			var arrNodes = new Array();
-			for(var idx = 0; idx < nodes.length; idx++)
-				arrNodes.push(nodes[idx].cNodes["a"]);
-			utils.injectHandler("click", cView.Actions, "unfoldComm", unfoldC, arrNodes);
-			
-			function unfoldR (victim){
-				if (victim.translated === true)
-					translate([victim]);
-				return victim;
-			}
-			var nodes = cView.doc.getElementsByClassName("unfold-readmore");
-			arrNodes = new Array();
-			for(idx = 0; idx < nodes.length; idx++)
-				arrNodes.push(nodes[idx]);
-			utils.injectHandler("click", cView.Actions, "unfoldReadMore", unfoldR, arrNodes);
-
 			window.addEventListener("newNode", handlers.evtNewNode);
 			window.addEventListener("updNode", handlers.evtUpdNode);
 			return utils._Promise.resolve();

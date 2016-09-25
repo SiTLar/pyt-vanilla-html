@@ -781,6 +781,7 @@ _Actions.prototype = {
 				+ "/" + nodePost.rawData.id 
 			, ["comments"]
 		).then( function(postUpd){
+			var arrCmts = new Array();
 			cView.Common.loadGlobals(postUpd, context);
 			postUpd.posts.domain = domain;
 			cView.doc.getElementById(id).rawData = postUpd.posts;
@@ -794,7 +795,12 @@ _Actions.prototype = {
 			nodePB.cNodes["comments"] = cView.doc.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";
 
-			postUpd.comments.forEach(function(cmt){context.gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(cView.Drawer.genComment.call(context, cmt))});
+			postUpd.comments.forEach(function(cmt){
+				context.gComments[cmt.id] = cmt;
+				var nodeCmt = cView.Drawer.genComment.call(context, cmt);
+				nodePB.cNodes["comments"].appendChild(nodeCmt);
+				arrCmts.push(nodeCmt);
+			});
 			nodePB.appendChild(nodePB.cNodes["comments"]);
 			if (nodePost.rtCtrl.isBeenCommented == true){ 
 				var nodeComment = cView.Drawer.genAddComment(context);
@@ -803,6 +809,8 @@ _Actions.prototype = {
 			}
 			cView.Drawer.applyReadMore( nodePB);
 			cView.Drawer.addLastCmtButton(nodePB);
+
+			window.dispatchEvent(new CustomEvent("newNode", {"detail":arrCmts}));
 			return postUpd;
 
 		},function(res){
@@ -1576,7 +1584,7 @@ _Actions.prototype = {
 		var victim = cView.Utils.getNode(e.target,["p","long-text"]);
 		victim.innerHTML = victim.words;
 		victim.isUnfolded = true;
-		return cView.Utils._Promise.resolve(victim);
+		window.dispatchEvent(new CustomEvent("updNode", {"detail":victim}));
 	}
 	,"remBlockingItem":function(e){
 		var cView = document.cView;

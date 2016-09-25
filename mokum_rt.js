@@ -139,7 +139,7 @@ RtUpdate.prototype = {
 			nodePost.rawData.updatedAt = Date.now();
 
 			if(Array.isArray(newPost.comments))newPost.comments.forEach(function(cmt){
-				var commentId = [rt.context.domain,"cmt" ,cmt].join("-");
+				var commentId = rt.context.domain + "-cmt-" + cmt;
 				var nodeCmt = document.getElementById(commentId);
 				if (nodeCmt){
 					var unfolded = nodeCmt.isUnfolded;

@@ -93,8 +93,7 @@ RtHandler.prototype = {
 					,document.posts.firstChild
 				);
 		}
-		var evt = new CustomEvent("newNode", {"detail":nodePost});
-		window.dispatchEvent(evt);
+		window.dispatchEvent(new CustomEvent("newNode", {"detail":nodePost}));
 
 		function manageMeta(nodePost){
 			nodePost.rawData.sign = cView.hasher.of(nodePost.rawData.body);
@@ -228,8 +227,7 @@ RtHandler.prototype = {
 			}
 			nodePost.rawData.updatedAt = Date.now();
 			cView.Common.markMetaMenu(nodePost);
-			var evt = new CustomEvent("newNode", {"detail":nodeComment});
-			window.dispatchEvent(evt);
+			window.dispatchEvent(new CustomEvent("newNode", {"detail":nodeComment}));
 		}else that.injectPost(data.comments.postId, context);
 	}
 	,"comment:update": function(data, context){
@@ -238,13 +236,17 @@ RtHandler.prototype = {
 		var postId = context.domain+"-post-"+data.comments.postId;
 		context.gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(commentId);
-		if (nodeComment) cView.Utils.unscroll(function(){
+		if (nodeComment){ 
 			var newComment = cView.Drawer.genComment.call(context, data.comments);
-			nodeComment.parentNode.replaceChild( newComment , nodeComment);
-			cView.Drawer.applyReadMore( newComment );
-			cView.Common.markMetaMenu(document.getElementById(postId));
-			return newComment;
-		});
+			cView.Utils.unscroll(function(){
+				var nodePost = document.getElementById(postId);
+				nodeComment.parentNode.replaceChild( newComment , nodeComment);
+				cView.Drawer.applyReadMore( newComment );
+				cView.Common.markMetaMenu(nodePost);
+				return newComment;
+			});
+			window.dispatchEvent(new CustomEvent("updNode", {"detail":newComment}));
+		}
 		
 	}
 	,"comment:destroy": function(data, context){
@@ -325,6 +327,7 @@ RtHandler.prototype = {
 			cView.Common.markMetaMenu(nodePost);
 			return nodePost; 
 		});
+		window.dispatchEvent(new CustomEvent("updNode", {"detail":nodePost}));
 	}
 	, "post:destroy" : function(data, context){
 		var cView = document.cView;

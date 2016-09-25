@@ -64,6 +64,51 @@ var handlers = {
 			});
 		});
 	}
+	,"evtNewNode":function (e){
+		var node = e.detail;
+		if(!node)return;
+		if(node.classList[0] == "comment"){
+			if (node.domain != domain)return;
+			var options = {
+				"url":srvUrl + "all-likes?updated_after=0"
+				,"data":JSON.stringify([node.rawId])
+				,"method":"post"
+			};
+			if(auth) options.token = cView.contexts[domain].token;
+			utils.xhr(options).then(function(res){
+				res = JSON.parse(res);
+				if((res.status != "error") && res.data.length)
+					apply(res.data[0],node);
+			});
+			return;
+		}
+		if (node.rawData.domain != domain)return;
+		var comments = node.getElementsByClassName("comment");
+		var byId = new Object();
+		for (var idx = 0; idx < comments.length; idx++ )
+			if(typeof comments[idx].rawId !== "undefined")
+				byId[comments[idx].rawId] = comments[idx];
+		var ids = Object.keys(byId);
+		while(ids.length){
+			var options = {
+				"url":srvUrl + "all-likes?updated_after=0"
+				,"data":JSON.stringify(ids.splice(0,100))
+				,"method":"post"
+			};
+			if(auth) options.token = cView.contexts[domain].token;
+			utils.xhr(options).then(function(res){
+				res = JSON.parse(res);
+				if(res.status != "error") 
+					res.data.forEach(function(likeInfo){
+						apply(likeInfo,byId[likeInfo.id]);
+					});
+			});
+			return;
+		}
+		
+
+
+	}
 
 }
 function setControls(node){
@@ -107,51 +152,6 @@ function apply (likeInfo, node){
 		,nodeLike
 	);
 };
-function evtNewNode(e){
-	var node = e.detail;
-	if(!node)return;
-	if(node.classList[0] == "comment"){
-		if (node.domain != domain)return;
-		var options = {
-			"url":srvUrl + "all-likes?updated_after=0"
-			,"data":JSON.stringify([node.rawId])
-			,"method":"post"
-		};
-		if(auth) options.token = cView.contexts[domain].token;
-		utils.xhr(options).then(function(res){
-			res = JSON.parse(res);
-			if((res.status != "error") && res.data.length)
-				apply(res.data[0],node);
-		});
-		return;
-	}
-	if (node.rawData.domain != domain)return;
-	var comments = node.getElementsByClassName("comment");
-	var byId = new Object();
-	for (var idx = 0; idx < comments.length; idx++ )
-		if(typeof comments[idx].rawId !== "undefined")
-			byId[comments[idx].rawId] = comments[idx];
-	var ids = Object.keys(byId);
-	while(ids.length){
-		var options = {
-			"url":srvUrl + "all-likes?updated_after=0"
-			,"data":JSON.stringify(ids.splice(0,100))
-			,"method":"post"
-		};
-		if(auth) options.token = cView.contexts[domain].token;
-		utils.xhr(options).then(function(res){
-			res = JSON.parse(res);
-			if(res.status != "error") 
-				res.data.forEach(function(likeInfo){
-					apply(likeInfo,byId[likeInfo.id]);
-				});
-		});
-		return;
-	}
-	
-
-
-}
 function initLikes(){
 	cView.Common.genNodes(template).forEach(function(node){
 		nodesT[node.classList[0]] = node;
@@ -210,19 +210,18 @@ return function(cV){
 		"run": function (){
 			cView = cV;
 			initLikes();
-			var unfold = cView.Actions.unfoldComm;
-			var unfoldComm = function(e){
-				return unfold(e).then(function(res){
-					loadLikes(res.comments.map(function(cmt){
-						return cmt.id;
-					}));
-				});
+			function addLikes(res){
+				loadLikes(res.comments.map(function(cmt){
+					return cmt.id;
+				}));
+				return res;
 			}
+			var arrNodes = new Array();
 			var nodes = cView.doc.getElementsByClassName("comments-load");
-			for(var idx = 0; idx < nodes.length; idx++){
-				nodes[idx].cNodes["a"].removeEventListener("click", cView.Actions.unfoldComm, false);
-				nodes[idx].cNodes["a"].addEventListener("click", unfoldComm);
-			}
+			for(var idx = 0; idx < nodes.length; idx++)
+				arrNodes.push(nodes[idx].cNodes["a"]);
+			utils.injectHandler("click", cView.Actions, "unfoldComm", addLikes, arrNodes);
+
 			if(auth) {
 				utils.xhr({
 					"url": srvUrl + "auth"
@@ -230,7 +229,7 @@ return function(cV){
 					,"token":cView.contexts[domain].token
 				}).then(connect);
 			}else connect(null);
-			window.addEventListener("newNode", evtNewNode);
+			window.addEventListener("newNode",cView["addons-like-comm"].evtNewNode); 
 			return cView.Utils._Promise.resolve();
 		}
 		,"settings": function(){return makeSettings(cView);}

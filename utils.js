@@ -260,5 +260,18 @@ return {
 		if(fScroll) window.scrollBy(0,offset);
 		return node;
 	}
+	,"injectHandler":function(evt, host, name, nextH, clients){
+
+		var newH = function(oldH){	
+			return  function(e){
+				return oldH(e).then(nextH);
+			}
+		}(host[name]);
+		clients.forEach(function(client){
+			client.removeEventListener(evt, host[name], false);
+			host[name] = newH;
+			client.addEventListener(evt,newH);
+		})
+	}
 }
 });

@@ -6,11 +6,9 @@ define("./addons", [ "./utils"
 	,"./addons/sidebar"
 	,"./addons/likecomm"
 	,"./addons/srvsave"
+	,"./addons/translate"
 ]
-,function( utils
-	,sidebar
-	,likeComm
-) {
+,function( utils ) {
 	var addons = utils.args2Arr.apply(this,arguments);
 	addons.shift();
 return{

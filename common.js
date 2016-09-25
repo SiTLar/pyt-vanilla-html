@@ -389,7 +389,8 @@ _Common.prototype = {
 		posts.forEach(function(post){
 			if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
 			if (post.isHidden !== true) post.isHidden = false;
-			dups.push(post);
+			if(!dups.some(function(dup){ return (dup.domain == post.domain)&&(dup.id == post.id);}))
+				dups.push(post);
 			hidden = hidden && post.isHidden;
 		});
 		return {"type": "metapost"

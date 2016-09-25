@@ -1576,6 +1576,7 @@ _Actions.prototype = {
 		var victim = cView.Utils.getNode(e.target,["p","long-text"]);
 		victim.innerHTML = victim.words;
 		victim.isUnfolded = true;
+		return cView.Utils._Promise.resolve(victim);
 	}
 	,"remBlockingItem":function(e){
 		var cView = document.cView;

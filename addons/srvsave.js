@@ -150,14 +150,15 @@ function makeSettings(){
 	return node;
 }
 return function(cV){
+	cView = cV;
+	cView.Common.genNodes(template).forEach(function(node){
+		nodesT[node.classList[0]] = node;
+	});
 	return {
 		"run": function (){
-			cView = cV;
-			cView.Common.genNodes(template).forEach(function(node){
-				nodesT[node.classList[0]] = node;
-			});
 			if ((typeof cView.contexts[savDomain] === "undefined")
-			|| !cView.contexts[savDomain].token) return;
+			|| !cView.contexts[savDomain].token) 
+				return cView.Utils._Promise.resolve();
 			loginOK = true;
 			cView["addons-srvsave"] = handlers;
 			if (JSON.parse(cView.localStorage.getItem("addons-save-blocks"))){

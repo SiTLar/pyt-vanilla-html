@@ -1016,7 +1016,7 @@ _Actions.prototype = {
 		cView.localStorage.removeItem("logins");
 		Object.keys(cView.contexts).forEach(function(domain){ cView.contexts[domain].token = null;});
 		cView.Common.saveLogins();
-		location.reload();
+		location.assign(gConfig.front);
 	}
 	,"newPostRemoveFeed": function(e){
 		var cView = document.cView;
@@ -1377,6 +1377,12 @@ _Actions.prototype = {
 				cView.Common.setCookie(gConfig.domains[context.domain].tokenPrefix 
 					+ "authToken"
 					, data.authToken
+				);
+				cView.localStorage.setItem( "logins"
+					,JSON.stringify([{
+						"domain":context.domain
+						,"token":data.authToken
+					}])
 				);
 				location.reload();
 		},function(err){

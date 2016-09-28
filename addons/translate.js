@@ -53,7 +53,7 @@ var handlers = {
 				break;
 			}
 		});
-		if (qNodes.lenght)translate(qNodes);
+		if (qNodes.length)translate(qNodes);
 	}
 	,"evtUpdNode": function (e){
 		var node = e.detail;

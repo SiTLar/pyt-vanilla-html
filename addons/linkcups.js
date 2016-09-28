@@ -20,7 +20,7 @@ function linkCups (nodePost){
 		var cups = new Object();
 		var content = cmtsHC[idx].getElementsByClassName("long-text")[0];
 		if(typeof content === "undefined") continue;
-		var matches = content.innerHTML.match(/[\^\u8593]+/);
+		var matches = content.innerHTML.match(/[\^\u8593]+/g);
 		if(Array.isArray(matches))matches.forEach(function(match){
 			var target =  idx-match.length;
 			if( ( (idx > loadIdx)&&( (target) <= loadIdx) )||cmtsHC[target].hidden )
@@ -28,11 +28,11 @@ function linkCups (nodePost){
 			cups[match] = cmtsHC[target];
 		});
 		Object.keys(cups).forEach(function(cup){
-			var re = new RegExp(cup.replace(/\^/g,"\\x5e"),"g");
+			var re = new RegExp("(^|[^\\^\\u8593])("+cup.replace(/\^/g,"\\x5e")+")(?![\\^\\u8593])","g");
 			content.innerHTML = content.innerHTML.replace(re
-				,"<span class=\"cups_"
+				,"$1<span class=\"cups_"
 					+cup.length
-					+"\">$&</span>"
+					+"\">$2</span>"
 			);
 			var spans = cmtsHC[idx].getElementsByClassName("cups_"+ cup.length);
 			for(var s = 0; s < spans.length; s++)

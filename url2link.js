@@ -96,7 +96,8 @@ _Url2link.prototype = {
 		}]
 	}
 	,"uname":{
-		"regex": /@[-_a-z0-9]{3,}(?=[}\]\).,;:!?\s]|$)/
+		//"regex": /@[-_a-z0-9]{3,}(?=[{}\[\]\(\)\*.,;:!?-\s]|$)/
+		"regex": /@[-_a-z0-9]{3,}/
 		,"newtab": true
 		,"flags":"i"
 		,"actions":[function(match, host){

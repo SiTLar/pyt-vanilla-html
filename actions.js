@@ -1014,7 +1014,9 @@ _Actions.prototype = {
 		//matrix.ready = 0;
 		try{matrix.logout();}catch(e){};
 		cView.localStorage.removeItem("logins");
-		Object.keys(cView.contexts).forEach(function(domain){ cView.contexts[domain].token = null;});
+		Object.keys(cView.contexts).forEach(function(domain){
+			cView.contexts[domain].token = null;
+		});
 		cView.Common.saveLogins();
 		location.assign(gConfig.front);
 	}

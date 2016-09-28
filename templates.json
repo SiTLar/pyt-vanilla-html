@@ -142,12 +142,15 @@
 		,{"c":"spacer","t":"span","txt":"|"}
 		,{"t":"a","txt":"delete","e":{"click":["Actions","deleteComment"]}}
 	]}
-	,{"c":"comments-load", "cl":["comment-body"]
+	,{"c":"comments-load", "cl":["comment"]
 	,"children":[
-		{"c":"a", "t":"a", "e":{"click":["Actions","unfoldComm"]}
+		{"c":"comment-body"
 		,"children":[
-			{"c":"num", "t":"span"}
-			,{"t":"span", "txt":" more comments"}
+			{"c":"a", "t":"a", "e":{"click":["Actions","unfoldComm"]}
+			,"children":[
+				{"c":"num", "t":"span"}
+				,{"t":"span", "txt":" more comments"}
+			]}
 		]}
 	]}
 	,{"c":"edit"

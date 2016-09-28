@@ -117,7 +117,8 @@ var handlers = {
 function save(){
 	var oSettings = new Object();
 	settingsNames.forEach(function(name){
-		oSettings[name] = cView.localStorage.getItem(name);
+		var val = cView.localStorage.getItem(name);
+		if(val !== null)oSettings[name] = val;
 	});
 	var tokens = new Object();
 	var mainIds = new Object();

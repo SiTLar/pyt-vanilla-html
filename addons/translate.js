@@ -101,6 +101,7 @@ function makeSettings(){
 }
 function translate (nodesHC){
 	var cView = this.cView;
+	if (apiKey == "null")return;
 	var url = "https://translate.yandex.net/api/v1.5/tr.json/translate?"
 		+"lang=en"
 		+"&format=html"
@@ -145,16 +146,24 @@ return function(cV){
 			var key = cView.localStorage.getItem("addons-translate-apikey");
 			if(!key) return utils._Promise.resolve();
 			apiKey = key;
-
-			cView.Common.genNodes(template).forEach(function(node){
-				nodesT[node.classList[0]] = node;
+			return new utils._Promise(function(resolve){ utils.xhr({
+					"url":"https://translate.yandex.net/api/v1.5/tr.json/detect?hint=en&text=test&key="+key
+				}).then(function(){
+					cView.Common.genNodes(template).forEach(function(node){
+						nodesT[node.classList[0]] = node;
+					});
+					var postCtrls = cView.doc.getElementsByClassName("post-controls");
+					for (var idx = 0; idx < postCtrls.length; idx++)
+						postCtrls[idx].cNodes["controls"].appendChild(nodesT["control"].cloneAll());
+					window.addEventListener("newNode", handlers.evtNewNode);
+					window.addEventListener("updNode", handlers.evtUpdNode);
+					resolve();
+				},function(){
+					cView.localStorage.removeItem("addons-translate-apikey");
+					resolve();
+				});
 			});
-			var postCtrls = cView.doc.getElementsByClassName("post-controls");
-			for (var idx = 0; idx < postCtrls.length; idx++)
-				postCtrls[idx].cNodes["controls"].appendChild(nodesT["control"].cloneAll());
-			window.addEventListener("newNode", handlers.evtNewNode);
-			window.addEventListener("updNode", handlers.evtUpdNode);
-			return utils._Promise.resolve();
+
 		}
 		,"settings": function(){return makeSettings(cView);}
 	}

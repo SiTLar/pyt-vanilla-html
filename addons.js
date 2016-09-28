@@ -7,6 +7,7 @@ define("./addons", [ "./utils"
 	,"./addons/likecomm"
 	,"./addons/srvsave"
 	,"./addons/translate"
+	,"./addons/linkcups"
 ]
 ,function( utils ) {
 	var addons = utils.args2Arr.apply(this,arguments);

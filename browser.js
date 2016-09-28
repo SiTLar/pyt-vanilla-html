@@ -111,6 +111,8 @@ function postInit(){
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	}
 	cView.Drawer.applyReadMore( cView.doc);
+	
+
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");

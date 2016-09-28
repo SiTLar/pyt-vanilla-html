@@ -783,12 +783,9 @@ _Drawer.prototype = {
 			if(post.omittedComments){
 				if(post.comments[0])
 					postNBody.cNodes["comments"].appendChild(Drawer.genComment.call(context, context.gComments[post.comments[0]]));
-				var nodeComment = cView.gNodes["comment"].cloneAll();
-				nodeComment.cNodes["comment-date"].innerHTML = "";
 				var nodeLoad = cView.gNodes["comments-load"].cloneAll();
-				nodeLoad.getNode(["c","a"],["c","num"]).innerHTML = post.omittedComments;
-				cView.Utils.setChild(nodeComment, "comment-body", nodeLoad);
-				postNBody.cNodes["comments"].appendChild(nodeComment);
+				nodeLoad.getElementsByClassName("num")[0].innerHTML = post.omittedComments;
+				postNBody.cNodes["comments"].appendChild(nodeLoad);
 				if(post.comments[1])
 					postNBody.cNodes["comments"].appendChild(Drawer.genComment.call(context, context.gComments[post.comments[1]]));
 			}
@@ -956,6 +953,7 @@ _Drawer.prototype = {
 		&& ( listBlocksUsr!= null) 
 		&& (listBlocksUsr[cUser.id])){
 			nodeComment.innerHTML = "---";
+			nodeComment.hidden = true;
 			return nodeComment;
 		}
 		if(( typeof listBlocksStr!== "undefined") 
@@ -996,6 +994,7 @@ _Drawer.prototype = {
 		aAddComment.innerHTML  = "Add comment";
 		aAddComment.addEventListener("click",cView["Actions"]["addComment"]);
 		var nodeCtrl = cView.gNodes["comment"].cloneAll(true);
+		nodeCtrl.classList.remove("comment");
 		var div = cView.doc.createElement("div");
 		div.appendChild(aIcon);
 		div.className = "comment-date";

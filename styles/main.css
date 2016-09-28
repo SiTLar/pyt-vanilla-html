@@ -743,3 +743,6 @@ span.comment-controls::before {
 .m-l{
 	margin-left: 0.3em; 
 }
+.highlighted{
+	background-color: #d9edf7;
+}

@@ -200,9 +200,14 @@ _Drawer.prototype = {
 		function drawBlocks(){
 			var lists = cView.blockLists;
 			nodeSettingsHead.cNodes["sh-blocks"].className = "sh-selected";
+			var nodeCtrl = cView.gNodes["blocks-settings-page-ctrl"].cloneAll();
+			cView.Utils.getInputsByName(nodeCtrl)["hideCups"].checked = JSON.parse(
+				cView.localStorage.getItem("addons-linkcups-hide")
+			);
+			body.appendChild( nodeCtrl);
 			Object.keys(cView.contexts).forEach(function (domain){
 				var context = cView.contexts[domain];
-				var page = cView.gNodes["blocks-settings-page"].cloneAll(true);
+				var page = cView.gNodes["blocks-settings-page"].cloneAll();
 				page.cNodes["title"].innerHTML = domain;
 				page.cNodes["domain"].value = domain;
 				cView.Utils.setChild(
@@ -962,6 +967,7 @@ _Drawer.prototype = {
 			return comment.body.toLowerCase().indexOf(str.toLowerCase())!= -1;
 		}))){
 			nodeComment.innerHTML = "---";
+			nodeComment.hidden = true;
 			return nodeComment;
 		}
 		var nodeSpan = nodeComment.getNode(["c","comment-body"],["c","cmt-content"]);
@@ -1180,7 +1186,10 @@ _Drawer.prototype = {
 		for(var idx = 0; idx < nodesCmts.length; idx++){
 			if((nodesCmts[idx].userid == user.id)
 			&& (nodesCmts[idx].domain == user.domain)) {
-				if(action) nodesCmts[idx].innerHTML = "---";
+				if(action) {
+					nodesCmts[idx].innerHTML = "---";
+					nodesCmts[idx].hidden = true;
+				}
 				else{
 					var id = nodesCmts[idx].rawId; 
 					var nodeNewCmt = cView.Drawer.genComment.call( context

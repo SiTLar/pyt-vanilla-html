@@ -1,6 +1,7 @@
 "use strict";
 define("./addons/linkcups",["../utils"],function(utils){
 var cView;
+var fHide = false;
 
 function linkCups (nodePost){
 	var cmtsHC = nodePost.getElementsByClassName("comment");
@@ -23,8 +24,13 @@ function linkCups (nodePost){
 		var matches = content.innerHTML.match(/[\^\u8593]+/g);
 		if(Array.isArray(matches))matches.forEach(function(match){
 			var target =  idx-match.length;
-			if( ( (idx > loadIdx)&&( (target) <= loadIdx) )||cmtsHC[target].hidden )
+			if( ( (idx > loadIdx)&&( (target) <= loadIdx) ))
 				return;
+			if(cmtsHC[target].hidden){
+				if(fHide) cmtsHC[idx].hidden = true;
+				return;
+			}
+				
 			cups[match] = cmtsHC[target];
 		});
 		Object.keys(cups).forEach(function(cup){
@@ -79,8 +85,10 @@ var handlers = {
 return function(cV){
 	cView = cV;
 	cView["addons-linkcups"] = handlers;
+	fHide = JSON.parse(cView.localStorage.getItem("addons-linkcups-hide"));
 	return {
 		"run": function (){
+
 			var nodesPosts = document.getElementsByClassName("post");
 			for ( idx = 0; idx < nodesPosts.length; idx++)
 				linkCups(nodesPosts[idx]);

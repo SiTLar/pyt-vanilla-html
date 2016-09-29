@@ -894,5 +894,13 @@
 		{"t":"span", "txt":"&hellip; "}
 		,{"c":"unfold-readmore", "t":"a","txt":"Read&nbsp;more", "e":{"click":["Actions","unfoldReadMore"]} }
 	]}
+	,{"c":"blocks-settings-page-ctrl", "cl":["blocks-settings-page"]
+	,"children":[
+		{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "name":"hideCups"}, "e":{"click":["Actions","setHideCups"]} }
+			,{"t":"span", "txt":"Hide comments referring to blocked users with cups"}
+		]}
+	]}
 ]}
 

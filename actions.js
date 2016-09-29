@@ -1174,7 +1174,7 @@ _Actions.prototype = {
 			if((typeof list !== "undefined") 
 				&& (typeof list[context.domain]!== "undefined")
 				&& (list[context.domain] != null) 
-				&& (list[context.domain][context.gUsers.byName[nodeUC.user].id]>-1)
+				&& (typeof list[context.domain][context.gUsers.byName[nodeUC.user].id] !== "undefined")
 			)
 				chkboxes[idx].checked = true;
 		}
@@ -1672,6 +1672,13 @@ _Actions.prototype = {
 		cView.Common.updateBlockList();
 
 
+	}
+	,"setHideCups": function(e){
+		var cView = document.cView;
+		var nodeCtrl = e.target.getNode(["p" ,"blocks-settings-page-ctrl"]);
+		cView.localStorage.setItem("addons-linkcups-hide"
+			,cView.Utils.getInputsByName(nodeCtrl)["hideCups"].checked
+		);
 	}
 };
 return _Actions;

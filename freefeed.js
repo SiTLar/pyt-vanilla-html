@@ -78,7 +78,7 @@ return function(config){
 			,"switchCmts": function(token, id, action){
 				return utils.xhr(
 					{	"url":config.serverURL 
-							+"posts/" + post.id 
+							+"posts/" + id 
 							+ (action?"/disableComments":"/enableComments")
 						,"token":token
 						,"method":"post"

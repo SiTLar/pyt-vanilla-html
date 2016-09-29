@@ -1487,6 +1487,7 @@ _Actions.prototype = {
 		e.target.getNode(["p","uds-likes"]).href = document.location +"/likes";
 	}
 	,"morePostCtrls":function(e){
+		if(e.target!=e.currentTarget) return;
 		var cView = document.cView;
 		var node = e.target.parentNode;
 		var nodePost = e.target.getNode(["p","post"]);
@@ -1514,11 +1515,13 @@ _Actions.prototype = {
 	,"showDelete": function(e){
 		var cView = document.cView;
 		var action = e.target.action;
-		e.target.getNode(["p","post"]).commentsModerated = action;
+		var nodePost = e.target.getNode(["p","post"]);
+		nodePost.commentsModerated = action;
 		var comments = e.target.getNode(["p","post-body"],["c","comments"]).getElementsByClassName("comment");
 		for(var idx = 0; idx < comments.length; idx++){
 			var comment = comments[idx];
-			if (cView.ids.indexOf(comment.userid) != -1)continue;
+			if (cView.contexts[nodePost.rawData.domain].ids.indexOf(comment.userid) != -1)
+				continue;
 			comment.getNode(["c","comment-body"],["c","comment-controls"]).hidden = !action;
 		}
 		e.target.innerHTML = action?"Stop moderating comments":"Moderate comments";

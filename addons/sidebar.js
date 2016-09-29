@@ -87,7 +87,7 @@ var payload = [
 				var vLink = genLinks(cView, ["#","Vanity search"]);
 				out.push(vLink);
 				context.p.then(function(){
-					vLink.href = gConfig.front
+					vLink.getElementsByTagName("a")[0].href = gConfig.front
 						+"search?qs="
 						+context.gMe.users.username;
 				});

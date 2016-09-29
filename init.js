@@ -198,7 +198,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			,"blockLists": {"cmts":"blockComments", "posts":"blockPosts"}
 			,"threshold":0.63
 			,"skip":0
-			,"minBody": 8
+			,"minBody": 20
 			,"noBlocks":false
 		}
 		,"Utils":Utils

@@ -32,14 +32,18 @@ function linkCups (nodePost){
 			}
 				
 			cups[match] = cmtsHC[target];
-		});
-		Object.keys(cups).forEach(function(cup){
-			var re = new RegExp("(^|[^\\^\\u8593])("+cup.replace(/\^/g,"\\x5e")+")(?![\\^\\u8593])","g");
+			var re = new RegExp("(^|[^\\^\\u8593])("
+				+match.replace(/\^/g,"\\x5e")
+				+")(?![\\^\\u8593])"
+				,"g"
+			);
 			content.innerHTML = content.innerHTML.replace(re
 				,"$1<span class=\"cups_"
-					+cup.length
+					+match.length
 					+"\">$2</span>"
 			);
+		});
+		Object.keys(cups).forEach(function(cup){
 			var spans = cmtsHC[idx].getElementsByClassName("cups_"+ cup.length);
 			for(var s = 0; s < spans.length; s++)
 				addHighlightEvts(spans[s],cups[cup]);

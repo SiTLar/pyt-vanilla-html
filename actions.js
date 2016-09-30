@@ -1680,6 +1680,28 @@ _Actions.prototype = {
 			,cView.Utils.getInputsByName(nodeCtrl)["hideCups"].checked
 		);
 	}
+	,"toggleHighlightCmts": function(e){
+		var cView = document.cView;
+		var node = e.target;
+		if (node.tagName.toLowerCase() != "a"){
+			node = cView.Utils
+				.getNode(node,["p","cmt-author"])
+				.getElementsByTagName("a")[0];
+		} 
+		e.stopPropagation();
+		var nodePost = cView.Utils.getNode(node,["p","post"]);
+		var domain = nodePost.rawData.domain;
+		var username = node.href.substr(gConfig.front.length+4+domain.length);
+		var userid = cView.contexts[domain].gUsers.byName[username].id;
+		if(typeof userid === "undefined" )return;
+		var nodesCmts = nodePost.getElementsByClassName("comment");
+		for (var idx = 0; idx < nodesCmts.length; idx++) {
+			if(nodesCmts[idx].userid == userid)
+				nodesCmts[idx]
+				.classList
+				.toggle("highlighted");
+		}
+	}
 };
 return _Actions;
 });

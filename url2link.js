@@ -45,7 +45,7 @@ _Url2link.prototype = {
 		}
 		,"newtab":false
 		,"actions":[function(match,host){
-			return '<a href="mailto:' + match + '" >' + match + '</a>'; 
+			return '<a class="url2link-email" href="mailto:' + match + '" >' + match + '</a>'; 
 		}]
 	}
 	,"text":{
@@ -92,7 +92,7 @@ _Url2link.prototype = {
 			catch(e){};
 			if (text.slice(-1) == "/")text = text.slice(0,-1);
 			text = (host.trunc &&(text.length > host.trunc))? text.substr(0,host.trunc)+"...":text;
-			return '<a dir="ltr" ' +(host["url"].newtab?'target="_blank"':"") +' href="'+match+'">' + text + "</a>"+suffix;
+			return '<a class="url2link-url" dir="ltr" ' +(host["url"].newtab?'target="_blank"':"") +' href="'+match+'">' + text + "</a>"+suffix;
 		}]
 	}
 	,"uname":{
@@ -102,7 +102,7 @@ _Url2link.prototype = {
 		,"flags":"i"
 		,"actions":[function(match, host){
 			var uname = match.slice(1);
-			return '<a '+(host["uname"].newtab?'target="_blank"':"") +' href="___CONTEXT_PATH___/' + uname+'" >@' +uname + '</a>' ;
+			return '<a class="url2link-uname" '+(host["uname"].newtab?'target="_blank"':"") +' href="___CONTEXT_PATH___/' + uname+'" >@' +uname + '</a>' ;
 		}]
 	}
 	,"hashtag":{
@@ -110,7 +110,7 @@ _Url2link.prototype = {
 		,"newtab": true
 		,"flags":"i"
 		,"actions":[function(match, host){
-			return '<a '+(host["hashtag"].newtab?'target="_blank"':"") +' href="___CONTEXT_SEARCH___%23' + match.slice(1)+'" >' + match+ '</a>' ;
+			return '<a class="url2link-hashtag" '+(host["hashtag"].newtab?'target="_blank"':"") +' href="___CONTEXT_SEARCH___%23' + match.slice(1)+'" >' + match+ '</a>' ;
 		}]
 	}
 	,"link": function(input, format){

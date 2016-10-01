@@ -1369,6 +1369,18 @@ _Drawer.prototype = {
 				else break;
 			}while((high - low) > 1);
 		}
+		var unamesHC = host.getElementsByClassName("url2link-uname");
+		for(var idx = 0; idx < unamesHC.length; idx++){
+			unamesHC[idx].addEventListener(
+				"mouseover"
+				,cView.Actions.toggleHighlightCmts
+			);
+			unamesHC[idx].addEventListener(
+				"mouseout"
+				,cView.Actions.toggleHighlightCmts
+			);
+		}
+
 	}
 	,"makeErrorMsg":function(err,nodeEButtons){
 		var cView = this.cView;

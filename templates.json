@@ -129,7 +129,11 @@
 		,"children":[
 			{"c":"cmt-content", "t":"span","cl":["long-text"], "p":{"dir":"auto"}}
 			,{"c":"spacer","t":"span","txt":"&mdash;"}
-			,{"c":"cmt-author", "t":"span"}
+			,{"c":"cmt-author", "t":"span","e":{
+					"mouseover":["Actions","toggleHighlightCmts"]
+					,"mouseout":["Actions","toggleHighlightCmts"]
+				} 
+			}
 			,{"c":"comment-controls", "t":"span","p":{"hidden":true}
 			,"children":[
 				{"t":"a","txt":"delete","p":"","e":{"click":["Actions","deleteComment"]}}

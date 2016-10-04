@@ -241,7 +241,7 @@ _Drawer.prototype = {
 					});
 					if(count){
 						var span = cView.doc.createElement("span");
-						span.innerHTML = count + " unrecognized useres";
+						span.innerHTML = count + " unrecognized users";
 						page.getNode(["c",type],["c","content"]).appendChild(span);
 					}
 				});

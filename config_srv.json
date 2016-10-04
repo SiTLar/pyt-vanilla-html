@@ -1,0 +1,9 @@
+var gConfig = {
+  "serverURL":"https://freefeed.net/v1/"
+, "front":"/x/"
+, "static":"https://myfeed.rocks/s/"
+, "rtURL":"https://freefeed.net/socket.io/"
+, "offset":"30"
+, "likesFold":4
+, "tokenPrefix":"freefeed_"
+}

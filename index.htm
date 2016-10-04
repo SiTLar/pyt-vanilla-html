@@ -1,18 +1,20 @@
 <html>
 <head>
-	<script type="text/javascript" src="/static/templates.json" > </script>
-	<script type="text/javascript" src="/static/config.json" ></script> 
-	<script type="text/javascript" src="/static/utils.js" > </script>
-	<script type="text/javascript" src="/static/Autolinker.min.js"></script>
-	<script type="text/javascript" src="/static/openpgp.min.js"></script>
-	<script type="text/javascript" src="/static/stringview.js"></script>
-	<script type="text/javascript" src="/static/private_module.js" > </script>
-	<link rel="stylesheet" type="text/css" href="/static/main.css" media="screen"/>
+	<meta charset="utf-8" /> 
+	<link rel="shortcut icon" href="/s/favicon.ico">
+	<link rel="stylesheet" id="main-stylesheet" type="text/css" href="/s/expanded.css?md5=9178cff9bc2fd6b1d4864ca57d70f0c9" media="screen" />
 	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+	<style title="local" type="text/css" > </style>
+	<script type="text/javascript" src="/s/config.json?md5=bed43ffe6a355bcfad0d81615b149733" ></script> 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<script type="text/javascript" src="/static/parser.js" > </script>
+	<script type="text/javascript" src="/s/vanilla.js?md5=90222bae1eec4fe409bb60c69b27dcd7" > </script>
+	<script> document.addEventListener("DOMContentLoaded", initDoc); </script>
 </head>
 
 <body >
+<div id="splash" style="position: absolute; width:100%; background:white;z-index:3;height:100%" > 
+<img src="/s/throbber-100.gif" style="display:block; top: 0px; right: 0px; left: 0px; margin: 10% auto 0px;"> 
+<div id=loading style="text-align:center; font-family:monospace; font-size:x-large; font-weight:bold; text-overflow: clip;" class="loading" ><span id="loading-msg">Initializing</span><span>.</span><span>.</span><span>.</span></div>
+</div>
 </body>
 </html>

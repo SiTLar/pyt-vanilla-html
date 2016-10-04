@@ -1,8 +1,16 @@
 var gConfig = {
-  "serverURL":"https://moimosk.ru/v1/"
-, "front":"https://moimosk.ru/frf/"
-, "static":"https://moimosk.ru/static/"
+ "front":"https://myfeed.rocks/"
+, "static":"https://myfeed.rocks/s/"
 , "offset":"30"
-, "likesFold":4
-
+, "ga":"UA-0-1"
+, "leadDomain":"micropeppa"
+, "domains":["FreeFeed", "micropeppa", "Mokum"]
 }
+var gCryptoPrivateCfg = {
+  "srvurl":"https://moimosk.ru/secret/"
+, "mul":10
+, "authurl": "https://freefeed.net/v1/"
+, "sk":16 
+, "encId":"MATRIX" 
+, "feed":"crypto-matrix" 
+};

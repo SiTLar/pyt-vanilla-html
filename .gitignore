@@ -1,6 +1,6 @@
-
+*.swp
 config.json
-
-config.json
-
-favicon.ico
+node_modules
+vanilla*.js
+compact.css
+expanded.css

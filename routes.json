@@ -1,0 +1,33 @@
+{
+	"default":{
+		"vals":{ 
+			"comments":{"dest":["Router","timeline"]}
+			,"likes":{"dest":["Router","timeline"]}
+			,"subscribers":{"dest":["Router","subscribers"]}
+			,"subscriptions":{"dest":["Router","subscriptions"]}
+		}
+		,"default":{
+			"dest":["Router","unmixed"]
+			,"default":{"dest":["Router","singlePost"]}
+		}
+	}
+	,"vals":{
+		"as":{"reroute":["Router","routeContext"]}
+		,"groups":{"dest":["Router","groups","token"] }
+		,"filter":{
+			"req":["token"]
+			,"vals":{ 
+				"direct":{"dest":["Router","directs"]}
+				,"discussions":{"dest":["Router","timeline"]} 
+				,"me":{"dest":["Router","routeMe"]}
+			} 
+			,"default":{"dest":["Router","timeline"]} 
+		}
+		,"home":{ "dest":["Router","routeHome","token"] }
+		,"logout":{ "dest":["Actions","logout"] }
+		,"requests":{"dest":["Drawer","drawRequests","token"] }
+		,"search":{"default":{"dest":["Router","routeSearch"]}}
+		,"settings":{"default":{"dest":["Drawer","drawSettings"]}}
+	}
+
+}

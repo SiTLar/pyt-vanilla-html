@@ -138,20 +138,32 @@ RtUpdate.prototype = {
 			cView.Drawer.genLikes(nodePost);
 			nodePost.rawData.updatedAt = Date.now();
 
-			if(Array.isArray(newPost.comments))newPost.comments.forEach(function(cmt){
-				var commentId = rt.context.domain + "-cmt-" + cmt;
+			if(Array.isArray(newPost.comments))newPost.comments.forEach(function(cmtId){
+				var commentId = rt.context.domain + "-cmt-" + cmtId;
 				var nodeCmt = document.getElementById(commentId);
 				if (nodeCmt){
 					var unfolded = nodeCmt.isUnfolded;
 					var nodeNewCmt = cView.Drawer.genComment.call(
 						rt.context
-						,rt.context.gComments[cmt]
+						,rt.context.gComments[cmtId]
 					);
 					nodeNewCmt.isUnfolded = unfolded;
 					nodeCmt.parentNode.replaceChild(
 						nodeNewCmt
 						,nodeCmt
 					);
+					var clikes = rt.context.gComments[cmtId].clikes;
+					if(!Array.isArray(clikes))clikes = new Array();
+					window.dispatchEvent(new CustomEvent("evtCLikeMokum" , {
+						"detail":{ "node":nodeNewCmt
+							,"info":{ "id":cmtId
+								,"likes":clikes.length
+								,"my_likes":(
+									(clikes.indexOf(rt.context.gMe.users.id) !=-1)?"1":"0"
+								)
+							}
+						}
+					}));
 				}
 			});
 			return nodePost;

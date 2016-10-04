@@ -30,6 +30,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			}
 		});
 		context.api.parse = api.parse;
+		context.api.name = api.name;
 		this.p = new Utils._Promise( function(resolve){resolve()});
 		if ((typeof api.oRT !== "undefined") && JSON.parse(v.localStorage.getItem("rt"))){
 			context.rt = new api.oRT(context,JSON.parse(v.localStorage.getItem("rtbump")));

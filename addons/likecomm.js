@@ -44,6 +44,7 @@ var handlers = {
 				e.target.action = !action;
 				e.target.innerHTML = (!action?"like":"un-like");
 			});
+			break;
 		case "Mokum":
 			utils.xhr({
 				"url":[gConfig.domains[domain].server.serverApiURL + "posts"  
@@ -62,7 +63,7 @@ var handlers = {
 				e.target.action = !action;
 				e.target.innerHTML = (!action?"like":"un-like");
 			});
-			
+			break;
 		}
 	}
 	,"show":function(e){

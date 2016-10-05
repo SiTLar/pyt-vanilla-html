@@ -24,7 +24,7 @@ function linkCups (nodePost){
 		var matches = content.innerHTML.match(/[\^\u8593]+/g);
 		if(Array.isArray(matches))matches.forEach(function(match){
 			var target =  idx-match.length;
-			if( ( (idx > loadIdx)&&( (target) <= loadIdx) ))
+			if( (target < 0 )||( (idx > loadIdx)&&( target <= loadIdx) ))
 				return;
 			if(cmtsHC[target].hidden){
 				if(fHide) cmtsHC[idx].hidden = true;

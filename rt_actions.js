@@ -43,13 +43,14 @@ RtHandler.prototype = {
 				node.style.overflow = "unset"; 
 			} ,  that.timeGrow);
 		}, 1);
-		*/
+		
 		if(document.getElementsByClassName("posts").length == 0){
 			console.log("%s, %s",node.id, nodePos.id);
 			console.log( cView.posts);
 			throw "Same shit again";
 		
 		}
+		*/
 		return node;
 	}
 	,setBumpCooldown: function(cooldown){
@@ -204,6 +205,7 @@ RtHandler.prototype = {
 		var commentId = context.domain + "-cmt-" +data.comments.id;
 		var postId = context.domain+"-post-" +data.comments.postId;
 		var nodePost = document.getElementById(postId);
+		var nodeComment;
 		data.users.forEach(cView.Common.addUser,context);
 		if(nodePost){
 			context.gComments[data.comments.id] = data.comments; 
@@ -211,7 +213,7 @@ RtHandler.prototype = {
 				nodePost.rawData.comments = new Array();
 			nodePost.rawData.comments.push(data.comments.id);
 			if(!document.getElementById(commentId)) 
-				var nodeComment = cView.Utils.unscroll(function(){
+				nodeComment = cView.Utils.unscroll(function(){
 					var nodeComment = that.insertSmooth(
 						cView.Drawer.genComment.call(context, data.comments)
 						,null
@@ -220,7 +222,7 @@ RtHandler.prototype = {
 					cView.Drawer.applyReadMore(nodeComment);
 					return nodeComment;
 				});
-			
+			else return;
 			if (that.bump && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown) < Date.now())){
 				if(!Array.isArray(cView.bumps))cView.bumps = new Array();
 				setTimeout(function(){ cView.bumps.push(nodePost)},that.bumpDelay+1);

@@ -458,6 +458,14 @@
 			}
 			,{"t":"span","txt":"Compact"}
 		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input"
+				,"p":{"type":"checkbox", "value":"addons-show-moon"}
+				,"e":{"change":["Actions","setChkboxOption"]}
+			}
+			,{"t":"span","txt":"Show moon phase"}
+		]}
 		,{"t":"h3","txt":"Text layout"}
 		,{"t":"label"
 		,"children":[

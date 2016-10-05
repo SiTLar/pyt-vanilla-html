@@ -6,7 +6,8 @@ return function(config){
 		return 	utils.xhr( {"url":config.serverURL +url ,"token":token });
 	}
 	return{
-		"protocol":{
+		"name": "FreeFeed"
+		,"protocol":{
 			"get": get
 			,"getTimeline": function(token, timeline, skip) {
 				if (timeline == "filter/best_of") return utils.xhr( {

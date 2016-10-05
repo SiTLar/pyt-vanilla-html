@@ -43,13 +43,14 @@ RtHandler.prototype = {
 				node.style.overflow = "unset"; 
 			} ,  that.timeGrow);
 		}, 1);
-		*/
+		
 		if(document.getElementsByClassName("posts").length == 0){
 			console.log("%s, %s",node.id, nodePos.id);
 			console.log( cView.posts);
 			throw "Same shit again";
 		
 		}
+		*/
 		return node;
 	}
 	,setBumpCooldown: function(cooldown){

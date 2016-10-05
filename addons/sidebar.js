@@ -54,6 +54,20 @@ var payload = [
 		}
 		,"test":always  
 	}
+	,{"title":"Moon"
+		,"content":function(cView){
+			var suncalc = require("suncalc");
+			var phase = suncalc.getMoonIllumination(Date.now()).phase;
+			var nodeImg = cView.doc.createElement("img");
+			nodeImg.className = "img-center";
+			nodeImg.src = "https://cdn.rawgit.com/thelinmichael/lunar-phases/master/images/browser-icons/"
+			+Math.ceil(29*phase)+ ".png"
+			return [nodeImg];
+			
+		}
+	
+		,"test": function(cView){return JSON.parse(cView.localStorage.getItem("addons-show-moon"));} 
+	}
 	,{"title":"Search"
 		,"content":function(cView){
 			var input = cView.gNodes["search-input"].cloneAll();

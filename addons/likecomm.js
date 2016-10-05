@@ -50,10 +50,14 @@ var handlers = {
 					, context.gUsers[post.createdBy].username 
 					, post.id
 					, "clike"
-					, id
+					, id+".json"
 				].join("/")
 				,"method": action?"post":"DELETE"
-				,"headers":{"X-API-Token":context.token}
+				,"headers":{
+					"X-API-Token":context.token
+					,"Accept": "application/json"
+					,"Content-Type": "application/json"
+				}
 			}).then(function(res){
 				e.target.action = !action;
 				e.target.innerHTML = (!action?"like":"un-like");
@@ -100,6 +104,14 @@ var handlers = {
 			});
 		};
 	}
+	,"evtUpdNode":function (e){
+		var node = e.detail;
+		if(!node||(node.classList[0] !== "comment"))
+			return;
+		var payload = new Object();
+		payload[node.domain] = [node];
+		loadLikes(payload);	
+	}
 	,"evtNewNode":function (e){
 		var arrNodes = e.detail;
 		if(!arrNodes)return;
@@ -143,6 +155,7 @@ function setControls(node){
 
 }
 function apply (likeInfo, node){
+	var context = cView.contexts[node.domain];
 	var authLocal = auth || ((context.api.name == "Mokum" )&&context.gMe);
 	var nodeControl = node.getNode( ["c","comment-body"] ,["c","like-comm"]);
 	if (!nodeControl) nodeControl= setControls(node);
@@ -214,8 +227,7 @@ function loadLikes(cmts) {
 				utils.xhr(options).then(function(res){
 					res = JSON.parse(res);
 					if(res.status != "error") res.data.forEach(function(likeInfo){
-						var commentId = context.domain + "-cmt-" + id;
-						var cmt = context.gComments[id]; 
+						var commentId = context.domain + "-cmt-" + likeInfo.id;
 						var nodeCmt = document.getElementById(commentId);
 						if(nodeCmt)apply(likeInfo, nodeCmt);
 					});
@@ -230,9 +242,9 @@ function loadLikes(cmts) {
 				if(nodeCmt && Array.isArray(cmt.clikes)){
 					apply({ "id":id
 							,"likes":cmt.clikes.length
-							,"my_likes":( (cmt
-								.clikes
-								.indexOf(context.gMe.users.id) !=-1)?"1":"0"
+							,"my_likes":( (context.gMe 
+								&& (cmt.clikes
+								.indexOf(context.gMe.users.id) !=-1))?"1":"0"
 							)
 						}
 						,nodeCmt
@@ -281,7 +293,7 @@ return function(cV){
 				utils.xhr({
 					"url": srvUrl + "auth"
 					,"method":"post"
-					,"token":cView.contexts[domain].token
+					,"token":cView.contexts["FreeFeed"].token
 				}).then(connect);
 			}else connect(null);
 			window.addEventListener("newNode",cView["addons-like-comm"].evtNewNode); 

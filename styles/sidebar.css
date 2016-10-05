@@ -76,3 +76,9 @@
 input.search{
 	width:100%;
 }
+.img-center{
+	display: block;
+	left: 0;
+	margin: auto;
+	right: 0;
+}

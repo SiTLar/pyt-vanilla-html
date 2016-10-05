@@ -159,7 +159,7 @@ RtUpdate.prototype = {
 							,"info":{ "id":cmtId
 								,"likes":clikes.length
 								,"my_likes":(
-									(clikes.indexOf(rt.context.gMe.users.id) !=-1)?"1":"0"
+									(rt.context.gMe&&(clikes.indexOf(rt.context.gMe.users.id) !=-1))?"1":"0"
 								)
 							}
 						}

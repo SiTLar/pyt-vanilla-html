@@ -66,7 +66,7 @@ var payload = [
 			
 		}
 	
-		,"test": function(cView){return JSON.parse(cView.localStorage.getItem("addons-show-moon");} 
+		,"test": function(cView){return JSON.parse(cView.localStorage.getItem("addons-show-moon"));} 
 	}
 	,{"title":"Search"
 		,"content":function(cView){

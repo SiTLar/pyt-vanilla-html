@@ -270,12 +270,12 @@ function connect(token){
 	cView["like-comm-ws"].onopen = function(){
 		cView["like-comm-ws"].onmessage = function(e){
 			var data = JSON.parse(e.data);
-			var context = cView.contexts["FreFeed"];
+			var context = cView.contexts["FreeFeed"];
 			if(!context ||!data) return;
-			var commentId = context.domain + "-cmt-" + id;
-			var cmt = context.gComments[id]; 
+			var commentId = context.domain + "-cmt-" + data.id;
+			var cmt = context.gComments[data.id]; 
 			var nodeCmt = document.getElementById(commentId);
-			apply(data, nodeCmt);
+			if (nodeCmt)apply(data, nodeCmt);
 		};
 	};
 }

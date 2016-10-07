@@ -1,4 +1,4 @@
-"use strinct";
+"use strict";
 var gRoutes = require("json!./routes.json");
 function is(val){return typeof val !== "undefined";};
 var chk = {

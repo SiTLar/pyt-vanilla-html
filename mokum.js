@@ -1,4 +1,4 @@
-"use strinct";
+"use strict";
 define(["./utils","./mokum_rt"],function(utils, RtUpdate){
 //utils._Promise = Promise;
 return function(config){

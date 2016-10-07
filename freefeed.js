@@ -1,4 +1,4 @@
-"use strinct";
+"use strict";
 define(["./utils", "./freefeed_rt"],function(utils, RtUpdate ){
 
 return function(config){

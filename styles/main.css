@@ -453,7 +453,7 @@ span.comment-controls::before {
 	margin-bottom: 0.3em;
 	font-size: 13px;
 }
-.new-post-feed{
+.new-post-feed,.blocks-item{
 	background-color: #f2f2f2;
 	border: 1px solid #d8d8d8;
 	margin: 0 0.3em 0.3em 0;
@@ -584,6 +584,13 @@ span.comment-controls::before {
 	.ud-unfold{
 		display:block;
 	}
+
+
+
+	.settings-head {
+		flex-flow: column nowrap;
+	}
+
 }
 .subs-cont > div {
 	display:flex;
@@ -622,7 +629,7 @@ span.comment-controls::before {
 	background-color:#fff;
 	border-bottom-style: none;
 }
-.sh-displ, .sh-acc, .sh-addons{
+.sh-item{
 	border-top-left-radius:1em;
 	border-style: solid;
 	background-color:#ddd;
@@ -726,4 +733,16 @@ span.comment-controls::before {
 }
 .search-domain {
 	margin: 0.5em;
+}
+.blocks-settings-page div {
+	margin: 0.5em 0;
+}
+.blocks-settings-page input,button {
+	margin: 0 0.5em;
+}
+.m-l{
+	margin-left: 0.3em; 
+}
+.highlighted{
+	background-color: #d9edf7;
 }

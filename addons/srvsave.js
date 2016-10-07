@@ -75,6 +75,7 @@ var handlers = {
 				return;
 			}
 			settingsNames.forEach(function(name){
+				if (oSettings[name] == "undefined") oSettings[name] = false;
 				cView.localStorage.setItem(name,oSettings[name] );
 			});
 			Object.keys( oSettings.tokens).forEach(function(domain){
@@ -117,7 +118,8 @@ var handlers = {
 function save(){
 	var oSettings = new Object();
 	settingsNames.forEach(function(name){
-		oSettings[name] = cView.localStorage.getItem(name);
+		var val = cView.localStorage.getItem(name);
+		if(val !== null)oSettings[name] = val;
 	});
 	var tokens = new Object();
 	var mainIds = new Object();
@@ -150,29 +152,33 @@ function makeSettings(){
 	return node;
 }
 return function(cV){
+	cView = cV;
+	cView.Common.genNodes(template).forEach(function(node){
+		nodesT[node.classList[0]] = node;
+	});
 	return {
 		"run": function (){
-			cView = cV;
-			cView.Common.genNodes(template).forEach(function(node){
-				nodesT[node.classList[0]] = node;
-			});
 			if ((typeof cView.contexts[savDomain] === "undefined")
-			|| !cView.contexts[savDomain].token) return;
+			|| !cView.contexts[savDomain].token) 
+				return cView.Utils._Promise.resolve();
 			loginOK = true;
 			cView["addons-srvsave"] = handlers;
 			if (JSON.parse(cView.localStorage.getItem("addons-save-blocks"))){
 				var savContext = cView.contexts[savDomain];
-				savContext.getWhoami(savContext.token).then(function(){
+				return savContext.getWhoami(savContext.token).then(function(){
 					var oSettings = savContext.gMe.users.frontendPreferences.vanilla;
-					cView.localStorage.setItem("blocks",oSettings["blocks"]);
-					var ub = cView.Common.updateBlockList;
-					cView.Common.updateBlockList = function(){
+					cView.blocks = JSON.parse(oSettings["blocks"]); 
+					if(typeof cView.blocks.blockStrings === "undefined")
+						cView.blocks.blockStrings = new Object();
+					localStorage.setItem("blocks",JSON.stringify(cView.blocks));
+				var ub = cView.Common.updateBlockList;
+				cView.Common.updateBlockList = function(){
 						ub.apply(cView, arguments);
 						save();
 					}
 
 				});
-			}
+			}else return cView.Utils._Promise.resolve();
 		}
 		,"settings": function(){return makeSettings(cView);}
 	}

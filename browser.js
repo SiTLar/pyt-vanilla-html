@@ -15,10 +15,15 @@ window.browserDoc = function(){
 		var matchOffset = cView.search.match(/offset=(\d+)/);
 		if(matchOffset) cView.skip = matchOffset[1];
 		cView.search = cView.search.replace(/offset=\d+&?/,"").replace(/limit=\d+&?/,"")
+	}else if(locationPath.indexOf("settings/raw") != -1){
+		var nodeSplash = document.getElementById("splash");
+		cView.Drawer.drawRaw(nodeSplash);
 	}
 		
 	if(JSON.parse(cView.localStorage.getItem("blocks")))
 		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
+	if(typeof cView.blocks.blockStrings === "undefined")
+		cView.blocks.blockStrings = new Object();
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
@@ -43,15 +48,20 @@ window.browserDoc = function(){
 		,locationPath 
 		,gConfig.front.length].join("<br>");
 	*/
-	cView.Router.route(cView.contexts, locationPath).then(postInit,function(err){
+	var contexts = new Object();
+	Object.keys(cView.contexts).forEach(function(domain){contexts[domain] = cView.contexts[domain];});
+	cView.Router.route(contexts, locationPath).then(postInit,function(err){
 		console.log(err);
+		if (Array.isArray(err))
+			err = err.filter(function(item){return typeof item !== "undefined"})[0];
+		
 		if( typeof err === "string") switch(err){
 			case "token":
 				cView.Common.auth();
 			break;
 		}else {
 			var nodeMsg = cView.gNodes["global-failure"].cloneAll();
-			body.appendChild(nodeMsg);
+			body.getNode(["c","container"],["c","details"]).appendChild(nodeMsg);
 			try{
 				nodeMsg.cNodes["title"].innerHTML = "Error " + err.code;
 				nodeMsg.cNodes["info"].innerHTML = cView.Utils.err2html(err.data);
@@ -101,10 +111,28 @@ function postInit(){
 			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
 	}
 	cView.Drawer.applyReadMore( cView.doc);
+	
+
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");
-	Addons.commit(cView);
+	Addons.commit(cView).then(function(){
+		var lists = cView.blockLists;
+		Object.keys(cView.contexts).forEach(function (domain){
+			var context = cView.contexts[domain];
+			Object.keys(lists).forEach(function(type){
+				var list = cView.blocks[lists[type]][domain]; 
+				if(typeof list !== "undefined") Object.keys(list).forEach(function(id){
+					if(list[id] !== true) return;
+					var user = context.gUsers[id];
+					if(typeof user === "undefined") return;
+					list[id] = user.username;
+				});
+
+			});
+		});
+		cView.Common.updateBlockList();
+	});
 }
 window.srvDoc = function(){
 	var cView = document.cView;

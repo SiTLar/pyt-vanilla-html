@@ -54,6 +54,20 @@ var payload = [
 		}
 		,"test":always  
 	}
+	,{"title":"Moon"
+		,"content":function(cView){
+			var suncalc = require("suncalc");
+			var phase = suncalc.getMoonIllumination(Date.now()).phase;
+			var nodeImg = cView.doc.createElement("img");
+			nodeImg.className = "img-center";
+			nodeImg.src = "https://cdn.rawgit.com/thelinmichael/lunar-phases/master/images/browser-icons/"
+			+Math.floor(29*phase)+ ".png"
+			return [nodeImg];
+			
+		}
+	
+		,"test": function(cView){return JSON.parse(cView.localStorage.getItem("addons-show-moon"));} 
+	}
 	,{"title":"Search"
 		,"content":function(cView){
 			var input = cView.gNodes["search-input"].cloneAll();
@@ -68,8 +82,31 @@ var payload = [
 				input.getElementsByClassName("search-domains")[0].appendChild(el);
 
 			});
+			var out = [input];
+			if(isLogged(cView)){
+				var context;
 
-			return [input].concat( 
+				if(cView.contexts[gConfig.leadDomain].token) 
+					context = cView.contexts[gConfig.leadDomain];
+				else{
+					var domains = Object.keys(cView.contexts);
+					domains.some(function(domain){
+						if(cView.contexts[domain].token != null){
+							context = cView.contexts[domain];
+							return true;
+						}else return false;
+					});
+				}
+
+				var vLink = genLinks(cView, ["#","Vanity search"]);
+				out.push(vLink);
+				context.p.then(function(){
+					vLink.getElementsByTagName("a")[0].href = gConfig.front
+						+"search?qs="
+						+context.gMe.users.username;
+				});
+			}
+			return out.concat( 
 				Object.keys(cView.contexts).map(
 					function(domain){ 
 						return [gConfig.domains[domain].search, domain]; 
@@ -174,6 +211,7 @@ return function(cView){
 				,cView.doc.getElementById("sidebar")
 				,payload
 			);
+			return cView.Utils._Promise.resolve();
 		}
 		,"settings":function(){return cView.doc.createElement("span");}
 	}

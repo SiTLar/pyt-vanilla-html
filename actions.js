@@ -224,6 +224,7 @@ _Actions.prototype = {
 		var postCNode = cView.doc.createElement("div");
 		postCNode.innerHTML = context.digestText(victim.rawData.body);
 		postCNode.className = "post-cont long-text";
+		postCNode.dir = "auto";
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 		cView.Drawer.applyReadMore(postCNode);
@@ -262,6 +263,7 @@ _Actions.prototype = {
 			*/
 			postCNode.innerHTML = context.digestText(post.body);
 			postCNode.className = "post-cont long-text";
+			postCNode.dir = "auto";
 			nodePost.rawData.body = post.body;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
@@ -779,6 +781,7 @@ _Actions.prototype = {
 				+ "/" + nodePost.rawData.id 
 			, ["comments"]
 		).then( function(postUpd){
+			var arrCmts = new Array();
 			cView.Common.loadGlobals(postUpd, context);
 			postUpd.posts.domain = domain;
 			cView.doc.getElementById(id).rawData = postUpd.posts;
@@ -792,7 +795,12 @@ _Actions.prototype = {
 			nodePB.cNodes["comments"] = cView.doc.createElement("div");
 			nodePB.cNodes["comments"].className = "comments";
 
-			postUpd.comments.forEach(function(cmt){context.gComments[cmt.id] =cmt; nodePB.cNodes["comments"].appendChild(cView.Drawer.genComment.call(context, cmt))});
+			postUpd.comments.forEach(function(cmt){
+				context.gComments[cmt.id] = cmt;
+				var nodeCmt = cView.Drawer.genComment.call(context, cmt);
+				nodePB.cNodes["comments"].appendChild(nodeCmt);
+				arrCmts.push(nodeCmt);
+			});
 			nodePB.appendChild(nodePB.cNodes["comments"]);
 			if (nodePost.rtCtrl.isBeenCommented == true){ 
 				var nodeComment = cView.Drawer.genAddComment(context);
@@ -801,6 +809,8 @@ _Actions.prototype = {
 			}
 			cView.Drawer.applyReadMore( nodePB);
 			cView.Drawer.addLastCmtButton(nodePB);
+
+			window.dispatchEvent(new CustomEvent("newNode", {"detail":arrCmts}));
 			return postUpd;
 
 		},function(res){
@@ -936,13 +946,15 @@ _Actions.prototype = {
 	,"doBlockCom": function(e){
 		var cView = document.cView;
 		var nodeUPC = e.target.getNode(["p" ,"up-controls"]);
-		cView.Common.updateBlockList("blockComments" ,nodeUPC ,e.target.checked);
+		var id = cView.contexts[nodeUPC.domain].gUsers.byName[nodeUPC.user].id; 
+		cView.Common.updateBlockList("blockComments" ,nodeUPC.domain, id ,e.target.checked);
 		cView.Drawer.blockComments( nodeUPC ,e.target.checked);
 	}
 	,"doBlockPosts": function(e){
 		var cView = document.cView;
 		var nodeUPC = e.target.getNode(["p" ,"up-controls"]);
-		cView.Common.updateBlockList("blockPosts" ,nodeUPC ,e.target.checked);
+		var id = cView.contexts[nodeUPC.domain].gUsers.byName[nodeUPC.user].id; 
+		cView.Common.updateBlockList("blockPosts" ,nodeUPC.domain, id  ,e.target.checked);
 		cView.Drawer.blockPosts( nodeUPC,e.target.checked );
 	}
 	,"setRadioOption": function(e){
@@ -1002,9 +1014,11 @@ _Actions.prototype = {
 		//matrix.ready = 0;
 		try{matrix.logout();}catch(e){};
 		cView.localStorage.removeItem("logins");
-		Object.keys(cView.contexts).forEach(function(domain){ cView.contexts[domain].token = null;});
+		Object.keys(cView.contexts).forEach(function(domain){
+			cView.contexts[domain].token = null;
+		});
 		cView.Common.saveLogins();
-		location.reload();
+		location.assign(gConfig.front);
 	}
 	,"newPostRemoveFeed": function(e){
 		var cView = document.cView;
@@ -1160,7 +1174,7 @@ _Actions.prototype = {
 			if((typeof list !== "undefined") 
 				&& (typeof list[context.domain]!== "undefined")
 				&& (list[context.domain] != null) 
-				&& (list[context.domain][context.gUsers.byName[nodeUC.user].id]>-1)
+				&& (typeof list[context.domain][context.gUsers.byName[nodeUC.user].id] !== "undefined")
 			)
 				chkboxes[idx].checked = true;
 		}
@@ -1366,6 +1380,12 @@ _Actions.prototype = {
 					+ "authToken"
 					, data.authToken
 				);
+				cView.localStorage.setItem( "logins"
+					,JSON.stringify([{
+						"domain":context.domain
+						,"token":data.authToken
+					}])
+				);
 				location.reload();
 		},function(err){
 			cView.doc.getElementById("auth-msg").innerHTML = JSON.parse(err.data).err;
@@ -1467,6 +1487,7 @@ _Actions.prototype = {
 		e.target.getNode(["p","uds-likes"]).href = document.location +"/likes";
 	}
 	,"morePostCtrls":function(e){
+		if(e.target!=e.currentTarget) return;
 		var cView = document.cView;
 		var node = e.target.parentNode;
 		var nodePost = e.target.getNode(["p","post"]);
@@ -1494,11 +1515,13 @@ _Actions.prototype = {
 	,"showDelete": function(e){
 		var cView = document.cView;
 		var action = e.target.action;
-		e.target.getNode(["p","post"]).commentsModerated = action;
+		var nodePost = e.target.getNode(["p","post"]);
+		nodePost.commentsModerated = action;
 		var comments = e.target.getNode(["p","post-body"],["c","comments"]).getElementsByClassName("comment");
 		for(var idx = 0; idx < comments.length; idx++){
 			var comment = comments[idx];
-			if (cView.ids.indexOf(comment.userid) != -1)continue;
+			if (cView.contexts[nodePost.rawData.domain].ids.indexOf(comment.userid) != -1)
+				continue;
 			comment.getNode(["c","comment-body"],["c","comment-controls"]).hidden = !action;
 		}
 		e.target.innerHTML = action?"Stop moderating comments":"Moderate comments";
@@ -1529,6 +1552,9 @@ _Actions.prototype = {
 	}
 	,"goSetAddons": function(e){
 		e.target.href = gConfig.front+"settings/addons";
+	}
+	,"goSetBlocks": function(e){
+		e.target.href = gConfig.front+"settings/blocks";
 	}
 	,"goSetDisplay": function(e){
 		e.target.href = gConfig.front+"settings/display";
@@ -1569,8 +1595,113 @@ _Actions.prototype = {
 		var victim = cView.Utils.getNode(e.target,["p","long-text"]);
 		victim.innerHTML = victim.words;
 		victim.isUnfolded = true;
+		window.dispatchEvent(new CustomEvent("updNode", {"detail":victim}));
 	}
+	,"remBlockingItem":function(e){
+		var cView = document.cView;
+		var victim = cView.Utils.getNode(e.target,["p","blocks-item"]);
+		var domain = victim.getNode(["p","blocks-settings-page"],["c","domain"]).value;
+		var inputs = cView.Utils.getInputsByName(victim);
+		switch(inputs.type.value){
+		case "str":
+			var strings = cView.blocks.blockStrings[domain];
+			var idx = strings.indexOf(inputs.val.value);
+			if(idx != -1) strings.splice(idx, 1);
+			cView.Common.updateBlockList("blockStrings", domain, inputs.val.value, false);
+			break;
+		case "posts":
+		case "cmts":
+			cView.Common.updateBlockList(
+				cView.blockLists[inputs.type.value]
+				,domain
+				,inputs.val.value
+				,false
+			);
+			break;
+		}
+		victim.parentNode.removeChild(victim);
+	}
+	,"addBlockingString":function(e){
+		var cView = document.cView;
+		if((e.type != "click")&& (e.which != "13")) return ;
+		var str = cView.Utils.getInputsByName(e.target.getNode(["p","controls"]))["strToBlock"].value.trim();
+		var host = e.target.getNode(["p","blocks-settings-page"]);
+		var domain = host.getNode(["c","domain"]).value;
+		var item = cView.gNodes["blocks-item"].cloneAll();
+		var inputs = cView.Utils.getInputsByName(item);
+		if((typeof cView.blocks.blockStrings[domain] !== "undefined")
+		&& (cView.blocks.blockStrings[domain].indexOf(str) != -1 ))return;
+		inputs["type"].value = "str";
+		inputs["val"].value  = str;
+		item.cNodes["title"].innerHTML = str;
+		host.getNode(["c","strings"],["c","content"]).appendChild(item);
+		cView.Common.updateBlockList("blockStrings", domain, str, true);
+	}
+	,"copyBlockingStrings": function(e){
+		var cView = document.cView;
+		var host = e.target.getNode(["p","blocks-settings-page"]);
+		var domain = host.getNode(["c","domain"]).value;
+		cView.tmp = cView.blocks.blockStrings[domain];
+		var buttons = cView.doc.getElementsByTagName("button");
+		for (var idx = 0; idx < buttons.length; idx++) {
+			if(buttons[idx].className == "paste")buttons[idx].disabled = false;
+		}
 
+	
+	}
+	,"pasteBlockingStrings": function(e){
+		var cView = document.cView;
+		var host = e.target.getNode(["p","blocks-settings-page"]);
+		var domain = host.getNode(["c","domain"]).value;
+		if(!Array.isArray(cView.blocks.blockStrings[domain]))
+			cView.blocks.blockStrings[domain] = new Array();
+		var arr = cView.blocks.blockStrings[domain];
+		cView.blocks.blockStrings[domain] = arr.concat(
+			cView.tmp.filter(function (item) { return arr.indexOf(item) < 0; })
+		);
+		var buttons = cView.doc.getElementsByTagName("button");
+		for (var idx = 0; idx < buttons.length; idx++) {
+			if(buttons[idx].className == "paste")buttons[idx].disabled = true;
+		}
+		delete cView.tmp;
+		cView.Utils.setChild(
+			host.cNodes["strings"]
+			,"content"
+			,cView.Drawer.genBlockStrPage(domain)
+		);	
+		cView.Common.updateBlockList();
+
+
+	}
+	,"setHideCups": function(e){
+		var cView = document.cView;
+		var nodeCtrl = e.target.getNode(["p" ,"blocks-settings-page-ctrl"]);
+		cView.localStorage.setItem("addons-linkcups-hide"
+			,cView.Utils.getInputsByName(nodeCtrl)["hideCups"].checked
+		);
+	}
+	,"toggleHighlightCmts": function(e){
+		var cView = document.cView;
+		var node = e.target;
+		if (node.tagName.toLowerCase() != "a"){
+			node = cView.Utils
+				.getNode(node,["p","cmt-author"])
+				.getElementsByTagName("a")[0];
+		} 
+		e.stopPropagation();
+		var nodePost = cView.Utils.getNode(node,["p","post"]);
+		var domain = nodePost.rawData.domain;
+		var username = node.href.substr(gConfig.front.length+4+domain.length);
+		var userid = cView.contexts[domain].gUsers.byName[username].id;
+		if(typeof userid === "undefined" )return;
+		var nodesCmts = nodePost.getElementsByClassName("comment");
+		for (var idx = 0; idx < nodesCmts.length; idx++) {
+			if(nodesCmts[idx].userid == userid)
+				nodesCmts[idx]
+				.classList
+				.toggle("highlighted");
+		}
+	}
 };
 return _Actions;
 });

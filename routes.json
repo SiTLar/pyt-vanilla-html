@@ -24,6 +24,7 @@
 			,"default":{"dest":["Router","timeline"]} 
 		}
 		,"home":{ "dest":["Router","routeHome","token"] }
+		,"logout":{ "dest":["Actions","logout"] }
 		,"requests":{"dest":["Drawer","drawRequests","token"] }
 		,"search":{"default":{"dest":["Router","routeSearch"]}}
 		,"settings":{"default":{"dest":["Drawer","drawSettings"]}}

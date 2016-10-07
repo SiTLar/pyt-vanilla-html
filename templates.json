@@ -38,7 +38,7 @@
 		,{"c":"post-body"
 		,"children":[
 			{"c":"title"}
-			,{"c":"post-cont", "cl":["long-text"]}
+			,{"c":"post-cont", "cl":["long-text"], "p":{"dir":"auto"}}
 			,{"c":"attachments"
 			,"children":[
 				{"c":"atts-img"}
@@ -127,9 +127,13 @@
 		]}
 		,{"c":"comment-body"
 		,"children":[
-			{"c":"cmt-content", "t":"span","cl":["long-text"]}
+			{"c":"cmt-content", "t":"span","cl":["long-text"], "p":{"dir":"auto"}}
 			,{"c":"spacer","t":"span","txt":"&mdash;"}
-			,{"c":"cmt-author", "t":"span"}
+			,{"c":"cmt-author", "t":"span","e":{
+					"mouseover":["Actions","toggleHighlightCmts"]
+					,"mouseout":["Actions","toggleHighlightCmts"]
+				} 
+			}
 			,{"c":"comment-controls", "t":"span","p":{"hidden":true}
 			,"children":[
 				{"t":"a","txt":"delete","p":"","e":{"click":["Actions","deleteComment"]}}
@@ -142,17 +146,20 @@
 		,{"c":"spacer","t":"span","txt":"|"}
 		,{"t":"a","txt":"delete","e":{"click":["Actions","deleteComment"]}}
 	]}
-	,{"c":"comments-load", "cl":["comment-body"]
+	,{"c":"comments-load", "cl":["comment"]
 	,"children":[
-		{"c":"a", "t":"a", "e":{"click":["Actions","unfoldComm"]}
+		{"c":"comment-body"
 		,"children":[
-			{"c":"num", "t":"span"}
-			,{"t":"span", "txt":" more comments"}
+			{"c":"a", "t":"a", "e":{"click":["Actions","unfoldComm"]}
+			,"children":[
+				{"c":"num", "t":"span"}
+				,{"t":"span", "txt":" more comments"}
+			]}
 		]}
 	]}
 	,{"c":"edit"
 	,"children":[
-		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
+		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
 		,{"c":"edit-buttons"
 		,"children":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"}
@@ -178,7 +185,7 @@
 		,{"c":"post-to"}
 		,{"c":"new-post-cont"
 		,"children":[
-			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}}
+			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
 			,{"c":"attachments"}
 		]}
 		,{"c":"edit-buttons"
@@ -402,17 +409,21 @@
 	]}
 	,{"c":"settings-head"
 	,"children":[
-		{"c":"sh-displ"
+		{"c":"sh-displ", "cl":["sh-item"]
 		,"children":[
 			{"t":"a","txt":"Display","e":{"mousedown":["Actions","goSetDisplay"]}}
 		]}
-		,{"c":"sh-acc"
+		,{"c":"sh-acc", "cl":["sh-item"]
 		,"children":[
 			{"t":"a","txt":"Accounts","e":{"mousedown":["Actions","goSetAccounts"]}}
 		]}
-		,{"c":"sh-addons"
+		,{"c":"sh-addons", "cl":["sh-item"]
 		,"children":[
 			{"t":"a","txt":"Addons","e":{"mousedown":["Actions","goSetAddons"]}}
+		]}
+		,{"c":"sh-blocks", "cl":["sh-item"]
+		,"children":[
+			{"t":"a","txt":"Block content","e":{"mousedown":["Actions","goSetBlocks"]}}
 		]}
 		,{"c":"sh-end"}
 	]}
@@ -446,6 +457,14 @@
 				,"e":{"change":["Actions","setRadioOption"]}
 			}
 			,{"t":"span","txt":"Compact"}
+		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input"
+				,"p":{"type":"checkbox", "value":"addons-show-moon"}
+				,"e":{"change":["Actions","setChkboxOption"]}
+			}
+			,{"t":"span","txt":"Show moon phase"}
 		]}
 		,{"t":"h3","txt":"Text layout"}
 		,{"t":"label"
@@ -576,7 +595,7 @@
 		,{"t":"p", "txt":"Email:"}
 		,{"c":"gs-input","t":"input","p":{"name":"email"}}
 		,{"t":"p", "txt":"Description"}
-		,{"c":"gs-descr","t":"textarea"}
+		,{"c":"gs-descr","t":"textarea", "p":{"dir":"auto"}}
 		,{"t":"label"
 		,"children":[
 			{"t":"input" ,"p":{"type":"checkbox" ,"name":"is-private"}}
@@ -717,7 +736,7 @@
 			,{"c":"ud-text"
 			,"children":[
 				{"c":"ud-title"}
-				,{"c":"ud-desc", "cl":["long-text"]}
+				,{"c":"ud-desc", "cl":["long-text"], "p":{"dir":"auto"}}
 			]}
 			,{"c":"ud-stats"
 			,"children":[
@@ -844,6 +863,55 @@
 			,{"t":"p", "txt":"<b>from:</b> return entries from a specific user, e.g.: from:freefeed<br/>"}
 			,{"t":"p", "txt":"<b>group:</b> return entries from a specific group, e.g.: group:travel"}
 		
+		]}
+	]}
+	,{"c":"blocks-settings-page"
+	,"children":[
+		{"c":"title","t":"h2"}
+		,{"c":"domain", "t":"input", "p":{"type":"hidden", "name":"domain"}}
+		,{"c":"strings"
+		,"children":[
+			{ "txt":"Block content with those strings:"}
+			,{"c":"content", "t":"ul"}
+			,{"c":"controls"
+			,"children":[
+				{"t":"span", "txt":"add a string"}
+				,{"t":"input", "p":{"name":"strToBlock"}, "e":{"keydown":["Actions","addBlockingString"]}}
+				,{"t":"button", "txt":"add", "e":{"click":["Actions","addBlockingString"]}}
+				,{"t":"button", "txt":"copy", "e":{"click":["Actions","copyBlockingStrings"]}}
+				,{"c":"paste", "t":"button", "txt":"paste", "p":{"disabled":true}, "e":{"click":["Actions","pasteBlockingStrings"]}}
+			]}
+
+		]}
+		,{"c":"cmts", "p":{"hidden":true}
+		,"children":[
+			{"txt":"Block comments from following users:"}
+			,{"c":"content", "t":"ul"}
+		]}
+		,{"c":"posts", "p":{"hidden":true}
+		,"children":[
+			{"txt":"Block posts from following users:"}
+			,{"c":"content", "t":"ul"}
+		]}
+	]}
+	,{"c":"blocks-item", "t":"il", "e":{"click":["Actions","remBlockingItem"]} 
+	,"children":[
+		{"t":"input", "p":{"name":"val", "type":"hidden"}}	
+		,{"t":"input", "p":{"name":"type", "type":"hidden"}}	
+		,{"c":"title","t":"span"}
+		, {"c":"fa fa-times m-l","t":"i"}
+	]}
+	,{"c":"read-more-ctrl", "t":"b" 
+	,"children":[
+		{"t":"span", "txt":"&hellip; "}
+		,{"c":"unfold-readmore", "t":"a","txt":"Read&nbsp;more", "e":{"click":["Actions","unfoldReadMore"]} }
+	]}
+	,{"c":"blocks-settings-page-ctrl", "cl":["blocks-settings-page"]
+	,"children":[
+		{"t":"label"
+		,"children":[
+			{"t":"input" ,"p":{"type":"checkbox", "name":"hideCups"}, "e":{"click":["Actions","setHideCups"]} }
+			,{"t":"span", "txt":"Hide comments referring to blocked users with cups"}
 		]}
 	]}
 ]}

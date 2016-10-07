@@ -227,18 +227,25 @@ _Common.prototype = {
 		cView.doc.getElementById("a-form").addEventListener("submit",cView.Actions.getauth);
 
 	}
-	,"updateBlockList": function(tag, node, add){
+	,"updateBlockList": function(tag, domain, value, add){
 		var cView = document.cView;
-		var context = cView.contexts[node.domain];
-		var id = context.gUsers.byName[node.user].id;
-		var list = cView.blocks[tag][node.domain];
+		if (typeof tag === "undefined") 
+			return cView.localStorage.setItem("blocks", JSON.stringify(cView.blocks));
+		var context = cView.contexts[domain];
+		var list = cView.blocks[tag][domain];
+		var fArray = ["blockStrings"].indexOf(tag) != -1; 
+			
 		if(add){
-			if ((typeof list === "undefined") || (list == null)) list = new Object();
-			list[id] = true;
+			if ((typeof list === "undefined") || (list == null)) 
+				fArray?(list = new Array()):(list = new Object()) ;
+			fArray?(list.push(value)):(list[value] = true);
 		}else try{
-			delete list[id];
+			if (fArray){
+				var idx = list.indexOf(val);
+				if(idx != -1)list.splice(idx,1);
+			}else delete list[value];
 		}catch(e){};
-		cView.blocks[tag][node.domain] = list;
+		cView.blocks[tag][domain] = list;
 		cView.localStorage.setItem("blocks", JSON.stringify(cView.blocks));
 	}
 	,"setFrontUrl": function(url){
@@ -382,7 +389,8 @@ _Common.prototype = {
 		posts.forEach(function(post){
 			if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
 			if (post.isHidden !== true) post.isHidden = false;
-			dups.push(post);
+			if(!dups.some(function(dup){ return (dup.domain == post.domain)&&(dup.id == post.id);}))
+				dups.push(post);
 			hidden = hidden && post.isHidden;
 		});
 		return {"type": "metapost"

@@ -43,13 +43,14 @@ RtHandler.prototype = {
 				node.style.overflow = "unset"; 
 			} ,  that.timeGrow);
 		}, 1);
-		*/
+		
 		if(document.getElementsByClassName("posts").length == 0){
 			console.log("%s, %s",node.id, nodePos.id);
 			console.log( cView.posts);
 			throw "Same shit again";
 		
 		}
+		*/
 		return node;
 	}
 	,setBumpCooldown: function(cooldown){
@@ -93,8 +94,7 @@ RtHandler.prototype = {
 					,document.posts.firstChild
 				);
 		}
-		var evt = new CustomEvent("newNode", {"detail":nodePost});
-		window.dispatchEvent(evt);
+		window.dispatchEvent(new CustomEvent("newNode", {"detail":nodePost}));
 
 		function manageMeta(nodePost){
 			nodePost.rawData.sign = cView.hasher.of(nodePost.rawData.body);
@@ -205,6 +205,7 @@ RtHandler.prototype = {
 		var commentId = context.domain + "-cmt-" +data.comments.id;
 		var postId = context.domain+"-post-" +data.comments.postId;
 		var nodePost = document.getElementById(postId);
+		var nodeComment;
 		data.users.forEach(cView.Common.addUser,context);
 		if(nodePost){
 			context.gComments[data.comments.id] = data.comments; 
@@ -212,7 +213,7 @@ RtHandler.prototype = {
 				nodePost.rawData.comments = new Array();
 			nodePost.rawData.comments.push(data.comments.id);
 			if(!document.getElementById(commentId)) 
-				var nodeComment = cView.Utils.unscroll(function(){
+				nodeComment = cView.Utils.unscroll(function(){
 					var nodeComment = that.insertSmooth(
 						cView.Drawer.genComment.call(context, data.comments)
 						,null
@@ -221,15 +222,14 @@ RtHandler.prototype = {
 					cView.Drawer.applyReadMore(nodeComment);
 					return nodeComment;
 				});
-			
+			else return;
 			if (that.bump && ( (nodePost.rawData.updatedAt*1 + that.bumpCooldown) < Date.now())){
 				if(!Array.isArray(cView.bumps))cView.bumps = new Array();
 				setTimeout(function(){ cView.bumps.push(nodePost)},that.bumpDelay+1);
 			}
 			nodePost.rawData.updatedAt = Date.now();
 			cView.Common.markMetaMenu(nodePost);
-			var evt = new CustomEvent("newNode", {"detail":nodeComment});
-			window.dispatchEvent(evt);
+			window.dispatchEvent(new CustomEvent("newNode", {"detail":nodeComment}));
 		}else that.injectPost(data.comments.postId, context);
 	}
 	,"comment:update": function(data, context){
@@ -238,13 +238,17 @@ RtHandler.prototype = {
 		var postId = context.domain+"-post-"+data.comments.postId;
 		context.gComments[data.comments.id] = data.comments; 
 		var nodeComment = document.getElementById(commentId);
-		if (nodeComment) cView.Utils.unscroll(function(){
+		if (nodeComment){ 
 			var newComment = cView.Drawer.genComment.call(context, data.comments);
-			nodeComment.parentNode.replaceChild( newComment , nodeComment);
-			cView.Drawer.applyReadMore( newComment );
-			cView.Common.markMetaMenu(document.getElementById(postId));
-			return newComment;
-		});
+			cView.Utils.unscroll(function(){
+				var nodePost = document.getElementById(postId);
+				nodeComment.parentNode.replaceChild( newComment , nodeComment);
+				cView.Drawer.applyReadMore( newComment );
+				cView.Common.markMetaMenu(nodePost);
+				return newComment;
+			});
+			window.dispatchEvent(new CustomEvent("updNode", {"detail":newComment}));
+		}
 		
 	}
 	,"comment:destroy": function(data, context){
@@ -325,6 +329,7 @@ RtHandler.prototype = {
 			cView.Common.markMetaMenu(nodePost);
 			return nodePost; 
 		});
+		window.dispatchEvent(new CustomEvent("updNode", {"detail":nodePost}));
 	}
 	, "post:destroy" : function(data, context){
 		var cView = document.cView;

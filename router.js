@@ -1,4 +1,4 @@
-"use strinct";
+"use strict";
 var gRoutes = require("json!./routes.json");
 function is(val){return typeof val !== "undefined";};
 var chk = {
@@ -97,7 +97,7 @@ function undup (cView, posts){
 			cView.Common.metapost(
 				Object.keys( duplicates[idx]).map(function(v){
 					return posts[parseInt(v)];
-				})
+				}).filter(function(post){return post != null;})
 			)
 		);
 		Object.keys(duplicates[idx])
@@ -107,9 +107,7 @@ function undup (cView, posts){
 			posts[v] = null;
 		});
 	});
-	posts = posts.filter(function(post){return post != null;});
-	return posts;
-
+	return posts.filter(function(post){return post != null;});
 }
 define("./router",[],function(){
 	function _Router(v){

@@ -1,4 +1,4 @@
-"use strinct";
+"use strict";
 define(["./utils","./mokum_rt"],function(utils, RtUpdate){
 //utils._Promise = Promise;
 return function(config){
@@ -93,7 +93,8 @@ return function(config){
 		});
 	}
 	return{
-		"protocol":{
+		"name": "Mokum"
+		,"protocol":{
 			"get": get
 			,"getSubs": function (token, userlist) {
 				return get(token, userlist).then(function(res){
@@ -474,6 +475,7 @@ return function(config){
 				,"authToken":{"out":"","a":"copy"}
 				,"banIds":{"out":"","a":"str"}
 				,"can_unhide":{"out":"isHidden","a":"copy"} 
+				,"clikes":{"out":"","a":"str"}
 				,"comments":{"out":"", "post":function(cmts){ 
 					if (Array.isArray(cmts))
 						return cmts.map(function(cmt){
@@ -482,6 +484,7 @@ return function(config){
 					else aComments = cmts;
 				} }
 				,"comments_count":{"out":"","a":"copy"}
+				,"comments_disabled":{"out":"commentsDisabled","a":"copy"}
 				,"created_at":{"out":"createdAt","a":"mutate","f":Date.parse,"single":true}
 				,"description":{"out":"","a":"copy"}
 				,"display_name":{"out":"screenName","a":"copy"}

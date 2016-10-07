@@ -1,4 +1,4 @@
-"use strinct";
+"use strict";
 define("./utils", [], function(){
 function args2Arr(){
 	//.length is just an integer, this doesn't leak

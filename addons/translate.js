@@ -25,12 +25,16 @@ var template = [
 var handlers = {
 	"translatePost": function(e){
 		var host = e.target.getNode(["p","post"]);
-		var label = cView.doc.createElement("span");
-		label.innerHTML = "Translated";
 		host.translated = true;
+		var nodeParent = e.target.parentNode;
+		var spinner = cView.gNodes["spinner"].cloneAll();
+		nodeParent.replaceChild(spinner, e.target);
+		translate(host.getElementsByClassName("long-text")).then(function(){
+			var label = cView.doc.createElement("span");
+			label.innerHTML = "Translated";
+			nodeParent.replaceChild(label,spinner);
 
-		e.target.parentNode.replaceChild(label, e.target);
-		translate(host.getElementsByClassName("long-text"));
+		});
 	}
 	,"evtNewNode": function (e){
 		var arrNodes = e.detail;
@@ -124,7 +128,7 @@ function translate (nodesHC){
 		payload += amp+"text=" + encodeURIComponent(node.innerHTML); 
 		amp = "&";
 	}
-	utils.xhr({
+	return utils.xhr({
 		"url":url
 		,"data":payload
 		,"method":"post"

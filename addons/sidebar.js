@@ -149,53 +149,75 @@ var payload = [
 	}
 	,{"title":"Groups"
 		,"content":function(cView){
-			var domains = Object.keys(cView.contexts);
-			var groups = new Array();
-			domains.forEach(function(domain){
-				var context = cView.contexts[domain];
-				var ids = new Object();
-				context.ids.forEach(function(id){
-					if (typeof  context.logins[id].data.users.subscriptions === "undefined")
-						return;
-					var subscriptions = new Object();
-					context.logins[id].data.subscriptions.forEach(function(sub){
-						subscriptions[sub.id]=sub;
-					});
-					context.logins[id].data.users.subscriptions.forEach(function(subid){
-						var sub = subscriptions[subid];
-						var group = context.gUsers[sub.user];
-						if( (typeof group !== "undefined")
-							&&(group.type == "group") 
-							&& (sub.name == "Posts")){
-							if(typeof group.updatedAt === "undefined")
-								group.updatedAt = 0;
-							if(ids[sub.user] !== true){
-								groups.push({ 
-									"link":group.link
-									,"time":Number(group.updatedAt)
-								});
-								ids[sub.user] = true;
-							}
-						}
-					});
-				});
+			var out = Array.apply(null, {"length":5}).map(function(){
+				return cView.doc.createElement("div");
 			});
-			groups.sort(function(a,b){return b.time - a.time;});
-			var length = groups.length;
-			length = length <5 ? length:5;
-			var out = new Array();
-			for (var idx = 0; idx < length; idx++){
-				var div = cView.doc.createElement("div");
-				div.innerHTML = groups[idx].link + "<br/>" 
-				+ "<span class=\"sb-info\">" 
-				+cView.Utils.relative_time( groups[idx].time) 
-				+ "</span>";
-				out.push(div);
-			}
+			var div = cView.doc.createElement("div");
 			div = cView.doc.createElement("div");
 			div.innerHTML = "<span class=\"sb-info\"><a href=\""
-				+gConfig.front + "groups\" >All groups</a></span>"
+				+gConfig.front + "groups\" >All groups</a></span>";
+			
+			window.addEventListener("newNode",evtNewNode); 
+			fill();
 			return out.concat(div);
+			function evtNewNode(e){
+				var arrNodes = e.detail;
+				if(!arrNodes)return;
+				arrNodes = Array.isArray(arrNodes)?arrNodes:[arrNodes];
+				arrNodes.forEach(function(node){
+					post = node.getNode(["p","post"]).rawData;
+					var context = cView.contexts[post.domain];
+					post.postedTo.forEach(function(feed){
+						context.gFeeds[feed].user.updatedAt = Date.now();
+					});
+				});
+				fill();
+							
+			}
+			function fill(){
+				var domains = Object.keys(cView.contexts);
+				var groups = new Array();
+				domains.forEach(function(domain){
+					var context = cView.contexts[domain];
+					var ids = new Object();
+					context.ids.forEach(function(id){
+						if (typeof  context.logins[id].data.users.subscriptions === "undefined")
+							return;
+						var subscriptions = new Object();
+						context.logins[id].data.subscriptions.forEach(function(sub){
+							subscriptions[sub.id]=sub;
+						});
+						context.logins[id].data.users.subscriptions.forEach(function(subid){
+							var sub = subscriptions[subid];
+							var group = context.gUsers[sub.user];
+							if( (typeof group !== "undefined")
+								&&(group.type == "group") 
+								&& (sub.name == "Posts")){
+								if(typeof group.updatedAt === "undefined")
+									group.updatedAt = 0;
+								if(ids[sub.user] !== true){
+									groups.push({ 
+										"link":group.link
+										,"time":Number(group.updatedAt)
+									});
+									ids[sub.user] = true;
+								}
+							}
+						});
+					});
+				});
+				groups.sort(function(a,b){return b.time - a.time;});
+				var length = groups.length;
+				length = length <5 ? length:5;
+				for (var idx = 0; idx < length; idx++){
+					out[idx].innerHTML = groups[idx].link + "<br/>" 
+					var spanTime = cView.doc.createElement("span");
+					spanTime.className = "sb-info";
+					out[idx].appendChild(spanTime);
+					spanTime.date = groups[idx].time; 
+					window.setTimeout(cView.Drawer.updateDate, 10,spanTime, cView);
+				}
+			}
 		}
 		,"test":isLogged	
 	}

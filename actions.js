@@ -104,6 +104,7 @@ _Actions.prototype = {
 			textField.style.height  = "4em";
 			try{ e.target.parentNode.removeChild(nodeSpinner); }
 			catch(e){};
+			var arrNodes = new Array();
 			arrPostsTo.forEach(function(postTo,idx){
 				res[idx].posts.domain = postTo.domain;
 				var context = cView.contexts[postTo.domain];
@@ -113,14 +114,16 @@ _Actions.prototype = {
 					,"post" 
 					,res[idx].posts.id
 				].join("-");
-				if(!cView.doc.getElementById(nodePostId))
-					cView.Drawer.applyReadMore(
-						cView.doc.posts.insertBefore(
-							cView.Drawer.genPost(res[idx].posts)
-							, cView.doc.posts.childNodes[0]
-						)
-					);
+				if(!cView.doc.getElementById(nodePostId)){
+					var nodePost = cView.doc.posts.insertBefore(
+						cView.Drawer.genPost(res[idx].posts)
+						, cView.doc.posts.childNodes[0]
+					)
+					cView.Drawer.applyReadMore(nodePost);
+					arrNodes.push(nodePost);
+				}
 			});
+			window.dispatchEvent(new CustomEvent("newNode", {"detail":arrNodes}));
 			var login;
 			if (cView.leadContext.gMe)
 				login = cView.leadContext.gMe;
@@ -702,6 +705,7 @@ _Actions.prototype = {
 				var newComment = cView.Drawer.genComment.call(context, comment);
 				nodeComment.parentNode.replaceChild(newComment ,nodeComment);
 				cView.Drawer.applyReadMore(newComment);
+				window.dispatchEvent(new CustomEvent("newNode", {"detail":newComment}));
 			} else nodeComment.parentNode.removeChild(nodeComment);
 		},function(err){
 			nodeEButtons.cNodes["edit-buttons-post"].disabled = false;

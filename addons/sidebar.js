@@ -158,12 +158,18 @@ var payload = [
 				+gConfig.front + "groups\" >All groups</a></span>";
 			
 			window.addEventListener("newNode",evtNewNode); 
+			fill();
 			return out.concat(div);
 			function evtNewNode(e){
-				post = e.detail.getNode(["p","post"]).rawData;
-				var context = cView.contexts[post.domain];
-				post.postedTo.forEach(function(feed){
-					context.gFeeds[feed].user.updatedAt = Date.now();
+				var arrNodes = e.detail;
+				if(!arrNodes)return;
+				arrNodes = Array.isArray(arrNodes)?arrNodes:[arrNodes];
+				arrNodes.forEach(function(node){
+					post = node.getNode(["p","post"]).rawData;
+					var context = cView.contexts[post.domain];
+					post.postedTo.forEach(function(feed){
+						context.gFeeds[feed].user.updatedAt = Date.now();
+					});
 				});
 				fill();
 							

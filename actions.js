@@ -1706,6 +1706,9 @@ _Actions.prototype = {
 				.toggle("highlighted");
 		}
 	}
+	,"selectAll": function(e){
+		e.target.setSelectionRange(0, e.target.value.length);
+	}
 };
 return _Actions;
 });

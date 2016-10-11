@@ -125,6 +125,9 @@ _Drawer.prototype = {
 			case "id": 
 				node.value = user.id;
 				break;
+			case "token": 
+				node.value = context.logins[user.id].token; 
+				break;
 			case "is-main":
 				node.checked = (context.logins[user.id].token == context.token);
 				node.name = "is-main-"+user.domain;

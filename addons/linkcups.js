@@ -21,7 +21,7 @@ function linkCups (nodePost){
 		var cups = new Object();
 		var content = cmtsHC[idx].getElementsByClassName("long-text")[0];
 		if(typeof content === "undefined") continue;
-		var matches = content.innerHTML.match(/[\^\u8593]+/g);
+		var matches = content.innerHTML.match(/[\^\u2191]+/g);
 		if(Array.isArray(matches))matches.forEach(function(match){
 			var target =  idx-match.length;
 			if( (target < 0 )||( (idx > loadIdx)&&( target <= loadIdx) ))
@@ -32,9 +32,9 @@ function linkCups (nodePost){
 			}
 				
 			cups[match] = cmtsHC[target];
-			var re = new RegExp("(^|[^\\^\\u8593])("
+			var re = new RegExp("(^|[^\\^\\u2191])("
 				+match.replace(/\^/g,"\\x5e")
-				+")(?![\\^\\u8593])"
+				+")(?![\\^\\u2191])"
 				,"g"
 			);
 			content.innerHTML = content.innerHTML.replace(re

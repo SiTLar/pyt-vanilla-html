@@ -903,7 +903,7 @@
 		,{"c":"title","t":"span"}
 		, {"c":"fa fa-times m-l","t":"i"}
 	]}
-	,{"c":"read-more-wrapper", "t":"span" 
+	,{"c":"read-more-wrapper"
 	,"children":[
 		{"c":"content"}
 		,{"t":"b"

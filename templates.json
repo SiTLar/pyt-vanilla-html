@@ -903,10 +903,14 @@
 		,{"c":"title","t":"span"}
 		, {"c":"fa fa-times m-l","t":"i"}
 	]}
-	,{"c":"read-more-ctrl", "t":"b" 
+	,{"c":"read-more-wrapper", "t":"span" 
 	,"children":[
-		{"t":"span", "txt":"&hellip; "}
-		,{"c":"unfold-readmore", "t":"a","txt":"Read&nbsp;more", "e":{"click":["Actions","unfoldReadMore"]} }
+		{"c":"content"}
+		,{"t":"b"
+		,"children":[
+			{"t":"span", "txt":"&hellip; "}
+			,{"c":"unfold-readmore", "t":"a","txt":"Read&nbsp;more", "e":{"click":["Actions","unfoldReadMore"]} }
+		]}
 	]}
 	,{"c":"blocks-settings-page-ctrl", "cl":["blocks-settings-page"]
 	,"children":[

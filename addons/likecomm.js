@@ -256,6 +256,10 @@ function loadLikes(cmts) {
 	}
 	Object.keys(cmts).forEach(function(domain){
 		var context = cView.contexts[domain];
+		if(typeof context === "undefined") {
+			console.log("Something went wrong. Unknown domain:", domain);
+			return;
+		}
 		likeApi[context.api.name](context, cmts[domain].map(function(node){
 			setControls(node);
 			return node.rawId;

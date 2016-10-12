@@ -1596,9 +1596,12 @@ _Actions.prototype = {
 	}
 	,"unfoldReadMore":function(e){
 		var cView = document.cView;
-		var victim = cView.Utils.getNode(e.target,["p","long-text"]);
+		var wrapper = e.target.getNode(["p","read-more-wrapper"]);
+		var victim = wrapper.cNodes["content"];
 		victim.innerHTML = victim.words;
 		victim.isUnfolded = true;
+		wrapper.parentNode.replaceChild(victim, wrapper);
+		
 		window.dispatchEvent(new CustomEvent("updNode", {"detail":victim}));
 	}
 	,"remBlockingItem":function(e){

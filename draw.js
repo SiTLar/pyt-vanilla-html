@@ -1356,19 +1356,17 @@ _Drawer.prototype = {
 			node.innerHTML = words.join(" ");
 			if (typeof node.isUnfolded === "undefined" ) node.isUnfolded = false;
 			if((node.offsetHeight < (height + lineHeight))||!height||node.isUnfolded ) return;
-			var nodeContent = cView.doc.createElement("span");
-			nodeContent.className = "folded";
-			var ctrl = cView.gNodes["read-more-ctrl"].cloneAll();
-			node.innerHTML = "";
-			node.appendChild(nodeContent);
-			node.appendChild(ctrl);
+			var wrapper = cView.gNodes["read-more-wrapper"].cloneAll();
+			node.parentNode.replaceChild(wrapper,node);
+			cView.Utils.setChild(wrapper, "content", node);
+
 			do{
 				var idx = Math.ceil((high+low)/2);
-				nodeContent.innerHTML = words
+				node.innerHTML = words
 					.slice(0,idx+1)
 					.join(" ");
-				if(node.offsetHeight < height) low = idx;
-				else if (node.offsetHeight > height)high = idx;
+				if(wrapper.offsetHeight < height) low = idx;
+				else if (wrapper.offsetHeight > height)high = idx;
 				else break;
 			}while((high - low) > 1);
 		}

@@ -157,6 +157,8 @@ function saveBlocks(fn){
 			cView.blocks = oBlocks;
 			*/
 			cView.blocks = oSettings.blocks;
+			if (typeof cView.blocks === "string") 
+				cView.blocks = JSON.parse(cView.blocks);
 			if(typeof cView.blocks.blockStrings === "undefined")
 				cView.blocks.blockStrings = new Object();
 			Object.keys(cView.blockLists).forEach(function(type){
@@ -213,6 +215,8 @@ return function(cV){
 			cView.blocks = oBlocks;
 			*/
 					cView.blocks = oSettings.blocks;
+					if (typeof cView.blocks === "string") 
+						cView.blocks = JSON.parse(cView.blocks);
 					if(typeof cView.blocks.blockStrings === "undefined")
 						cView.blocks.blockStrings = new Object();
 					Object.keys(cView.blockLists).forEach(function(type){

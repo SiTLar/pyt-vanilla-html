@@ -249,9 +249,9 @@ _Drawer.prototype = {
 					}
 				});
 
-				cView.Common.updateBlockList();
 				body.appendChild(page);
 			});
+			cView.Common.updateBlockList();
 
 			
 		}

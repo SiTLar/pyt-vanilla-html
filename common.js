@@ -238,7 +238,7 @@ _Common.prototype = {
 		if(add){
 			if ((typeof list === "undefined") || (list == null)) 
 				fArray?(list = new Array()):(list = new Object()) ;
-			fArray?(list.push(value)):(list[value] = true);
+			fArray?(list.push(value)):(list[value] = context.gUsers[value].username);
 		}else try{
 			if (fArray){
 				var idx = list.indexOf(val);

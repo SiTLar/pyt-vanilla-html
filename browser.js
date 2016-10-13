@@ -29,6 +29,11 @@ window.browserDoc = function(){
 		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
 	if(typeof cView.blocks.blockStrings === "undefined")
 		cView.blocks.blockStrings = new Object();
+	Object.keys(cView.blockLists).forEach(function(type){
+		if (typeof cView.blocks[cView.blockLists[type]] === "undefined"){
+			cView.blocks[cView.blockLists[type]] = new Object();
+		}
+	});
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);

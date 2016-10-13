@@ -672,6 +672,9 @@ span.comment-controls::before {
 .avatar img, .usr-avatar {
 	max-width:50;
 }
+.post{
+	overflow: hidden;
+}
 .metapost .post{
 
 	margin-top: 0;
@@ -718,6 +721,7 @@ span.comment-controls::before {
 	margin: 1em;
 }
 .long-text{
+	display:inline;
 }
 .one-line{
 	position:absolute;

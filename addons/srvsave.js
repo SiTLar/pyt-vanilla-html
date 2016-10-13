@@ -66,7 +66,7 @@ var handlers = {
 		var nodeMsg = e.target.getNode(["p","settings"], ["c", "update-status"]);
 		savContext.getWhoami(savContext.token).then(function(){
 			nodeMsg.className = "sr-info";
-			oSettings = savContext.gMe.users.frontendPreferences.vanilla;
+			var oSettings = savContext.gMe.users.frontendPreferences.vanilla;
 			if ((typeof oSettings === "undefined")
 			||!Object.keys(oSettings).length){
 				nodeMsg.className = "msg-error";
@@ -102,7 +102,7 @@ var handlers = {
 				cView.localStorage.setItem(e.target.value, action);
 				var savContext = cView.contexts[savDomain];
 				savContext.getWhoami(savContext.token).then(function(){
-					oSettings = savContext.gMe.users.frontendPreferences.vanilla;
+					var oSettings = savContext.gMe.users.frontendPreferences.vanilla;
 					oSettings.blocks = cView.localStorage.getItem("blocks");
 					savContext.api.updProfile(
 						savContext.token
@@ -141,6 +141,42 @@ function save(){
 		,{"user":{"frontendPreferences":{"vanilla":oSettings}}}
 	);
 }
+function saveBlocks(fn){ 
+	return function(){
+		var args = cView.Utils.args2Arr.apply(this, arguments);
+		var savContext = cView.contexts[savDomain];
+		savContext.getWhoami(savContext.token).then(function(){
+			var oSettings = savContext.gMe.users.frontendPreferences.vanilla;
+			/*
+			var oBlocks;
+			try{
+				oBlocks = JSON.parse(oSettings.blocks);
+			
+			}catch(e){oBlocks = new Object();}
+
+			cView.blocks = oBlocks;
+			*/
+			cView.blocks = oSettings.blocks;
+			if(typeof cView.blocks.blockStrings === "undefined")
+				cView.blocks.blockStrings = new Object();
+			Object.keys(cView.blockLists).forEach(function(type){
+				if (typeof cView.blocks[cView.blockLists[type]] === "undefined"){
+					cView.blocks[cView.blockLists[type]] = new Object();
+				}
+			});
+			fn.apply(cView, args);
+
+			oSettings.blocks = cView.blocks;
+			savContext.api.updProfile(
+				savContext.token
+				,savContext.gMe.users.id
+				,{"user":{"frontendPreferences":{"vanilla":oSettings}}}
+			);
+		});
+	}
+
+
+}
 function makeSettings(){
 	
 	if(!loginOK)return nodesT["settings-no-login"].cloneAll();
@@ -158,26 +194,41 @@ return function(cV){
 	});
 	return {
 		"run": function (){
-			if ((typeof cView.contexts[savDomain] === "undefined")
-			|| !cView.contexts[savDomain].token) 
+			var savContext = cView.contexts[savDomain];
+			if ((typeof savContext === "undefined") || !savContext.token) 
 				return cView.Utils._Promise.resolve();
 			loginOK = true;
 			cView["addons-srvsave"] = handlers;
 			if (JSON.parse(cView.localStorage.getItem("addons-save-blocks"))){
-				var savContext = cView.contexts[savDomain];
+				cView.Common.updateBlockList = saveBlocks(cView.Common.updateBlockList); 
 				return savContext.getWhoami(savContext.token).then(function(){
 					var oSettings = savContext.gMe.users.frontendPreferences.vanilla;
-					cView.blocks = JSON.parse(oSettings["blocks"]); 
+			/*
+			var oBlocks;
+			try{
+				oBlocks = JSON.parse(oSettings.blocks);
+			
+			}catch(e){oBlocks = new Object();}
+
+			cView.blocks = oBlocks;
+			*/
+					cView.blocks = oSettings.blocks;
 					if(typeof cView.blocks.blockStrings === "undefined")
 						cView.blocks.blockStrings = new Object();
-					localStorage.setItem("blocks",JSON.stringify(cView.blocks));
-				var ub = cView.Common.updateBlockList;
-				cView.Common.updateBlockList = function(){
-						ub.apply(cView, arguments);
-						save();
+					Object.keys(cView.blockLists).forEach(function(type){
+						if (typeof cView.blocks[cView.blockLists[type]] === "undefined"){
+							cView.blocks[cView.blockLists[type]] = new Object();
+						}
+					});
+					if(cView.cView.fullPath == "settings/blocks"){
+						var victim;
+						while(victim = document.querySelector(".blocks-settings-page, .settings-head"))
+							victim.parentNode.removeChild(victim);
+						cView.Drawer.drawSettings();
 					}
-
 				});
+
+				
 			}else return cView.Utils._Promise.resolve();
 		}
 		,"settings": function(){return makeSettings(cView);}

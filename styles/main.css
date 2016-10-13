@@ -721,7 +721,6 @@ span.comment-controls::before {
 	margin: 1em;
 }
 .long-text{
-	display:inline;
 }
 .one-line{
 	position:absolute;
@@ -749,4 +748,7 @@ span.comment-controls::before {
 }
 .highlighted{
 	background-color: #d9edf7;
+}
+.read-more-wrapper div {
+	display: inline;
 }

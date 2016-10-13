@@ -1359,9 +1359,9 @@ _Drawer.prototype = {
 			var wrapper = cView.gNodes["read-more-wrapper"].cloneAll();
 			node.parentNode.replaceChild(wrapper,node);
 			cView.Utils.setChild(wrapper, "content", node);
-
+			var idx;
 			do{
-				var idx = Math.ceil((high+low)/2);
+				idx = Math.ceil((high+low)/2);
 				node.innerHTML = words
 					.slice(0,idx+1)
 					.join(" ");
@@ -1369,6 +1369,16 @@ _Drawer.prototype = {
 				else if (wrapper.offsetHeight > height)high = idx;
 				else break;
 			}while((high - low) > 1);
+			var cHeight = wrapper.offsetHeight;
+			while(wrapper.offsetHeight == cHeight){
+				node.innerHTML = words
+					.slice(0,++idx)
+					.join(" ");
+			}
+			node.innerHTML = words
+				.slice(0,idx-1)
+				.join(" ");
+
 		}
 		var unamesHC = host.getElementsByClassName("url2link-uname");
 		for(var idx = 0; idx < unamesHC.length; idx++){

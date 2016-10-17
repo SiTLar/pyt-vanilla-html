@@ -19,7 +19,7 @@ window.browserDoc = function(){
 		cView.search = document.location.search.slice(1);
 		var matchOffset = cView.search.match(/offset=(\d+)/);
 		if(matchOffset) cView.skip = matchOffset[1];
-		cView.search = cView.search.replace(/offset=\d+&?/,"").replace(/limit=\d+&?/,"")
+		cView.search = cView.search.replace(/&?offset=\d+&?/,"").replace(/&?limit=\d+&?/,"")
 	}else if(locationPath.indexOf("settings/raw") != -1){
 		var nodeSplash = document.getElementById("splash");
 		cView.Drawer.drawRaw(nodeSplash);

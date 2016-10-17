@@ -56,6 +56,8 @@ _Common.prototype = {
 			return localUser;
 		}
 		var className = "not-my-link";
+		if (typeof user.screenName === "undefined")
+			user.screenName = user.username;
 		(function(screenName){
 		user.screenName = screenName.replace(/&/g,"&amp;")
 			.replace(/</g, "&lt;")
@@ -241,7 +243,7 @@ _Common.prototype = {
 			fArray?(list.push(value)):(list[value] = context.gUsers[value].username);
 		}else try{
 			if (fArray){
-				var idx = list.indexOf(val);
+				var idx = list.indexOf(value);
 				if(idx != -1)list.splice(idx,1);
 			}else delete list[value];
 		}catch(e){};

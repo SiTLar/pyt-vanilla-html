@@ -1370,9 +1370,11 @@ _Drawer.prototype = {
 				else break;
 			}while((high - low) > 1);
 			var cHeight = wrapper.offsetHeight;
+			var inc =  cHeight > height?-1:1; 
 			while(wrapper.offsetHeight == cHeight){
+				idx += inc;
 				node.innerHTML = words
-					.slice(0,++idx)
+					.slice(0,idx)
 					.join(" ");
 			}
 			node.innerHTML = words

@@ -1469,9 +1469,11 @@ _Actions.prototype = {
 		regenAttaches(host);
 	}
 	,"unfoldUserDet":function(e){
+		var cView = document.cView;
 		document.getElementsByClassName("ud-info")[0].style.display = "flex";
 		document.getElementsByClassName("ud-fold")[0].hidden = false;
 		document.getElementsByClassName("ud-unfold")[0].style.display = "none";
+		cView.Drawer.applyReadMore(document.getElementsByClassName("ud-info")[0]);
 	}
 	,"foldUserDet":function(e){
 		document.getElementsByClassName("ud-info")[0].style.display = "none";

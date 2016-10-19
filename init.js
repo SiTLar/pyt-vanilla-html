@@ -66,7 +66,7 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 			var mainId;  
 			var ids = Object.keys(logins);
 			if(ids.length == 0)return null;
-			if(ids.length == 1){
+			if(ids.length === 1){
 				mainId = ids[0];
 				context.token = logins[ids[0]].token;
 			}else ids.some(function(id){
@@ -145,9 +145,11 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 		cView.addons = { 
 			"all":new Array()
 			,"ok": function(){}
-			,"pr": new Utils._Promise(function(resolve){setAddons(resolve);})
-		}
-		function setAddons(pr){cView.addons.ok = pr;};
+			,"pr": new Object()
+		};
+		cView.addons.pr = new Utils._Promise(function(resolve){
+			cView.addons.ok = resolve;
+		});
 		//cView.SecretActions = new _SecretActions(cView);
 		var Url2link =  require("./url2link");
 		cView.autolinker = new Url2link({ "truncate":25

@@ -121,7 +121,8 @@ _Common.prototype = {
 			var dummy = cView.doc.createElement("span");
 			if(template.p) for( var p in template.p){
 				dummy.innerHTML = template.p[p];
-				node[p] = dummy.textContent;
+				try{node[p] = dummy.textContent;}
+				catch(e){};
 			}
 			nodes.push(node);
 		} );

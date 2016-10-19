@@ -1353,8 +1353,9 @@ _Drawer.prototype = {
 			var high  = words.length - 1;
 			var low = 0;
 			if((node.offsetTop == 0) || (node.innerHTML != "")) return;
-			node.innerHTML = words.join(" ");
+			if(node.isUnfolded == false) return;
 			if (typeof node.isUnfolded === "undefined" ) node.isUnfolded = false;
+			node.innerHTML = words.join(" ");
 			if((node.offsetHeight < (height + lineHeight))||!height||node.isUnfolded ) return;
 			var wrapper = cView.gNodes["read-more-wrapper"].cloneAll();
 			node.parentNode.replaceChild(wrapper,node);

@@ -124,7 +124,7 @@ define("./router",[],function(){
 			for(var idx = 0; idx < arrPath.length; idx++){
 				var txtStep = arrPath[idx];
 				if (is(step.req) && chk[step.req](contexts))
-					return new cView.Utils._Promise.reject(chk[step.req](contexts));
+					return  cView.Utils._Promise.reject(chk[step.req](contexts));
 
 				if(is(step.reroute))
 					return cView[step.reroute[0]][step.reroute[1]](contexts, path);
@@ -136,10 +136,10 @@ define("./router",[],function(){
 			if(is(step.dest)){
 				cView.doc.getElementById("loading-msg").innerHTML = "Loading content";
 				if((step.dest.length == 3)&& chk[step.dest[2]](contexts) )
-					return new cView.Utils._Promise.reject(chk[step.dest[2]](contexts));
+					return cView.Utils._Promise.reject(chk[step.dest[2]](contexts));
 				return cView[step.dest[0]][step.dest[1]](contexts, path);
 			}
-			return new cView.Utils._Promise.reject();
+			return cView.Utils._Promise.reject();
 		}
 		,"directs":function(contexts){
 			var cView = this.cView;

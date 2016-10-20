@@ -1733,11 +1733,11 @@ _Actions.prototype = {
 			host.appendChild(nodeComment);
 			nodeComment.getElementsByClassName("edit-txt-area")[0].value = nodePost.getElementsByTagName("textarea")[0].value;	
 		}
-		cView.Utils.unscroll(function(){
-			cView.Utils.setChild(nodePost.cNodes["post-body"],"comments", host);
-			cView.Drawer.applyReadMore( host);
-			return nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]);
-		}, nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]));
+		var refNode = nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]);
+		var refTop = refNode.getBoundingClientRect().top;
+		cView.Utils.setChild(nodePost.cNodes["post-body"],"comments", host);
+		cView.Drawer.applyReadMore( host);
+		window.scrollBy(0,refNode.getBoundingClientRect().top - refTop);
 		nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]).hidden = true;
 	}
 };

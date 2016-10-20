@@ -700,7 +700,8 @@ _Actions.prototype = {
 				setTimeout(nodePost.rtCtrl.bumpLater, 1000);
 			var comment = res.comments;
 			context.gComments[comment.id] = comment;
-			if( nodeComment.parentNode.children.length > 4 )cView.Drawer.addLastCmtButton(nodePost.cNodes["post-body"]);
+			if( nodeComment.parentNode.children.length > 4 )
+				nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]).hidden = false;
 			if(!document.getElementById(context.domain + "-cmt-" + comment.id)){
 				var newComment = cView.Drawer.genComment.call(context, comment);
 				nodeComment.parentNode.replaceChild(newComment ,nodeComment);
@@ -786,6 +787,7 @@ _Actions.prototype = {
 			, ["comments"]
 		).then( function(postUpd){
 			var arrCmts = new Array();
+			nodePost.rawData.omittedComments = 0; 
 			cView.Common.loadGlobals(postUpd, context);
 			postUpd.posts.domain = domain;
 			cView.doc.getElementById(id).rawData = postUpd.posts;
@@ -795,24 +797,23 @@ _Actions.prototype = {
 				text = nodePB.getElementsByTagName("textarea")[0].value;	
 			if(typeof nodePost.rtCtrl.bumpLater !== "undefined")
 				setTimeout(nodePost.rtCtrl.bumpLater, 1000);
-			nodePB.removeChild(nodePB.cNodes["comments"]);
-			nodePB.cNodes["comments"] = cView.doc.createElement("div");
-			nodePB.cNodes["comments"].className = "comments";
+			var host = cView.doc.createElement("div");
+			host.className = "comments";
 
 			postUpd.comments.forEach(function(cmt){
 				context.gComments[cmt.id] = cmt;
 				var nodeCmt = cView.Drawer.genComment.call(context, cmt);
-				nodePB.cNodes["comments"].appendChild(nodeCmt);
+				host.appendChild(nodeCmt);
 				arrCmts.push(nodeCmt);
 			});
-			nodePB.appendChild(nodePB.cNodes["comments"]);
 			if (nodePost.rtCtrl.isBeenCommented == true){ 
 				var nodeComment = cView.Drawer.genAddComment(context);
-				nodePB.cNodes["comments"].appendChild(nodeComment);
+				host.appendChild(nodeComment);
 				nodeComment.getElementsByClassName("edit-txt-area")[0].value = text;
 			}
+			cView.Utils.setChild(nodePB,"comments", host);
+			nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]).hidden = false;
 			cView.Drawer.applyReadMore( nodePB);
-			cView.Drawer.addLastCmtButton(nodePB);
 
 			window.dispatchEvent(new CustomEvent("newNode", {"detail":arrCmts}));
 			return postUpd;
@@ -1713,6 +1714,31 @@ _Actions.prototype = {
 	}
 	,"selectAll": function(e){
 		e.target.setSelectionRange(0, e.target.value.length);
+	}
+	,"foldComments":function(e){
+		var cView = document.cView;
+		var nodePost = e.target.getNode(["p","post"]);
+		var post = nodePost.rawData;
+		var context = cView.contexts[post.domain];
+		var host = cView.doc.createElement("div");
+		host.className = "comments";
+		host.appendChild(cView.Drawer.genComment.call(context, context.gComments[post.comments[0]]));
+		var nodeLoad = cView.gNodes["comments-load"].cloneAll();
+		nodeLoad.getElementsByClassName("num")[0].innerHTML = post.omittedComments + post.comments.length;
+		host.appendChild(nodeLoad);
+		host.appendChild(cView.Drawer.genComment.call(context, context.gComments[post.comments[post.comments.length - 1]]));
+
+		if (nodePost.rtCtrl.isBeenCommented == true){ 
+			var nodeComment = cView.Drawer.genAddComment(context);
+			host.appendChild(nodeComment);
+			nodeComment.getElementsByClassName("edit-txt-area")[0].value = nodePost.getElementsByTagName("textarea")[0].value;	
+		}
+		cView.Utils.unscroll(function(){
+			cView.Utils.setChild(nodePost.cNodes["post-body"],"comments", host);
+			cView.Drawer.applyReadMore( host);
+			return nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]);
+		}, nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]));
+		nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]).hidden = true;
 	}
 };
 return _Actions;

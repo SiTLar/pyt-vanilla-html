@@ -63,6 +63,28 @@
 				,{"c":"likes"}
 			]}
 			,{"c":"comments"}
+			,{"c":"many-cmts-ctrl", "p":{"hidden":true}
+			,"children":[
+				{"c":"comment-date"
+				,"children":[
+					{"c":"add-cmt-icon", "t":"a", "cl":["fa-stack","fa-1x"]
+					,"children":[
+						{"t":"i","cl":["fa","fa-comment-o", "fa-stack-1x"]}
+						,{"c":"fa", "t":"i", "cl":["fa-square", "fa-inverse", "fa-stack-1x"]
+							,"style":{ "left": "3px", "top": "3px", "font-size": "60%"} 
+						} 
+						,{"c":"fa", "t":"i", "cl":["fa-plus", "fa-stack-1x"]
+							,"style":{ "left": "3px", "top": "3px", "font-size": "60%"} 
+						} 
+					]}
+				]}
+				,{"c":"comment-body"
+				,"children":[
+					{"t":"a", "txt":"Add comment", "e":{"click":["Actions","addComment"]}}
+					,{"c":"spacer","t":"span","txt":"&mdash;"}
+					,{"t":"a", "txt":"Fold comments", "e":{"click":["Actions","foldComments"]}}
+				]}
+			]}
 		]}
 	]}
 	,{"c":"likes-suffix", "t":"span"

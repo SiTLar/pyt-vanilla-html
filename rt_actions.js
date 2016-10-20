@@ -229,6 +229,8 @@ RtHandler.prototype = {
 			}
 			nodePost.rawData.updatedAt = Date.now();
 			cView.Common.markMetaMenu(nodePost);
+			if(nodePost.getElementsByClassName("comment").length>4)
+				nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]).hidden = false;
 			window.dispatchEvent(new CustomEvent("newNode", {"detail":nodeComment}));
 		}else that.injectPost(data.comments.postId, context);
 	}

@@ -124,6 +124,10 @@ _Common.prototype = {
 				try{node[p] = dummy.textContent;}
 				catch(e){};
 			}
+			if(template.style) for( var s in template.style){
+				try{node.style[s] = template.style[s];}
+				catch(e){};
+			}
 			nodes.push(node);
 		} );
 		return nodes;

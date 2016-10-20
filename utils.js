@@ -229,19 +229,23 @@ return {
 		if(node.offsetLeft < 0) node.style.left = 0;
 		node.style.opacity = 1;
 	}
-	,"unscroll":function(inp){
+	,"unscroll":function(inp, ref){
 		var node;
 		var offset;
 		var fScroll = false;
 		if (typeof inp === "function" ){
-			var div_array = Array.prototype.slice.call(
-				document.body.querySelectorAll(".post, .comment")
-			);
-			var refNode = div_array.filter(function(a){
-				return a.getBoundingClientRect().top > 0;
-			}).sort(function(a,b){
-				return a.getBoundingClientRect().top - b.getBoundingClientRect().top;;
-			})[0];
+			var refNode;
+			if (typeof ref !== "undefined") refNode = ref;
+			else{ 
+				var div_array = Array.prototype.slice.call(
+					document.body.querySelectorAll(".post, .comment")
+				);
+				refNode = div_array.filter(function(a){
+					return a.getBoundingClientRect().top > 0;
+				}).sort(function(a,b){
+					return a.getBoundingClientRect().top - b.getBoundingClientRect().top;;
+				})[0];
+			}
 			var refTop = refNode.getBoundingClientRect().top;
 			var arrArgs =  args2Arr.apply(this,arguments);
 			arrArgs.shift();

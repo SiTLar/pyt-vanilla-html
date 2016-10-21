@@ -590,7 +590,7 @@
 		]}
 		,{"c":"gs-input","t":"input","p":{"name":"id", "type":"hidden"}}
 		,{"c":"gs-input","t":"input","p":{"name":"domain", "type":"hidden"}}
-		,{"t":"p", "txt":"The token for that user:"}
+		,{"t":"p", "txt":"Your token:"}
 		,{"c":"gs-input","t":"input","p":{"name":"token", "readonly":true}, "e":{"click":["Actions","selectAll"]}}
 		,{"t":"p", "txt":"Screen name:"}
 		,{"c":"gs-input","t":"input","p":{"name":"screen-name"}}

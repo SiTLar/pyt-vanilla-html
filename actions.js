@@ -706,6 +706,8 @@ _Actions.prototype = {
 				var newComment = cView.Drawer.genComment.call(context, comment);
 				nodeComment.parentNode.replaceChild(newComment ,nodeComment);
 				cView.Drawer.applyReadMore(newComment);
+				if(nodePost.rawData.comments.indexOf(comment.id) == -1)
+					nodePost.rawData.comments.push(comment.id);
 				window.dispatchEvent(new CustomEvent("newNode", {"detail":newComment}));
 			} else nodeComment.parentNode.removeChild(nodeComment);
 		},function(err){

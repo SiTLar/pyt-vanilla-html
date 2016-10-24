@@ -750,7 +750,7 @@ _Drawer.prototype = {
 				Drawer.embedPreview(oEmbedPr
 					,urlMatch[0]
 					,postNBody.cNodes["attachments"] 
-				).then(cView.Utils.unscroll);
+				).then((post.src == "rt")?cView.Utils.unscroll:function(){});
 			});
 		}
 		var anchorDate = cView.doc.createElement("a");

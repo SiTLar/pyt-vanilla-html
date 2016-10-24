@@ -1333,7 +1333,7 @@ _Drawer.prototype = {
 			node.innerHTML = words.join(" ");
 			if((node.offsetHeight < (height + lineHeight))||!height||node.isUnfolded ) return;
 			var wrapper = cView.gNodes["read-more-wrapper"].cloneAll();
-			node.parentNode.replaceChild(wrapper,node);
+			cView.Utils.setChild(node.parentNode, node.classList[0], wrapper);
 			cView.Utils.setChild(wrapper, "content", node);
 			var idx;
 			do{

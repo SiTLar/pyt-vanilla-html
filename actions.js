@@ -216,7 +216,7 @@ _Actions.prototype = {
 		var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditedPost,cView.Actions.cancelEditPost);
 		var textArea = nodeEdit.cNodes["edit-txt-area"]
 		textArea.value = victim.rawData.body;
-		victim.cNodes["post-body"].replaceChild( nodeEdit, victim.cNodes["post-body"].cNodes["post-cont"]);
+		cView.Utils.setChild(victim.cNodes["post-body"], "post-cont", nodeEdit);
 		if (textArea.scrollHeight > textArea.clientHeight)
 			textArea.style.height = textArea.scrollHeight + "px";
 	}

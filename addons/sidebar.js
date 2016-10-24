@@ -61,7 +61,7 @@ var payload = [
 			var nodeImg = cView.doc.createElement("img");
 			nodeImg.className = "img-center";
 			nodeImg.src = "https://cdn.rawgit.com/thelinmichael/lunar-phases/master/images/browser-icons/"
-			+Math.floor(29*phase)+ ".png"
+			+Math.round(29*phase)+ ".png"
 			return [nodeImg];
 			
 		}

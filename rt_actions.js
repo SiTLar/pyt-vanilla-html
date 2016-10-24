@@ -324,6 +324,7 @@ RtHandler.prototype = {
 
 		var nodeCont = nodePost.getNode(["c","post-body"],["c","post-cont"]);
 		nodeCont.words = context.digestText(data.posts.body);
+		delete nodeCont.isUnfolded;
 		cView.Utils.unscroll(function(){
 			nodeCont.innerHTML = "";
 			cView.Drawer.applyReadMore( nodePost);

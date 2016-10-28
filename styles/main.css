@@ -691,7 +691,6 @@ span.comment-controls::before {
 .main{
 	margin: 0 auto;
 	width: 100%;
-	position: relative;
 	max-width: 62em;
 	overflow:hidden;
 }

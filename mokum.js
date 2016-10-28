@@ -132,7 +132,7 @@ return function(config){
 				});
 			}
 			,"getTimeline": function(token, timeline, skip) {
-				var len = timeline.lebngth;
+				var len = timeline.length;
 				if(timeline.charAt(len - 1) == "/")timeline = timeline.slice(0,-1);
 				if (timeline == "home")timeline = "index";
 				return get(token, timeline, Math.ceil(skip/gConfig.offset)+1)

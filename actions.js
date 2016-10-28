@@ -1605,7 +1605,7 @@ _Actions.prototype = {
 		var victim = wrapper.cNodes["content"];
 		victim.innerHTML = victim.words;
 		victim.isUnfolded = true;
-		wrapper.parentNode.replaceChild(victim, wrapper);
+		cView.Utils.setChild(wrapper.parentNode, victim.classList[0],victim );
 		
 		window.dispatchEvent(new CustomEvent("updNode", {"detail":victim}));
 	}

@@ -20,25 +20,14 @@ window.browserDoc = function(){
 		var matchOffset = cView.search.match(/offset=(\d+)/);
 		if(matchOffset) cView.skip = matchOffset[1];
 		cView.search = cView.search.replace(/&?offset=\d+&?/,"").replace(/&?limit=\d+&?/,"")
-	}else if(locationPath.indexOf("settings/raw") != -1){
+	}else if(document.location == gConfig.front +"settings/raw"){
 		var nodeSplash = document.getElementById("splash");
 		cView.Drawer.drawRaw(nodeSplash);
+	}else if(document.location == gConfig.front +"settings/wipe"){
+		settingsNames.forEach(function(setting){cView.localStorage.removeItem(setting)});
+		cView.Actions.logout();
 	}
 		
-	if(JSON.parse(cView.localStorage.getItem("blocks")))
-		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
-	if(typeof cView.blocks.blockStrings === "undefined")
-		cView.blocks.blockStrings = new Object();
-	Object.keys(cView.blockLists).forEach(function(type){
-		if (typeof cView.blocks[cView.blockLists[type]] === "undefined"){
-			cView.blocks[cView.blockLists[type]] = new Object();
-		}
-	});
-	var nameMode = cView.localStorage.getItem("screenname");
-	if(nameMode){
-		cView.localStorage.setItem("display_name", nameMode);
-		cView.localStorage.removeItem("screenname");
-	}
 	setLocalSettings();
 	cView.Common.loadLogins();
 	var body = cView.gNodes["main"].cloneAll();
@@ -266,6 +255,20 @@ function setAttr(nodes, name){
 }
 function setLocalSettings(){
 	var cView = document.cView;
+	if(JSON.parse(cView.localStorage.getItem("blocks")))
+		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
+	if(typeof cView.blocks.blockStrings === "undefined")
+		cView.blocks.blockStrings = new Object();
+	Object.keys(cView.blockLists).forEach(function(type){
+		if (typeof cView.blocks[cView.blockLists[type]] === "undefined"){
+			cView.blocks[cView.blockLists[type]] = new Object();
+		}
+	});
+	var nameMode = cView.localStorage.getItem("screenname");
+	if(nameMode){
+		cView.localStorage.setItem("display_name", nameMode);
+		cView.localStorage.removeItem("screenname");
+	}
 	cView.mode = cView.localStorage.getItem("display_name");
 	cView.readMore = JSON.parse(cView.localStorage.getItem("read_more"));
 	//default

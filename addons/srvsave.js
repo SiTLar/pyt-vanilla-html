@@ -65,7 +65,6 @@ var handlers = {
 		var savContext = cView.contexts[savDomain];
 		var nodeMsg = e.target.getNode(["p","settings"], ["c", "update-status"]);
 		savContext.getWhoami(savContext.token).then(function(){
-			nodeMsg.className = "sr-info";
 			var oSettings = savContext.gMe.users.frontendPreferences.vanilla;
 			if ((typeof oSettings === "undefined")
 			||!Object.keys(oSettings).length){
@@ -76,7 +75,7 @@ var handlers = {
 			}
 			settingsNames.forEach(function(name){
 				if (oSettings[name] == "undefined") oSettings[name] = false;
-				cView.localStorage.setItem(name,oSettings[name] );
+				cView.localStorage.setItem(name,JSON.stringify(oSettings[name]) );
 			});
 			Object.keys( oSettings.tokens).forEach(function(domain){
 				var context = cView.contexts[domain];

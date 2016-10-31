@@ -75,7 +75,9 @@ var handlers = {
 			}
 			settingsNames.forEach(function(name){
 				if (oSettings[name] == "undefined") oSettings[name] = false;
-				cView.localStorage.setItem(name,JSON.stringify(oSettings[name]) );
+				var setting = (typeof oSettings[name] === "string" )?
+					 oSettings[name]:JSON.stringify(oSettings[name]);
+				cView.localStorage.setItem(name, setting );
 			});
 			Object.keys( oSettings.tokens).forEach(function(domain){
 				var context = cView.contexts[domain];

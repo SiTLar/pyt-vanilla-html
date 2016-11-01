@@ -1319,7 +1319,9 @@ _Drawer.prototype = {
 		var lineHeight = dummy.offsetHeight;	
 		var height = lineHeight* lines;
 		document.body.removeChild(dummy);
-		var nodes = host.getElementsByClassName("long-text");
+		var nodes = ((typeof host.classList !=="undefined")
+				&& host.classList.contains("long-text"))?
+			[host]:host.getElementsByClassName("long-text");
 		for(var idx = 0; idx<nodes.length; idx++)
 			if(Array.isArray(nodes[idx].words))
 				makeReadMore(nodes[idx],height,nodes[idx].words );

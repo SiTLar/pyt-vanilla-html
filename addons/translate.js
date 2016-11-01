@@ -62,7 +62,7 @@ var handlers = {
 	,"evtUpdNode": function (e){
 		var node = e.detail;
 		if(!node)return;
-		var nodePost = node.getNode(["p","post"]);
+		var nodePost = cView.Utils.getNode(node,["p","post"]);
 		if(nodePost.translated !== true) return;
 		var nodes;
 		if(node.classList.contains("long-text")) 

@@ -322,13 +322,15 @@ RtHandler.prototype = {
 		var nodePost = document.getElementById(postId);
 		if(!nodePost) return;
 
-		var nodeCont = nodePost.getNode(["c","post-body"],["c","post-cont"]);
+		var nodeCont = cView.doc.createElement("div");
 		nodeCont.words = context.digestText(data.posts.body);
+		nodeCont.className = "post-cont long-text";
+		nodeCont.dir = "auto";
+		cView.Utils.setChild(nodePost.cNodes["post-body"], "post-cont", nodeCont);
 		delete nodeCont.isUnfolded;
+		nodePost.rawData.body = data.posts.body;
 		cView.Utils.unscroll(function(){
-			nodeCont.innerHTML = "";
-			cView.Drawer.applyReadMore( nodePost);
-			nodePost.rawData.body = data.posts.body;
+			cView.Drawer.applyReadMore( nodeCont);
 			cView.Common.markMetaMenu(nodePost);
 			return nodePost; 
 		});

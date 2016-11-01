@@ -261,7 +261,14 @@ define("./router",[],function(){
 				var username = path.split("/")[0];
 				cView.Router.timeline(cs, path).then(function(){ 
 					var feed =  context.gUsers.byName[username];
-					if(feed.type == "user")cView.noBlocks = true;
+					if(feed.type == "user"){
+						cView.noBlocks = true;
+						var nodesPosts = cView.doc.getElementsByClassName("post");
+						for(var idx = 0; idx < nodesPosts.length; idx++){
+							nodesPosts[idx].hidden = false;
+							cView.Drawer.applyReadMore(nodesPosts[idx]);
+						}
+					}
 					//cView.Common.addUser.call(context, feed);
 					cView.doc.title = "@"+feed.username + ", a " + context.domain + " feed.";
 					cView.Utils.setChild(body, "details", cView.Drawer.genUserDetails(feed.username, context));

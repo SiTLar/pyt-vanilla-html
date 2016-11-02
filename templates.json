@@ -934,7 +934,7 @@
 			,{"c":"unfold-readmore", "t":"a","txt":"Read&nbsp;more", "e":{"click":["Actions","unfoldReadMore"]} }
 		]}
 	]}
-	,{"c":"blocks-settings-page-ctrl", "cl":["blocks-settings-page"]
+	,{"c":"blocks-settings-page-ctrl", "cl":["blocks-settings-page","global-settings"]
 	,"children":[
 		{"t":"label"
 		,"children":[

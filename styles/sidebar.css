@@ -56,12 +56,11 @@
 }
 .show-sidebar{
 	position:absolute;
-	top:0;
+	top:.5em;
 	border-radius:.5em;
 	right:2em;
 	background-color: white;
 	padding: 0 .5em;
-
 }
 .show-sidebar *{
 	color:gray;

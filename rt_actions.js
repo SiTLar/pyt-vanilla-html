@@ -220,6 +220,7 @@ RtHandler.prototype = {
 						,nodePost.cNodes["post-body"].cNodes["comments"]
 					);
 					cView.Drawer.applyReadMore(nodeComment);
+					nodePost.hidden = cView.Common.chkBlocked(nodePost.rawData);
 					return nodeComment;
 				});
 			else return;
@@ -267,6 +268,7 @@ RtHandler.prototype = {
 		if (nodeComment) cView.Utils.unscroll(function(){
 			nodeComment.parentNode.removeChild(nodeComment);
 			cView.Common.markMetaMenu(nodePost);
+			nodePost.hidden = cView.Common.chkBlocked(nodePost.rawData);
 			return nodeComment.parentNode;
 		});
 	}
@@ -287,6 +289,7 @@ RtHandler.prototype = {
 				cView.Drawer.genLikes(nodePost);
 				nodePost.rawData.updatedAt = Date.now();
 				cView.Common.markMetaMenu(nodePost);
+				nodePost.hidden = cView.Common.chkBlocked(nodePost.rawData);
 				return nodePost; 
 			});
 		}else that.injectPost(data.meta.postId, context);
@@ -305,6 +308,7 @@ RtHandler.prototype = {
 				cView.Common.markMetaMenu(nodePost);
 				return nodePost; 
 			});
+			nodePost.hidden = cView.Common.chkBlocked(nodePost.rawData);
 		}
 
 	}
@@ -332,6 +336,7 @@ RtHandler.prototype = {
 		cView.Utils.unscroll(function(){
 			cView.Drawer.applyReadMore( nodeCont);
 			cView.Common.markMetaMenu(nodePost);
+			nodePost.hidden = cView.Common.chkBlocked(nodePost.rawData);
 			return nodePost; 
 		});
 		window.dispatchEvent(new CustomEvent("updNode", {"detail":nodePost}));

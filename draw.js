@@ -678,26 +678,7 @@ _Drawer.prototype = {
 			postNBody.cNodes["post-cont"][(cView.readMore?"words":"innerHTML")] = context.digestText(post.body);
 
 		var urlMatch ;		
-		var listBlockByUsr = cView.blocks.blockPosts[context.domain];
-		var listBlockByStr = cView.blocks.blockStrings[context.domain];
-		if(!cView.noBlocks 
-			&&(
-				(
-					( typeof listBlockByUsr !== "undefined")
-					&& ( listBlockByUsr != null)
-					&& (listBlockByUsr[ user.id])
-				)||(
-					( typeof listBlockByStr!== "undefined")
-					&& ( listBlockByStr != null)
-					&& listBlockByStr.some(function(str){
-						return post.body.toLowerCase().indexOf(str.toLowerCase()) != -1;		
-					})
-				)
-				
-			)
-		){
-			nodePost.hidden = true  ;
-		}
+		nodePost.hidden = cView.Common.chkBlocked(post);
 		nodePost.gotLock  = false;
 		if(typeof user !== "undefined"){
 			nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';

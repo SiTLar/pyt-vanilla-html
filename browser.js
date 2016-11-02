@@ -274,7 +274,9 @@ function setLocalSettings(){
 	//default
 	if (cView.localStorage.getItem("read_more_height") == null) cView.localStorage.setItem("read_more_height", 10);
 	cView.readMoreHeight = cView.readMore? JSON.parse(cView.localStorage.getItem("read_more_height")):0;
-	
+
+	cView.blockLonely = cView.localStorage.getItem("hide-lonely-posts");
+
 	var cssTheme = cView.localStorage.getItem("display_theme");
 	if (cssTheme == "main.css") {
 		cssTheme = "expanded.css";

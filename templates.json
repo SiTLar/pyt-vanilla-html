@@ -488,6 +488,14 @@
 			}
 			,{"t":"span","txt":"Show moon phase"}
 		]}
+		,{"t":"label"
+		,"children":[
+			{"t":"input"
+				,"p":{"type":"checkbox", "value":"hide-lonely-posts"}
+				,"e":{"change":["Actions","setChkboxOption"]}
+			}
+			,{"t":"span","txt":"Hide posts with no likes and comments"}
+		]}
 		,{"t":"h3","txt":"Text layout"}
 		,{"t":"label"
 		,"children":[

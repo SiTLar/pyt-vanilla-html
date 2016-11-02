@@ -414,6 +414,35 @@ _Common.prototype = {
 			}
 		};
 	}
+	,"chkBlocked":function(post){
+		var cView = this.cView;
+		var context = cView.contexts[post.domain];
+		var listBlockByUsr = cView.blocks.blockPosts[context.domain];
+		var listBlockByStr = cView.blocks.blockStrings[context.domain];
+		if(cView.noBlocks ) return false;
+
+		if(cView.blockLonely 
+			&& !(Array.isArray(post.comments) && post.comments.length)
+			&& !(Array.isArray(post.likes) && post.likes.length)
+			&& (context.ids.indexOf(post.createdBy) == -1)
+		) return true;
+
+		if( ( typeof listBlockByUsr !== "undefined")
+			&& ( listBlockByUsr != null)
+			&& (listBlockByUsr[post.createdBy])
+		) return true;
+
+		if ( ( typeof listBlockByStr!== "undefined")
+			&& ( listBlockByStr != null)
+			&& listBlockByStr.some(function(str){
+				return post.body.toLowerCase().indexOf(str.toLowerCase()) != -1;
+			})
+		) return true;
+
+		return false;
+			
+		
+	}
 };
 return _Common;
 });

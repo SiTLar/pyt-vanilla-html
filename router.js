@@ -261,6 +261,7 @@ define("./router",[],function(){
 				var username = path.split("/")[0];
 				cView.Router.timeline(cs, path).then(function(){ 
 					var feed =  context.gUsers.byName[username];
+					cView.origin = feed.id;
 					if(feed.type == "user"){
 						cView.noBlocks = true;
 						var nodesPosts = cView.doc.getElementsByClassName("post");

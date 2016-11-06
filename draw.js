@@ -628,11 +628,12 @@ _Drawer.prototype = {
 				envelop.cNodes["up-d"].previousSibling.hidden = true;
 			}
 			var aBan = envelop.cNodes["up-b"];
-			if (user.type == "group"){
+			/*if (user.type == "group"){
 				aBan.hidden = true;
 				envelop.cNodes["up-b"].previousSibling.hidden = true;
 				return;
 			}
+			*/
 			aBan.banned  = login.users.banIds.indexOf( user.id) != -1;
 			if (aBan.banned){
 				aBan.innerHTML = "Un-ban";

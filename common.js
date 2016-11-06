@@ -429,7 +429,12 @@ _Common.prototype = {
 
 		if( ( typeof listBlockByUsr !== "undefined")
 			&& ( listBlockByUsr != null)
-			&& (listBlockByUsr[post.createdBy])
+			&& (listBlockByUsr[post.createdBy]
+				|| post.postedTo.some(function (dest){
+					var id = context.gFeeds[dest].user.id
+					return listBlockByUsr[id] && (cView.origin != id);
+				})
+			)
 		) return true;
 
 		if ( ( typeof listBlockByStr!== "undefined")

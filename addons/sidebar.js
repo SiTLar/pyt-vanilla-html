@@ -120,11 +120,32 @@ var payload = [
 	,{"title":"Filters"
 		,"content":function(cView){
 			var linkHead = gConfig.front+"filter/";
-			return [ ["me","My posts"]
+			var nodes  = [ ["me","My posts"]
 				,["discussions","My discussions"]
-				,["direct","Direct messages"]
+				,["direct",directsLabel()]
 				,["best_of", "Best of"]
 			].map(function(a){return genLinks(cView, a,linkHead);});
+
+			window.addEventListener("whoamiUpdatedd",regenDirects); 
+			return nodes;
+			function regenDirects(){
+				nodes[2].getElementsByTagName("a")[0].innerHTML = directsLabel();
+			}
+			function directsLabel(){
+				var directsCount = Object.keys(cView.contexts).reduce(
+					function(acc,domain){ 
+						if(!cView.contexts[domain].gMe) return acc;
+						return acc + parseInt(
+							cView.contexts[domain].gMe.users.unreadDirectsNumber
+						);
+					}
+				,0);
+				cView.doc.getElementById("show-sidebar-directs").hidden = !directsCount;
+				
+				return directsCount?
+					"<b>Direct messages ("+ directsCount +")</b>":"Direct messages";
+			}
+
 		}
 		,"test":isLogged	
 	}

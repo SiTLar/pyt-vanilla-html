@@ -26,6 +26,10 @@
 			,"children":[
 				{"c":"fa fa-bars fa-2x","t":"i"}
 			]}
+			,{"c":"show-sidebar-directs"
+				,"p":{"id":"show-sidebar-directs","hidden":true}
+				,"txt":"&bullet;"
+			}
 		]}
 	]}
 	,{"c":"post"

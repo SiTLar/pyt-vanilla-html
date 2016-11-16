@@ -454,6 +454,9 @@ return function(config){
 					});
 				});
 			}
+			,"resetDirectsCount":function(token){
+				return utils._Promise.resolve();
+			}
 		}
 		,"parse":function (res){
 			var input = (typeof res == "string")?JSON.parse(res):res;

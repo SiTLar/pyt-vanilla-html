@@ -157,6 +157,12 @@ define("./router",[],function(){
 				cView.Router.timeline(contexts, "filter/directs").then(function(){
 					body.cNodes["pagetitle"].innerHTML = "Direct messages";
 					cView.doc.title += ": Direct messages";
+					if (!cView.skip) domains.forEach(function(domain){ 
+						var context = contexts[domain];
+						cView.contexts[domain].gMe.users.unreadDirectsNumber = 0;
+						context.api.resetDirectsCount(context.token);
+					});
+					window.dispatchEvent(new CustomEvent("whoamiUpdated"));
 					resolve();
 				},reject);
 			});

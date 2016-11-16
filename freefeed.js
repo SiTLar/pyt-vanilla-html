@@ -265,6 +265,12 @@ return function(config){
 					}
 				);
 			}
+			,"resetDirectsCount":function(token){
+				return utils.xhr( {
+					"url":config.serverURLV2 + "users/markAllDirectsAsRead"
+					,"token":token 
+				});
+			}
 		}
 		,"parse":function (res){
 			return (typeof res == "string")?JSON.parse(res):res;

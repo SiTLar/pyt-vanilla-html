@@ -206,6 +206,7 @@ _Common.prototype = {
 			);
 		}
 		var nodeSR = cView.doc.getElementById("sr-info");
+		window.dispatchEvent(new CustomEvent("whoamiUpdated"));
 		if (!nodeSR) return;
 		cView.Drawer.updateReqs();
 	}

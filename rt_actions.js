@@ -119,6 +119,8 @@ RtHandler.prototype = {
 				});
 			else {
 				var targetMeta = cView.posts.find(function(a){
+					if (Math.abs(a.data.createdAt-nodePost.rawData.createdAt)>48*3600*1000)
+						return false;
 					return cView.hasher.similarity(
 						a.data.sign
 						, nodePost.rawData.sign

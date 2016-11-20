@@ -78,7 +78,10 @@ function undup (cView, posts){
 	for(var idx = 0; idx < posts.length-1; idx++){
 		if(posts[idx].body.length < cView.minBody) continue;
 		for(var v = idx+1; v < posts.length; v++){
-			if(posts[v].body.length < cView.minBody) continue;
+			if(
+				(posts[v].body.length < cView.minBody)
+				||(Math.abs(posts[idx].createdAt-posts[v].createdAt)>48*3600*1000)
+			) continue;
 			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>cView.threshold){
 				var dups;
 				if (is(duplicates[idx]))dups = duplicates[idx];

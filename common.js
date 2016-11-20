@@ -333,7 +333,6 @@ _Common.prototype = {
 					context.logins[login.data.users.id] = login;
 					Common.addUser.call(context, login.data.users);
 					Common.refreshLogin(login.data.users.id, context);
-					setTimeout(function(){ context.getWhoami(login.token);},300);
 
 				});
 			}catch(e){

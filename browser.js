@@ -87,6 +87,13 @@ function postInit(){
 	ga("create", gConfig.ga, "auto");
 	ga("send", "pageview");
 
+	Object.keys(cView.contexts).forEach(function(domain){
+		var context = cView.contexts[domain];
+		Object.keys(context.logins).forEach(function(id){
+			context.getWhoami(context.logins[id].token);
+		});
+	});
+
 	//if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
 	if(JSON.parse(cView.localStorage.getItem("show_link_preview"))){
 		(function(a,b,c){

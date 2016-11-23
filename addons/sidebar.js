@@ -155,8 +155,9 @@ var payload = [
 			nodeBuild.innerHTML = "<span class=\"sb-info\">"+___BUILD___+"</span>";
 			return [ ["https://myfeed.rocks/about", "What's going on?"]
 				,[gConfig.front+"as/FreeFeed/vanillaweb", "Feedback"]
-				,["https://freefeed.net/about","FreeFeed"]
-				,["https://myfeed.rocks/about#author","Author"]
+				,["https://freefeed.net/about", "FreeFeed"]
+				,["https://dev.freefeed.net/w/faq", "FAQ"]
+				,["https://myfeed.rocks/about#author", "Author"]
 			].map(function(a){
 				var div = cView.doc.createElement("div");
 				var ahref = cView.doc.createElement("a");
@@ -242,6 +243,15 @@ var payload = [
 		}
 		,"test":isLogged	
 	}
+	,{"title":"Donate"
+		, "content":function(cView){
+			var div = cView.doc.createElement("div");
+			div.innerHTML = '<div class="box-footer"><p style="margin-bottom: 10px;">Subscribe to Freefeed today! Arrangement is plain and simple &mdash; you wire funds to Freefeed, it gets better every week.</p><span style="display: block; margin-left: auto; margin-right: auto;"><form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input name="cmd" value="_s-xclick" type="hidden"><input name="hosted_button_id" value="DRR5XU73QLD7Y" type="hidden"><table><tbody><tr><td style="padding-bottom: 5px;"><input name="on0" value="Pick monthly donation amount" style="padding: 5px 0px;" type="hidden"><!-- react-text: 123 -->Choose your option:<!-- /react-text --></td></tr><tr><td><select name="os0"><option value="Basic">&euro;5.00 EUR / month</option><option value="Advanced">&euro;10.00 EUR / month</option><option value="Sizable">&euro;15.00 EUR / month</option><option value="Luxurious">&euro;20.00 EUR / month</option><option value="King size">&euro;30.00 EUR / month</option><option value="Master of the Universe">&euro;50.00 EUR / month</option><option value="Chuck Norris">&euro;75.00 EUR / month</option><option value="Duke Nukem">&euro;100.00 EUR / month</option></select></td></tr></tbody></table><input name="currency_code" value="EUR" type="hidden"><input src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_100x26.png" name="submit" alt="PayPal - The safer, easier way to pay online!" style="margin: 5px;" value="" type="image"><img alt="" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" style="" class="ctutpseciownqmiudmkn" width="1" height="1"></form></span><form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" id="singlePayPalPayment"><input name="cmd" value="_s-xclick" type="hidden"><input name="hosted_button_id" value="HMVYD6GEWNWH8" type="hidden"><input src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_100x26.png" name="submit" alt="PayPal - The safer, easier way to pay online!" value="" width="0" type="image" height="0"><img alt="" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" style="" class="ctutpseciownqmiudmkn" width="1" height="1"></form><p style="margin-bottom: 10px;"><!-- react-text: 144 -->Or <!-- /react-text --><span style="text-decoration: underline; cursor: pointer;">send a one-time payment first&nbsp;&rarr;</span></p></div>';
+			return [div];
+		}
+		,"test":always  
+	}
+
 ];
 return function(cView){
 	return{

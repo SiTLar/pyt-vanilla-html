@@ -479,6 +479,7 @@ return function(config){
 				,"banIds":{"out":"","a":"str"}
 				,"can_unhide":{"out":"isHidden","a":"copy"} 
 				,"clikes":{"out":"","a":"str"}
+				,"clikes_count":{"out":"","a":"copy"}
 				,"comments":{"out":"", "post":function(cmts){ 
 					if (Array.isArray(cmts))
 						return cmts.map(function(cmt){
@@ -590,6 +591,7 @@ return function(config){
 						return users;
 					}
 				}
+				,"user_liked":{"out":"","a":"copy"}
 				,"uuid":{"out":"id","a":"copy"}
 			}
 			var out = convert(input);

@@ -93,6 +93,7 @@ var handlers = {
 			popup.style.top =  e.target.offsetTop;
 			popup.style.left = e.target.offsetLeft;
 			popup.cNodes["up-info"].innerHTML = "<b>Liked by:</b>";
+			if (!data.length)popup.cNodes["up-info"].innerHTML = "No info";
 			data.forEach(function(uname){
 				var div = cView.doc.createElement("div");
 				var link = cView.doc.createElement("a");
@@ -100,9 +101,9 @@ var handlers = {
 				link.href = gConfig.front + "as/"+domain+"/"+uname; 
 				div.appendChild(link);
 				popup.cNodes["up-info"].appendChild(div);
-				e.target.parentNode.appendChild(popup);
-				cView.Utils.fixPopupPos(popup);
 			});
+			e.target.parentNode.appendChild(popup);
+			cView.Utils.fixPopupPos(popup);
 		};
 	}
 	,"evtUpdNode":function (e){
@@ -240,12 +241,14 @@ function loadLikes(cmts) {
 				var commentId = context.domain + "-cmt-" + id;
 				var cmt = context.gComments[id]; 
 				var nodeCmt = document.getElementById(commentId);
-				if(nodeCmt && Array.isArray(cmt.clikes)){
+				var cmtCount = ( typeof cmt.clikes_count !== "undefined" ) ?
+					cmt.clikes_count : (Array.isArray(cmt.clikes)?cmt.clikes.length:0);
+				if(nodeCmt && cmtCount){
 					apply({ "id":id
-							,"likes":cmt.clikes.length
-							,"my_likes":( (context.gMe 
-								&& (cmt.clikes
-								.indexOf(context.gMe.users.id) !=-1))?"1":"0"
+							,"likes":cmtCount
+							,"my_likes":( 
+								(typeof cmt.user_liked !== "undefined")
+								&& cmt.user_liked ?"1":"0"
 							)
 						}
 						,nodeCmt

@@ -152,14 +152,16 @@ RtUpdate.prototype = {
 						nodeNewCmt
 						,nodeCmt
 					);
-					var clikes = rt.context.gComments[cmtId].clikes;
-					if(!Array.isArray(clikes))clikes = new Array();
+					var cmt = rt.context.gComments[cmtId];
+					var cmtCount = ( typeof cmt.clikes_count !== "undefined" ) ?
+						cmt.clikes_count : (Array.isArray(cmt.clikes)?cmt.clikes.length:0);
 					window.dispatchEvent(new CustomEvent("evtCLikeMokum" , {
 						"detail":{ "node":nodeNewCmt
 							,"info":{ "id":cmtId
-								,"likes":clikes.length
+								,"likes":cmtCount
 								,"my_likes":(
-									(rt.context.gMe&&(clikes.indexOf(rt.context.gMe.users.id) !=-1))?"1":"0"
+									(typeof cmt.user_liked !== "undefined")
+									&& cmt.user_liked ?"1":"0"
 								)
 							}
 						}

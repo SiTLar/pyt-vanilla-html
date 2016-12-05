@@ -132,7 +132,7 @@ return function(config){
 			}
 			,"_getWhoami": function(token){
 				var whoami = utils.xhr( { 
-					"url":config.serverURL +"users/whoami" 
+					"url":config.serverURLV2 +"users/whoami" 
 					,"token":token 
 				});
 				var groupReqs = utils.xhr( { 

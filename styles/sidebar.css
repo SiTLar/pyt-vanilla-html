@@ -90,3 +90,10 @@ input.search{
 	right: 0;
 	top: 0.25em;
 }
+.fundraiser{
+	width: 11em;
+	height: 60px;
+	margin-bottom: 10px;
+	overflow: hidden;
+	position: relative;
+}

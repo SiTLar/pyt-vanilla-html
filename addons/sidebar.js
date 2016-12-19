@@ -58,7 +58,7 @@ var payload = [
 		,"content":function(cView){
 			var div = cView.doc.createElement("div");
 			div.className = "fundraiser";
-			div.innerHTML = '<iframe src="https://www.indiegogo.com/project/freefeed-2016--3/embedded/6303633" frameBorder="0" scrolling="no" style=\'width: 11em; height: 445px; position: absolute; top: -376px; left: -1px\'> </iframe>';
+			div.innerHTML = '<iframe src="https://www.indiegogo.com/project/freefeed-2016--3/embedded/6303633" frameBorder="0" scrolling="no" style=\'width: 10em; height: 445px; position: absolute; top: -376px; left: -1px\'> </iframe>';
 			return [div];
 		}
 		,"test":always  

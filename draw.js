@@ -732,6 +732,7 @@ _Drawer.prototype = {
 				Drawer.embedPreview(oEmbedPr
 					,urlMatch[0]
 					,postNBody.cNodes["attachments"] 
+				//);
 				).then((post.src == "rt")?cView.Utils.unscroll:function(){});
 			});
 		}

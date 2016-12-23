@@ -253,7 +253,7 @@ return {
 			fScroll = (window.scrollY + window.innerHeight/2) > node.offsetTop;
 			var prevDocHeight = document.body.scrollHeight;
 			node.style.position = "absolute"; 
-			offset = document.body.scrollHeight - prevDocHeight;
+			offset = prevDocHeight - document.body.scrollHeight ;
 			node.style.position = "static"; 
 		}
 		

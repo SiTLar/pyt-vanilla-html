@@ -325,9 +325,9 @@ function setLocalSettings(){
 			}
 		});
 		embedly('on', 'card.rendered', function(iframe){
-			cView.Utils.unscroll(iframe);
-		});
 
+		//	cView.Utils.unscroll(iframe);
+		});
 		cView.gEmbed.p = new Promise(function(resolve,reject){
 			var oReq = new XMLHttpRequest();
 			oReq.onload = function(){

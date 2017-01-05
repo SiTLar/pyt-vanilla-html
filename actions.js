@@ -972,11 +972,11 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var nodeAtts = cView.Utils.getNode(e.target,["p", "attachments"]);
 		if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
-			nodeAtts.cNodes["atts-img"].style.display = "block";
+			nodeAtts.cNodes["atts-img"].style.flexWrap = "wrap";
 			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';
 			nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "false";
 		}else{
-			nodeAtts.cNodes["atts-img"].style.display = "flex";
+			nodeAtts.cNodes["atts-img"].style.flexWrap = "nowrap";
 			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-down fa-2x"></i>';
 			nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "true";
 		}

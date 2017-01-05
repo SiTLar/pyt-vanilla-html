@@ -1,0 +1,32 @@
+{
+	"home":{
+		"descr":"Home"
+		,"action":["Actions","home"]
+	}
+	,"mydiscussions":{
+		"descr":"My discussions"
+		,"action":["Actions","my"]
+	}
+	,"myposts":{
+		"descr":"My posts"
+		,"action":["Actions","me"]
+	}
+	,"directs":{
+		"descr":"Directs"
+		,"action":["Actions","directs"]
+		,"cl":["directs-control"]
+	}
+	,"comments":{
+		"descr":"My comments"
+		,"action":["Actions","goComments"]
+	}
+	,"settings":{
+		"descr":"Settings"
+		,"action":["Actions","goSettings"]
+	}
+	,"logout":{
+		"descr":"Logout"
+		,"action":["Actions","logout"]
+	}
+
+}

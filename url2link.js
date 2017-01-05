@@ -1,5 +1,5 @@
 "use strict";
-var tlds = require("raw!val!./loadtlds");
+var tlds = require("json!./tlds.json");
 define("Url2link", [], function(){
 function _Url2link(cfg){
 	var that = this;

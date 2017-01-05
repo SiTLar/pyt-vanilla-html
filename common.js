@@ -101,21 +101,32 @@ _Common.prototype = {
 	,"genNodes": function (templates){
 		var cView = this.cView;
 		var nodes = new Array();
+		var nodesByName = new Object();
 		//oTemplates = JSON.parse(templates);
 		templates.forEach(function(template) {
 			if (!template.t)template.t = "div";
-			var node = cView.doc.createElement(template.t);
+			var node;
+			if(template.pt){ 
+				node = nodesByName[template.pt].cloneAll(); 
+				if(!Array.isArray(template.cl)) template.cl = new Array();
+				node.classList.forEach(function(className){
+					template.cl.push(className);
+				});
+			}else node = cView.doc.createElement(template.t);
 			node.cloneAll = function(){
 				var newNode = this.cloneNode(true);
 				genCNodes(newNode, this);
 				return newNode;
 			};
-			if(template.c)node.className = template.c;
+			if(template.c){
+				node.className = template.c;
+				nodesByName[template.c] = node;
+			}
 			if(template.cl)template.cl.forEach(function(c){node.classList.add(c);});
-			if(template.children)
-			cView.Common.genNodes(template.children).forEach(function(victim){
-				node.appendChild(victim);
-			});
+			if(template.el)
+				 cView.Common.genNodes(template.el).forEach(function(victim){
+					node.appendChild(victim);
+				});
 			if(template.txt) node.innerHTML = template.txt;
 			if(template.e) node.e = template.e;
 			var dummy = cView.doc.createElement("span");
@@ -445,8 +456,41 @@ _Common.prototype = {
 		) return true;
 
 		return false;
-			
+	}
+	,"regenCustomUi": function(host){
+		var cView = this.cView;
+		var items = host.getElementsByTagName("il");
+		var out = new Array();
+		for(var idx = 0; idx< items.length; idx++ ){
+			var inputs = cView.Utils.getInputsByName(items[idx]);
+			if(items[idx].cNodes["title"].getElementsByTagName("i").length) out.push({
+				"fn":inputs.type.value
+				,"icon":inputs.val.value
+			});
+			else out.push({
+				"fn":inputs.type.value
+				,"text":inputs.val.value
+			});
+		}
+		return out;
+	}
+	,"regenDirects": function (){
+		var cView = document.cView;
+		var directsCount = Object.keys(cView.contexts).reduce(
+			function(acc,domain){ 
+				if(!cView.contexts[domain].gMe) return acc;
+				return acc + parseInt(
+					cView.contexts[domain].gMe.users.unreadDirectsNumber
+				);
+			}
+		,0);
+		cView.doc.getElementById("show-sidebar-directs").hidden = !directsCount;
+		var style = cView.doc.getElementById("directs-control-style");
+		if(directsCount)
+			style.innerHTML = ".directs-control::after{color:red; content:\" +"+directsCount+"\"}";
+		else style.innerHTML = "";
 		
+
 	}
 };
 return _Common;

@@ -837,16 +837,19 @@ _Actions.prototype = {
 		}
 	}
 	,"me": function(e){
-		e.target.href = gConfig.front+"filter/me";
+		e.currentTarget.href = gConfig.front+"filter/me";
+	}
+	,"goComments": function(e){
+		e.currentTarget.href = gConfig.front+"filter/comments";
 	}
 	,"home": function(e){
-	    e.target.href = gConfig.front;
+		e.currentTarget.href = gConfig.front;
 	}
 	,"directs": function(e){
-	    e.target.href = gConfig.front+ "filter/direct";
+		e.currentTarget.href = gConfig.front+ "filter/direct";
 	}
 	,"my": function(e){
-	    e.target.href = gConfig.front+ "filter/discussions";
+		e.currentTarget.href = gConfig.front+ "filter/discussions";
 	}
 	,"newDirectInp": function(e){
 		var cView = document.cView;
@@ -1121,6 +1124,7 @@ _Actions.prototype = {
 		var nodePost = node.getNode(["p","post"]);
 		var context = cView.contexts[nodePost.rawData.domain];
 		var user = context.gUsers[node.userid];
+		var innerWidth = window.innerWidth;
 		if(cView.doc.getElementById("userPopup" + context.domain+ node.userid))return;
 		var nodePopup = cView.Drawer.genUserPopup(node, user);
 		nodePopup.style.opacity = 0;
@@ -1130,9 +1134,9 @@ _Actions.prototype = {
 		var width = nodePopup.offsetWidth;
 		nodePopup.style.top = e.pageY;
 		nodePopup.style.left = e.pageX;
-		if(nodePopup.offsetLeft + width > window.innerWidth){
+		if(nodePopup.offsetLeft + width > innerWidth){
 			nodePopup.style.left = "auto";
-			nodePopup.style.right = 0;
+			nodePopup.style.right = "1em";
 		}
 		nodePopup.style["z-index"] = 2;
 		nodePopup.style.opacity = 1;
@@ -1157,11 +1161,11 @@ _Actions.prototype = {
 	}
 	,"goSettings": function (e){
 		var cView = document.cView;
-	    e.target.href = gConfig.front+"settings";
+		e.currentTarget.href = gConfig.front+"settings";
 	}
 	,"goRequests": function (e){
 		var cView = document.cView;
-	    e.target.href = gConfig.front+"requests";
+		e.currentTarget.href = gConfig.front+"requests";
 	}
 	,"genBlock": function (e){
 		var cView = document.cView;
@@ -1557,16 +1561,19 @@ _Actions.prototype = {
 		});
 	}
 	,"goSetAccounts": function(e){
-		e.target.href = gConfig.front+"settings/accounts";
+		e.currentTarget.href = gConfig.front+"settings/accounts";
 	}
 	,"goSetAddons": function(e){
-		e.target.href = gConfig.front+"settings/addons";
+		e.currentTarget.href = gConfig.front+"settings/addons";
 	}
 	,"goSetBlocks": function(e){
-		e.target.href = gConfig.front+"settings/blocks";
+		e.currentTarget.href = gConfig.front+"settings/blocks";
+	}
+	,"goSetCustomUI": function(e){
+		e.currentTarget.href = gConfig.front+"settings/customui";
 	}
 	,"goSetDisplay": function(e){
-		e.target.href = gConfig.front+"settings/display";
+		e.currentTarget.href = gConfig.front+"settings/display";
 	}
 	,"setDomainInfo": function(e){
 		e.target.getNode(["p","settings-login"],["c","info"]).innerHTML = "Log in to&nbsp;"
@@ -1741,6 +1748,108 @@ _Actions.prototype = {
 		cView.Drawer.applyReadMore( host);
 		window.scrollBy(0,refNode.getBoundingClientRect().top - refTop);
 		nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]).hidden = true;
+	}
+	,"submitCuUm": function(e){
+		var cView = document.cView;
+		var customFunctions = require("json!./custom_functions.json");
+		var item = cView.gNodes["custom-ui-item"].cloneAll(true);
+		var host = cView.doc.getElementById("custom-ui-um-display")
+		var slots = cView.Utils.getInputsByName(item);
+		var inputs = cView.Utils.getInputsByName(cView.doc.getElementById("custom-ui-um-control"));
+		var functionId = cView.doc.getElementById("cu-um-function").value;
+		var options = cView.doc.getElementById("cu-um-function").getElementsByTagName("option");
+		if(functionId == "spacer"){
+			slots["type"].value = "spacer";	
+			item.cNodes["title"].innerHTML = "&bullet;";
+			host.appendChild(item);
+			clearCU();
+			return;
+		}
+		for(var idx = 0; idx < options.length; idx++ ) if(options[idx].selected){
+			options[idx].disabled = true;
+			break;
+		}
+		if ((typeof inputs["label"].value === "undefined")|| (inputs["label"].value == "")){
+			if((typeof inputs["icon"].value !== "undefined") && inputs["icon"].value != "" ){
+				slots["val"].value = inputs["icon"].value;
+				var icon = cView.doc.createElement("i");
+				icon.className = "fa fa-2x fa-" + inputs["icon"].value;
+				item.cNodes["title"].appendChild(icon); 
+			}else{
+				slots["val"].value = customFunctions[functionId].descr;
+				item.cNodes["title"].innerHTML = customFunctions[functionId].descr;
+			}
+		}else{
+			slots["val"].value = inputs["label"].value;
+			item.cNodes["title"].innerHTML = inputs["label"].value
+				.trim().replace(/&/g,"&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
+		}
+		options[0].selected = true;
+		slots["type"].value = functionId;
+		item.title = functionId;
+		host.appendChild(item);
+		clearCU();
+		cView.localStorage.setItem(
+			"custom-ui-upper"
+			,JSON.stringify(cView.Common.regenCustomUi(host))
+		);
+		function clearCU(){
+			Object.keys(inputs).forEach(function(name){inputs[name].value = ""});
+			cView.doc.getElementById("cu-um-icon").firstChild.className = "";
+		};
+	}
+	,"customUILabelInput":function(e){
+		var cView = document.cView;
+		var inputs = cView.Utils.getInputsByName(cView.doc.getElementById("custom-ui-um-control"));
+		inputs["icon"].value;
+		cView.doc.getElementById("cu-um-icon").firstChild.className = "";
+	}
+	,"selectIcon": function(e){
+		if (document.getElementById("selector-fa-dialog")) return;
+		var cView = document.cView;
+		var host = e.target.getNode(["p","select-ico"]); 
+		var inputs = cView.Utils.getInputsByName(e.target.getNode(["p","custom-ui-um-control"])); 
+		var dlg =  cView.FaSelector.makeSelector(cb);
+		var innerWidth = window.innerWidth;
+		dlg.style.opacity = 0;
+		//cView.doc.getElementsByTagName("body")[0].appendChild(dlg);
+		host.appendChild(dlg);
+		dlg.style.top = 0;
+		dlg.style.left = 0;
+		var width = dlg.offsetWidth;
+		dlg.style.top = e.pageY;
+		dlg.style.left = e.pageX;
+		if(dlg.offsetLeft + width > innerWidth){
+			dlg.style.left = "auto";
+			dlg.style.right = "1em";
+		}
+		dlg.style["z-index"] = 2;
+		dlg.style.opacity = 1;
+		host.body.appendChild(dlg);
+		//document.body.appendChild(dlg);
+		function cb(name){
+			inputs["icon"].value = name;
+			inputs["label"].value = "";
+			host.getNode(["c","cu-um-icon"], ["c","i"]).className = "fa fa-2x fa-" + name;
+		}
+	}
+	,"remCustomUiItem": function(e){
+		var cView = document.cView;
+		var victim = e.target.getNode(["p","custom-ui-item"]); 
+		var host = victim.getNode(["p","custom-ui-um-display"]);
+		victim.parentNode.removeChild(victim);
+		cView.localStorage.setItem(
+			"custom-ui-upper"
+			,JSON.stringify(cView.Common.regenCustomUi(host))
+		);
+		var inputs = cView.Utils.getInputsByName(victim);
+		var options = cView.doc.getElementById("cu-um-function").getElementsByTagName("option");
+		for(var idx = 0; idx < options.length; idx++ ) if(options[idx].value == inputs.type.value){
+			options[idx].disabled = false;
+			break;
+		}
 	}
 };
 return _Actions;

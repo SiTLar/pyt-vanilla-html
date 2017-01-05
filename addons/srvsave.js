@@ -8,25 +8,25 @@ var loginOK = false;
 var savDomain = "FreeFeed";
 var template = [
 {"c":"settings-no-login"
-, "children":[
+, "el":[
 	{"t":"h1", "txt":"&#x52A9; Sync settings to server"}
 	,{"t":"p","txt":"To be able to sync settings to the server, you should be logged in to an account on "+ savDomain}
 ]}
 ,{"c":"settings"
-, "children":[
+, "el":[
 	{"t":"h1", "txt":"&#x52A9; Sync settings to server"}
 	,{"t":"span", "txt":"The account for saving the settings will be the main account on " + savDomain + ":&nbsp;" }
 	,{"c":"account", "t":"span"}
 	,{
-	"children":[
+	"el":[
 		,{"t":"label" 
-		,"children":[
+		,"el":[
 			{"t":"input" ,"p":{"type":"checkbox","name":"autosave", "value":"addons-save-blocks"}, "e":{"click":["addons-srvsave","autosave"]} }
 			,{"t":"span", "txt":"Automatically sync blocked users to server."}
 		]}
 	]}
 	,{"c":"buttons"
-	,"children":[
+	,"el":[
 		{"t":"input"
 			,"p":{"value":"Upload settings","type":"button"}
 			,"e":{"click":["addons-srvsave","upload"]}

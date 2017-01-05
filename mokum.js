@@ -77,6 +77,7 @@ return function(config){
 			});
 			whoami.user.subscriptions = subscriptions.map(function(sub){return "posts-"+sub.id;});
 			whoami.user.banIds = subs[0].banned_subscribers;
+			whoami.user.unreadDirectsNumber = 0;
 			whoami.requests = new Array();
 			whoami.user.subscriptionRequests = new Array();
 			var subscription_requests = JSON.parse(res[2]).subscription_requests;
@@ -575,6 +576,7 @@ return function(config){
 				,"text":{"out":"body","a":"copy"}
 				,"thumb_url":{"out":"thumbnailUrl","a":"mutate", "f":addHost}
 				,"type":{"out":"","a":"copy"}
+				,"unreadDirectsNumber":{"out":"","a":"copy"}
 				,"updated_at":{"out":"updatedAt","a":"mutate","f":Date.parse,"single":true}
 				,"user_id":{"out":"createdBy","a":"str"}
 				,"user":{"out":"users", "post":function(user){

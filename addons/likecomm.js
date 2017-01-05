@@ -7,17 +7,17 @@ var auth = false;
 var nodesT = new Object();
 var template = [
 {"c":"settings"
-, "children":[
+, "el":[
 	{"t":"h1", "txt":"&#22909; Like comments"}
 	,{"t":"label"
-	,"children":[
+	,"el":[
 		{"t":"input" ,"p":{"type":"checkbox","name":"auth", "value":"addons-likecomm-auth"}, "e":{"click":["Actions","setChkboxOption"]} }
 		,{"t":"span", "txt":"Authenticate with my token to be able to send likes."}
 	]}
 	,{"c":"warning", "t":"p", "txt":"Your token will be sent to a third party server &mdash; "+srvUrl }
 ]}
 ,{"c":"control", "cl":["inline-control"]
-,"children":[
+,"el":[
 	{"c":"spacer","t":"span","txt":"&mdash;", "p":{"hidden":true}}
 	,{"c":"display","t":"span" }
 	,{"c":"action", "t":"a", "cl":["like-comm-action"], "e":{"click":["addons-like-comm","action"]}}

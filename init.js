@@ -7,8 +7,24 @@ var apis = {
 
 var gTemplates = require("json!./templates.json");
 var gDomains = require("json!./domains.json");
-define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher" ]
-,function(Utils, _Common, _Drawer,_Actions, _Router, _Hasher){
+define( 
+[ 
+	"./utils"
+	, "./common"
+	, "./draw" 
+	, "./actions"
+	, "./router"
+	, "./hasher"
+	, "./faselector" 
+],function(
+	Utils
+	, _Common
+	, _Drawer
+	, _Actions
+	, _Router
+	, _Hasher
+	, _FaSelector
+){
 	function _Context(v, domain, api){
 		var context = this ;
 		Object.keys(context.defaults).forEach(function(key){
@@ -142,6 +158,9 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 		cView.Actions = new _Actions(cView);
 		cView.Router = new _Router(cView);
 		cView.hasher = new _Hasher["_Minhash"]({"fnum":1000});
+		cView.FaSelector = new _FaSelector(cView);
+		
+
 		cView.addons = { 
 			"all":new Array()
 			,"ok": function(){}
@@ -208,7 +227,9 @@ define( [ "./utils" , "./common", "./draw" ,"./actions" , "./router", "./hasher"
 	};
 	function init(doc){
 		var cView = new _cView(doc);
-		cView.Common.genNodes(gTemplates.nodes).forEach( function(node){ cView.gNodes[node.classList[0]] = node; });
+		cView.Common.genNodes(gTemplates.nodes).forEach( function(node){ 
+			cView.gNodes[node.classList[0]] = node; 
+		});
 		cView.Common.setIcon("throbber-16.gif");
 		return cView;
 	}

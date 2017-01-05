@@ -116,6 +116,8 @@ h1{
 }
 .up-close{
 	float:right;
+	width:1em;
+	height:1em;
 }
 .up-avatar{
 	float:left;
@@ -453,7 +455,7 @@ span.comment-controls::before {
 	margin-bottom: 0.3em;
 	font-size: 13px;
 }
-.new-post-feed,.blocks-item{
+.new-post-feed,.removeable-item {
 	background-color: #f2f2f2;
 	border: 1px solid #d8d8d8;
 	margin: 0 0.3em 0.3em 0;
@@ -750,4 +752,41 @@ span.comment-controls::before {
 }
 .read-more-wrapper div {
 	display: inline;
+}
+.custom-ui-um-display * {
+	margin-bottom:0;
+}
+.selector-fa-dialog{
+	width: 80%;
+	text-align: center;
+	padding: .3em;
+}
+.selector-fa-bar{
+
+}
+.selector-fa-item {
+	padding: .3em;
+	margin: auto;
+	min-width: 3em;
+}
+.selector-fa-container{
+	display: flex;
+	flex-wrap: wrap;
+	overflow: auto;
+	height: 10em;
+}
+.selector-fa-title{
+	font-weight: bold;
+	display:inline-block;
+}
+.cu-um-icon{
+	height: 3em;
+	width: 4em;
+	text-align:center;
+}
+.custom-ui-um-control >div{
+	margin-top: auto;
+}
+.custom-ui-um-control button{
+	margin: auto 0 0 0;
 }

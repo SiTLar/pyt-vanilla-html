@@ -1,12 +1,12 @@
 {"nodes": [
 	{"c":"main"
-	,"children":[
+	,"el":[
 		{"c":"sidebar", "p":{"id":"sidebar"} , "cl":["sidebar-h"]
-		,"children":[
+		,"el":[
 			{"c":"hide-sidebar","e":{"click":["Actions","toggleSidebar"]}
-			,"children":[
+			,"el":[
 				{"t":"a"
-				,"children":[
+				,"el":[
 					{"c":"fa fa-times fa-2x","t":"i"}
 				]}
 				
@@ -14,16 +14,16 @@
 			,{"c":"sidebar-left" , "e":{"click":["Actions","toggleSidebar"]}}
 		]}
 		,{"c":"container", "p":{"id":"container"}
-		,"children":[
+		,"el":[
 			{"c":"controls"}
 			,{"c":"pagetitle", "t":"h1"}
 			,{"c":"details"}
 			,{"c":"up-controls"}
 		]}
 		,{"c":"show-sidebar" ,  "p":{"id":"show-sidebar"}
-		,"children":[
+		,"el":[
 			{"t":"a","e":{"click":["Actions","toggleSidebar"]}
-			,"children":[
+			,"el":[
 				{"c":"fa fa-bars fa-2x","t":"i"}
 			]}
 			,{"c":"show-sidebar-directs"
@@ -33,33 +33,33 @@
 		]}
 	]}
 	,{"c":"post"
-	,"children":[
+	,"el":[
 		{"c":"post-refl-menu"}
 		,{"c":"avatar"
-		,"children":[
+		,"el":[
 			{"c":"avatar-h","t":"a","e":{"click":["Actions","evtUserPopup"]}}
 		]}
 		,{"c":"post-body"
-		,"children":[
+		,"el":[
 			{"c":"title"}
 			,{"c":"post-cont", "cl":["long-text"], "p":{"dir":"auto"}}
 			,{"c":"attachments"
-			,"children":[
+			,"el":[
 				{"c":"atts-img"}
 				,{"c":"atts-unfold", "p":{"hidden":true}
-				,"children":[
+				,"el":[
 					{"c":"unfold-action","t":"input", "p":{"type":"hidden", "value":true}}
 					,{"t":"a","e":{"click":["Actions","unfoldAttImgs"]}
-					,"children":[
+					,"el":[
 						{"c":"fa fa-chevron-down fa-2x","t":"i"}
 					]}
 				]}
 				,{"c":"atts-audio"}
 			]}
 			,{"c":"post-info"
-			,"children":[
+			,"el":[
 				{"c":"post-controls"
-				,"children":[
+				,"el":[
 					{"c":"post-lock","t":"span"}
 					,{"c":"post-date","t":"span"}
 					,{"c":"cmts-lock-msg","t":"span", "txt":" &mdash; Comments disabled", "p":{"hidden":true}}
@@ -68,11 +68,11 @@
 			]}
 			,{"c":"comments"}
 			,{"c":"many-cmts-ctrl", "p":{"hidden":true}
-			,"children":[
+			,"el":[
 				{"c":"comment-date"
-				,"children":[
+				,"el":[
 					{"c":"add-cmt-icon", "t":"a", "cl":["fa-stack","fa-1x"]
-					,"children":[
+					,"el":[
 						{"t":"i","cl":["fa","fa-comment-o", "fa-stack-1x"]}
 						,{"c":"fa", "t":"i", "cl":["fa-square", "fa-inverse", "fa-stack-1x"]
 							,"style":{ "left": "3px", "top": "3px", "font-size": "60%"} 
@@ -83,7 +83,7 @@
 					]}
 				]}
 				,{"c":"comment-body"
-				,"children":[
+				,"el":[
 					{"t":"a", "txt":"Add comment", "e":{"click":["Actions","addComment"]}}
 					,{"c":"spacer","t":"span","txt":"&mdash;"}
 					,{"t":"a", "txt":"Fold comments", "e":{"click":["Actions","foldComments"]}}
@@ -92,38 +92,38 @@
 		]}
 	]}
 	,{"c":"likes-suffix", "t":"span"
-	,"children":[
+	,"el":[
 		{"c":"likes-omitted", "t":"span", "p":{"hidden":true}
-		,"children":[
+		,"el":[
 			{"t":"span", "txt":"and "}
 			,{"t":"a", "e":{"click":["Actions","unfoldLikes"]}}
 		]}
 		,{"t":"span", "txt":"liked this"}
 	]}
 	,{"c":"private"
-	,"children":[
+	,"el":[
 		{"c":"priv-body"}
 	]}
 	,{"c":"controls-login","t":"div"
-	,"children":[
-		{"c":"user-home","t":"a","href":"#","txt":"home","e":{"mousedown":["Actions","home"]}}
+	,"el":[
+		{"c":"user-home","t":"a","txt":"home","e":{"mousedown":["Actions","home"]}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-priv","t":"a","txt":"settings","e":{"mousedown":["Actions","goSettings"]}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-logout","t":"a","txt":"logout","e":{"click":["Actions","logout"]}}
 		,{"c":"sr-info","p":{"id":"sr-info","hidden":true}
-		,"children":[
+		,"el":[
 			{"c":"sr-info-a","t":"a","e":{"mousedown":["Actions","goRequests"]}}
 		]}
 	]}
 	,{"c":"controls-anon"
-	,"children":[
+	,"el":[
 		{"c":"user-signup","t":"a","txt":"sign up","p":{"href":"https://freefeed.net/signup"}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-login","t":"a","txt":"login","e":{"click":["Common","auth"]}}
 	]}
 	,{"c":"controls-self","t":"span"
-	,"children":[
+	,"el":[
 		{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":["Actions","addComment"]}}
 		,{"c":"spacer","t":"span","txt":"-"}
@@ -134,7 +134,7 @@
 		,{"c":"post-control-more","t":"a","txt":"More&nbsp;&#x25Be;","e":{"click":["Actions","morePostCtrls"]}}
 	]}
 	,{"c":"controls-others","t":"span"
-	,"children":[
+	,"el":[
 		{"c":"spacer","t":"span","txt":"&mdash;"}
 		,{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":["Actions","addComment"]}}
 		,{"c":"spacer","t":"span","txt":"-"}
@@ -143,16 +143,16 @@
 		,{"c":"hide","t":"a","txt":"Hide","e":{"click":["Actions","postHide"]}}
 	]}
 	,{"c":"comment"
-	,"children":[
+	,"el":[
 		{"c":"comment-date","e":{"mouseover":["Actions","calcCmtTime"], "click":["Actions","evtUserPopup"]}
-		,"children":[
+		,"el":[
 			{"c":"date","t":"a"
-				,"children":[
+				,"el":[
 				{"c":"fa fa-comment icon","t":"i" }
 			]}
 		]}
 		,{"c":"comment-body"
-		,"children":[
+		,"el":[
 			{"c":"cmt-content", "t":"span","cl":["long-text"], "p":{"dir":"auto"}}
 			,{"c":"spacer","t":"span","txt":"&mdash;"}
 			,{"c":"cmt-author", "t":"span","e":{
@@ -161,37 +161,37 @@
 				} 
 			}
 			,{"c":"comment-controls", "t":"span","p":{"hidden":true}
-			,"children":[
+			,"el":[
 				{"t":"a","txt":"delete","p":"","e":{"click":["Actions","deleteComment"]}}
 			]}
 		]}
 	]}
 	,{"c":"comment-controls","t":"span"
-	,"children":[
+	,"el":[
 		{"t":"a","txt":"edit","e":{"click":["Actions","editComment"]}}
 		,{"c":"spacer","t":"span","txt":"|"}
 		,{"t":"a","txt":"delete","e":{"click":["Actions","deleteComment"]}}
 	]}
 	,{"c":"comments-load", "cl":["comment"]
-	,"children":[
+	,"el":[
 		{"c":"comment-body"
-		,"children":[
+		,"el":[
 			{"c":"a", "t":"a", "e":{"click":["Actions","unfoldComm"]}
-			,"children":[
+			,"el":[
 				{"c":"num", "t":"span"}
 				,{"t":"span", "txt":" more comments"}
 			]}
 		]}
 	]}
 	,{"c":"edit"
-	,"children":[
+	,"el":[
 		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
 		,{"c":"edit-buttons"
-		,"children":[
+		,"el":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"}
 			,{"c":"edit-buttons-cancel","t":"a","txt":"Cancel"}
 			,{"c":"select-user", "t":"span", "p":{"hidden":true}
-			,"children":[
+			,"el":[
 				{"t":"span","txt":"comment with:"}
 				,{"c":"select-user-ctrl", "t":"select"}
 			]}
@@ -199,9 +199,9 @@
 
 	]}
 	,{"c":"new-post"
-	,"children":[
+	,"el":[
 		{"c":"add-sender" ,"p":{"hidden":true}
-		,"children":[
+		,"el":[
 			{
 				"t":"a"
 				,"txt":"&#10133; Post to another account"
@@ -210,26 +210,26 @@
 		]}
 		,{"c":"post-to"}
 		,{"c":"new-post-cont"
-		,"children":[
+		,"el":[
 			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
 			,{"c":"attachments"}
 		]}
 		,{"c":"edit-buttons"
-		,"children":[
+		,"el":[
 			{"c":"edit-buttons-upload","t":"input","p":{"type":"file" }, "e":{"change":["Actions","sendAttachment"] }}
 			,{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":["Actions","newPost"]}}
 		]}
 	]}
 	,{"c":"new-post-to"
-	,"children":[
+	,"el":[
 		{"c":"mu-login", "t":"span", "p":{"hidden":true}}
 		,{"t":"span", "txt":"Post to:"}
 		,{"c":"new-post-feeds","t":"ul"
-		,"children":[
+		,"el":[
 			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":["Actions","newDirectRemoveFeed"]} }
 		]}
 		,{"c":"new-feed-input" 
-		,"children":[
+		,"el":[
 			{"c":"input", "t": "input","p":{"hidden":"1"}
 				,"e":{
 					"input":["Actions","newDirectInp"]
@@ -241,12 +241,12 @@
 		,{"c":"rm-sender", "t":"a", "txt":"&cross;Remove sender", "p":{"hidden":true}, "e":{"click":["Actions","newPostRmSender"]} }
 	]}
 	,{"c":"new-direct-to"
-	,"children":[
+	,"el":[
 		{"c":"mu-login", "t":"span"}
 		,{"t":"span", "txt":"Direct message to:"}
 		,{"c":"new-post-feeds","t":"ul"}
 		,{"c":"new-feed-input" 
-		,"children":[
+		,"el":[
 			{"c":"input", "t": "input"
 				,"e":{
 					"input":["Actions","newDirectInp"]
@@ -259,15 +259,15 @@
 	]}
 	,{"c":"new-post-feed", "t":"li", "e":{"click":["Actions","newDirectRemoveFeed"]}}
 	,{"c":"friends-tip","e":{"mouseleave":["Actions","ftClose"]}
-	,"children":[
+	,"el":[
 		{"c":"priv-close", "e":{"click":["Actions","ftClose"] }
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
-		,{ "children":[
+		,{ "el":[
 			{"c":"fa fa-search", "t":"i"}
 			,{"t":"span", "txt":"&nbsp;&hellip;"}
 		]}
@@ -275,42 +275,42 @@
 	]}
 	,{"c":"ft-i", "t":"li", "e":{"click":["Actions","selectFeed"]}}
 	,{"c":"likes-smile","t":"span"
-	,"children":[
+	,"el":[
 		{"c":"fa fa-circle icon-bg fa-stack-1x", "t":"i"}
 		,{"c":"fa fa-smile-o icon fa-stack-1x", "t":"i"}
 		,{"t":"span", "txt":"&nbsp;"}
 	]}
 	,{"c":"show-hidden"
-	,"children":[
+	,"el":[
 		{"c":"href","e":{"click":["Actions","showHidden"]},"t":"a" }
 	]}
 	,{"c":"private-control"
-	,"children":[
+	,"el":[
 		{"c":"priv-close","e":{"click":["Secrets","ctrlPrivClose"]}
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
 		,{"c":"priv-header", "txt":"THE MATRIX" }
 		,{"c":"priv-info"}
 		,{"c":"priv-join"
-		,"children":[
+		,"el":[
 			{"c":"priv-key-input", "t":"textarea","p":{"rows":1},"e":{"change":["Secrets","privActivateButton"]}}
 			,{"c":"priv-submit", "t":"button", "txt":"join","p":{"disabled":true}, "e":{"click":["Secrets","ctrlPrivJoin"]}}
 		]}
 		,{"c":"priv-groups"}
 		,{"c":"priv-groups-ctrl"
-		,"children":[
+		,"el":[
 			{"c":"priv-leave-submit", "t":"button", "p":{"disabled":true}, "txt":"leave", "e":{"click":["Secrets","ctrlPrivLeave"]} }
 			,{"c":"priv-invite-submit", "t":"button", "p":{"disabled":true}, "txt":"invite a friend", "e":{"click":["Secrets","ctrlPrivShowInvite"]} }
 		]}
 		,{"c":"priv-create"
-		,"children":[
+		,"el":[
 			{"t":"p","txt":"Create a new private group"}
 			,{"c":"priv-create-ctrl"
-			,"children":[
+			,"el":[
 				{"t":"span","txt":"Name"}
 				,{"c":"priv-c-name" , "t":"input","e":{"change":["Secrets","privActivateButton"]}}
 				,{"c":"priv-submit", "t":"button", "p":{"disabled":true}, "txt":"go!","e":{"click":["Secrets","ctrlPrivGen"]}}
@@ -319,16 +319,16 @@
 		,{"t":"a", "txt":"logout","e":{"click":["Secrets","ctrlPrivLogout"]}}
 	]}
 	,{"c":"priv-grp"
-	,"children":[
+	,"el":[
 		{"t":"input", "p":{"name":"privGrp","type":"radio"},"e":{"change":["Secrets","privGrpActivateButton"]} }
 		,{"c":"priv-grp-name", "t":"span"}
 	]}
 	,{"c":"priv-dlg-login"
-	,"children":[
+	,"el":[
 		{"c":"priv-close","e":{"click":["Secrets","ctrlPrivClose"]}
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
@@ -336,9 +336,9 @@
 		,{"t":"p", "txt":"Please log in to get access to secret groups"}
 		,{"c":"priv-info"}
 		,{"c":"priv-login"
-		,"children":[
+		,"el":[
 			{"c":"priv-pass"
-			,"children":[
+			,"el":[
 				{"t":"span", "txt":"Password"}
 				,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
 			]}
@@ -346,11 +346,11 @@
 		]}
 	]}
 	,{"c":"priv-dlg-share"
-	,"children":[
+	,"el":[
 		{"c":"priv-close","e":{"click":["Secrets","ctrlPrivClose"]}
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
@@ -364,22 +364,22 @@
 
 	]}
 	,{"c":"priv-new-user"
-	,"children":[
+	,"el":[
 		{"t":"p", "txt": "Please confirm the password<br>There is no way to recover it later"}
 		,{"c":"priv-pass-i" , "t":"input","p":{"type":"password"} }
 		,{"c":"priv-pass-submit", "t":"button", "txt":"OK"}
 		,{"c":"priv-pass-cancel", "t":"button", "txt":"Cancel" }
 	]}
 	,{"c":"spinner","t":"span"
-	,"children":[
+	,"el":[
 		{"c":"fa fa-spinner fa-pulse","t":"i"}
 	]}
 	,{"c":"user-popup","e":{"mouseleave":["Actions","destroy"]}
-	,"children":[
+	,"el":[
 		{"c":"up-close","e":{"click":["Actions","upClose"]}
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
@@ -387,20 +387,20 @@
 		,{"c":"up-info"}
 	]}
 	,{"c":"up-controls"
-	,"children":[
+	,"el":[
 		{"c":"up-sbs"
-		,"children":[
+		,"el":[
 			{"t":"ul"}
 		]}
 		,{"c":"up-c"
-		,"children":[
+		,"el":[
 			{"c":"spacer","t":"span","txt":"&bigstar;"}
 			,{"c":"up-m","t":"a", "txt":"@","e":{"click":["Actions","getUsername"]}}
 		]}
 
 	]}
 	,{"c":"up-c-mu","t":"li"
-	,"children":[
+	,"el":[
 		{"c":"uname","t":"span"}
 		,{"c":"up-s","t":"a", "e":{"click":["Actions","evtSubscribe"]}}
 		,{"c":"spacer","t":"span","txt":"&mdash;"}
@@ -409,67 +409,71 @@
 		,{"c":"up-b","t":"a", "txt":"hide&block","e":{"click":["Actions","genBlock"]}}
 	]}
 	,{"c":"up-block","e":{"mouseleave":["Actions","destroy"]}
-	,"children":[
+	,"el":[
 		{"c":"up-close","e":{"click":["Actions","upClose"]}
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input" ,"p":{"type":"checkbox", "value":"blockPosts"}, "e":{"click":["Actions","doBlockPosts"]} }
 			,{"t":"span", "txt":"Block&nbsp;posts"}
 		]}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input" ,"p":{"type":"checkbox", "value":"blockComments"}, "e":{"click":["Actions","doBlockCom"]} }
 			,{"t":"span", "txt":"Block&nbsp;comments"}
 		]}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input" ,"p":{"type":"checkbox", "value":"banIds"}, "e":{"click":["Actions","doBan"]} }
 			,{"t":"span", "txt":"Ban"}
 		]}
 	]}
 	,{"c":"settings-head"
-	,"children":[
+	,"el":[
 		{"c":"sh-displ", "cl":["sh-item"]
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Display","e":{"mousedown":["Actions","goSetDisplay"]}}
 		]}
 		,{"c":"sh-acc", "cl":["sh-item"]
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Accounts","e":{"mousedown":["Actions","goSetAccounts"]}}
 		]}
+		,{"c":"sh-custom-ui", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"Custom UI","e":{"mousedown":["Actions","goSetCustomUI"]}}
+		]}
 		,{"c":"sh-addons", "cl":["sh-item"]
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Addons","e":{"mousedown":["Actions","goSetAddons"]}}
 		]}
 		,{"c":"sh-blocks", "cl":["sh-item"]
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Block content","e":{"mousedown":["Actions","goSetBlocks"]}}
 		]}
 		,{"c":"sh-end"}
 	]}
 	,{"c":"accaunts-settings", "cl":["global-settings"]
-	,"children":[
+	,"el":[
 		{"c":"settings-profiles"}
 		,{"c":"gs-add-acc"
-		,"children":[
+		,"el":[
 			{"t":"a", "e":{"click":["Actions","addAcc"]}
-			,"children":[
+			,"el":[
 				{"c":"fa fa-plus","t":"i"}
 				,{"t":"span", "txt":"&nbsp;Add account"}
 			]}
 		]}
 	]}
 	,{"c":"display-settings", "cl":["global-settings"]
-	,"children":[
+	,"el":[
 		{"t":"h3","txt":"Theme"}
 		,{"c":"radio", "t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"radio", "value":"expanded.css", "name":"display_theme"}
 				,"e":{"change":["Actions","setRadioOption"]}
@@ -477,7 +481,7 @@
 			,{"t":"span","txt":"Expanded"}
 		]}
 		,{"c":"radio", "t":"label"
-		,"children":[
+		,"el":[
 			{"c":"radio", "t":"input"
 				,"p":{"type":"radio", "value":"compact.css", "name":"display_theme"}
 				,"e":{"change":["Actions","setRadioOption"]}
@@ -485,7 +489,7 @@
 			,{"t":"span","txt":"Compact"}
 		]}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"checkbox", "value":"addons-show-moon"}
 				,"e":{"change":["Actions","setChkboxOption"]}
@@ -494,7 +498,7 @@
 		]}
 		,{"t":"h3","txt":"Text layout"}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"checkbox", "value":"show_newlines"}
 				,"e":{"change":["Actions","setChkboxOption"]}
@@ -502,7 +506,7 @@
 			,{"t":"span","txt":"Break lines at newline characters"}
 		]}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"checkbox", "value":"read_more"}
 				,"e":{"change":["Actions","setChkboxOption"]}
@@ -511,7 +515,7 @@
 		]}
 		,{"t":"h3","txt":"Display names style" }
 		,{"c":"radio", "t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"radio", "value":"screen", "name":"display_name"}
 				,"e":{"change":["Actions","setRadioOption"]}
@@ -519,7 +523,7 @@
 			,{"t":"span","txt":"Screen name"}
 		]}
 		,{"c":"radio", "t":"label"
-		,"children":[
+		,"el":[
 			{"c":"radio", "t":"input"
 				,"p":{"type":"radio", "value":"screen_u", "name":"display_name"}
 				,"e":{"change":["Actions","setRadioOption"]}
@@ -527,7 +531,7 @@
 			,{"t":"span" ,"txt":"Screen name (username)"}
 		]}
 		,{"c":"radio", "t":"label"
-		,"children":[
+		,"el":[
 			{"c":"radio", "t":"input"
 				,"p":{"type":"radio", "value":"username", "name":"display_name"}
 				,"e":{"change":["Actions","setRadioOption"]}
@@ -536,7 +540,7 @@
 		]}
 		,{"t":"h3","txt":"Link previews"}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"checkbox", "value":"show_link_preview"}, "e":{"click":["Actions","setChkboxOption"] }
 			}
@@ -544,23 +548,23 @@
 		]} 
 		,{"t":"h3","txt":"Real-time Updates" }
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"checkbox","id":"rt-chkbox"}, "e":{"click":["Actions","realTimeSwitch"] }
 			}
 			,{"t":"span","txt":"Update feed in real-time"}
 		]}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"checkbox", "id":"rt-bump"}, "e":{"click":["Actions","setRTBump"] }
 			}
 			,{"t":"span","txt":"Bump posts with new comments"}
 		]} 
 		,{"c":"rt-params","p":{"id":"rt-params","hidden":true}
-		,"children":[
+		,"el":[
 			{"t":"label"
-			,"children":[
+			,"el":[
 				{"t":"p", "txt":"Bumping interval:"}
 				,{"t":"input"
 					,"p":{"type":"range", "min":"1","max":"10", "value":"1","step":"1"
@@ -570,7 +574,7 @@
 				,{"t":"span"}
 			]}
 			,{"t":"label"
-			,"children":[
+			,"el":[
 				{"t":"p", "txt":"Bumping cooldown:"}
 				,{"t":"input"
 					,"p":{"type":"range","min":"0", "max":"60", "value":"20","step":"1"
@@ -580,7 +584,7 @@
 				,{"t":"span"}
 			]}
 			,{"t":"label"
-			,"children":[
+			,"el":[
 				{"t":"p", "txt":"Bumping delay:"}
 				,{"t":"input"
 					,"p":{"type":"range","min":"0", "max":"10", "value":"0","step":"1"
@@ -593,12 +597,12 @@
 
 	]}
 	,{"c":"settings-profile" 
-	,"children":[
+	,"el":[
 		{
-		"children":[
+		"el":[
 			{"c":"sp-username","t":"span"}
 			,{"t":"label"
-			,"children":[
+			,"el":[
 				{"t":"input" ,"p":{"type":"radio" ,"name":"is-main"}
 					,"e":{"change":["Actions","setMainProfile"]}
 				}
@@ -606,10 +610,10 @@
 			]}
 		]}
 		,{"c":"chng-avatar"
-		,"children":[
+		,"el":[
 			{"c":"sp-avatar-img", "t":"img"}
 			,{
-			"children":[
+			"el":[
 				{"c":"edit-buttons-upload","t":"input", "p":{"type":"file","accept":"image/*" }}
 				,{"t":"a", "txt":"Update Avatar", "e":{"click":["Actions","chngAvatar"] }}
 			]}
@@ -625,16 +629,16 @@
 		,{"t":"p", "txt":"Description"}
 		,{"c":"gs-descr","t":"textarea", "p":{"dir":"auto"}}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input" ,"p":{"type":"checkbox" ,"name":"is-private"}}
 			,{"t":"span","txt":"Private feed (only let people I approve see my feed)" }
 		]}
 		,{"c":"prof-upd"
-		,"children":[
+		,"el":[
 			{"t":"button" ,"e":{"click":["Actions","updateProfile"]},"txt":"Update profile"}
 			,{"c":"spacer","t":"span","txt":"&nbsp;"}
 			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":true}
-			,"children":[
+			,"el":[
 				{"c":"fa fa-spinner fa-pulse","t":"i"}
 			]}
 			,{"c":"spacer","t":"span","txt":"&nbsp;"}
@@ -643,7 +647,7 @@
 		,{"c":"update-status" }
 	]}
 	,{"c":"settings-login"
-	,"children":[
+	,"el":[
 		{"t":"p","txt":"Please log in to another account"}
 		,{"c":"domains" }
 		,{"c":"info" }
@@ -652,35 +656,35 @@
 		,{"t":"p", "txt":"Password:"}
 		,{"c":"gs-input","t":"input","p":{"type":"password", "name":"login-password"}}
 		,{
-		"children":[
+		"el":[
 			{"c":"gs-p-login","t":"button", "txt":"Login", "e":{"click":["Actions","addProfileLogin"] }}
 			,{"c":"spacer","t":"span","txt":"&nbsp;"}
 			,{"c":"spinner","t":"span","p":{"id":"update-spinner","hidden":true}
-			,"children":[
+			,"el":[
 				{"c":"fa fa-spinner fa-pulse","t":"i"}
 			]}
 		]}
 		,{"c":"msg-error", "p":{"hidden":true}}
 	]}
 	,{"c":"input-block","t":"label"
-	,"children":[
+	,"el":[
 		{"c":"ib-input","t":"input" ,"p":{"type":"radio" } }
 		,{"c":"ib-span","t":"span"}
 	]}
 	,{"c":"req-body"
-	,"children":[
+	,"el":[
 		{"c":"req-body-pend", "p":{"hidden":true}
-		,"children":[
+		,"el":[
 			{"t":"h3", "txt":"Pending requests", "p":{"id":"sr-header"}}
 		]}
 		,{"c":"req-body-sent", "p":{"hidden":true}
-		,"children":[
+		,"el":[
 			{"t":"h3", "txt":"Sent requests"}
 		]}
 		
 	]}
 	,{"c":"sub-request"
-	,"children":[
+	,"el":[
 		{"c":"sr-avatar", "t":"img"}
 		,{"c":"sr-name"}
 		,{"c":"sr-user", "t":"input","p":{"type":"hidden"}}
@@ -691,18 +695,18 @@
 		,{"c":"sr-reqid", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-domain", "t":"input","p":{"type":"hidden"}}
 		,{"c":"sr-ctrl"
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Accept request", "e":{"click":["Actions","srAccept"]}}
 			,{"c":"spacer","t":"span","txt":"&mdash;"}
 			,{"t":"a","txt":"Reject request", "e":{"click":["Actions","srReject"]}}
 		]}
 	]}
 	,{"c":"multiuser-dialog"
-	,"children":[
+	,"el":[
 		{"c":"close"
-		,"children":[
+		,"el":[
 			{"c":"a-close", "t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
@@ -712,32 +716,32 @@
 		,{"c":"edit-buttons-cancel","t":"a","txt":"Cancel"}
 	]}
 	,{"c":"multiuser-unit"
-	,"children":[
+	,"el":[
 		{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input" ,"p":{"type":"checkbox","checked":true }}
 			,{"t":"span" }
 		]}
 	]}
 	,{"c":"add-sender-dialog","p":{"id":"add_sender"}
-	,"children":[
+	,"el":[
 		{"c":"up-close","e":{"click":["Actions","upClose"]}
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
 		,{"c":"units"}
 	]}
 	,{"c":"add-sender-unit"
-	,"children":[
+	,"el":[
 		{"c":"up-avatar"
-		,"children":[
+		,"el":[
 			{"c":"avatar-img", "t":"img"}
 		]}
 		,{"c":"asu-info"
-		,"children":[
+		,"el":[
 			{"c":"username"}
 			,{"c":"screen-name"}
 		]}
@@ -745,46 +749,46 @@
 	
 	]}
 	,{"c":"user-details"
-	,"children":[
+	,"el":[
 		{"c":"ud-unfold","t":"p"
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Show info&nbsp;&#x25Be;", "e":{"click":["Actions","unfoldUserDet"]}}
 		]}
 		,{"c":"ud-fold","t":"p", "p":{"hidden":true} 
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Hide info&nbsp;&#x25B4;", "e":{"click":["Actions","foldUserDet"]}}
 		]}
 		,{"c":"ud-info"
-		,"children":[
+		,"el":[
 			{"c":"ud-username", "t":"input", "p":{"type":"hidden"}}
 			,{"c":"ud-avatar"
-			,"children":[
+			,"el":[
 				{"c":"ud-avatar-img", "t":"img"}
 			]}
 			,{"c":"ud-text"
-			,"children":[
+			,"el":[
 				{"c":"ud-title"}
 				,{"c":"ud-desc", "cl":["long-text"], "p":{"dir":"auto"}}
 			]}
 			,{"c":"ud-stats"
-			,"children":[
+			,"el":[
 				{"c":"uds-subs", "t":"a" , "e":{"mousedown":["Actions","goUserSubs"]} 
-				,"children":[
+				,"el":[
 					 {"c":"val", "t":"span"}
 					 ,{"t":"span", "txt":"&nbsp;subscriptions"}
 				]}
 				,{"c":"uds-subsc", "t":"a" , "e":{"mousedown":["Actions","goUserSubsc"]} 
-				,"children":[
+				,"el":[
 					 {"c":"val", "t":"span"}
 					 ,{"t":"span", "txt":"&nbsp;subscribers"}
 				]}
 				,{"c":"uds-com", "t":"a", "e":{"mousedown":["Actions","goUserComments"]} 
-				,"children":[
+				,"el":[
 					 {"c":"val", "t":"span"}
 					 ,{"t":"span", "txt":"&nbsp;comments"}
 				]}
 				,{"c":"uds-likes", "t":"a" , "e":{"mousedown":["Actions","goUserLikes"]} 
-				,"children":[
+				,"el":[
 					 {"c":"val", "t":"span"}
 					 ,{"t":"span", "txt":"&nbsp;likes"}
 				]}
@@ -792,100 +796,100 @@
 		]}
 	]}
 	,{"c":"subs-cont"
-	,"children":[
+	,"el":[
 		{"t":"h3","txt":"users"}
 		,{"c":"sc-users"}
 		,{"t":"h3","txt":"groups"}
 		,{"c":"sc-grps"}
 	]}
 	,{"c":"sub-item"
-	,"children":[
+	,"el":[
 		{"c":"link", "t":"a"
-		,"children":[
+		,"el":[
 			{"c":"usr-avatar", "t":"img"}
 			,{"c":"usr-title", "t":"span"}
 
 		]}
 	]}
 	,{"c":"adv-cmts", "cl":["user-popup"],"e":{"mouseleave":["Actions","destroy"]}
-	,"children":[
+	,"el":[
 		{"c":"up-close","e":{"click":["Actions","upClose"]}
-		,"children":[
+		,"el":[
 			{"t":"a"
-			,"children":[
+			,"el":[
 				{"c":"fa fa-times","t":"i"}
 			]}
 		]}
 		,{"c":"block-links"
-		,"children":[
+		,"el":[
 			{"t":"a","txt":"Delete", "e":{"click":["Actions","deletePost"]} }
 			,{"c":"moderate-cmts","t":"a","txt":"Moderate comments", "e":{"click":["Actions","showDelete"]} }
 			,{"c":"disable-cmts","t":"a","txt":"Disable comments", "e":{"click":["Actions","switchCmts"]} }
 		]}
 	]}
 	,{"c":"global-failure"
-	,"children":[
+	,"el":[
 		{"c":"title","t":"h1", "txt":"unknown error"}
 		,{"c":"info"}
 	]}
 	,{"c":"reflect-menu-item"
-	,"children":[
+	,"el":[
 		{"c":"star", "t":"span", "p":{"hidden":true}
-		,"children":[
+		,"el":[
 			{"c":"fa fa-asterisk","t":"i"}
 		]}
 		,{"c":"label","t":"a", "e":{"click":["Actions","showRefl"]}}
 		,{"c":"victim-id","t":"input", "p":{"type":"hidden"}}
 	]}
 	,{"c":"sidebar-emt"
-	,"children":[
+	,"el":[
 		{"c":"sb-emt-title"}
 		,{"c":"sb-emt-content"}
 	]}
 	,{"c":"sidebar-acc-anon","t":"div"
-	,"children":[
+	,"el":[
 		{
-		"children":[
+		"el":[
 			{"c":"user-signup","t":"a","txt":"Sign up","p":{"href":"https://freefeed.net/signup"}}
 		]}
 		,{"t":"p", "txt":"OR"}
 		,{
-		"children":[
+		"el":[
 			{"c":"user-login","t":"a","txt":"Login","e":{"click":["Common","auth"]}}
 		]}
 	]}
 	,{"c":"sidebar-acc"
-	,"children":[
+	,"el":[
 		{"c":"main-avatar"	
-		,"children":[
+		,"el":[
 			{"c":"img","t":"img"}	
 		]}
 		,{"c":"info"}
 		,{"c":"settings"
-		,"children":[
+		,"el":[
 			{"c":"edit-acc","t":"a", "txt":"Edit accounts"}
 		]}
 	]}
 	,{"c":"one-line", "txt":"QWERTYUIOP"}
 	,{"c":"search-input"
-	,"children":[
+	,"el":[
 		{"t":"form", "p":{"target":"_blank"}
-		,"children":[
+		,"el":[
 			{"c":"search", "t":"input", "p":{"name":"qs", "placeholder":" &#x1F50D; Search request"}}
 			,{"c":"search-domains"}
 		]}
 	]}
 	,{"c":"search-domain", "t":"label"
-	,"children":[
+	,"el":[
 		{"c":"i","t":"input" ,"p":{"type":"checkbox", "name":"d"}}
 		,{"c":"s","t":"span"}
 	]}
 	,{"c":"nothig-found", "t":"h2", "txt":"No results found for "}
 	,{"c":"search-big"
-	,"children":[
+	,"el":[
 		{"c":"search-input"}
 		,{"c":"search-info"
-		,"children":[
+		,"el":[
 			{"t":"p", "txt":"<b>Advanced search operators</b>"}
 			,{"t":"p", "txt":"<b>\"double-quotes\"</b> return entries having exact match, e.g.: opensource \"social network\""}
 			,{"t":"p", "txt":"<b>from:</b> return entries from a specific user, e.g.: from:freefeed<br/>"}
@@ -894,15 +898,15 @@
 		]}
 	]}
 	,{"c":"blocks-settings-page"
-	,"children":[
+	,"el":[
 		{"c":"title","t":"h2"}
 		,{"c":"domain", "t":"input", "p":{"type":"hidden", "name":"domain"}}
 		,{"c":"strings"
-		,"children":[
+		,"el":[
 			{ "txt":"Block content with those strings:"}
 			,{"c":"content", "t":"ul"}
 			,{"c":"controls"
-			,"children":[
+			,"el":[
 				{"t":"span", "txt":"add a string"}
 				,{"t":"input", "p":{"name":"strToBlock"}, "e":{"keydown":["Actions","addBlockingString"]}}
 				,{"t":"button", "txt":"add", "e":{"click":["Actions","addBlockingString"]}}
@@ -912,41 +916,42 @@
 
 		]}
 		,{"c":"cmts", "p":{"hidden":true}
-		,"children":[
+		,"el":[
 			{"txt":"Block comments from following users:"}
 			,{"c":"content", "t":"ul"}
 		]}
 		,{"c":"posts", "p":{"hidden":true}
-		,"children":[
+		,"el":[
 			{"txt":"Block posts from following users:"}
 			,{"c":"content", "t":"ul"}
 		]}
 	]}
-	,{"c":"blocks-item", "t":"il", "e":{"click":["Actions","remBlockingItem"]} 
-	,"children":[
+	,{"c":"removeable-item", "t":"il" 
+	,"el":[
 		{"t":"input", "p":{"name":"val", "type":"hidden"}}	
 		,{"t":"input", "p":{"name":"type", "type":"hidden"}}	
 		,{"c":"title","t":"span"}
 		, {"c":"fa fa-times m-l","t":"i"}
 	]}
+	,{"c":"blocks-item", "pt":"removeable-item",  "e":{"click":["Actions","remBlockingItem"]}} 
 	,{"c":"read-more-wrapper"
-	,"children":[
+	,"el":[
 		{"c":"content"}
 		,{"t":"b"
-		,"children":[
+		,"el":[
 			{"t":"span", "txt":"&hellip; "}
 			,{"c":"unfold-readmore", "t":"a","txt":"Read&nbsp;more", "e":{"click":["Actions","unfoldReadMore"]} }
 		]}
 	]}
 	,{"c":"blocks-settings-page-ctrl", "cl":["blocks-settings-page","global-settings"]
-	,"children":[
+	,"el":[
 		{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input" ,"p":{"type":"checkbox", "name":"hideCups"}, "e":{"click":["Actions","setHideCups"]} }
 			,{"t":"span", "txt":"Hide comments referring to blocked users with cups"}
 		]}
 		,{"t":"label"
-		,"children":[
+		,"el":[
 			{"t":"input"
 				,"p":{"type":"checkbox", "value":"hide-lonely-posts"}
 				,"e":{"change":["Actions","setChkboxOption"]}
@@ -954,5 +959,53 @@
 			,{"t":"span","txt":"Hide posts with no likes and comments"}
 		]}
 	]}
+	,{"c":"custom-ui-settings-page","cl":["global-settings"]
+	,"el":[
+		{"t":"h3", "txt":"Upper menu"}
+		,{"t":"label"
+		,"el":[
+			{"t":"input" 
+				,"p":{"type":"checkbox", "id":"use-upper","value":"use-custom-upper-menu"}
+				, "e":{"click":["Actions","setChkboxOption"]} 
+			}
+			,{"t":"span", "txt":"Use custom upper menu"}
+		]}
+		,{"c":"custom-ui-um-display",  "p":{"id":"custom-ui-um-display"}}
+		,{"c":"custom-ui-um-control", "cl":["settings-head"]
+			, "p":{"id":"custom-ui-um-control"}
+		,"el":[
+			{"c":"select-ico"
+			,"el":[
+				{"txt":"Icon"}
+				,{"c":"cu-um-icon", "t":"button", "p":{"id":"cu-um-icon"}
+					, "e":{"click":["Actions", "selectIcon"]}
+				,"el":[
+					{"c":"i", "t":"i"}
+				]}
+				,{"t":"input", "p":{"type":"hidden", "name":"icon"} }
+			]}
+			,{
+			"el":[
+				{"txt":"Label"}
+				,{"t":"input", "p":{"name":"label"}
+					, "e":{"keydown":["Actions","customUILabelInput"]}
+				}
+			]}
+			,{
+			"el":[
+				{"txt":"Function"}
+				,{"t":"select", "p":{"id":"cu-um-function", "name":"function"}
+				,"el":[
+			
+					{"t":"option","txt":"&bullet;", "p":{"value":"spacer"}}
+				]}
+			]}
+			,{
+			"el":[
+				{"t":"button", "txt":"Append" , "e":{"click":["Actions","submitCuUm"]}}
+			]}
+		]}
+	]}
+	,{"c":"custom-ui-item", "pt":"removeable-item",  "e":{"click":["Actions","remCustomUiItem"]}} 
 ]}
 

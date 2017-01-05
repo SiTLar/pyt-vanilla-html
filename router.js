@@ -226,6 +226,36 @@ define("./router",[],function(){
 			var prAllC = cView.Utils._Promise.all(prContxt);
 			return mixedTimelines (cView, contexts, prAllT,prAllC);
 		}
+		,"routeComments": function(contexts, path){
+			var cView = this.cView;
+			var nodeAddPost = cView.gNodes["new-post"].cloneAll();
+			var domains = Object.keys(contexts);
+			var body = cView.doc.getElementById("container");
+			var mainContext = (domains.indexOf(gConfig.leadDomain) != -1)? 
+				contexts[gConfig.leadDomain]:contexts[domains[0]];
+			mainContext.p.then(function () {
+				cView.Drawer.genPostTo(nodeAddPost
+					,null
+					,mainContext.gMe);
+			});
+			body.appendChild(nodeAddPost);
+			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
+			cView.doc.title +=": " + path;
+			var prContxt = new Array();
+			var prConts = new Array();
+			domains.forEach(function(domain){
+				var context = contexts[domain];
+				prContxt.push(context.p);
+				prConts.push(context.api.getTimeline(
+					context.token
+					,context.gMe.users.username+"/comments"
+					,cView.skip
+				));
+			});
+			var prAllT = cView.Utils._Promise.all(prConts);
+			var prAllC = cView.Utils._Promise.all(prContxt);
+			return mixedTimelines (cView, contexts, prAllT,prAllC);
+		}
 		,"subscribers":function(contexts, path){
 			var cView = this.cView;
 			return cView.Router.subs(contexts, path, cView.Drawer.drawSubs); 

@@ -20,10 +20,12 @@ return function(config){
 					return res;
 				});
 
-				return utils.xhr( {
-					"url":config.serverURLV2 +"timelines/"+ timeline + "?offset="+skip
-					,"token":token 
-				}); 
+				if ( timeline == "home" )
+					return utils.xhr( {
+						"url":config.serverURLV2 +"timelines/"+ timeline + "?offset="+skip
+						,"token":token 
+					});
+				else return get(token,"timelines/"+ timeline + "?offset="+skip ); 
 			}
 			,"getSearch": function(token, search, skip) {
 				return 	utils.xhr( {

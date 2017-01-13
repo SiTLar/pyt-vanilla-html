@@ -20,6 +20,7 @@
 				"direct":{"dest":["Router","directs"]}
 				,"discussions":{"dest":["Router","timeline"]} 
 				,"me":{"dest":["Router","routeMe"]}
+				,"comments":{"dest":["Router","routeComments"]}
 			} 
 			,"default":{"dest":["Router","timeline"]} 
 		}

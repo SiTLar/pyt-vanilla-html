@@ -131,29 +131,13 @@ var payload = [
 			var linkHead = gConfig.front+"filter/";
 			var nodes  = [ ["me","My posts"]
 				,["discussions","My discussions"]
-				,["direct",directsLabel()]
+				,["direct","Direct messages"]
 				,["best_of", "Best of"]
 			].map(function(a){return genLinks(cView, a,linkHead);});
 
-			window.addEventListener("whoamiUpdatedd",regenDirects); 
+			nodes[2].getElementsByTagName("a")[0].classList.add("directs-control");
+			cView.Common.regenDirects();
 			return nodes;
-			function regenDirects(){
-				nodes[2].getElementsByTagName("a")[0].innerHTML = directsLabel();
-			}
-			function directsLabel(){
-				var directsCount = Object.keys(cView.contexts).reduce(
-					function(acc,domain){ 
-						if(!cView.contexts[domain].gMe) return acc;
-						return acc + parseInt(
-							cView.contexts[domain].gMe.users.unreadDirectsNumber
-						);
-					}
-				,0);
-				cView.doc.getElementById("show-sidebar-directs").hidden = !directsCount;
-				
-				return directsCount?
-					"<b>Direct messages ("+ directsCount +")</b>":"Direct messages";
-			}
 
 		}
 		,"test":isLogged	

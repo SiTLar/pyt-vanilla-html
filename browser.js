@@ -31,11 +31,16 @@ window.browserDoc = function(){
 	setLocalSettings();
 	cView.Common.loadLogins();
 	var body = cView.gNodes["main"].cloneAll();
-	cView.Utils.setChild(body.cNodes["container"], "controls",(
-		Object.keys(cView.contexts).some(function(domain){return cView.contexts[domain].token})?
-		cView.gNodes["controls-login"].cloneAll()
-		:cView.gNodes["controls-anon"].cloneAll()
-	));
+	var nodeControls;
+	if(Object.keys(cView.contexts).some(function(domain){return cView.contexts[domain].token})){
+		if(cView.localStorage.getItem("use-custom-upper-menu") == "true"){
+			try{
+				var scheme = JSON.parse(cView.localStorage.getItem("custom-ui-upper"));
+				nodeControls = cView.Drawer.genCustomUI(scheme);
+			}catch(e){ nodeControls = cView.gNodes["controls-login"].cloneAll()}
+		}else nodeControls = cView.gNodes["controls-login"].cloneAll();
+	} else  nodeControls = cView.gNodes["controls-anon"].cloneAll();
+	cView.Utils.setChild(body.cNodes["container"], "controls", nodeControls);
 	cView.doc.getElementsByTagName("body")[0].appendChild(body);
 	/*
 	var nodeDebug =  document.createElement("div");	
@@ -118,7 +123,7 @@ function postInit(){
 	}
 	cView.Drawer.applyReadMore( cView.doc);
 	
-
+	window.addEventListener("whoamiUpdated", cView.Common.regenDirects); 
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");

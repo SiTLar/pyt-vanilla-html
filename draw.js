@@ -169,6 +169,9 @@ _Drawer.prototype = {
 		case "blocks":
 			drawBlocks();
 			break;
+		case "customui":
+			drawCustomUI();
+			break;
 		case "display":
 		default:
 			drawDisp();
@@ -198,6 +201,63 @@ _Drawer.prototype = {
 					node.classList.add( "post");
 					body.appendChild(node); 
 				});
+			});
+		}
+		function drawCustomUI(){
+			var customFunctions = require("json!./custom_functions.json");
+			nodeSettingsHead.cNodes["sh-custom-ui"].className = "sh-selected";
+			var nodeCtrl = cView.gNodes["custom-ui-settings-page"].cloneAll();
+			body.appendChild( nodeCtrl);
+			var host = cView.doc.getElementById("custom-ui-um-display")
+			var nodeSelect = cView.doc.getElementById("cu-um-function");
+			var chkBox = cView.doc.getElementById("use-upper");
+			chkBox.checked = JSON.parse (cView.localStorage.getItem(chkBox.value));
+			var usedFuncs = new Object();
+			try{
+				var scheme = JSON.parse(cView.localStorage.getItem("custom-ui-upper"));
+				scheme.forEach(function(item){
+					var nodeItem = cView.gNodes["custom-ui-item"].cloneAll();
+					var slots = cView.Utils.getInputsByName(nodeItem);
+					var funcId; 
+					var text = "";
+					var i = null ;
+					var node;
+					Object.keys(item).forEach(function(key){
+						switch (key){
+						case "fn":
+							funcId = item[key];
+							break;
+						case "icon":
+							i = cView.doc.createElement("i");
+							i.className = "fa fa-2x fa-" + item[key];
+							slots["val"].value = item[key];
+							break;
+						case "text":
+							text = item[key];
+							slots["val"].value = item[key];
+							break;
+						}
+					});
+					if(funcId == "spacer"){
+						slots["type"].value = "spacer";	
+						nodeItem.cNodes["title"].innerHTML = "&bullet;";
+						host.appendChild(nodeItem);
+						return;
+					}
+					slots["type"].value = funcId;
+					nodeItem.cNodes["title"].innerHTML = text; 
+					if(i)nodeItem.cNodes["title"].appendChild(i); 
+					nodeItem.title = funcId;
+					host.appendChild(nodeItem);
+					usedFuncs[funcId] = true;
+				});
+			}catch(e){};
+			Object.keys(customFunctions).forEach(function(funcId){
+				var nodeOption = cView.doc.createElement("option");
+				nodeOption.innerHTML = customFunctions[funcId].descr;
+				nodeOption.value = funcId;
+				if (usedFuncs[funcId] === true ) nodeOption.disabled = true;
+				nodeSelect.appendChild(nodeOption);
 			});
 		}
 		function drawBlocks(){
@@ -262,7 +322,7 @@ _Drawer.prototype = {
 			var mode = cView.localStorage.getItem("display_name");
 			if (mode == null) mode = "screen";
 			var theme = cView.localStorage.getItem("display_theme");
-			if (theme  == null) mode = "expanded.css";
+			if (theme  == null) theme = "expanded.css";
 			var nodes = nodeSettings.getElementsByTagName("input");
 			for(var idx = 0; idx < nodes.length; idx++){
 				var node = nodes[idx];
@@ -1394,6 +1454,48 @@ _Drawer.prototype = {
 		settingsNames.forEach(function(name){
 			node.innerHTML += name + "=" + cView.localStorage.getItem(name) + "<br />";
 		});
+	}
+	,"genCustomUI": function(scheme){
+		var cView = this.cView;
+		var customFunctions = require("json!./custom_functions.json");
+		var host = cView.doc.createElement("div");
+		scheme.forEach(function(item){
+			var funcId; 
+			var text = "";
+			var i = null ;
+			var node;
+			Object.keys(item).forEach(function(key){
+				switch (key){
+				case "fn":
+					funcId = item[key];
+					break;
+				case "icon":
+					i = cView.doc.createElement("i");
+					i.className = "fa fa-2x fa-" + item[key];
+					break;
+				case "text":
+					text = item[key];
+					break;
+				}
+			});
+			if(funcId == "spacer"){
+				node = cView.doc.createElement("span");
+				node.innerHTML = "&bullet;"; 
+			}else{
+				node = cView.doc.createElement("a");
+				node.innerHTML = text;
+				if (i) node.appendChild(i);
+				var action = customFunctions[funcId].action;
+				node.addEventListener("mousedown",cView[action[0]][action[1]]);
+				if(Array.isArray(customFunctions[funcId].cl))
+					customFunctions[funcId].cl.forEach(function(name){
+						node.classList.add(name);					
+					});
+			}
+			host.appendChild(node);
+		});
+		host.className = "controls-login";
+		return host;
 	}
 };
 return _Drawer;

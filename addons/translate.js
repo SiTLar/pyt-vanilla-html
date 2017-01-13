@@ -5,18 +5,18 @@ var apiKey;
 var nodesT = new Object();
 var template = [
 {"c":"settings"
-, "children":[
+, "el":[
 	{"t":"h1", "txt":"&#35695; Translations"}
 	,{"t":"p", "txt":"To use translations, you should obtain an API key from <a href=\"https://tech.yandex.com/key/form.xml?service=trnslr\">Yandex.Translate</a>"}
 	,{"c":"sr-info", "txt":"No key set yet"}
 	,{"t":"form", "e":{"submit":["addons-translate","setAPIKey"]}
-	,"children":[
+	,"el":[
 		{"c":"big-txt-input", "t":"input" ,"p":{"name":"api-key", "placeholder":"paste your key here"} }
 		,{"t":"input", "p":{"type":"submit", "value":"use that key"}}
 	]}
 ]}
 ,{"c":"control", "cl":["inline-control"]
-,"children":[
+,"el":[
 	,{"c":"spacer","t":"span","txt":"-"}
 	,{"c":"translate","t":"a","txt":"Translate","e":{"click":["addons-translate","translatePost"]}}
 ]}

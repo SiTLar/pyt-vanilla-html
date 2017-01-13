@@ -16,6 +16,10 @@
 		,{"c":"container", "p":{"id":"container"}
 		,"el":[
 			{"c":"controls"}
+			,{"c":"sr-info","p":{"id":"sr-info","hidden":true}
+			,"el":[
+				{"c":"sr-info-a","t":"a","e":{"mousedown":["Actions","goRequests"]}}
+			]}
 			,{"c":"pagetitle", "t":"h1"}
 			,{"c":"details"}
 			,{"c":"up-controls"}
@@ -111,10 +115,6 @@
 		,{"c":"user-priv","t":"a","txt":"settings","e":{"mousedown":["Actions","goSettings"]}}
 		,{"t":"span","txt":" &#8226; "}
 		,{"c":"user-logout","t":"a","txt":"logout","e":{"click":["Actions","logout"]}}
-		,{"c":"sr-info","p":{"id":"sr-info","hidden":true}
-		,"el":[
-			{"c":"sr-info-a","t":"a","e":{"mousedown":["Actions","goRequests"]}}
-		]}
 	]}
 	,{"c":"controls-anon"
 	,"el":[

@@ -1484,6 +1484,7 @@ _Drawer.prototype = {
 			}else{
 				node = cView.doc.createElement("a");
 				node.innerHTML = text;
+				node.title = customFunctions[funcId].descr;
 				if (i) node.appendChild(i);
 				var action = customFunctions[funcId].action;
 				node.addEventListener("mousedown",cView[action[0]][action[1]]);

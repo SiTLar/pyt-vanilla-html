@@ -109,7 +109,7 @@ _Common.prototype = {
 			if(template.pt){ 
 				node = nodesByName[template.pt].cloneAll(); 
 				if(!Array.isArray(template.cl)) template.cl = new Array();
-				node.classList.forEach(function(className){
+				node.className.split(" ").forEach(function(className){
 					template.cl.push(className);
 				});
 			}else node = cView.doc.createElement(template.t);
@@ -411,19 +411,23 @@ _Common.prototype = {
 				dups.push(post);
 			hidden = hidden && post.isHidden;
 		});
-		return {"type": "metapost"
+		var ret = {
+			"type": "metapost"
 			,"updatedAt":updatedAt
 			,"dups":dups
 			,"sign":posts[0].sign
 			,"isHidden":hidden
-			,set "idx"(idx){
+		};
+		Object.defineProperty(ret, "idx",{
+			"get":function(){
+				return this.index;
+			}
+			,"set": function(idx){
 				this.index = idx;
 				this.dups.forEach(function(dup){dup.idx = idx;});
 			}
-			,get "idx"(){
-				return this.index;
-			}
-		};
+		});
+		return ret;
 	}
 	,"chkBlocked":function(post){
 		var cView = this.cView;

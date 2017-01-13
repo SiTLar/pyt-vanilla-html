@@ -3,6 +3,7 @@ var gPrivTimeline = {"done":0,"postsById":{},"oraphed":{count:0},"noKey":{},"noD
 var matrix  = new Object();
 var Init = require("./init.js")
 var Addons = require("./addons.js");
+var polyfills = require("./polyfills.js");
 window.browserDoc = function(){
 	var cView = document.cView;
 	var Utils = cView.Utils;
@@ -79,6 +80,7 @@ window.browserDoc = function(){
 
 window.initDoc = function(){
 	Init.init(document);
+	polyfills();
 	//document.cView.Utils._Promise = Promise;
 	browserDoc();
 }

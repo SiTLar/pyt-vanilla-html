@@ -1,12 +1,4 @@
 "use strict";
-var apis = {
-	"freefeed": require("./freefeed")
-	,"mokum": require("./mokum")
-
-}
-
-var gTemplates = require("json!./templates.json");
-var gDomains = require("json!./domains.json");
 define( 
 [ 
 	"./utils"
@@ -25,6 +17,37 @@ define(
 	, _Hasher
 	, _FaSelector
 ){
+	var apis = {
+		"freefeed": require("./freefeed")
+		,"mokum": require("./mokum")
+
+	}
+
+	var gTemplates = require("json!./templates.json");
+	var gDomains = require("json!./domains.json");
+	function _gMe(){
+		var context = this;
+		var logins = context.logins;
+		var mainId;  
+		var ids = Object.keys(logins);
+		if(ids.length == 0)return null;
+		if(ids.length === 1){
+			mainId = ids[0];
+			context.token = logins[ids[0]].token;
+		}else ids.some(function(id){
+				if(logins[id].token == context.token) {
+				mainId = id;
+				return true;
+				}else return false;
+				});
+
+		logins[mainId].data.domain = context.domain;
+		return logins[mainId].data;
+	}
+	function _ids(){
+		var ids = Object.keys(this.logins);
+		return ids;
+	}
 	function _Context(v, domain, api){
 		var context = this ;
 		Object.keys(context.defaults).forEach(function(key){
@@ -54,6 +77,8 @@ define(
 				context[key] = function(inp){context.rt[key](inp)};
 			});
 		}else ["rtSubTimeline","rtSubPost"].forEach(function(key){context[key] = function(){};});
+		Object.defineProperty(this, "gMe", {"get": _gMe});
+		Object.defineProperty(this, "ids", {"get": _ids});
 
 	}
 	_Context.prototype = {
@@ -75,29 +100,6 @@ define(
 			var bump = cView.localStorage.getItem("rtbump");
 			this.gRt = new RtUpdate(this.token, bump);
 			this.gRt.subscribe(this.rtSub);
-		}
-		,get "gMe"(){
-			var context = this;
-			var logins = context.logins;
-			var mainId;  
-			var ids = Object.keys(logins);
-			if(ids.length == 0)return null;
-			if(ids.length === 1){
-				mainId = ids[0];
-				context.token = logins[ids[0]].token;
-			}else ids.some(function(id){
-				if(logins[id].token == context.token) {
-					mainId = id;
-					return true;
-				}else return false;
-			});
-			
-			logins[mainId].data.domain = context.domain;
-			return logins[mainId].data;
-		}
-		,get "ids"(){
-			var ids = Object.keys(this.logins);
-			return ids;
 		}
 		,"digestText":function(text){
 			var context = this;

@@ -852,10 +852,12 @@ _Drawer.prototype = {
 	}
 	,"genTitle":function(nodePost){
 		var cView = this.cView;
-		var context = cView.contexts[nodePost.rawData.domain];
+		var domain = nodePost.rawData.domain;
+		var context = cView.contexts[domain];
 		var post = nodePost.rawData;
 		var user = context.gUsers[post.createdBy];
-		var title = user.link;
+		var title = "<span><a href='//"+ [gConfig.domains[domain].front, user.username, post.id].join("/")
+			+ "'><img src='"+gConfig.static + domain + ".ico' /></a></span>&nbsp;"+user.link;
 		//if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
 		if(false);
 		else if(post.postedTo){

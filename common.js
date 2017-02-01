@@ -310,6 +310,7 @@ _Common.prototype = {
 						"user":user
 						,"direct": (sub.name == "Directs")
 						,"isPrivate": isPrivate
+						,"isProtected": user.isProtected == "1"
 					}
 				}
 			});

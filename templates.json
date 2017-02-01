@@ -630,8 +630,18 @@
 		,{"c":"gs-descr","t":"textarea", "p":{"dir":"auto"}}
 		,{"t":"label"
 		,"el":[
-			{"t":"input" ,"p":{"type":"checkbox" ,"name":"is-private"}}
-			,{"t":"span","txt":"Private feed (only let people I approve see my feed)" }
+			{"t":"input" ,"p":{"type":"radio" ,"name":"access", "value":"is-public"}}
+			,{"t":"span","txt":"Public feed (everyone can see my feed)" }
+		]}
+		,{"t":"label"
+		,"el":[
+			{"t":"input" ,"p":{"type":"radio" ,"name":"access", "value":"is-private"}}
+			,{"t":"span","txt":"Private feed (only let people I approve to see my feed)" }
+		]}
+		,{"t":"label"
+		,"el":[
+			{"t":"input" ,"p":{"type":"radio" ,"name":"access", "value":"is-protectd"}}
+			,{"t":"span","txt":"Protected feed (only let people logged in to see my feed)" }
 		]}
 		,{"c":"prof-upd"
 		,"el":[

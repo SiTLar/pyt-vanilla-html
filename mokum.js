@@ -286,10 +286,15 @@ return function(config){
 			}
 			,"get": get
 			,"updProfile" : function(token, id, data){
+				var status;
+				if(data.user.isPrivate == "1")status = "private";
+				else if(data.user.isProtected == "1") status = "protected";
+				else status = "public";
+
 				var user = {
 					"description":data.user.description
 					,"display_name":data.user.screenName
-					,"status":data.user.isPrivate == "1"?"private":"public"
+					,"status": status
 
 				};
 				var data = JSON.stringify({"user":user});
@@ -533,12 +538,7 @@ return function(config){
 					}
 	
 				}
-				,"requests":{"out":"", "post":function(user){
-						if(typeof user.type === "undefined")
-							user.type = "user";
-						return user;
-					}
-				}
+				,"requests":{"out":"", "post":postUser}
 				,"river":{"out":"timelines"}
 				,"reason":{"out":"postedTo" ,"a":"mutate","f":function(val){
 					var feeds = new Array();
@@ -567,8 +567,15 @@ return function(config){
 					
 					return feeds;
 				}}
-				,"status":{"out":"isPrivate","a":"mutate","f":function(val){
-					return ["public","disallow-robots","protected","subscribed"].indexOf(val) != -1 ?"0":"1";
+				,"status":{"out":"","a":"split","f":function(val){
+					switch( val){
+					case "protected":
+						return ["isProtected", "1"];
+					case "private":
+						return ["isPrivate", "1"];
+					default:
+						return ["isPrivate", "0"];
+					}
 				}}
 				,"subscribers":{"out":""}
 				,"subscriptionRequests":{"out":"", "a":"copy"}
@@ -579,17 +586,9 @@ return function(config){
 				,"unreadDirectsNumber":{"out":"","a":"copy"}
 				,"updated_at":{"out":"updatedAt","a":"mutate","f":Date.parse,"single":true}
 				,"user_id":{"out":"createdBy","a":"str"}
-				,"user":{"out":"users", "post":function(user){
-						if(typeof user.type === "undefined")
-							user.type = "user";
-						return user;
-					}
-				}
+				,"user":{"out":"users", "post":postUser}
 				,"users":{"out":"", "pre":obj2arr, "post":function(users){
-						users.forEach(function(user){
-							if(typeof user.type === "undefined")
-								user.type = "user";
-						});
+						users.forEach(postUser);
 						return users;
 					}
 				}
@@ -637,6 +636,11 @@ return function(config){
 						case "mutate":
 							res = conv.f(val);
 							break;
+						case "split":
+							var out = conv.f(val);
+							conv.out = out[0];
+							res = out[1];
+							break;
 						default: 
 							res = Array.isArray(val)?val.map(convert):convert(val);
 						}
@@ -674,6 +678,12 @@ return function(config){
 			function wwwFormData(key,val){
 				return utils.encodeURIForm(key) + "=" + utils.encodeURIForm(val);
 			}
+			function postUser(user){
+				if(typeof user.type === "undefined")
+					user.type = "user";
+				return user;
+			}
+
 		}
 		,"oRT":RtUpdate
 	};

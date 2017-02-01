@@ -1202,22 +1202,36 @@ _Actions.prototype = {
 		var oUser = context.logins[id].data.users;
 		oUser.screenName = inputs["screen-name"].value;
 		oUser.email = inputs["email"].value;
-		oUser.isPrivate = inputs["is-private"].checked?"1":"0";
+		var access = inputs[["access",oUser.domain, oUser.id].join("-")].value;
+		switch (access){
+		case "is-private":
+			oUser.isPrivate = "1";
+			break;
+		case "is-protected":
+			oUser.isProtected = "1";
+			break;
+		default:
+			oUser.isPrivate = "0";
+			oUser.isProtected = "0";
+		}
+
 		oUser.description = nodeProfile.cNodes["gs-descr"].value;
 		var nodeMsg = nodeProfile.getElementsByClassName("update-status")[0];
+		nodeMsg.className = "update-status";
+		nodeMsg.innerHTML = "";
 		context.api.updProfile(context.logins[id].token, id, {"user":oUser})
 		.then(function(res){
 			e.target.disabled = false;
 			nodeProfile.getElementsByClassName("spinner")[0].hidden = true;
 			context.logins[id].data = res;
-			nodeMsg.className = "sr-info";
+			nodeMsg.classList.add("sr-info");
 			nodeMsg.innerHTML = "Updated. @"+ oUser.username +"'s feed is <span style='font-weight: bold;'>" + ((oUser.isPrivate == "1")?"private":"public")+ ".</span>";
 			cView.Common.refreshLogin(id, context);
 		}
 		,function(res){
 			e.target.disabled = false;
 			nodeProfile.getElementsByClassName("spinner")[0].hidden = true;
-			nodeMsg.className = "msg-error";
+			nodeMsg.classList.add( "msg-error");
 			nodeMsg.innerHTML = "Got error: ";
 			try{ 
 				nodeMsg.innerHTML += res.data.err;

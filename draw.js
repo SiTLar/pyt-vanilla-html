@@ -119,6 +119,8 @@ _Drawer.prototype = {
 		if (typeof user.description !== "undefined")
 			nodeProfile.cNodes["gs-descr"].value = user.description;
 		var nodes = nodeProfile.getElementsByTagName("input");
+		if(typeof user.isProtected === "undefined") user.isProtected = "0";
+		if(typeof user.isPrivate === "undefined") user.isPrivate  = "0";
 		for(var idx = 0; idx < nodes.length; idx++){
 			var node = nodes[idx];
 			switch(node.name){
@@ -142,8 +144,18 @@ _Drawer.prototype = {
 			case "screen-name": 
 				node.value = user.screenName;
 				break;
-			case "is-private":
-				node.checked = (user.isPrivate == "1");
+			case "access":
+				node.name = ["access",user.domain, user.id].join("-");
+				if(JSON.parse(user.isPrivate)
+				&&( node.value == "is-private"))
+					node.checked = true;
+				else if(JSON.parse(user.isProtected)
+				&&(node.value == "is-protected"))
+					node.checked = true;
+				else if((node.value == "is-public")
+				&&(!JSON.parse(user.isProtected))
+				&&(!JSON.parse(user.isPrivate)))
+					node.checked = true;
 				break;
 			}
 		};
@@ -740,16 +752,20 @@ _Drawer.prototype = {
 
 		var urlMatch ;		
 		nodePost.hidden = cView.Common.chkBlocked(post);
-		nodePost.gotLock  = false;
+		nodePost.gotLock = false;
+		nodePost.gotShield = false;
 		if(typeof user !== "undefined"){
 			nodePost.cNodes["avatar"].cNodes["avatar-h"].innerHTML = '<img src="'+ user.profilePictureMediumUrl+'" />';
 			nodePost.cNodes["avatar"].cNodes["avatar-h"].userid = user.id;
 			postNBody.cNodes["title"].innerHTML = Drawer.genTitle(nodePost);
 		}
+		var nodeLock = postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]);
 		if(nodePost.gotLock)
-			postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]).innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
+			nodeLock.innerHTML = "<i class='fa fa-lock icon'>&nbsp;</i>";
+		else if (nodePost.gotShield)
+			nodeLock.innerHTML = "<i class='fa fa-shield icon'>&nbsp;</i>";
 		if(nodePost.direct)
-			postNBody.getNode(["c","post-info"],["c","post-controls"],["c","post-lock"]).innerHTML += "<i class='fa fa fa-envelope icon'>&nbsp;</i>";
+			nodeLock.innerHTML += "<i class='fa fa fa-envelope icon'>&nbsp;</i>";
 
 		if(Array.isArray(post.attachments)&&post.attachments.length){
 			var attsNode = postNBody.cNodes["attachments"];
@@ -859,10 +875,14 @@ _Drawer.prototype = {
 		var title = "<span><a href='//"+ [gConfig.domains[domain].front, user.username, post.id].join("/")
 			+ "'><img src='"+gConfig.static + domain + ".ico' /></a></span>&nbsp;"+user.link;
 		//if(nodePost.isPrivate) title += "<span> posted a secret to "+StringView.makeFromBase64(matrix.gSymKeys[cpost.payload.feed].name)+"</span>";
+
+		nodePost.gotLock = true;
+		nodePost.gotShield = true;
 		if(false);
 		else if(post.postedTo){
 			post.postedTo.forEach(function(id){
-				nodePost.gotLock = context.gFeeds[id].isPrivate;
+				nodePost.gotLock &= context.gFeeds[id].isPrivate;
+				nodePost.gotShield &= context.gFeeds[id].isProtected;
 				nodePost.direct = context.gFeeds[id].direct;
 			});
 			if ((post.postedTo.length >1)||(context.gFeeds[post.postedTo[0]].user.id!=user.id)){

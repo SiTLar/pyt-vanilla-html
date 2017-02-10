@@ -5,31 +5,30 @@ return function(config){
 	function get(token, url){
 		return 	utils.xhr( {"url":config.serverURL +url ,"token":token });
 	}
+	function get2(token, url){
+		return 	utils.xhr( {"url":config.serverURLV2 +url ,"token":token });
+	}
 	return{
 		"name": "FreeFeed"
 		,"protocol":{
 			"get": get
 			,"getTimeline": function(token, timeline, skip) {
-				if (timeline == "filter/best_of") return utils.xhr( {
-					"url":config.serverURLV2 + "bestof" + "?offset="+skip
-					,"token":token 
-				}).then(function(res){
+				if (timeline == "filter/best_of") return get2( token 
+					,"bestof" + "?offset="+skip
+				).then(function(res){
 					res = JSON.parse(res);
 					if (typeof res.timelines == "undefined")
 						res.timelines = {"id":"bestof"};
 					return res;
 				});
-
-				return utils.xhr( {
-					"url":config.serverURLV2 +"timelines/"+ timeline + "?offset="+skip
-					,"token":token 
-				});
+				return get2( token 
+					,"timelines/"+ timeline + "?offset="+skip
+				);
 			}
 			,"getSearch": function(token, search, skip) {
-				return 	utils.xhr( {
-					"url":config.serverURLV2 +"search?qs=" + search + "&offset="+skip
-					,"token":token 
-				}).then(function(res){
+				return get2( token 
+					,"search?qs=" + search + "&offset="+skip
+				).then(function(res){
 					res = JSON.parse(res);
 					res.timelines = {"id":search};
 					return res;
@@ -49,7 +48,7 @@ return function(config){
 					}
 				});
 				var suffix = "?maxComments=" + cmts + "&maxLikes=" + likes;
-				return get(token, "posts/"+ id + suffix);
+				return get2(token, "posts/"+ id + suffix);
 			}
 			,"sendPost": function(token, postdata){
 				return utils.xhr(
@@ -134,14 +133,8 @@ return function(config){
 				);
 			}
 			,"_getWhoami": function(token){
-				var whoami = utils.xhr( { 
-					"url":config.serverURLV2 +"users/whoami" 
-					,"token":token 
-				});
-				var groupReqs = utils.xhr( { 
-					"url":config.serverURLV2 +"managedGroups" 
-					,"token":token 
-				});
+				var whoami = get2( token ,"users/whoami");
+				var groupReqs =  get2( token ,"managedGroups" );
 				return utils._Promise.all([whoami,groupReqs])
 				.then(function(res){
 					var whoami = JSON.parse(res[0]);
@@ -269,10 +262,7 @@ return function(config){
 				);
 			}
 			,"resetDirectsCount":function(token){
-				return utils.xhr( {
-					"url":config.serverURLV2 + "users/markAllDirectsAsRead"
-					,"token":token 
-				});
+				return get2( token ,"users/markAllDirectsAsRead");
 			}
 		}
 		,"parse":function (res){

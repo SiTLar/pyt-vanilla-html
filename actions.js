@@ -231,6 +231,7 @@ _Actions.prototype = {
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 		cView.Drawer.applyReadMore(postCNode);
+		cView.cTxt = null;
 
 	}
 	,"postEditedPost": function(e){
@@ -271,6 +272,7 @@ _Actions.prototype = {
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 		});
+		cView.cTxt = null;
 
 	/*
 		if(nodePost.isPrivate){
@@ -422,8 +424,15 @@ _Actions.prototype = {
 	,"getUsername": function(e){
 		var cView = document.cView;
 		var node = e.target; do node = node.parentNode; while(typeof node.user === "undefined");
-		if ( cView.cTxt == null ) return;
+		var nodePopUp = node.getNode(["p","user-popup"]);
+		if ( cView.cTxt == null ){
+			if (nodePopUp && (typeof nodePopUp.post !== "undefined"))
+				cView.Actions.addComment({"target":nodePopUp.post});
+			else return;
+		}
 		cView.cTxt.value += "@" + node.user;
+		if(nodePopUp) nodePopUp.parentNode.removeChild(nodePopUp);
+
 	}
 	,"reqSubscription": function(e){
 		var cView = document.cView;
@@ -491,6 +500,7 @@ _Actions.prototype = {
 			});
 			e.target.parentNode.parentNode.insertBefore(nodeHiddenPosts , e.target.parentNode.nextSibling);
 			e.target.innerHTML =  "Collapse "+ cView.doc.hiddenCount + " hidden entries";
+			cView.Drawer.applyReadMore(nodeHiddenPosts);
 		}else{
 			var nodeHiddenPosts = cView.doc.getElementById("hidden-posts");
 			if (nodeHiddenPosts) nodeHiddenPosts.parentNode.removeChild(nodeHiddenPosts);
@@ -562,6 +572,7 @@ _Actions.prototype = {
 				insertPost(victim);
 				cView.doc.hiddenCount--;
 			}
+			cView.Drawer.applyReadMore(victim);
 			if(cView.doc.hiddenCount) 
 				aShow.innerHTML = "Collapse "
 					+ cView.doc.hiddenCount 
@@ -591,7 +602,8 @@ _Actions.prototype = {
 		nodePost.rtCtrl.isBeenCommented = true;
 		var nodeComment = cView.Drawer.genAddComment(cView.contexts[nodePost.rawData.domain]);
 		postNBody.cNodes["comments"].appendChild(nodeComment);
-		nodeComment.getElementsByClassName("edit-txt-area")[0].focus();
+		cView.cTxt = nodeComment.getElementsByClassName("edit-txt-area")[0];
+		cView.cTxt.focus();
 	}
 	,"editComment": function(e){
 		var cView = document.cView;
@@ -604,7 +616,8 @@ _Actions.prototype = {
 		victim.replaceChild( nodeEdit, victim.cNodes["comment-body"]);
 		victim.cNodes["comment-body"] = nodeEdit;
 		nodeEdit.className = "comment-body";
-		victim.getElementsByClassName("edit-txt-area")[0].focus();
+		cView.cTxt = victim.getElementsByClassName("edit-txt-area")[0];
+		cView.cTxt.focus();
 		if (textArea.scrollHeight > textArea.clientHeight)
 			textArea.style.height = textArea.scrollHeight + "px";
 	}
@@ -627,6 +640,7 @@ _Actions.prototype = {
 			nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, res.comments),nodeComment);
 			context.gComments[comment.id] = res.comments;
 		});
+		cView.cTxt = null;
 
 	}
 	,"cancelEditComment": function(e){
@@ -636,6 +650,7 @@ _Actions.prototype = {
 		var newNodeComment = cView.Drawer.genComment.call(context, context.gComments[nodeComment.rawId]);
 		nodeComment.parentNode.replaceChild(newNodeComment,nodeComment);
 		cView.Drawer.applyReadMore(newNodeComment);
+		cView.cTxt = null;
 	}
 	,"processText": function(e) {
 		var cView = document.cView;
@@ -658,6 +673,7 @@ _Actions.prototype = {
 			setTimeout(nodePost.rtCtrl.bumpLater, 1000);
 		var nodeComment = e.target.getNode(["p", "comment"]);
 		nodeComment.parentNode.removeChild(nodeComment);
+		cView.cTxt = null;
 
 	}
 	,"postNewComment": function(e){
@@ -715,6 +731,7 @@ _Actions.prototype = {
 			nodeEButtons.replaceChild(butCancel,spinner );
 			cView.Drawer.makeErrorMsg(err,nodeEButtons);
 		});
+		cView.cTxt = null;
 		
 	}
 	,"deleteComment": function(e){
@@ -1127,6 +1144,7 @@ _Actions.prototype = {
 		var innerWidth = window.innerWidth;
 		if(cView.doc.getElementById("userPopup" + context.domain+ node.userid))return;
 		var nodePopup = cView.Drawer.genUserPopup(node, user);
+		nodePopup.post = nodePost;
 		nodePopup.style.opacity = 0;
 		cView.doc.getElementsByTagName("body")[0].appendChild(nodePopup);
 		nodePopup.style.top = 0;

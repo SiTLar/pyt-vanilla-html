@@ -171,7 +171,7 @@ return {
 			switch(step[0]){
 			case "p":
 				do node = node.parentNode; 
-				while(!node.classList.contains(className));
+				while(node && !node.classList.contains(className));
 				break;
 			case "c":
 				node = node.cNodes[className];

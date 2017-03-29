@@ -56,7 +56,7 @@ _Url2link.prototype = {
 	
 	}
 	,"url":{
-		"regex": /(?:https?:\/\/)?(?:[^\s\/'`"<>~!@#$^&*()_?\.:;|\\,]+\.)+[^\s\/'`"<>~!@#$^&*()_?:;|\\\.,]{2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*?)*?[\]>)}]*?(?=[.,({\[<?:;`"]*(?:\s|$))/
+		"regex": /(?:https?:\/\/)?(?:[^\s\/'`"<>~!@#$^&*()_?\.:;|\\,]+\.)+[^\s\/'`"<>~!@#$^&*()_?:;|\\\.,]{2,}(?:\.)?(?::[0-9]+)?(?:\/[^\s]*?)*?[\]>)}]*?(?=[.,({\[<?:;`]*(?:\s|$))/
 		,"flags": "i"
 		,"newtab": true
 		,"check":function(text){
@@ -92,7 +92,7 @@ _Url2link.prototype = {
 			catch(e){};
 			if (text.slice(-1) == "/")text = text.slice(0,-1);
 			text = (host.trunc &&(text.length > host.trunc))? text.substr(0,host.trunc)+"...":text;
-			return '<a class="url2link-url" dir="ltr" ' +(host["url"].newtab?'target="_blank"':"") +' href="'+match+'">' + text + "</a>"+suffix;
+			return '<a class="url2link-url" dir="ltr" ' +(host["url"].newtab?'target="_blank"':"") +' href="'+encodeURI(match)+'">' + text + "</a>"+suffix;
 		}]
 	}
 	,"uname":{

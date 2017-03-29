@@ -402,11 +402,11 @@ _Common.prototype = {
 
 	}
 	,"metapost":function (posts){
-		var updatedAt = posts[0].updatedAt;
+		var bumpedAt = posts[0].bumpedAt;
 		var dups = new Array();
 		var hidden = true;
 		posts.forEach(function(post){
-			if (updatedAt < post.updatedAt)updatedAt = post.updatedAt;
+			if (bumpedAt < post.bumpedAt)bumpedAt = post.bumpedAt;
 			if (post.isHidden !== true) post.isHidden = false;
 			if(!dups.some(function(dup){ return (dup.domain == post.domain)&&(dup.id == post.id);}))
 				dups.push(post);
@@ -414,7 +414,7 @@ _Common.prototype = {
 		});
 		var ret = {
 			"type": "metapost"
-			,"updatedAt":updatedAt
+			,"bumpedAt":bumpedAt
 			,"dups":dups
 			,"sign":posts[0].sign
 			,"isHidden":hidden

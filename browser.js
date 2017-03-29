@@ -269,8 +269,13 @@ function setAttr(nodes, name){
 }
 function setLocalSettings(){
 	var cView = document.cView;
-	if(JSON.parse(cView.localStorage.getItem("blocks")))
-		cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
+	try{
+		if(JSON.parse(cView.localStorage.getItem("blocks")))
+			cView.blocks = JSON.parse(cView.localStorage.getItem("blocks"));
+	}catch(e){
+		settingsError("bolcks");
+	}
+	try{
 	if(typeof cView.blocks.blockStrings === "undefined")
 		cView.blocks.blockStrings = new Object();
 	Object.keys(cView.blockLists).forEach(function(type){
@@ -278,6 +283,9 @@ function setLocalSettings(){
 			cView.blocks[cView.blockLists[type]] = new Object();
 		}
 	});
+	}catch(e){
+		settingsError("blockLists");
+	}
 	var nameMode = cView.localStorage.getItem("screenname");
 	if(nameMode){
 		cView.localStorage.setItem("display_name", nameMode);
@@ -298,14 +306,17 @@ function setLocalSettings(){
 	}
 	var sheet;
 	var idx;
-	for ( idx = 0 ; idx< document.styleSheets.length; idx ++)
-		if( document.styleSheets[idx].title == "local")
-			sheet = document.styleSheets[idx]; 
-	if (JSON.parse(cView.localStorage.getItem("show_newlines")))
-		sheet.insertRule(".long-text{white-space:pre-wrap;}",0);
-	else
-		sheet.insertRule(".long-text{white-space:normal;}",0);
-	
+	try{
+		for ( idx = 0 ; idx< document.styleSheets.length; idx ++)
+			if( document.styleSheets[idx].title == "local")
+				sheet = document.styleSheets[idx]; 
+		if (JSON.parse(cView.localStorage.getItem("show_newlines")))
+			sheet.insertRule(".long-text{white-space:pre-wrap;}",0);
+		else
+			sheet.insertRule(".long-text{white-space:normal;}",0);
+	}catch(e){
+		settingsError("show_newlines");
+	}	
 	if(cssTheme) 
 		document.getElementById("main-stylesheet").href = gConfig.static 
 		+ cssTheme 
@@ -349,4 +360,16 @@ function setLocalSettings(){
 		});
 	}
 
+}
+
+function settingsError(id){
+	var msg = "Error applying {"+id+"}";
+	console.log(msg);
+	var dialog = document.getElementById("modalDlg");
+	if (!dialog){ 
+		dialog = document.cView.gNodes["modal-error-dlg"].cloneAll();
+		document.body.appendChild(dialog);
+	}
+	
+	dialog.cNodes["value"].innerHTML += msg + "<br>";
 }

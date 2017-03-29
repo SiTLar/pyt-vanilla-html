@@ -1017,5 +1017,10 @@
 		]}
 	]}
 	,{"c":"custom-ui-item", "pt":"removeable-item",  "e":{"click":["Actions","remCustomUiItem"]}} 
+	,{"c":"modal-error-dlg"
+	,"el":[
+		{"c":"modal-error-dlg-top", "txt":"Error loading settings"}
+		,{"c":"value"}
+	]}
 ]}
 

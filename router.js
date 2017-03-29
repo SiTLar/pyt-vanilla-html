@@ -64,7 +64,7 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 				context.rtSubTimeline(data);
 		});
 		posts = undup(cView, posts);
-		posts.sort(function(a,b){return b.updatedAt - a.updatedAt;}); 
+		posts.sort(function(a,b){return b.bumpedAt - a.bumpedAt;}); 
 		cView.Drawer.drawTimeline(posts,contexts);
 		cView.Drawer.updateReqs();
 	});
@@ -72,6 +72,10 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 function undup (cView, posts){
 	posts.forEach(function(post,idx){
 		post.sign = cView.hasher.of(post.body);
+		if (post.comments.length){
+			var commentId = post.comments[post.comments.length-1];
+			post.bumpedAt = cView.contexts[post.domain].gComments[commentId].createdAt;
+		}else  post.bumpedAt = post.createdAt
 	});
 	//var hashes = posts.map(function(post){return hash.of(post.body);});
 	var duplicates = new Object();

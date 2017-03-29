@@ -86,7 +86,7 @@ var handlers = {
 			node.innerHTML = "The key is OK";
 			cView.localStorage.setItem("addons-translate-apikey", key);
 		},function(){
-			node.innerHTML = "The key seams to be invalide";
+			node.innerHTML = "The key seems to be invalide";
 			node.className = "msg-error";
 		});
 

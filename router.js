@@ -72,7 +72,7 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 function undup (cView, posts){
 	posts.forEach(function(post,idx){
 		post.sign = cView.hasher.of(post.body);
-		if (post.comments.length){
+		if (is(post.comments) && post.comments.length){
 			var commentId = post.comments[post.comments.length-1];
 			post.bumpedAt = cView.contexts[post.domain].gComments[commentId].createdAt;
 		}else  post.bumpedAt = post.createdAt

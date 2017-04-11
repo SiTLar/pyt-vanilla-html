@@ -86,7 +86,7 @@ _Common.prototype = {
 			className = "not-my-link";
 		}
 		user.link = '<a class="'+className
-		+'" target=blank  href="' + gConfig.front+"as/"+ context.domain + "/"+ user.username+'">'
+		+'" target="_blank"  href="' + gConfig.front+"as/"+ context.domain + "/"+ user.username+'">'
 		+ user.title
 		+"</a>";
 		if((typeof user.profilePictureMediumUrl === "undefined")

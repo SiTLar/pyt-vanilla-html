@@ -11,6 +11,10 @@
 		"descr":"My posts"
 		,"action":["Actions","me"]
 	}
+	,"bestof":{
+		"descr":"Best of"
+		,"action":["Actions","bestof"]
+	}
 	,"directs":{
 		"descr":"Directs"
 		,"action":["Actions","directs"]

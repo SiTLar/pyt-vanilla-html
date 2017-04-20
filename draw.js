@@ -1046,6 +1046,8 @@ _Drawer.prototype = {
 		nodeComment.rawId = comment.id;
 		nodeComment.domain = context.domain;
 		nodeComment.createdAt = comment.createdAt;
+		if(typeof cUser === "undefined") 
+			return nodeComment; 
 		nodeComment.userid = cUser.id;
 		nodeComment.getNode(["c","comment-body"],["c","cmt-author"]).innerHTML = cUser.link ;
 		if(context.ids.length){

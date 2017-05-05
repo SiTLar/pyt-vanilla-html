@@ -1023,6 +1023,7 @@ _Drawer.prototype = {
 		var listBlocksStr = cView.blocks.blockStrings[context.domain];
 		var cUser = context.gUsers[comment.createdBy];
 		if(( typeof listBlocksUsr!== "undefined") 
+		&& (typeof cUser !== "undefined")
 		&& ( listBlocksUsr!= null) 
 		&& (listBlocksUsr[cUser.id])){
 			nodeComment.innerHTML = "---";

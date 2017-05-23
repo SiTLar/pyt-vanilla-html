@@ -144,7 +144,7 @@ return {
 		} else if (delta < (24*60*60*30*12)){
 			r = (parseInt(delta / 2592000, 10)).toString() + ' months ago';
 		} else {
-			r = (parseInt(delta / 31104000, 10)).toString() + ' years ago';
+			return parsed_date.toISOString().substr(0,10);
 		}
 		return 'about ' + r;
 	}

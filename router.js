@@ -75,16 +75,20 @@ function undup (cView, posts){
 		if (is(post.comments) && post.comments.length){
 			var commentId = post.comments[post.comments.length-1];
 			post.bumpedAt = cView.contexts[post.domain].gComments[commentId].createdAt;
-		}else  post.bumpedAt = post.createdAt
+		}else  post.bumpedAt = post.createdAt;
 	});
 	//var hashes = posts.map(function(post){return hash.of(post.body);});
 	var duplicates = new Object();
 	for(var idx = 0; idx < posts.length-1; idx++){
-		if(posts[idx].body.length < cView.minBody) continue;
+		if(
+			posts[idx].body.length < cView.minBody
+			||(posts[idx].body.split(cView.autolinker.hashtag.regex).join(" ").trim() == "" )
+		) continue;
 		for(var v = idx+1; v < posts.length; v++){
 			if(
 				(posts[v].body.length < cView.minBody)
 				||(Math.abs(posts[idx].createdAt-posts[v].createdAt)>48*3600*1000)
+				||(posts[v].body.split(cView.autolinker.hashtag.regex).join(" ").trim() == "" )
 			) continue;
 			if( cView.hasher.similarity(posts[idx].sign,posts[v].sign)>cView.threshold){
 				var dups;

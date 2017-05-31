@@ -1,0 +1,185 @@
+[{"c": "mention_in_post"
+,"el":[
+	{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"was mentioned in a"}
+	,{"c": "post_id", "t":"a", "txt": "post"}
+	,{"t":"span", "txt":"by"}
+	,{"c": "created_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "mention_in_comment"
+,"el":[
+	{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"was mentioned in a"}
+	,{"c": "comment_id", "t":"a", "txt": "comment"}
+	,{"t":"span", "txt":"by"}
+	,{"c": "created_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "mention_comment_to"
+,"el":[
+	{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"got a reply in a"}
+	,{"c": "comment_id", "t":"a", "txt": "comment"}
+	,{"t":"span", "txt":"by"}
+	,{"c": "created_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "banned_user"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has banned"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "unbanned_user"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has unbanned"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "banned_by_user"
+,"el":[
+	{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"was banned by"}
+	,{"c": "created_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "unbanned_by_user"
+,"el":[
+	{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"was unbanned by"}
+	,{"c": "created_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "user_subscribed"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has subscibed to"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "user_unsubscribed"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has subscibed to"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "subscription_requested"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has sent a subscription request to"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "subscription_request_revoked"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has revoked a subscription request to"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "subscription_request_approved"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has approved a subscription request to"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "subscription_request_rejected"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has rejected a subscription request to"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_created"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has created a group,"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_subscribed"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has subscribed to group"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_unsubscribed"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has unsubscribed from group"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_subscription_requested"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has sent a subscription request to join"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_subscription_request_revoked"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has revoked a subscription request to"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_subscription_approved"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has approved a request to join"}
+	,{"c": "group_id", "t":"a"}
+	,{"t":"span", "txt":"for"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_subscription_rejected"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has approved a rejected to join"}
+	,{"c": "group_id", "t":"a"}
+	,{"t":"span", "txt":"for"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_admin_promoted"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has promoted"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"to admin goup"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "group_admin_demoted"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has revoked admin privileges from"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"in goup"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "direct"
+,"el":[
+	{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"has recieved a"}
+	,{"c": "post_id", "t":"a", "txt": "direct message"}
+	,{"t":"span", "txt":"from"}
+	,{"c": "created_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "direct_comment"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"c": "comment_id", "t":"a", "txt": "commented"}
+	,{"t":"span", "txt":"to a"}
+	,{"c": "post_id", "t":"a", "txt": "direct message"}
+]}
+]

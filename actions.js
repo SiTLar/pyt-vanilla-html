@@ -865,6 +865,9 @@ _Actions.prototype = {
 	,"directs": function(e){
 		e.currentTarget.href = gConfig.front+ "filter/direct";
 	}
+	,"notifications": function(e){
+		e.currentTarget.href = gConfig.front+ "filter/notifications";
+	}
 	,"bestof": function(e){
 		e.currentTarget.href = gConfig.front+ "filter/best_of";
 	}

@@ -34,6 +34,11 @@ return function(config){
 					return res;
 				});
 			}
+			,"getNotifications": function(token, search, skip) {
+				return get2( token 
+					,"notifications?&offset="+skip
+				);
+			}
 			,"getPost": function(token, path, arrOptions) {
 				var id = path.split("/")[1];
 				var likes = "0";

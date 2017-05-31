@@ -749,7 +749,11 @@ span.comment-controls::before {
 }
 .highlighted{
 	background-color: #d9edf7;
+} 
+:target {
+	background-color: #d9edf7;
 }
+
 .read-more-wrapper div {
 	display: inline;
 }
@@ -804,4 +808,7 @@ span.comment-controls::before {
 	background: darkred;
 	color: white;
 	text-align: center;
+}
+.notifications-container span, a{
+	margin-right: .3em;
 }

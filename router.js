@@ -407,6 +407,36 @@ define("./router",[],function(){
 				})
 			});
 		}
+		,"routeNotifications":function(contexts, path){
+			var cView = this.cView;
+			var prConts = new Array();
+			var prContxt = new Array();
+			var domains = Object.keys(contexts);
+			domains.forEach(function(domain){ 
+				var context = contexts[domain];
+				prContxt.push(context.p);
+				prConts.push(context.api.getNotifications(context.token,path, cView.skip));
+			});
+			var prAllT = some(cView.Utils._Promise, prConts);
+			var prAllC = cView.Utils._Promise.all(prContxt);
+			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
+			cView.doc.title +=": " + path;
+			return cView.Utils._Promise.all([prAllT,prAllC]).then( function (res){
+				cView.doc.getElementById("loading-msg").innerHTML = "Building page";
+				cView.Drawer.drawNotifications( 
+					res[0].map(function(data,idx){
+						if(typeof data === "undefined" )return;
+						var context = contexts[domains[idx]];
+						cView.Common.loadGlobals( data, context);
+						if(typeof data.Notifications !== "undefined" ){
+							data.Notifications.context = context;
+							return data.Notifications;
+						}else return null;
+					}).filter(Boolean)
+				);
+				cView.Drawer.updateReqs();
+			});
+		}
 		,"timeline":function(contexts, path, source ){
 			var cView = this.cView;
 			source = (typeof source !== "undefined")?source:"getTimeline";

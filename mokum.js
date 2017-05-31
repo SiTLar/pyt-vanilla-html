@@ -194,6 +194,7 @@ return function(config){
 					}
 				);
 			}
+			,"getNotifications": function(token, search, skip) {return utils._Promise.resolve({});}
 			,"sendPost": function(token, postdata, sender, type, timelineId){
 				var post = {
 					"timelines": new Array()

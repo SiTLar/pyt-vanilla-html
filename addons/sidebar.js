@@ -124,6 +124,7 @@ var payload = [
 			var nodes  = [ ["me","My posts"]
 				,["discussions","My discussions"]
 				,["direct","Direct messages"]
+				,["notifications","Notifications"]
 				,["best_of", "Best of"]
 			].map(function(a){return genLinks(cView, a,linkHead);});
 

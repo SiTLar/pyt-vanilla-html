@@ -21,6 +21,7 @@
 				,"discussions":{"dest":["Router","timeline"]} 
 				,"me":{"dest":["Router","routeMe"]}
 				,"comments":{"dest":["Router","routeComments"]}
+				,"notifications":{"dest":["Router","routeNotifications"]}
 			} 
 			,"default":{"dest":["Router","timeline"]} 
 		}

@@ -298,6 +298,7 @@ _Common.prototype = {
 		if(data.attachments)data.attachments.forEach(function(attachment){ context.gAttachments[attachment.id] = attachment; });
 		if(data.comments)data.comments.forEach(function(comment){ context.gComments[comment.id] = comment; });
 		if(data.users)data.users.forEach(cView.Common.addUser, context);
+		if(data.groups)data.groups.forEach(cView.Common.addUser, context);
 		if(data.subscribers) data.subscribers.forEach(cView.Common.addUser, context);
 		if(data.subscribers && data.subscriptions ){
 			var subscribers = new Object();

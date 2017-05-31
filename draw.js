@@ -1523,6 +1523,53 @@ _Drawer.prototype = {
 		host.className = "controls-login";
 		return host;
 	}
+	,"drawNotifications":function(input){
+		var cView = this.cView;
+		var out = cView.doc.createElement("div");
+		out.className = "subs-cont";
+		out.classList.add("notifications-container");
+		var ntfTemplates = new Object();
+		cView.Common.genNodes(require("json!./notifications.json")).forEach(function(node){
+			ntfTemplates[node.classList[0]] = node;
+		});
+		input.forEach(function(notifications){
+			var context = notifications.context;
+			var subHead = cView.doc.createElement("h3");
+			subHead.innerHTML = context.domain;
+			out.appendChild(subHead);
+			var nodeNtfs = cView.doc.createElement("div");
+			notifications.forEach(function(oNtf){
+				var nodeNtfs = ntfTemplates[oNtf.event_type].cloneAll();
+				Object.keys(nodeNtfs.cNodes).forEach(function(key){
+					var victim = nodeNtfs.cNodes[key];
+					var suffix = "";
+					switch(key){
+					case "created_user_id":
+					case "affected_user_id":
+					case "group_id":
+						victim.innerHTML = context.gUsers[oNtf[key]].link;
+						break;
+					case "comment_id":
+						suffix = "#"+context.domain+"-cmt-"+oNtf.comment_id; 
+					case "post_id":
+						victim.href = [
+							gConfig.front + "as"
+							, context.domain
+							, context.gUsers[ oNtf.group_ip || oNtf.created_user_id].username
+							,oNtf.post_id
+						].join("/") + suffix ;
+						break;
+					default:
+					}
+				});
+				nodeNtfs.cNodes.date.date = oNtf.date;
+				window.setTimeout(cView.Drawer.updateDate, 10,nodeNtfs.cNodes.date, cView);
+				out.appendChild(nodeNtfs);
+			});
+		});
+		cView.doc.getElementById("container").appendChild(out);
+		return cView.Utils._Promise.resolve();
+	}
 };
 return _Drawer;
 });

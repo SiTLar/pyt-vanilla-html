@@ -20,6 +20,11 @@
 		,"action":["Actions","directs"]
 		,"cl":["directs-control"]
 	}
+	,"directs":{
+		"descr":"Notifications"
+		,"action":["Actions","Notifications"]
+		,"cl":["notifications-control"]
+	}
 	,"comments":{
 		"descr":"My comments"
 		,"action":["Actions","goComments"]

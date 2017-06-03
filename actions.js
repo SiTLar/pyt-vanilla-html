@@ -1889,6 +1889,28 @@ _Actions.prototype = {
 			break;
 		}
 	}
+	,"notMentions": function(e){
+		e.currentTarget.href = gConfig.front+ "filter/notifications?filter=mentions";
+	}
+	,"notSubs": function(e){
+		e.currentTarget.href = gConfig.front+ "filter/notifications?filter=subscriptions";
+	}
+	,"notGroups": function(e){
+		e.currentTarget.href = gConfig.front+ "filter/notifications?filter=groups";
+	}
+	,"notDirect": function(e){
+		e.currentTarget.href = gConfig.front+ "filter/notifications?filter=directs";
+	}
+	,"notBans": function(e){
+		e.currentTarget.href = gConfig.front+ "filter/notifications?filter=bans";
+	}
+
+
+
+
+
+
+	
 };
 return _Actions;
 });

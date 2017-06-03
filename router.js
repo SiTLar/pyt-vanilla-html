@@ -415,7 +415,7 @@ define("./router",[],function(){
 			domains.forEach(function(domain){ 
 				var context = contexts[domain];
 				prContxt.push(context.p);
-				prConts.push(context.api.getNotifications(context.token,path, cView.skip));
+				prConts.push(context.api.getNotifications(context.token,cView.search, cView.skip));
 			});
 			var prAllT = some(cView.Utils._Promise, prConts);
 			var prAllC = cView.Utils._Promise.all(prContxt);
@@ -423,6 +423,7 @@ define("./router",[],function(){
 			cView.doc.title +=": " + path;
 			return cView.Utils._Promise.all([prAllT,prAllC]).then( function (res){
 				cView.doc.getElementById("loading-msg").innerHTML = "Building page";
+				var isLast = res[0].reduce(function(totla, courr){ return total &= curr }, true);
 				cView.Drawer.drawNotifications( 
 					res[0].map(function(data,idx){
 						if(typeof data === "undefined" )return;
@@ -433,6 +434,7 @@ define("./router",[],function(){
 							return data.Notifications;
 						}else return null;
 					}).filter(Boolean)
+					, isLast
 				);
 				cView.Drawer.updateReqs();
 			});

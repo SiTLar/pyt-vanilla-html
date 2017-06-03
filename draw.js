@@ -390,10 +390,8 @@ _Drawer.prototype = {
 
 
 	}
-	,"drawTimeline":function(posts,contexts){
+	,"genMore":function(isLast ){
 		var cView = this.cView;
-		var Drawer = cView.Drawer;
-		var body = cView.doc.getElementById("container");
 		var nodeMore = cView.doc.createElement("div");
 		nodeMore.className = "more-node";
 		var htmlPrefix = '<a href="' + gConfig.front+cView.fullPath + "?";
@@ -409,13 +407,20 @@ _Drawer.prototype = {
 				+ '"><span style="font-size: 120%">&larr;</span> Newer entries</a>';
 			nodeMore.innerHTML = htmlBackward ;
 		}
-		if(posts.length){
+		if(!isLast){
 			htmlForward = htmlPrefix + "offset="
 			+ forward*1 + "&limit="+gConfig.offset*1
 			+'">Older entries<span style="font-size: 120%">&rarr;</span></a>';
 		}
 		if ( (htmlBackward != "") && (htmlForward != "")) nodeMore.innerHTML += '<span class="spacer">&mdash;</span>'
 		nodeMore.innerHTML += htmlForward;
+		return nodeMore;
+	}
+	,"drawTimeline":function(posts,contexts){
+		var cView = this.cView;
+		var Drawer = cView.Drawer;
+		var body = cView.doc.getElementById("container");
+		var nodeMore = Drawer.genMore(!posts.length);
 		body.appendChild(nodeMore.cloneNode(true));
 		cView.doc.posts = cView.doc.createElement("div");
 		cView.doc.posts.className = "posts";
@@ -1523,25 +1528,35 @@ _Drawer.prototype = {
 		host.className = "controls-login";
 		return host;
 	}
-	,"drawNotifications":function(input){
+	,"drawNotifications":function(input, isLast){
 		var cView = this.cView;
-		var out = cView.doc.createElement("div");
-		out.className = "subs-cont";
-		out.classList.add("notifications-container");
+		var head = cView.gNodes["notifications-filters"].cloneAll();
+		var filter = cView.search.match(/filter=(\w+)/);
+		var victim;
+		if (filter) victim = head.cNodes["not-"+filter[1]];
+		else victim = head.cNodes["not-All"];
+		victim.classList.add("sh-selected");
+		victim.classList.remove("sh-item");
+		cView.doc.getElementById("container").appendChild(head);
+		var nodeMore = cView.Drawer.genMore(isLast);
+
+		body.appendChild(nodeMore.cloneNode(true));
 		var ntfTemplates = new Object();
 		cView.Common.genNodes(require("json!./notifications.json")).forEach(function(node){
 			ntfTemplates[node.classList[0]] = node;
 		});
 		input.forEach(function(notifications){
 			var context = notifications.context;
+			var out = cView.doc.createElement("div");
+			out.className = "subs-cont";
+			out.classList.add("notifications-container");
 			var subHead = cView.doc.createElement("h3");
 			subHead.innerHTML = context.domain;
 			out.appendChild(subHead);
-			var nodeNtfs = cView.doc.createElement("div");
 			notifications.forEach(function(oNtf){
-				var nodeNtfs = ntfTemplates[oNtf.event_type].cloneAll();
-				Object.keys(nodeNtfs.cNodes).forEach(function(key){
-					var victim = nodeNtfs.cNodes[key];
+				var nodeNtf = ntfTemplates[oNtf.event_type].cloneAll();
+				Object.keys(nodeNtf.cNodes).forEach(function(key){
+					var victim = nodeNtf.cNodes[key];
 					var suffix = "";
 					switch(key){
 					case "created_user_id":
@@ -1562,12 +1577,14 @@ _Drawer.prototype = {
 					default:
 					}
 				});
-				nodeNtfs.cNodes.date.date = oNtf.date;
-				window.setTimeout(cView.Drawer.updateDate, 10,nodeNtfs.cNodes.date, cView);
-				out.appendChild(nodeNtfs);
+				nodeNtf.cNodes.date.date = oNtf.date;
+				window.setTimeout(cView.Drawer.updateDate, 10,nodeNtf.cNodes.date, cView);
+				out.appendChild(nodeNtf);
 			});
+			if (notifications.length)
+				cView.doc.getElementById("container").appendChild(out);
 		});
-		cView.doc.getElementById("container").appendChild(out);
+		body.appendChild(nodeMore);
 		return cView.Utils._Promise.resolve();
 	}
 };

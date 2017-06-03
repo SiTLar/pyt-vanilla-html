@@ -809,6 +809,6 @@ span.comment-controls::before {
 	color: white;
 	text-align: center;
 }
-.notifications-container span, a{
+.notifications-container >div >span, .notifications-container >div >a {
 	margin-right: .3em;
 }

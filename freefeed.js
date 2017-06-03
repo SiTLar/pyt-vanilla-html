@@ -36,7 +36,7 @@ return function(config){
 			}
 			,"getNotifications": function(token, search, skip) {
 				return get2( token 
-					,"notifications?&offset="+skip
+					,"notifications?offset="+skip+"&"+search
 				);
 			}
 			,"getPost": function(token, path, arrOptions) {

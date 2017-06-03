@@ -1022,5 +1022,32 @@
 		{"c":"modal-error-dlg-top", "txt":"Error loading settings"}
 		,{"c":"value"}
 	]}
+	,{"c":"notifications-filters", "cl":["settings-head"]
+	,"el":[
+		{"c":"not-All", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"Everything","e":{"mousedown":["Actions","notifications"]}}
+		]}
+		,{"c":"not-mentions", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"Mentions","e":{"mousedown":["Actions","notMentions"]}}
+		]}
+		,{"c":"not-subscriptions", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"Subscriptions","e":{"mousedown":["Actions","notSubs"]}}
+		]}
+		,{"c":"not-groups", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"Groups","e":{"mousedown":["Actions","notGroups"]}}
+		]}
+		,{"c":"not-directs", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"Direct messages","e":{"mousedown":["Actions","notDirect"]}}
+		]}
+		,{"c":"not-bans", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"Bans","e":{"mousedown":["Actions","notBans"]}}
+		]}
+	]}
 ]}
 

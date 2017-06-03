@@ -1540,7 +1540,7 @@ _Drawer.prototype = {
 		cView.doc.getElementById("container").appendChild(head);
 		var nodeMore = cView.Drawer.genMore(isLast);
 
-		body.appendChild(nodeMore.cloneNode(true));
+		cView.doc.body.appendChild(nodeMore.cloneNode(true));
 		var ntfTemplates = new Object();
 		cView.Common.genNodes(require("json!./notifications.json")).forEach(function(node){
 			ntfTemplates[node.classList[0]] = node;
@@ -1584,7 +1584,7 @@ _Drawer.prototype = {
 			if (notifications.length)
 				cView.doc.getElementById("container").appendChild(out);
 		});
-		body.appendChild(nodeMore);
+		cView.doc.body.appendChild(nodeMore);
 		return cView.Utils._Promise.resolve();
 	}
 };

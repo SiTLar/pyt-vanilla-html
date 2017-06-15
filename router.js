@@ -423,7 +423,11 @@ define("./router",[],function(){
 			cView.doc.title +=": " + path;
 			return cView.Utils._Promise.all([prAllT,prAllC]).then( function (res){
 				cView.doc.getElementById("loading-msg").innerHTML = "Building page";
-				var isLast = res[0].reduce(function(total, curr){ return total &= curr }, true);
+				var isLast = res[0].reduce(function(total, curr){ 
+					if (typeof curr.isLastPage !== "undefined")
+						total &= curr.isLastPage;
+					return total; 
+				}, true);
 				cView.Drawer.drawNotifications( 
 					res[0].map(function(data,idx){
 						if(typeof data === "undefined" )return;

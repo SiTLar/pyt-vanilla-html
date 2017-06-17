@@ -1,9 +1,32 @@
 "use strict";
 define("./actions",[],function() {
+function appendAttachment(nodeNewPost, name, file){
+	var cView = document.cView;
+	var nodeInput =  nodeNewPost.getNode(["c","edit-buttons"], ["c","edit-buttons-upload"]).disabled = true;
+	nodeInput.disabled = true;
+	var host = nodeNewPost.getNode(["c","post-to"]);
+	var nodeSpinner = cView.doc.createElement("div");
+	var buttonPost = nodeNewPost.getElementsByClassName("edit-buttons-post")[0];
+	buttonPost.disabled = true;
+	host.buttonPost = buttonPost;
+	host.nodeInput = nodeInput;
+	host.nodeSpinner = nodeSpinner;
+	nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
+	nodeNewPost.getNode(["c", "new-post-cont"],["c","attachments"]).appendChild(nodeSpinner);
+	if (typeof host.files === "undefined") host.files = new Array(); 
+	if (typeof host.attachs === "undefined") host.attachs = new Object(); 
+	host.files.push({ 
+		"name":name 
+		,"file":file
+		,"timestamp":Date.now() 
+	});
+	regenAttaches(host);
+}
 function regenAttaches(host){
 	var cView = document.cView;
 	if (typeof host.attachs  === "undefined") return;
 	var nodesDest = host.childNodes;
+	var nodeInput = host.getNode(["p","new-post"], ["c","edit-buttons-upload"]);
 	delete host.attP;
 	var arrAttP = new Array();
 	for (var idx = 0; idx < nodesDest.length; idx++ )(function(domain, userid){
@@ -189,26 +212,12 @@ _Actions.prototype = {
 			}else*/{
 			}
 	}
-	,"sendAttachment": function(e){//TODO
-		var cView = document.cView;
-		e.target.disabled = true;
-		var host = e.target.getNode(["p","new-post"],["c","post-to"]);
-		var nodeSpinner = cView.doc.createElement("div");
-		var buttonPost = host.getNode(["p","new-post"]).getElementsByClassName("edit-buttons-post")[0];
-		buttonPost.disabled = true;
-		host.buttonPost = buttonPost;
-		host.nodeInput = e.target;
-		host.nodeSpinner = nodeSpinner;
-		nodeSpinner.innerHTML = '<img src="'+gConfig.static+'throbber-100.gif">';
-		e.target.getNode(["p","new-post"],["c", "new-post-cont"],["c","attachments"]).appendChild(nodeSpinner);
-		if (typeof host.files === "undefined") host.files = new Array(); 
-		if (typeof host.attachs === "undefined") host.attachs = new Object(); 
-		host.files.push({ 
-			"name": e.target.value
-			,"file":e.target.files[0]
-			,"timestamp":Date.now() 
-		});
-		regenAttaches(host);
+	,"attachmentCtrl": function(e){//TODO
+		appendAttachment(
+			e.target.getNode(["p","new-post"])
+			, e.target.value
+			, e.target.files[0]
+		);
 	}
 	,"editPost": function(e) {
 		var cView = document.cView;
@@ -1904,13 +1913,16 @@ _Actions.prototype = {
 	,"notBans": function(e){
 		e.currentTarget.href = gConfig.front+ "filter/notifications?filter=bans";
 	}
+	,"postEditPaste": function(e){
+		if (e.clipboardData.types[0] != "Files") return;
+		
+		appendAttachment(
+			e.target.getNode(["p","new-post"])
+			, e.clipboardData.files[0].name
+			, e.clipboardData.files[0]
+		);
+	}
 
-
-
-
-
-
-	
 };
 return _Actions;
 });

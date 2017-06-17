@@ -185,7 +185,11 @@
 	]}
 	,{"c":"edit"
 	,"el":[
-		{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
+		{"c":"edit-txt-area"
+			,"t":"textarea"
+			, "p":{"dir":"auto"} 
+			,"e":{"keydown":["Actions", "processText"]}
+		}
 		,{"c":"edit-buttons"
 		,"el":[
 			{"c":"edit-buttons-post","t":"button","txt":"Post"}
@@ -211,12 +215,19 @@
 		,{"c":"post-to"}
 		,{"c":"new-post-cont"
 		,"el":[
-			{"c":"edit-txt-area","t":"textarea","e":{"keydown":["Actions", "processText"]}, "p":{"dir":"auto"}}
+			{"c":"edit-txt-area"
+				,"t":"textarea"
+				,"p":{"dir":"auto"}
+				,"e":{
+					"keydown":["Actions", "processText"]
+					,"paste":["Actions","postEditPaste"]
+				}
+			}
 			,{"c":"attachments"}
 		]}
 		,{"c":"edit-buttons"
 		,"el":[
-			{"c":"edit-buttons-upload","t":"input","p":{"type":"file" }, "e":{"change":["Actions","sendAttachment"] }}
+			{"c":"edit-buttons-upload","t":"input","p":{"type":"file" }, "e":{"change":["Actions","attachmentCtrl"] }}
 			,{"c":"edit-buttons-post","t":"button","txt":"Post","e":{"click":["Actions","newPost"]}}
 		]}
 	]}

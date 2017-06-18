@@ -114,6 +114,8 @@ define(
 				arr[idx] = txt.replace(
 					/___CONTEXT_PATH___/g
 					,gConfig.front+"as/"+context.domain
+				).replace(/(https?:\/\/)?friendfeed.com\/\w+/g
+					,"https://freefeed.net/archivePost?url=$&"
 				);
 			});
 			arr.toString = function(){return this.join(" ");};

@@ -2,7 +2,7 @@
 define("./actions",[],function() {
 function appendAttachment(nodeNewPost, name, file){
 	var cView = document.cView;
-	var nodeInput =  nodeNewPost.getNode(["c","edit-buttons"], ["c","edit-buttons-upload"]).disabled = true;
+	var nodeInput =  nodeNewPost.getNode(["c","edit-buttons"], ["c","edit-buttons-upload"]);
 	nodeInput.disabled = true;
 	var host = nodeNewPost.getNode(["c","post-to"]);
 	var nodeSpinner = cView.doc.createElement("div");

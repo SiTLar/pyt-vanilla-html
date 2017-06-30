@@ -68,21 +68,25 @@ _Url2link.prototype = {
 		}
 		,"actions":[function(match,host){
 			var text;
-			var suffix = ""; 
+			var suffix = "";
+			var bra = "<{([";
+			var ket = ">})]";
 			var regex = /^https?:\/\//;
 			var scheme = regex.exec(match); 
-			var pos = match.length - 1;
-			do{
-				var idx = ">})]".indexOf(match.charAt(pos));
-				if(idx == -1) continue;
-				var bra = "<{([".charAt(idx);				
-				var ket = match.charAt(pos);
-				var ketPos = match.lastIndexOf(ket, pos-1);
-				if(match.indexOf(bra,ketPos) == -1){
-					suffix = match.slice(pos) + suffix;
-					match = match.slice(0,pos);
+			for(var pos = 0; pos< match.length; pos++){
+				var charAt = match.charAt(pos);
+				var idx = ket.indexOf(charAt);
+				if(idx != -1) break;
+				idx = bra.indexOf(charAt);
+				if(idx != -1){
+					pos = findBalance(match, pos, charAt, ket.charAt(idx));
+					console.log(pos);
 				}
-			}while(--pos > 0);
+			
+			}
+			suffix = match.slice(pos);
+			match = match.slice(0,pos);
+
 			if(scheme) text = match.slice(scheme[0].length);
 			else {
 				text = match;
@@ -93,6 +97,23 @@ _Url2link.prototype = {
 			if (text.slice(-1) == "/")text = text.slice(0,-1);
 			text = (host.trunc &&(text.length > host.trunc))? text.substr(0,host.trunc)+"...":text;
 			return '<a class="url2link-url" dir="ltr" ' +(host["url"].newtab?'target="_blank"':"") +' href="'+match+'">' + text + "</a>"+suffix;
+			function findBalance(text, pos, open, close){
+				var init = pos;
+				var count = 0;
+				while(pos < text.length){
+					switch(text.charAt(pos++)){
+					case open:
+						count++;
+						break;
+					case close:
+						if(!--count)
+							return pos;
+						break;
+					default:
+					}
+				}
+				return init;
+			}
 		}]
 	}
 	,"uname":{

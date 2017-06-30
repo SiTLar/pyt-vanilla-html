@@ -20,9 +20,9 @@
 		,"action":["Actions","directs"]
 		,"cl":["directs-control"]
 	}
-	,"directs":{
+	,"notifications":{
 		"descr":"Notifications"
-		,"action":["Actions","Notifications"]
+		,"action":["Actions","notifications"]
 		,"cl":["notifications-control"]
 	}
 	,"comments":{

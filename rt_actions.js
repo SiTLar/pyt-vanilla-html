@@ -1,5 +1,15 @@
 "use strict";
 define("RtHandler", [], function(){
+function likeCmt(data, context){
+	var that = this;
+	var cView = document.cView;
+	data.users.forEach(cView.Common.addUser,context);
+	context.gComments[data.comments.id] = data.comments; 
+	var commentId = context.domain+"-cmt-"+ data.comments.id;
+	var nodeComment = document.getElementById(commentId);
+	if (nodeComment) 
+		window.dispatchEvent(new CustomEvent("updNode", {"detail":nodeComment}));
+}
 var RtHandler = function (bump){
 	var that = this;
 	var cView = document.cView;
@@ -274,6 +284,8 @@ RtHandler.prototype = {
 			return nodeComment.parentNode;
 		});
 	}
+	,"comment_like:new": likeCmt
+	,"comment_like:remove": likeCmt
 	,"like:new": function(data, context){
 		var that = this;
 		var cView = document.cView;

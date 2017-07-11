@@ -153,6 +153,10 @@ function setControls(node){
 		nodeControl.cNodes["spacer"].hidden = false;
 		nodeControl.cNodes["action"].action = true;
 		nodeControl.cNodes["action"].innerHTML =  "&#22909;";
+		if (context.gMe.users.id == node.userid) {
+			nodeControl.cNodes["action"].hidden = true;
+			nodeControl.cNodes["spacer"].hidden = true;
+		}
 	}
 	return nodeControl;
 
@@ -163,15 +167,15 @@ function apply (likeInfo, node){
 	if (!nodeControl) nodeControl= setControls(node);
 	var nodeLike = cView.doc.createElement("span"); 
 	if(likeInfo.likes){
+		nodeControl.cNodes["spacer"].hidden = false;
 		var nodeLike = nodesT["display"].cloneAll();
 		nodeLike.innerHTML = likeInfo.likes;
 			
-		if(context.gMe){ 
-			nodeControl.cNodes["spacer"].hidden = false;
+		if(context.gMe && (context.gMe.users.id != node.userid)){ 
 			nodeControl.cNodes["action"].action = (likeInfo.my_likes == "0");
 			nodeControl.cNodes["action"].innerHTML =  (likeInfo.my_likes == "0"?"like":"un-like");
 		}
-	}else if(context.gMe){ 
+	}else if(context.gMe && (context.gMe.users.id != node.userid)){ 
 		nodeControl.cNodes["spacer"].hidden = false;
 		nodeControl.cNodes["action"].action = true;
 		nodeControl.cNodes["action"].innerHTML = "&#22909;";

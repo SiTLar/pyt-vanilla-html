@@ -15,10 +15,11 @@ var template = [
 ];
 var handlers = {
 	"action":function(e){
-		var id = e.target.getNode(["p","comment"]).rawId;
+		var nodeCmt = e.target.getNode(["p","comment"]);
+		var id = nodeCmt.rawId;
 		var action = e.target.action;
 		var post = e.target.getNode(["p","post"]).rawData;
-		var domain = e.target.getNode(["p","comment"]).domain;
+		var domain = nodeCmt.domain;
 		var context = cView.contexts[domain];
 		switch(context.api.name){
 		case "FreeFeed":
@@ -29,9 +30,18 @@ var handlers = {
 				,"token":context.token
 			}).then(function(res){
 				res = JSON.parse(res);
-				if(res.status == "error") return;
-				e.target.action = !action;
-				e.target.innerHTML = (!action?"like":"un-like");
+				res.users.forEach(cView.Common.addUser, context);
+				var fMyCmt = res.likes.some( function(like){
+					return like.userId == context.gMe.users.id;
+				});
+				context.gComments[id].hasOwnLike = fMyCmt;
+				context.gComments[id].likes = res.likes.length;
+				apply({ "id":id
+						,"likes": res.likes.length
+						,"my_likes": fMyCmt
+					}
+					,nodeCmt
+				);
 			});
 			break;
 		case "Mokum":
@@ -168,7 +178,7 @@ function apply (likeInfo, node){
 	var nodeLike = cView.doc.createElement("span"); 
 	if(likeInfo.likes){
 		nodeControl.cNodes["spacer"].hidden = false;
-		var nodeLike = nodesT["display"].cloneAll();
+		nodeLike = nodesT["display"].cloneAll();
 		nodeLike.innerHTML = likeInfo.likes;
 			
 		if(context.gMe && (context.gMe.users.id != node.userid)){ 

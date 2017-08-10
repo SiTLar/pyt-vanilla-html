@@ -37,7 +37,16 @@ return function(config){
 			,"getNotifications": function(token, search, skip) {
 				return get2( token 
 					,"notifications?offset="+skip+(search?("&"+search):"")
-				);
+				).then(function(res){
+					utils.xhr({
+						"url": config.serverURLV2
+							+"users/markAllNotificationsAsRead"
+						,"method":"post"
+						,"token": token 
+						,"headers":{"Content-type":"application/json"}
+					});
+					return res;
+				});
 			}
 			,"getPost": function(token, path, arrOptions) {
 				var id = path.split("/")[1];

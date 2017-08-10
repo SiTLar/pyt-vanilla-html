@@ -107,7 +107,7 @@ define(
 				text.trim().replace(/&/g,"&amp;")
 					.replace(/</g, "&lt;")
 					.replace(/>/g, "&gt;")
-					.replace(/\n{2,}/g, "\n\n")
+					.replace(/[\n\r]{2,}/g, "\r\r")
 				,"array"
 			).reduce(function(prev,curr){return prev.concat(curr);},[]);
 			arr.forEach(function(txt,idx,arr){

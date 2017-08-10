@@ -480,22 +480,31 @@ _Common.prototype = {
 		}
 		return out;
 	}
-	,"regenDirects": function (){
+	,"regenCounters": function (){
 		var cView = document.cView;
-		var directsCount = Object.keys(cView.contexts).reduce(
-			function(acc,domain){ 
-				if(!cView.contexts[domain].gMe) return acc;
-				return acc + parseInt(
-					cView.contexts[domain].gMe.users.unreadDirectsNumber
-				);
-			}
-		,0);
-		cView.doc.getElementById("show-sidebar-directs").hidden = !directsCount;
-		var style = cView.doc.getElementById("directs-control-style");
+		var directsCount = collectCounters("unreadDirectsNumber");
+		var notifCount = collectCounters("unreadNotificationsNumber");
+		cView.doc.getElementById("show-sidebar-directs").hidden = !directsCount && !notifCount;
+		var style = cView.doc.getElementById("counter-control-style");
+		var directsStyle = "";
+		var notifStyle = "";
 		if(directsCount)
-			style.innerHTML = ".directs-control::after{color:red; content:\" +"+directsCount+"\"}";
-		else style.innerHTML = "";
-		
+			directsStyle = ".directs-control::after{color:red; content:\" +"+directsCount+"\"}";
+		if(notifCount)
+			notifStyle = ".notifications-control::after{color:red; content:\" +"+notifCount+"\"}";
+		style.innerHTML = directsStyle+notifStyle;	
+		function collectCounters(prop){
+			return Object.keys(cView.contexts).reduce(
+				function(acc,domain){ 
+					if(!cView.contexts[domain].gMe) return acc;
+					var count = parseInt( 
+						cView.contexts[domain].gMe.users[prop]
+					);
+					return acc + (Number.isNaN(count)?0:count);
+				}
+			,0);
+
+		}
 
 	}
 };

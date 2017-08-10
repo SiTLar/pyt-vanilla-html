@@ -125,7 +125,7 @@ function postInit(){
 	}
 	cView.Drawer.applyReadMore( cView.doc);
 	
-	window.addEventListener("whoamiUpdated", cView.Common.regenDirects); 
+	window.addEventListener("whoamiUpdated", cView.Common.regenCounters); 
 	var nodeSplash = document.getElementById("splash");
 	nodeSplash.parentNode.removeChild(nodeSplash);
 	cView.Common.setIcon("favicon.ico");

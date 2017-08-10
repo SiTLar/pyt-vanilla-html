@@ -80,7 +80,7 @@ _Url2link.prototype = {
 				idx = bra.indexOf(charAt);
 				if(idx != -1){
 					pos = findBalance(match, pos, charAt, ket.charAt(idx));
-					console.log(pos);
+					//console.log(pos);
 				}
 			
 			}

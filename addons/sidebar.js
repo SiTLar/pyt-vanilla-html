@@ -129,7 +129,8 @@ var payload = [
 			].map(function(a){return genLinks(cView, a,linkHead);});
 
 			nodes[2].getElementsByTagName("a")[0].classList.add("directs-control");
-			cView.Common.regenDirects();
+			nodes[3].getElementsByTagName("a")[0].classList.add("notifications-control");
+			cView.Common.regenCounters();
 			return nodes;
 
 		}

@@ -1914,13 +1914,15 @@ _Actions.prototype = {
 		e.currentTarget.href = gConfig.front+ "filter/notifications?filter=bans";
 	}
 	,"postEditPaste": function(e){
-		if (e.clipboardData.types[0] != "Files") return;
+		if (e.clipboardData.types.indexOf("Files") == -1) return;
 		
-		appendAttachment(
-			e.target.getNode(["p","new-post"])
-			, e.clipboardData.files[0].name
-			, e.clipboardData.files[0]
-		);
+		 Array.prototype.slice.call(e.clipboardData.files).forEach(function(file){
+		 	appendAttachment(
+				e.target.getNode(["p","new-post"])
+				, file.name
+				, file
+			);
+		});
 	}
 
 };

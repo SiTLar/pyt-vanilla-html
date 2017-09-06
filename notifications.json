@@ -142,7 +142,25 @@
 ,{"c": "group_subscription_rejected"
 ,"el":[
 	{"c": "created_user_id", "t":"a"}
-	,{"t":"span", "txt":"has approved a rejected to join"}
+	,{"t":"span", "txt":"has rejected a request to join"}
+	,{"c": "group_id", "t":"a"}
+	,{"t":"span", "txt":"for"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "managed_group_subscription_approved"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has approved a request to join"}
+	,{"c": "group_id", "t":"a"}
+	,{"t":"span", "txt":"for"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "managed_group_subscription_rejected"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has rejected a request to join"}
 	,{"c": "group_id", "t":"a"}
 	,{"t":"span", "txt":"for"}
 	,{"c": "affected_user_id", "t":"a"}

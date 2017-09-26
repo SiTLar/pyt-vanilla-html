@@ -187,7 +187,7 @@
 ,{"c": "direct"
 ,"el":[
 	{"c": "affected_user_id", "t":"a"}
-	,{"t":"span", "txt":"has recieved a"}
+	,{"t":"span", "txt":"has received a"}
 	,{"c": "post_id", "t":"a", "txt": "direct message"}
 	,{"t":"span", "txt":"from"}
 	,{"c": "created_user_id", "t":"a"}

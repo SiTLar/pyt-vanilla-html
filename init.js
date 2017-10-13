@@ -71,12 +71,15 @@ define(
 		context.api.parse = api.parse;
 		context.api.name = api.name;
 		this.p = new Utils._Promise( function(resolve){resolve()});
+		var rtFuncs = ["rtSubTimeline","rtSubPost","rtSubUser"];
 		if ((typeof api.oRT !== "undefined") && JSON.parse(v.localStorage.getItem("rt"))){
-			context.rt = new api.oRT(context,JSON.parse(v.localStorage.getItem("rtbump")));
-			["rtSubTimeline","rtSubPost"].forEach(function(key){
-				context[key] = function(inp){context.rt[key](inp)};
+			context.rt = new api.oRT(context,JSON.parse(v.localStorage.getItem("rtbump")), context.token);
+			rtFuncs.forEach(function(key){
+				context[key] = function(inp){
+					context.rt[key](inp);
+				};
 			});
-		}else ["rtSubTimeline","rtSubPost"].forEach(function(key){context[key] = function(){};});
+		}else rtFuncs.forEach(function(key){context[key] = function(){};});
 		Object.defineProperty(this, "gMe", {"get": _gMe});
 		Object.defineProperty(this, "ids", {"get": _ids});
 
@@ -90,6 +93,7 @@ define(
 			,"gAttachments": {}
 			,"gFeeds": {}
 			,"gRt": {}
+			,"miscRts": {}
 			,"logins": {} 
 			,"token": null
 			,"pending":[]

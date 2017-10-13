@@ -402,6 +402,13 @@ RtHandler.prototype = {
 			});
 		if (nodePost) cView.Actions.doHide(nodePost, false, "rt");
 	}
+	, "user:update" : function(data, context){
+		var cView = document.cView;
+		var user = context.logins[data.user.id].data.users;
+		Object.keys(data.user).forEach(function(key){ user[key] = data.user[key];});
+		cView.Common.regenCounters();
+		
+	}
 }
 return RtHandler; 
 });

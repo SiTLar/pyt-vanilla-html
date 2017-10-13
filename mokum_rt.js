@@ -211,6 +211,9 @@ RtUpdate.prototype = {
 			rt.ready.then(function(){sendSubReq(timeline);});
 		}
 	}
+	,"rtSubUser": function(id){
+
+	}
 	,"rtSubPost": function(data){
 		this.subscribe("/rivers/" + data.timelines.id);
 	}

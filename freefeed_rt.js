@@ -1,6 +1,6 @@
 "use strict";
 define("RtUpdate", ["./rt_actions", "./utils"], function(RtHandler, utils){
-var RtUpdate = function (context, bump){
+var RtUpdate = function (context, bump, token){
 	var rt = this;
 	Object.keys(rt.defaults).forEach(function(key){
 		rt[key] = JSON.parse(JSON.stringify(rt.defaults[key]));
@@ -8,6 +8,7 @@ var RtUpdate = function (context, bump){
 	rt.context = context;
 	rt.handlers = new RtHandler(bump);
 	rt.subscriptions = new Array();
+	rt.token = token;
 }
 RtUpdate.prototype = {
 	  constructor: RtUpdate
@@ -33,7 +34,7 @@ RtUpdate.prototype = {
 			oReq.onload = function (){
 				if(oReq.status < 400){
 					var res = JSON.parse(oReq.response.slice(oReq.response.indexOf("{")));
-					rt.wSocket = new WebSocket(cfg.server.rtURL.replace("https","wss")+"?token="+rt.context.token+"&transport=websocket&sid=" + res.sid);
+					rt.wSocket = new WebSocket(cfg.server.rtURL.replace("https","wss")+"?token="+rt.context.token+"&transport=websocket&sid=" + res.sid)
 					rt.wSocket.onopen = function(){
 						rt.wSocket.send("2probe"); 
 						rt.wSocket.onmessage = function(e){
@@ -53,7 +54,7 @@ RtUpdate.prototype = {
 					reject();
 				}
 			}
-			oReq.open("get",cfg.server.rtURL+"?token="+rt.context.token+"&transport=polling&t="+Date.now(), true);
+			oReq.open("get",cfg.server.rtURL+"?token="+rt.token+"&transport=polling&t="+Date.now(), true);
 			oReq.send();	
 		});
 		return rt.ready;
@@ -102,6 +103,13 @@ RtUpdate.prototype = {
 			rt.subscriptions.push(timeline);
 			rt.ready.then(function(){sendSubReq(timeline);});
 		}
+	}
+	,"rtSubUser": function(id){
+		var context = this.context;
+		var rt = (typeof context.miscRts[id] !== "undefined")? context.miscRts[id]
+			: new RtUpdate(context, false, context.logins[id].token);
+		rt.subscribe({"user":[id]});
+		context.miscRts[id]  = rt;
 	}
 	,"rtSubPost": function(data){
 		this.subscribe({"post":[data.posts.id]});

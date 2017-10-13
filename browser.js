@@ -98,8 +98,10 @@ function postInit(){
 		var context = cView.contexts[domain];
 		Object.keys(context.logins).forEach(function(id){
 			context.getWhoami(context.logins[id].token);
+			context.rtSubUser(id);
 		});
 	});
+
 
 	//if(parseInt(cView.localStorage.getItem("rt")) ) cView.initRt();
 	if(JSON.parse(cView.localStorage.getItem("show_link_preview"))){

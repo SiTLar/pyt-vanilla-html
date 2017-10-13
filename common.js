@@ -493,6 +493,7 @@ _Common.prototype = {
 		if(notifCount)
 			notifStyle = ".notifications-control::after{color:red; content:\" +"+notifCount+"\"}";
 		style.innerHTML = directsStyle+notifStyle;	
+		cView.Drawer.updateReqs();
 		function collectCounters(prop){
 			return Object.keys(cView.contexts).reduce(
 				function(acc,domain){ 

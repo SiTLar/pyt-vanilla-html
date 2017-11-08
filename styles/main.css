@@ -666,10 +666,12 @@ span.comment-controls::before {
 	padding:0 .3em;
 }
 .pr-deselected {
-	background-color:#ddd;
+	background-color:#ccc;
+	opacity: 0.5;
 }
 .pr-selected {
 	background-color:#fff;
+	font-weight: bold;
 }
 .avatar img, .usr-avatar {
 	max-width:50;

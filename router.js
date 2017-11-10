@@ -63,7 +63,7 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 			if(JSON.parse(cView.localStorage.getItem("rt"))) 
 				context.rtSubTimeline(data);
 		});
-		posts = undup(cView, posts);
+		if(!(cView.noMetapost === true))posts = undup(cView, posts);
 		posts.sort(function(a,b){return b.bumpedAt - a.bumpedAt;}); 
 		cView.Drawer.drawTimeline(posts,contexts);
 		cView.Drawer.updateReqs();

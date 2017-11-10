@@ -300,6 +300,7 @@ function setLocalSettings(){
 	cView.readMoreHeight = cView.readMore? JSON.parse(cView.localStorage.getItem("read_more_height")):0;
 
 	cView.blockLonely = JSON.parse(cView.localStorage.getItem("hide-lonely-posts"));
+	cView.noMetapost = JSON.parse(cView.localStorage.getItem("no_metapost"));
 
 	var cssTheme = cView.localStorage.getItem("display_theme");
 	if (cssTheme == "main.css") {

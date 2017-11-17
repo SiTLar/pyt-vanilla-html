@@ -54,19 +54,21 @@ function mixedTimelines (cView, contexts, prAllT,prAllC){
 			var context = contexts[domains[idx]];
 			cView.Common.loadGlobals( data, context);
 			if(typeof data.posts !== "undefined" ){
-				data.posts.forEach(function(post){
+				data.posts.forEach(function(post, pos){
 					post.domain = domains[idx];
+					post.initPos = pos;
 				});
 				posts = posts.concat(data.posts);
 			}
-			context.timelineId = data.timelines.id;
-			if(JSON.parse(cView.localStorage.getItem("rt"))) 
-				context.rtSubTimeline(data);
+			if(is(data.timelines)&& is(data.timelines.id)){
+				context.timelineId = data.timelines.id;
+				if(JSON.parse(cView.localStorage.getItem("rt"))) 
+					context.rtSubTimeline(data);
+			}
 		});
 		if(!(cView.noMetapost === true))posts = undup(cView, posts);
 		posts.sort(function(a,b){return b.bumpedAt - a.bumpedAt;}); 
-		cView.Drawer.drawTimeline(posts,contexts);
-		cView.Drawer.updateReqs();
+		return [posts,contexts];
 	});
 }
 function undup (cView, posts){
@@ -232,7 +234,11 @@ define("./router",[],function(){
 			});
 			var prAllT = cView.Utils._Promise.all(prConts);
 			var prAllC = cView.Utils._Promise.all(prContxt);
-			return mixedTimelines (cView, contexts, prAllT,prAllC);
+			return mixedTimelines (cView, contexts, prAllT,prAllC)
+			.then(function(mix){
+				cView.Drawer.drawTimeline(mix[0],mix[1]);
+				cView.Drawer.updateReqs();
+			});
 		}
 		,"routeComments": function(contexts, path){
 			var cView = this.cView;
@@ -262,7 +268,11 @@ define("./router",[],function(){
 			});
 			var prAllT = cView.Utils._Promise.all(prConts);
 			var prAllC = cView.Utils._Promise.all(prContxt);
-			return mixedTimelines (cView, contexts, prAllT,prAllC);
+			return mixedTimelines (cView, contexts, prAllT,prAllC)
+			.then(function(mix){
+				cView.Drawer.drawTimeline(mix[0],mix[1]);
+				cView.Drawer.updateReqs();
+			});
 		}
 		,"subscribers":function(contexts, path){
 			var cView = this.cView;
@@ -459,7 +469,44 @@ define("./router",[],function(){
 			var prAllC = cView.Utils._Promise.all(prContxt);
 			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
 			cView.doc.title +=": " + path;
-			return mixedTimelines(cView, contexts, prAllT,prAllC);
+			return mixedTimelines(cView, contexts, prAllT,prAllC)
+			.then(function(mix){
+				cView.Drawer.drawTimeline(mix[0],mix[1]);
+				cView.Drawer.updateReqs();
+			});
+		}
+		,"routeSummary":function(contexts, path ){
+			var cView = this.cView;
+			var arrContent = new Array();
+			var prConts = new Array();
+			var prContxt = new Array();
+			var intervals = {"1":"day","7":"week","30":"month" };
+			var domains = Object.keys(contexts);
+			var summaryLookup = path.match(/(?:(\w+)\/)?summary(?:\/(\d+))?/);
+			var source = ((typeof summaryLookup[1] !== "undefined")?summaryLookup[1]:null);
+			var interval = ((typeof summaryLookup[2] !== "undefined")?summaryLookup[2]:"7");
+			cView.summarySource = source?source+"/":"";
+			domains.forEach(function(domain){ 
+				var context = contexts[domain];
+				prContxt.push(context.p);
+				prConts.push(context.api.getSummary(context.token,source,interval));
+			});
+			var prAllT = some(cView.Utils._Promise, prConts);
+			var prAllC = cView.Utils._Promise.all(prContxt);
+			return mixedTimelines(cView, contexts, prAllT,prAllC)
+			.then(function(mix){
+				var authorTitle = "";
+				if (source){
+					var context = mix[1][Object.keys(mix[1])[0]];
+					authorTitle = " &mdash; " + context.gUsers.byName[source].title;
+				}
+				var title = "Best of the " + intervals[interval] +authorTitle;
+				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = title;
+				cView.doc.title +=": " + title;
+				mix[0].sort(function(a,b){return a.initPos - b.initPos;}); 
+				cView.Drawer.drawSummary(mix[0],mix[1], interval);
+				cView.Drawer.updateReqs();
+			});
 		}
 	}
 return _Router;

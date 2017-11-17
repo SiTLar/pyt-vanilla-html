@@ -1,4 +1,5 @@
 "use strict";
+function is(val){return typeof val !== "undefined";};
 define("./actions",[],function() {
 function appendAttachment(nodeNewPost, name, file){
 	var cView = document.cView;
@@ -1923,6 +1924,21 @@ _Actions.prototype = {
 				, file
 			);
 		});
+	}
+	,"summDay": function(e){
+		var cView = document.cView;
+		var src = is(cView.summarySource)?cView.summarySource:"";
+		e.currentTarget.href = gConfig.front+src+"summary/1" 
+	}
+	,"summWeek": function(e){
+		var cView = document.cView;
+		var src = is(cView.summarySource)?cView.summarySource:"";
+		e.currentTarget.href = gConfig.front+src+"summary/7" 
+	}
+	,"summMonth": function(e){
+		var cView = document.cView;
+		var src = is(cView.summarySource)?cView.summarySource:"";
+		e.currentTarget.href = gConfig.front+src+"summary/30" 
 	}
 
 };

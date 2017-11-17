@@ -5,6 +5,7 @@
 			,"likes":{"dest":["Router","timeline"]}
 			,"subscribers":{"dest":["Router","subscribers"]}
 			,"subscriptions":{"dest":["Router","subscriptions"]}
+			,"summary":{"dest":["Router","routeSummary"]}
 		}
 		,"default":{
 			"dest":["Router","unmixed"]
@@ -30,6 +31,7 @@
 		,"requests":{"dest":["Drawer","drawRequests","token"] }
 		,"search":{"default":{"dest":["Router","routeSearch"]}}
 		,"settings":{"default":{"dest":["Drawer","drawSettings"]}}
+		,"summary":{"default":{"dest":["Router","routeSummary"]}}
 	}
 
 }

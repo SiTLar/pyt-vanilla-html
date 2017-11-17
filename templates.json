@@ -1068,5 +1068,20 @@
 			{"t":"a","txt":"Bans","e":{"mousedown":["Actions","notBans"]}}
 		]}
 	]}
+	,{"c":"summary-type", "cl":["settings-head"]
+	,"el":[
+		{"c":"summ-1", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"best of the day","e":{"mousedown":["Actions","summDay"]}}
+		]}
+		,{"c":"summ-7", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"best of the week","e":{"mousedown":["Actions","summWeek"]}}
+		]}
+		,{"c":"summ-30", "cl":["sh-item"]
+		,"el":[
+			{"t":"a","txt":"best of the month","e":{"mousedown":["Actions","summMonth"]}}
+		]}
+	]}
 ]}
 

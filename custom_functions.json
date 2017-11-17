@@ -11,9 +11,21 @@
 		"descr":"My posts"
 		,"action":["Actions","me"]
 	}
-	,"bestof":{
-		"descr":"Best of"
+	,"bestofall":{
+		"descr":"Best of all feeds"
 		,"action":["Actions","bestof"]
+	}
+	,"bestofmonth":{
+		"descr":"Best of the month"
+		,"action":["Actions","summMonth"]
+	}
+	,"bestofweek":{
+		"descr":"Best of the week"
+		,"action":["Actions","summWeek"]
+	}
+	,"bestofday":{
+		"descr":"Best of the day"
+		,"action":["Actions","summDay"]
 	}
 	,"directs":{
 		"descr":"Directs"

@@ -404,6 +404,7 @@ _Common.prototype = {
 	}
 	,"metapost":function (posts){
 		var bumpedAt = posts[0].bumpedAt;
+		var initPos = posts[0].initPos;
 		var dups = new Array();
 		var hidden = true;
 		posts.forEach(function(post){
@@ -419,6 +420,7 @@ _Common.prototype = {
 			,"dups":dups
 			,"sign":posts[0].sign
 			,"isHidden":hidden
+			,"initPos":initPos
 		};
 		Object.defineProperty(ret, "idx",{
 			"get":function(){

@@ -1,14 +1,12 @@
 "use strict";
 define("RtUpdate", ["./rt_actions", "./utils"], function(RtHandler, utils){
-var RtUpdate = function (context, bump, token){
+var RtUpdate = function (context, bump){
 	var rt = this;
 	Object.keys(rt.defaults).forEach(function(key){
 		rt[key] = JSON.parse(JSON.stringify(rt.defaults[key]));
 	});
 	rt.context = context;
 	rt.handlers = new RtHandler(bump);
-	rt.subscriptions = new Array();
-	rt.token = token;
 }
 RtUpdate.prototype = {
 	  constructor: RtUpdate
@@ -54,7 +52,7 @@ RtUpdate.prototype = {
 					reject();
 				}
 			}
-			oReq.open("get",cfg.server.rtURL+"?token="+rt.token+"&transport=polling&t="+Date.now(), true);
+			oReq.open("get",cfg.server.rtURL+"?token="+rt.context.token+"&transport=polling&t="+Date.now(), true);
 			oReq.send();	
 		});
 		return rt.ready;

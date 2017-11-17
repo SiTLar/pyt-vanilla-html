@@ -73,7 +73,7 @@ define(
 		this.p = new Utils._Promise( function(resolve){resolve()});
 		var rtFuncs = ["rtSubTimeline","rtSubPost","rtSubUser"];
 		if ((typeof api.oRT !== "undefined") && JSON.parse(v.localStorage.getItem("rt"))){
-			context.rt = new api.oRT(context,JSON.parse(v.localStorage.getItem("rtbump")), context.token);
+			context.rt = new api.oRT(context,JSON.parse(v.localStorage.getItem("rtbump")));
 			rtFuncs.forEach(function(key){
 				context[key] = function(inp){
 					context.rt[key](inp);

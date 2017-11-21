@@ -15,12 +15,7 @@ return function(config){
 			,"getTimeline": function(token, timeline, skip) {
 				if (timeline == "filter/best_of") return get2( token 
 					,"bestof" + "?offset="+skip
-				).then(function(res){
-					res = JSON.parse(res);
-					if (typeof res.timelines == "undefined")
-						res.timelines = {"id":"bestof"};
-					return res;
-				});
+				);
 				return get2( token 
 					,"timelines/"+ timeline + "?offset="+skip
 				);
@@ -47,6 +42,11 @@ return function(config){
 					});
 					return res;
 				});
+			}
+			,"getSummary": function(token,source,interval){
+				var address = "summary/" +(source?source+"/":"") +interval;
+				return get2(token ,address);
+;
 			}
 			,"getPost": function(token, path, arrOptions) {
 				var id = path.split("/")[1];

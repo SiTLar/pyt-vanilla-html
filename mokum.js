@@ -185,6 +185,7 @@ return function(config){
 					return data;
 				});
 			}
+			,"getSummary": function(token,source,interval){return utils._Promise.resolve({});}
 			,"getSearch": function (token, search, skip){
 				var pagenum = Math.ceil(skip/gConfig.offset)+1
 				skip =((typeof pagenum !== "undefined")&& (pagenum != 1)) ?("&page=" + pagenum):"";

@@ -113,6 +113,7 @@ var payload = [
 						return [gConfig.domains[domain].search, domain]; 
 					}
 				).map(function(url){return genLinks(cView, url);})
+				,genLinks(cView,["best_of", "Best of all feeds"],gConfig.front+"filter/") 
 			);
 		}
 		,"test":always  
@@ -125,8 +126,8 @@ var payload = [
 				,["discussions","My discussions"]
 				,["direct","Direct messages"]
 				,["notifications","Notifications"]
-				,["best_of", "Best of"]
 			].map(function(a){return genLinks(cView, a,linkHead);});
+			nodes.push(genLinks(cView,["summary/1", "Best of the day", gConfig.front]));
 
 			nodes[2].getElementsByTagName("a")[0].classList.add("directs-control");
 			nodes[3].getElementsByTagName("a")[0].classList.add("notifications-control");

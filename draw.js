@@ -1587,6 +1587,48 @@ _Drawer.prototype = {
 		cView.doc.getElementById("container").appendChild(nodeMore);
 		return cView.Utils._Promise.resolve();
 	}
+	,"drawSummary":function(posts,contexts, interval){
+		var cView = this.cView;
+		var Drawer = cView.Drawer;
+		var body = cView.doc.getElementById("container");
+		var head = cView.gNodes["summary-type"].cloneAll();
+		var victim = head.cNodes["summ-"+interval];
+		victim.classList.add("sh-selected");
+		victim.classList.remove("sh-item");
+		cView.doc.getElementById("container").appendChild(head);
+		cView.doc.posts = cView.doc.createElement("div");
+		cView.doc.posts.className = "posts";
+		cView.doc.posts.id = "posts";
+		body.appendChild(cView.doc.posts);
+		cView.posts = new Array();
+		cView.doc.hiddenCount = 0;
+		var idx = 0;
+		posts.forEach(function(post){
+			var nodePost = null; 
+			post.idx = idx++;
+			if (post.type == "metapost"){
+				var dups = post.dups.filter(function(post){
+					return post.isHidden != true;
+				});
+				if (dups.length == 1) 
+					nodePost = Drawer.genPost(dups[0]);
+				else if(dups.length != 0) 
+					nodePost = Drawer.makeMetapost( dups.map(Drawer.genPost, cView));
+				if (dups.length != post.dups.length) cView.doc.hiddenCount++;
+			}else if(post.isHidden) cView.doc.hiddenCount++;
+			else{
+				post.isHidden = false;
+				nodePost = Drawer.genPost(post);
+			}
+			if(nodePost)cView.doc.posts.appendChild(nodePost);
+			cView.posts.push({"hidden":post.isHidden,"data":post});
+		});
+		var nodeShowHidden = cView.gNodes["show-hidden"].cloneAll();
+		nodeShowHidden.cNodes["href"].action = true;
+		body.appendChild(nodeShowHidden);
+		if(cView.doc.hiddenCount) nodeShowHidden.cNodes["href"].innerHTML= "Show "+ cView.doc.hiddenCount + " hidden entries";
+	
+	} 
 };
 return _Drawer;
 });

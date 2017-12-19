@@ -1940,6 +1940,13 @@ _Actions.prototype = {
 		var src = is(cView.summarySource)?cView.summarySource:"";
 		e.currentTarget.href = gConfig.front+src+"summary/30" 
 	}
+	,"goMemories": function(e){
+		var cView = document.cView;
+		var txtDate = "";
+		txtDate = e.target.getNode(["p","memories-selector"], ["c", "memories-date"] ).value;
+		if(txtDate != "")
+			window.location = gConfig.front+"memories/"+txtDate.replace(/-/g,"");
+	}
 
 };
 return _Actions;

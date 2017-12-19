@@ -231,6 +231,28 @@ var payload = [
 		}
 		,"test":isLogged	
 	}
+	,{"title":"Memories"
+		, "content":function(cView){
+			var div = cView.Common.genNodes([{ 
+			"c":"memories-selector"
+			,"el":[ 
+				{ "c":"memories-date"
+					,"t":"input"
+					, "p":{
+						"type":"date"
+						,"pattern": "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+					}
+				}
+				,{"t":"button"
+					,"e":{"click":["Actions","goMemories"]}
+					,"txt":"go!"
+				}
+			]}])[0].cloneAll();
+			return [div];
+
+		}
+		,"test":always  
+	}
 	,{"title":"Donate"
 		, "content":function(cView){
 			var div = cView.doc.createElement("div");

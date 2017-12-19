@@ -500,11 +500,45 @@ define("./router",[],function(){
 					var context = mix[1][Object.keys(mix[1])[0]];
 					authorTitle = " &mdash; " + context.gUsers.byName[source].title;
 				}
-				var title = "Best of the " + intervals[interval] +authorTitle;
+				var title = "Best of the " + intervals[interval] 
+					+authorTitle;
 				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = title;
-				cView.doc.title +=": " + title;
+				cView.doc.title +=": " + title.replace(/<.*>/g,"");
 				mix[0].sort(function(a,b){return a.initPos - b.initPos;}); 
 				cView.Drawer.drawSummary(mix[0],mix[1], interval);
+				cView.Drawer.updateReqs();
+			});
+		}
+		,"memories":function(contexts, path ){
+			var cView = this.cView;
+			var arrContent = new Array();
+			var prConts = new Array();
+			var prContxt = new Array();
+			var intervals = {"1":"day","7":"week","30":"month" };
+			var domains = Object.keys(contexts);
+			var summaryLookup = path.match(/(?:(\w+)\/)?memories(?:\/(\d+))/);
+			var source = ((typeof summaryLookup[1] !== "undefined")
+				?summaryLookup[1]:"home");
+			var interval = new Date(summaryLookup[2].replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3"));
+			domains.forEach(function(domain){ 
+				var context = contexts[domain];
+				prContxt.push(context.p);
+				prConts.push(context.api.getMemories(context.token,source,interval));
+			});
+			var prAllT = some(cView.Utils._Promise, prConts);
+			var prAllC = cView.Utils._Promise.all(prContxt);
+			return mixedTimelines(cView, contexts, prAllT,prAllC)
+			.then(function(mix){
+				var authorTitle = "";
+				if (source != "home"){
+					var context = mix[1][Object.keys(mix[1])[0]];
+					authorTitle = context.gUsers.byName[source].title;
+				}
+				var title = authorTitle + " memories: posts from " + interval.toLocaleDateString();
+				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = title;
+				cView.doc.title +=": " + title.replace(/<.*>/g,"");
+				mix[0].sort(function(a,b){return a.initPos - b.initPos;}); 
+				cView.Drawer.drawTimeline(mix[0],mix[1]);
 				cView.Drawer.updateReqs();
 			});
 		}

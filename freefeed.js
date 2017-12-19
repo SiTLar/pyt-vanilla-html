@@ -48,6 +48,13 @@ return function(config){
 				return get2(token ,address);
 ;
 			}
+			,"getMemories": function(token,source,interval){
+				var address = "timelines/" + source 
+					+"/?created-before="+interval.toISOString()
+					+"&sort=created";
+				return get2(token ,address);
+;
+			}
 			,"getPost": function(token, path, arrOptions) {
 				var id = path.split("/")[1];
 				var likes = "0";

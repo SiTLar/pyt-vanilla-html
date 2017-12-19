@@ -2,6 +2,7 @@
 define(["./utils","./mokum_rt"],function(utils, RtUpdate){
 //utils._Promise = Promise;
 return function(config){
+	function unsupported(){return utils._Promise.resolve({});}
 	function get(token, url, pagenum){
 		var skip =((typeof pagenum !== "undefined")&& (pagenum != 1)) ?("?page=" + pagenum):"";
 		return 	utils.xhr( {
@@ -185,7 +186,8 @@ return function(config){
 					return data;
 				});
 			}
-			,"getSummary": function(token,source,interval){return utils._Promise.resolve({});}
+			,"getSummary": unsupported
+			,"getMemories": unsupported
 			,"getSearch": function (token, search, skip){
 				var pagenum = Math.ceil(skip/gConfig.offset)+1
 				skip =((typeof pagenum !== "undefined")&& (pagenum != 1)) ?("&page=" + pagenum):"";
@@ -195,7 +197,7 @@ return function(config){
 					}
 				);
 			}
-			,"getNotifications": function(token, search, skip) {return utils._Promise.resolve({});}
+			,"getNotifications": unsupported
 			,"sendPost": function(token, postdata, sender, type, timelineId){
 				var post = {
 					"timelines": new Array()
@@ -462,9 +464,7 @@ return function(config){
 					});
 				});
 			}
-			,"resetDirectsCount":function(token){
-				return utils._Promise.resolve();
-			}
+			,"resetDirectsCount":unsupported
 		}
 		,"parse":function (res){
 			var input = (typeof res == "string")?JSON.parse(res):res;

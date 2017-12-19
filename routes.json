@@ -3,6 +3,7 @@
 		"vals":{ 
 			"comments":{"dest":["Router","timeline"]}
 			,"likes":{"dest":["Router","timeline"]}
+			,"memories":{"default":{"dest":["Router","memories"]}}
 			,"subscribers":{"dest":["Router","subscribers"]}
 			,"subscriptions":{"dest":["Router","subscriptions"]}
 			,"summary":{"dest":["Router","routeSummary"]}
@@ -28,6 +29,7 @@
 		}
 		,"home":{ "dest":["Router","routeHome","token"] }
 		,"logout":{ "dest":["Actions","logout"] }
+		,"memories":{"default":{"dest":["Router","memories"]}}
 		,"requests":{"dest":["Drawer","drawRequests","token"] }
 		,"search":{"default":{"dest":["Router","routeSearch"]}}
 		,"settings":{"default":{"dest":["Drawer","drawSettings"]}}

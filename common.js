@@ -59,7 +59,7 @@ _Common.prototype = {
 		if (typeof user.screenName === "undefined")
 			user.screenName = user.username;
 		(function(screenName){
-		user.screenName = screenName.replace(/&/g,"&amp;")
+		user.untagScreenName = screenName.replace(/&/g,"&amp;")
 			.replace(/</g, "&lt;")
 			.replace(/>/g, "&gt;");
 		})(user.screenName);
@@ -68,11 +68,11 @@ _Common.prototype = {
 		if (cView.mode == null) cView.mode = "screen";
 		switch(cView.mode){
 		case "screen":
-			user.title  = user.screenName;
+			user.title  = user.untagScreenName;
 			break;
 		case "screen_u":
 			if(user.screenName != user.username)
-				user.title  = user.screenName + " <div class=username>(" + user.username + ")</div>";
+				user.title  = user.untagScreenName + " <div class=username>(" + user.username + ")</div>";
 			else user.title  = "<div class=username>"+user.username+"</div>";
 			break;
 		case "username":

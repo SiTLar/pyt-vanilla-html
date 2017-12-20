@@ -88,7 +88,7 @@ _Drawer.prototype = {
 		var nodeInfo = nodeUD.cNodes["ud-info"];
 		nodeInfo.cNodes["ud-username"].value = user.username;
 		nodeInfo.getNode(["c","ud-avatar"],["c","ud-avatar-img"]).src = user.profilePictureMediumUrl;
-		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.screenName;
+		nodeInfo.getNode(["c","ud-text"],["c","ud-title"]).innerHTML = user.untagScreenName;
 		if(typeof user.description === "string")
 			nodeInfo.getNode(["c","ud-text"],["c","ud-desc"])[(cView.readMore?"words":"innerHTML")] = context.digestText(user.description);
 			//nodeInfo.getNode(["c","ud-text"],["c","ud-desc"]).innerHTML = context.digestText(user.description);
@@ -1280,7 +1280,7 @@ _Drawer.prototype = {
 				var unit = cView.gNodes["add-sender-unit"].cloneAll();
 				unit.getNode(["c","up-avatar"],["c","avatar-img"]).src = login.users.profilePictureMediumUrl;
 				unit.getNode(["c","asu-info"],["c","username"]).innerHTML = "@" + login.users.username;
-				unit.getNode(["c","asu-info"],["c","screen-name"]).innerHTML = login.users.screenName;
+				unit.getNode(["c","asu-info"],["c","screen-name"]).innerHTML = login.users.untagScreenName;
 				unit.addEventListener("click", function(){cb(login,context)});
 				popup.cNodes["units"].appendChild(unit);
 			});

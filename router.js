@@ -185,7 +185,10 @@ define("./router",[],function(){
 			var arrPath = path.split("/").filter(function(str){return str != "";});
 			var singleContext = new Object();
 			singleContext[arrPath[1]] = contexts[arrPath[1]];
-			cView.doc.title = arrPath[1];
+			cView.doc.title = arrPath[1]
+				.replace("&amp;","&")
+				.replace("&lt;","<")
+				.replace("&gt;",">") ;
 			var newPath = arrPath.slice(2).join("/"); 
 			return this.route(singleContext, (newPath != "")?newPath:"home");
 		}
@@ -220,7 +223,10 @@ define("./router",[],function(){
 			});
 			body.appendChild(nodeAddPost);
 			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
-			cView.doc.title +=": " + path;
+			cView.doc.title +=": " + path
+				.replace("&amp;","&")
+				.replace("&lt;","<")
+				.replace("&gt;",">") ;
 			var prContxt = new Array();
 			var prConts = new Array();
 			domains.forEach(function(domain){
@@ -254,7 +260,10 @@ define("./router",[],function(){
 			});
 			body.appendChild(nodeAddPost);
 			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
-			cView.doc.title +=": " + path;
+			cView.doc.title +=": " + path
+				.replace("&amp;","&")
+				.replace("&lt;","<")
+				.replace("&gt;",">") ;
 			var prContxt = new Array();
 			var prConts = new Array();
 			domains.forEach(function(domain){
@@ -468,7 +477,10 @@ define("./router",[],function(){
 			var prAllT = some(cView.Utils._Promise, prConts);
 			var prAllC = cView.Utils._Promise.all(prContxt);
 			cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = path;
-			cView.doc.title +=": " + path;
+			cView.doc.title +=": " + path
+				.replace("&amp;","&")
+				.replace("&lt;","<")
+				.replace("&gt;",">") ;
 			return mixedTimelines(cView, contexts, prAllT,prAllC)
 			.then(function(mix){
 				cView.Drawer.drawTimeline(mix[0],mix[1]);
@@ -503,7 +515,10 @@ define("./router",[],function(){
 				var title = "Best of the " + intervals[interval] 
 					+authorTitle;
 				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = title;
-				cView.doc.title +=": " + title.replace(/<.*>/g,"");
+				cView.doc.title +=": " + title.replace(/<.*>/g,"")
+					.replace("&amp;","&")
+					.replace("&lt;","<")
+					.replace("&gt;",">") ;
 				mix[0].sort(function(a,b){return a.initPos - b.initPos;}); 
 				cView.Drawer.drawSummary(mix[0],mix[1], interval);
 				cView.Drawer.updateReqs();
@@ -536,7 +551,10 @@ define("./router",[],function(){
 				}
 				var title = authorTitle + " memories: posts from " + interval.toLocaleDateString();
 				cView.doc.getElementById("container").cNodes["pagetitle"].innerHTML = title;
-				cView.doc.title +=": " + title.replace(/<.*>/g,"");
+				cView.doc.title +=": " + title.replace(/<.*>/g,"")
+					.replace("&amp;","&")
+					.replace("&lt;","<")
+					.replace("&gt;",">") ;
 				mix[0].sort(function(a,b){return a.initPos - b.initPos;}); 
 				cView.Drawer.drawTimeline(mix[0],mix[1]);
 				cView.Drawer.updateReqs();

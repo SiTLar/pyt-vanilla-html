@@ -1558,7 +1558,7 @@ _Drawer.prototype = {
 				Object.keys(nodeNtf.cNodes).forEach(function(key){
 					var victim = nodeNtf.cNodes[key];
 					var suffix = "";
-					switch(key){
+					if(oNtf[key])switch(key){
 					case "created_user_id":
 					case "affected_user_id":
 					case "group_id":

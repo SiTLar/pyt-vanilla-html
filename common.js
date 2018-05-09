@@ -274,7 +274,7 @@ _Common.prototype = {
 					+gConfig.domains[domain].fronts.join("|")
 					+")\/(?!(as|settings|about|"
 					+gConfig.domains[domain].urlSkip.join("|")
-					+")(\/|$))"
+					+")(\/|\\?|$))"
 				)
 				,gConfig.front+"as/"+domain+"/"
 			);

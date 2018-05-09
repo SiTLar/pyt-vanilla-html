@@ -48,10 +48,11 @@ return function(config){
 				return get2(token ,address);
 ;
 			}
-			,"getMemories": function(token,source,interval){
+			,"getMemories": function(token,source,interval, skip){
 				var address = "timelines/" + source 
 					+"/?created-before="+interval.toISOString()
-					+"&sort=created";
+					+"&sort=created"
+					+"&offset="+skip;
 				return get2(token ,address);
 ;
 			}

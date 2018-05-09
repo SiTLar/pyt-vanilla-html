@@ -538,7 +538,7 @@ define("./router",[],function(){
 			domains.forEach(function(domain){ 
 				var context = contexts[domain];
 				prContxt.push(context.p);
-				prConts.push(context.api.getMemories(context.token,source,interval));
+				prConts.push(context.api.getMemories(context.token,source,interval,cView.skip));
 			});
 			var prAllT = some(cView.Utils._Promise, prConts);
 			var prAllC = cView.Utils._Promise.all(prContxt);

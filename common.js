@@ -272,9 +272,9 @@ _Common.prototype = {
 			url = url.replace(
 				new RegExp("^(.*:\/\/)?("
 					+gConfig.domains[domain].fronts.join("|")
-					+")\/(?!(as|settings|about|"
+					+")\/(?!as|settings|about|"
 					+gConfig.domains[domain].urlSkip.join("|")
-					+")(\/|\\?|$))"
+					+")"
 				)
 				,gConfig.front+"as/"+domain+"/"
 			);

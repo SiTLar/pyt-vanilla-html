@@ -4,6 +4,7 @@
 			"comments":{"dest":["Router","timeline"]}
 			,"likes":{"dest":["Router","timeline"]}
 			,"memories":{"default":{"dest":["Router","memories"]}}
+			,"calendar":{"default":{"dest":["Router","unmixed"]}}
 			,"subscribers":{"dest":["Router","subscribers"]}
 			,"subscriptions":{"dest":["Router","subscriptions"]}
 			,"summary":{"dest":["Router","routeSummary"]}

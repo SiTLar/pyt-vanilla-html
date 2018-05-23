@@ -281,6 +281,8 @@ _Actions.prototype = {
 			nodePost.rawData.body = post.body;
 			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
+		},function(err){
+			cView.Drawer.makeErrorMsg(err,textField.parentNode);
 		});
 		cView.cTxt = null;
 
@@ -335,8 +337,9 @@ _Actions.prototype = {
 					cView.posts[victim.rawData.idx].data = metapostData.dups[0];
 			} else cView.posts.splice(victim.rawData.idx,1);
 			cView.Drawer.regenHides();
-		}, function(){
+		}, function(err){
 			victim.hidden = false;
+			cView.Drawer.makeErrorMsg(err,victim);
 		});/*
 		if(victim.isPrivate){
 			oReq.open("delete",matrix.cfg.srvurl+"delete",true);
@@ -384,6 +387,7 @@ _Actions.prototype = {
 				e.target.parentNode.parentNode.parentNode.myLike = nodeLike;
 				if(!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
 				nodePost.rawData.likes.unshift(context.gMe.users.id);
+				e.target.action = false;
 			}else{
 				nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(context.gMe.users.id), 1) ;
 				var myLike = e.target.parentNode.parentNode.parentNode.myLike;
@@ -399,10 +403,17 @@ _Actions.prototype = {
 					nodePI.replaceChild(nodePI.cNodes["likes"], nodeLikes);
 				}
 				*/
+				e.target.action = true;
 			 }
-			e.target.innerHTML=e.target.action?"Un-like":"Like";
-			e.target.action = !e.target.action;
-		},function() { e.target.innerHTML= !e.target.action?"Un-like":"Like"; });
+			e.target.innerHTML=!e.target.action?"Un-like":"Like";
+			try{
+				e.target.parentNode.cNodes["msg-error"].hidden = true;
+			}catch(e){};
+		},function(err) { 
+		
+			cView.Drawer.makeErrorMsg(err,e.target.parentNode);
+			e.target.innerHTML= !e.target.action?"Un-like":"Like"; 
+		});
 
 
 
@@ -424,8 +435,11 @@ _Actions.prototype = {
 				postUpd.users.forEach(cView.Common.addUser, context);
 				nodePost.rawData.likes = postUpd.posts.likes;
 				cView.Drawer.writeAllLikes(nodePost.id, nodeLikes);
-			},function (res){
-				console.log(res);
+				try{
+					nodeLikes.parentNode.cNodes["msg-error"].hidden = true;
+				}catch(e){};
+			},function (err){
+				cView.Drawer.makeErrorMsg(err,nodeLikes.parentNode);
 
 			});
 
@@ -481,7 +495,10 @@ _Actions.prototype = {
 			cView.Common.refreshLogin(loginId,context);
 			cView.Utils.setChild(nodeParent.getNode(["p","up-controls"]).parentNode, "up-controls", cView.Drawer.genUpControls(context.gUsers.byName[username]));
 			context.getWhoami(context.logins[loginId].token);
-		},function(){  nodeParent.replaceChild( target, spinner); });
+		},function(){ 
+			cView.Drawer.makeErrorMsg(err,nodeParent);
+			nodeParent.replaceChild( target, spinner);
+		});
 	}
 	,"showHidden": function(e){
 		var cView = document.cView;
@@ -638,7 +655,8 @@ _Actions.prototype = {
 		var context = cView.contexts[nodeComment.domain];
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 		e.target.disabled = true;
-		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
+		var spinner = cView.gNodes["spinner"].cloneNode(true);
+		var nodeCancel = e.target.parentNode.replaceChild(spinner, e.target.parentNode.cNodes["edit-buttons-cancel"] );
 		var comment = context.gComments[nodeComment.rawId];
 		comment.body = cView.Common.urlsToCanonical(textField.value);
 		comment.updatedAt = Date.now();
@@ -649,6 +667,10 @@ _Actions.prototype = {
 		).then( function(res){
 			nodeComment.parentNode.replaceChild(cView.Drawer.genComment.call(context, res.comments),nodeComment);
 			context.gComments[comment.id] = res.comments;
+		},function(err){
+			e.target.disabled = false;
+			e.target.parentNode.replaceChild(nodeCancel, spinner);
+			cView.Drawer.makeErrorMsg(err,nodeComment);
 		});
 		cView.cTxt = null;
 
@@ -809,6 +831,7 @@ _Actions.prototype = {
 		var context = cView.contexts[domain];
 		var id = nodePost.id;
 		var spUnfold = e.target.parentNode.appendChild(cView.doc.createElement("i"));
+		var host = e.target.getNode(["p","comment-body"]);
 		spUnfold.className = "fa fa-spinner fa-pulse";
 		return context.api.getPost(context.token
 			, context.gUsers[nodePost.rawData.createdBy].username
@@ -847,9 +870,9 @@ _Actions.prototype = {
 			window.dispatchEvent(new CustomEvent("newNode", {"detail":arrCmts}));
 			return postUpd;
 
-		},function(res){
+		},function(err){
 			spUnfold.parentNode.removeChild(spUnfold);
-			console.log(res);
+			cView.Drawer.makeErrorMsg(err,host);
 
 		});
 	}
@@ -1421,8 +1444,9 @@ _Actions.prototype = {
 			}
 			
 		}
-		,function(){
+		,function(err){
 			host.removeChild(spinner);
+			cView.Drawer.makeErrorMsg(err,host);
 			node.parentNode.hidden = false;
 		});
 
@@ -1606,6 +1630,11 @@ _Actions.prototype = {
 			nodePost.getElementsByClassName("cmts-lock-msg")[0].hidden = !ctrl.action;
 			ctrl.action = !ctrl.action;
 			parentNode.replaceChild(ctrl, spinner);	
+			try{
+				parentNode.cNodes["msg-error"].hidden = true;
+			}catch(e){};
+		},function(err){
+			cView.Drawer.makeErrorMsg(err,parentNode);
 		});
 	}
 	,"goSetAccounts": function(e){

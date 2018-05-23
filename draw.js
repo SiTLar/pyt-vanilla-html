@@ -1446,15 +1446,23 @@ _Drawer.prototype = {
 		}
 
 	}
-	,"makeErrorMsg":function(err,nodeEButtons){
+	,"makeErrorMsg":function(err,host){
 		var cView = this.cView;
-		var node = cView.doc.createElement("div");
-		node.className = "msg-error";
+		var node ;
+		if (typeof host.cNodes === "undefined" ) host.cNodes = new Object();
+		if (typeof host.cNodes["msg-error"] !== "undefined")
+			node =  host.cNodes["msg-error"] ;
+		else {
+			node = cView.doc.createElement("div");
+			node.className = "msg-error";
+			host.cNodes["msg-error"] = node;
+			host.appendChild(node);
+		}
+		node.hidden = false;
 		var msg;
 		try{msg = JSON.parse(err.data).err;}
 		catch(e){msg = err.data;}
 		node.innerHTML = err.code?("Error #"+err.code+": "+msg):"Looks like a network error";
-		nodeEButtons.appendChild(node);
 	}
 	,"genBlockStrPage":function(domain){
 		var cView = this.cView;

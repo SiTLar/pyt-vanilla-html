@@ -15,7 +15,7 @@
 		]
 		,"search":"https://freefeed.net/search"
 		,"msg":"<a href=\"https://freefeed.net/about\">FreeFeed.net</a>"
-		,"urlSkip":[]
+		,"urlSkip":["$"]
 	}		
 	,"Mokum":{ "api":"mokum"
 		,"server":{

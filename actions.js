@@ -355,10 +355,11 @@ _Actions.prototype = {
 		var nodeLikes = cView.Utils.getNode(e.target,["p","post-info"],["c","likes"]);
 		var nodePost = cView.Utils.getNode(nodeLikes, ["p","post"]);
 		var context = cView.contexts[nodePost.rawData.domain];
+		var action = e.target.action;
 		e.target.innerHTML = "";
 		e.target.appendChild(cView.gNodes["spinner"].cloneAll());
-		context.api.sendLike(context.token, nodePost.rawData.id, e.target.action).then(function(){
-			if(e.target.action){
+		context.api.sendLike(context.token, nodePost.rawData.id, action).then(function(){
+			if(action){
 				var idx;
 				var likesUL;
 				if (!nodeLikes.childNodes.length){
@@ -387,7 +388,7 @@ _Actions.prototype = {
 				e.target.parentNode.parentNode.parentNode.myLike = nodeLike;
 				if(!Array.isArray(nodePost.rawData.likes)) nodePost.rawData.likes = new Array();
 				nodePost.rawData.likes.unshift(context.gMe.users.id);
-				e.target.action = false;
+				action = false;
 			}else{
 				nodePost.rawData.likes.splice(nodePost.rawData.likes.indexOf(context.gMe.users.id), 1) ;
 				var myLike = e.target.parentNode.parentNode.parentNode.myLike;
@@ -403,16 +404,18 @@ _Actions.prototype = {
 					nodePI.replaceChild(nodePI.cNodes["likes"], nodeLikes);
 				}
 				*/
-				e.target.action = true;
-			 }
-			e.target.innerHTML=!e.target.action?"Un-like":"Like";
+				action = true;
+			}
+			 
+			e.target.action = action;
+			e.target.innerHTML=action?"Like":"Un-like";
 			try{
 				e.target.parentNode.cNodes["msg-error"].hidden = true;
 			}catch(e){};
 		},function(err) { 
 		
 			cView.Drawer.makeErrorMsg(err,e.target.parentNode);
-			e.target.innerHTML= !e.target.action?"Un-like":"Like"; 
+			e.target.innerHTML=action?"Like":"Un-like";
 		});
 
 

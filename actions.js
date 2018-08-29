@@ -1,5 +1,17 @@
 "use strict";
 function is(val){return typeof val !== "undefined";};
+function goUnfolder(nodeImgAtt){
+	var host = nodeImgAtt.parentNode;
+	var total = 0;
+	for(var idx = 0; idx < nodeImgAtt.childNodes.length; idx++){
+		total += nodeImgAtt.childNodes[idx].t.w;
+		if (host.clientWidth < total) break;
+		else nodeImgAtt.childNodes[idx].hidden = false;
+	}
+	if ((host.clientWidth < total)&&(nodeImgAtt.childNodes.length > 1) )
+		host.cNodes["atts-unfold"].hidden = false;
+
+}
 define("./actions",[],function() {
 function appendAttachment(nodeNewPost, name, file){
 	var cView = document.cView;
@@ -1033,12 +1045,16 @@ _Actions.prototype = {
 	,"unfoldAttImgs": function (e){
 		var cView = document.cView;
 		var nodeAtts = cView.Utils.getNode(e.target,["p", "attachments"]);
+		var nodeImgHost = nodeAtts.cNodes["atts-img"];
 		if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
-			nodeAtts.cNodes["atts-img"].style.flexWrap = "wrap";
+			nodeImgHost.style.flexWrap = "wrap";
+			for (var idx = 0;idx < nodeImgHost.childNodes.length; idx++)
+				nodeImgHost.childNodes[idx].hidden = false;
+			
 			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';
 			nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "false";
 		}else{
-			nodeAtts.cNodes["atts-img"].style.flexWrap = "nowrap";
+			nodeImgHost.style.flexWrap = "nowrap";
 			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-down fa-2x"></i>';
 			nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "true";
 		}
@@ -1481,8 +1497,7 @@ _Actions.prototype = {
 		var cView = document.cView;
 		var nodeImgAtt = cView.Utils.getNode(e.target, ["p", "atts-img"]);
 		e.target.style.height = "auto";
-		if(cView.Utils.chkOverflow(nodeImgAtt))
-			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
+		goUnfolder(nodeImgAtt);
 	
 	}
 	,"showUnfolderRt":function(e){
@@ -1492,9 +1507,7 @@ _Actions.prototype = {
 			e.target.style.height = "auto";
 			return nodeImgAtt;
 		});
-		if(cView.Utils.chkOverflow(nodeImgAtt))
-			nodeImgAtt.parentNode.cNodes["atts-unfold"].hidden = false;
-	
+		goUnfolder(nodeImgAtt);
 	}
 	,"chngAvatar":function(e){
 		var cView = document.cView;

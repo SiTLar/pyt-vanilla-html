@@ -774,6 +774,7 @@ _Drawer.prototype = {
 
 		if(Array.isArray(post.attachments)&&post.attachments.length){
 			var attsNode = postNBody.cNodes["attachments"];
+			var bFirstImg = true;
 			post.attachments.forEach(function(att){
 				var nodeAtt = cView.doc.createElement("div");
 				var oAtt = context.gAttachments[att];
@@ -783,13 +784,21 @@ _Drawer.prototype = {
 					nodeA.target = "_blank";
 					nodeA.href = oAtt.url;
 					nodeA.border = "none";
+					if (typeof oAtt.imageSizes.t !== "undefined")
+						nodeAtt.t = oAtt.imageSizes.t;
+					else nodeAtt.t = oAtt.imageSizes.o;
 					var nodeImg = cView.doc.createElement("img");
 					nodeImg.src = oAtt.thumbnailUrl;
-					nodeImg.style.height = 0;
+					//nodeImg.style.height = 0;
 					var showUnfolder =  (post.src === "rt")?	
 						cView.Actions.showUnfolderRt
 						:cView.Actions.showUnfolder
-					nodeImg.addEventListener("load", showUnfolder);
+					if(bFirstImg){
+						nodeImg.addEventListener("load", showUnfolder);
+						bFirstImg = false;
+					}else{
+						nodeAtt.hidden = true;
+					}
 					nodeA.appendChild(nodeImg);
 					nodeAtt.appendChild(nodeA);
 					attsNode.cNodes["atts-img"].appendChild(nodeAtt);

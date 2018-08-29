@@ -477,6 +477,10 @@ return function(config){
 					,"post":function(atts){ 
 						return (Array.isArray(atts)?atts:[atts]).map(function(att){
 							att.mediaType="image";
+							att.imageSizes = {"t": {
+								"w":att.thumb_width
+								,"h":att.thumb_height
+							}};
 							aAttachments.push(att); 
 							return att.id;
 						});
@@ -584,6 +588,8 @@ return function(config){
 				,"subscriptions":{"out":"","a":"copy"}
 				,"text":{"out":"body","a":"copy"}
 				,"thumb_url":{"out":"thumbnailUrl","a":"mutate", "f":addHost}
+				,"thumb_width":{"out":"","a":"copy"}
+				,"thumb_height":{"out":"","a":"copy"}
 				,"type":{"out":"","a":"copy"}
 				,"unreadDirectsNumber":{"out":"","a":"copy"}
 				,"updated_at":{"out":"updatedAt","a":"mutate","f":Date.parse,"single":true}

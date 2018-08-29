@@ -171,7 +171,7 @@
 	{"c": "created_user_id", "t":"a"}
 	,{"t":"span", "txt":"has promoted"}
 	,{"c": "affected_user_id", "t":"a"}
-	,{"t":"span", "txt":"to admin goup"}
+	,{"t":"span", "txt":"to admin group"}
 	,{"c": "group_id", "t":"a"}
 	,{"c":"date", "t":"span"}
 ]}

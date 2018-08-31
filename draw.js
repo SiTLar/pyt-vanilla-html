@@ -789,7 +789,7 @@ _Drawer.prototype = {
 					else nodeAtt.t = oAtt.imageSizes.o;
 					var nodeImg = cView.doc.createElement("img");
 					nodeImg.src = oAtt.thumbnailUrl;
-					//nodeImg.style.height = 0;
+					nodeImg.style.height = 0;
 					var showUnfolder =  (post.src === "rt")?	
 						cView.Actions.showUnfolderRt
 						:cView.Actions.showUnfolder

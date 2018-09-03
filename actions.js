@@ -3,10 +3,21 @@ function is(val){return typeof val !== "undefined";};
 function goUnfolder(nodeImgAtt){
 	var host = nodeImgAtt.parentNode;
 	var total = 0;
+	var cView = document.cView;
 	for(var idx = 0; idx < nodeImgAtt.childNodes.length; idx++){
 		total += nodeImgAtt.childNodes[idx].t.w;
 		if (host.clientWidth < total) break;
-		else nodeImgAtt.childNodes[idx].hidden = false;
+		else if(idx) {
+			var nodeImg = nodeImgAtt.childNodes[idx].img;
+			nodeImgAtt.childNodes[idx].hidden = false;
+			nodeImg.addEventListener("load",function(){ 
+				cView.Utils.unscroll(function(){
+					nodeImg.style.height = "auto";
+					return nodeImgAtt;
+				});
+			});
+			nodeImg.src = nodeImgAtt.childNodes[idx].url;
+		}
 	}
 	if ((host.clientWidth < total)&&(nodeImgAtt.childNodes.length > 1) )
 		host.cNodes["atts-unfold"].hidden = false;
@@ -1048,8 +1059,11 @@ _Actions.prototype = {
 		var nodeImgHost = nodeAtts.cNodes["atts-img"];
 		if(nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value == "true"){
 			nodeImgHost.style.flexWrap = "wrap";
-			for (var idx = 0;idx < nodeImgHost.childNodes.length; idx++)
+			for (var idx = 1;idx < nodeImgHost.childNodes.length; idx++){
 				nodeImgHost.childNodes[idx].hidden = false;
+				nodeImgHost.childNodes[idx].img.src = nodeImgHost.childNodes[idx].url;
+				nodeImgHost.childNodes[idx].img.style.height = "auto";
+			}
 			
 			nodeAtts.cNodes["atts-unfold"].getElementsByTagName("a")[0].innerHTML = '<i class="fa fa-chevron-up fa-2x"></i>';
 			nodeAtts.cNodes["atts-unfold"].cNodes["unfold-action"].value = "false";

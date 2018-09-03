@@ -788,17 +788,20 @@ _Drawer.prototype = {
 						nodeAtt.t = oAtt.imageSizes.t;
 					else nodeAtt.t = oAtt.imageSizes.o;
 					var nodeImg = cView.doc.createElement("img");
-					nodeImg.src = oAtt.thumbnailUrl;
-					nodeImg.style.height = 0;
 					var showUnfolder =  (post.src === "rt")?	
 						cView.Actions.showUnfolderRt
-						:cView.Actions.showUnfolder
+						:cView.Actions.showUnfolder;
+					nodeImg.style.height = 0;
 					if(bFirstImg){
 						nodeImg.addEventListener("load", showUnfolder);
+						nodeImg.src = oAtt.thumbnailUrl;
 						bFirstImg = false;
 					}else{
+						nodeAtt.url = oAtt.thumbnailUrl;
+						nodeAtt.img = nodeImg;
 						nodeAtt.hidden = true;
 					}
+					
 					nodeA.appendChild(nodeImg);
 					nodeAtt.appendChild(nodeA);
 					attsNode.cNodes["atts-img"].appendChild(nodeAtt);

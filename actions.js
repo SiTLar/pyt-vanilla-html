@@ -7,8 +7,7 @@ function goUnfolder(nodeImgAtt){
 	for(var idx = 0; idx < nodeImgAtt.childNodes.length; idx++){
 		total += nodeImgAtt.childNodes[idx].t.w  ;
 		var nodeImg = nodeImgAtt.childNodes[idx].img;
-		if(idx && (!nodeImg.complete 
-		|| (nodeImg.src != nodeImgAtt.childNodes[idx].url)) ) {
+		if(idx && (nodeImg.src != nodeImgAtt.childNodes[idx].url) ) {
 			nodeImgAtt.childNodes[idx].hidden = false;
 			/*
 			nodeImg.addEventListener("load",function(){ 

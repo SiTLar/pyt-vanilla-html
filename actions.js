@@ -5,19 +5,23 @@ function goUnfolder(nodeImgAtt){
 	var total = 0;
 	var cView = document.cView;
 	for(var idx = 0; idx < nodeImgAtt.childNodes.length; idx++){
-		total += nodeImgAtt.childNodes[idx].t.w;
-		if (host.clientWidth < total) break;
-		else if(idx) {
-			var nodeImg = nodeImgAtt.childNodes[idx].img;
+		total += nodeImgAtt.childNodes[idx].t.w  ;
+		var nodeImg = nodeImgAtt.childNodes[idx].img;
+		if(idx && (!nodeImg.complete 
+		|| (nodeImg.src != nodeImgAtt.childNodes[idx].url)) ) {
 			nodeImgAtt.childNodes[idx].hidden = false;
+			/*
 			nodeImg.addEventListener("load",function(){ 
 				cView.Utils.unscroll(function(){
 					nodeImg.style.height = "auto";
 					return nodeImgAtt;
 				});
 			});
+			*/
 			nodeImg.src = nodeImgAtt.childNodes[idx].url;
 		}
+		if (host.clientWidth < total) break;
+		total += nodeImgAtt.childNodes[idx].style["margin-left"]*(!!idx);
 	}
 	if ((host.clientWidth < total)&&(nodeImgAtt.childNodes.length > 1) )
 		host.cNodes["atts-unfold"].hidden = false;
@@ -1521,6 +1525,7 @@ _Actions.prototype = {
 			e.target.style.height = "auto";
 			return nodeImgAtt;
 		});
+		cView.Utils.getNode(e.target, ["p", "att-img"]).t.w = e.target.width;
 		goUnfolder(nodeImgAtt);
 	}
 	,"chngAvatar":function(e){

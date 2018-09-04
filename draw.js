@@ -786,14 +786,19 @@ _Drawer.prototype = {
 					nodeA.border = "none";
 					if (typeof oAtt.imageSizes.t !== "undefined")
 						nodeAtt.t = oAtt.imageSizes.t;
-					else nodeAtt.t = oAtt.imageSizes.o;
+					else if(typeof oAtt.imageSizes.o !== "undefined")
+						nodeAtt.t = oAtt.imageSizes.o;
+					else nodeAtt.t = {"w":0};
 					var nodeImg = cView.doc.createElement("img");
-					var showUnfolder =  (post.src === "rt")?	
+					/*
+					var showUnfolder = (post.src === "rt")?	
 						cView.Actions.showUnfolderRt
 						:cView.Actions.showUnfolder;
+					*/
+					var showUnfolder = cView.Actions.showUnfolderRt;
 					nodeImg.style.height = 0;
+					nodeImg.addEventListener("load", showUnfolder);
 					if(bFirstImg){
-						nodeImg.addEventListener("load", showUnfolder);
 						nodeImg.src = oAtt.thumbnailUrl;
 						bFirstImg = false;
 					}else{

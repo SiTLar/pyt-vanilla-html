@@ -797,13 +797,13 @@ _Drawer.prototype = {
 					*/
 					var showUnfolder = cView.Actions.showUnfolderRt;
 					nodeImg.style.height = 0;
+					nodeAtt.img = nodeImg;
 					nodeImg.addEventListener("load", showUnfolder);
 					if(bFirstImg){
 						nodeImg.src = oAtt.thumbnailUrl;
 						bFirstImg = false;
 					}else{
 						nodeAtt.url = oAtt.thumbnailUrl;
-						nodeAtt.img = nodeImg;
 						nodeAtt.hidden = true;
 					}
 					

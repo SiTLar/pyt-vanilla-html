@@ -680,7 +680,7 @@ return function(config){
 				});
 			}
 			function addHost(url){
-				if(url.charAt(1) == "/")return url;
+				if(url.search(/(https?:)?\/\//) == 0)return url;
 				return "//mokum.place" + url;
 			}
 			function wwwFormData(key,val){

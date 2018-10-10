@@ -61,7 +61,7 @@ var payload = [
 			var phase = suncalc.getMoonIllumination(Date.now()).phase;
 			var nodeImg = cView.doc.createElement("img");
 			nodeImg.className = "img-center";
-			nodeImg.src = "https://cdn.rawgit.com/thelinmichael/lunar-phases/master/images/browser-icons/"
+			nodeImg.src = "https://cdn.jsdelivr.net/gh/thelinmichael/lunar-phases@a9e2b76af66b791193a7b770832ecda852d38ffc/images/browser-icons/"
 			+Math.round(29*phase)+ ".png"
 			return [nodeImg];
 			

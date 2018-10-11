@@ -201,4 +201,47 @@
 	,{"c": "post_id", "t":"a", "txt": "direct message"}
 	,{"c":"date", "t":"span"}
 ]}
+,{"c": "comment_moderated"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has deleted a comment of"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"to a"}
+	,{"c": "post_id", "t":"a", "txt": "post"}
+	,{"t":"span", "txt":"in goup"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "comment_moderated_by_another_admin"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has deleted a comment of"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"to a"}
+	,{"c": "post_id", "t":"a", "txt": "post"}
+	,{"t":"span", "txt":"in goup"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "post_moderated"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has deleted a"}
+	,{"c": "post_id", "t":"a", "txt": "post"}
+	,{"t":"span", "txt":"of"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"in goup"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
+,{"c": "post_moderated_by_another_admin"
+,"el":[
+	{"c": "created_user_id", "t":"a"}
+	,{"t":"span", "txt":"has deleted a post"}
+	,{"t":"span", "txt":"of"}
+	,{"c": "affected_user_id", "t":"a"}
+	,{"t":"span", "txt":"in goup"}
+	,{"c": "group_id", "t":"a"}
+	,{"c":"date", "t":"span"}
+]}
 ]

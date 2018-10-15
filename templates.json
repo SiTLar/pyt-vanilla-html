@@ -502,6 +502,14 @@
 		,{"t":"label"
 		,"el":[
 			{"t":"input"
+				,"p":{"type":"checkbox", "value":"do_dark_theme"}
+				,"e":{"change":["Actions","setChkboxOption"]}
+			}
+			,{"t":"span","txt":"Use dark colour theme"}
+		]}
+		,{"t":"label"
+		,"el":[
+			{"t":"input"
 				,"p":{"type":"checkbox", "value":"no_metapost"}
 				,"e":{"change":["Actions","setChkboxOption"]}
 			}

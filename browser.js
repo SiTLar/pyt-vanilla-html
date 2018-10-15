@@ -325,6 +325,7 @@ function setLocalSettings(){
 		+ cssTheme 
 		+ "?build=" 
 		+ encodeURIComponent(___BUILD___); 
+	
 	if(JSON.parse(cView.localStorage.getItem("show_link_preview"))){
 		var nodeEmScript =  document.createElement("script");
 		(function(w, d){
@@ -362,6 +363,13 @@ function setLocalSettings(){
 					
 		});
 	}
+	if (cView.localStorage.getItem("do_dark_theme") != null){
+		var elCSS = document.createElement("link");
+		elCSS.rel = "stylesheet";
+		elCSS.href = "https://gitcdn.xyz/repo/dym-sh/freefeed-dark.css/master/no-wrap.css";
+		document.getElementsByTagName("head")[0].appendChild(elCSS);
+	}
+
 
 }
 

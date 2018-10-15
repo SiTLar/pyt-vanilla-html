@@ -363,7 +363,7 @@ function setLocalSettings(){
 					
 		});
 	}
-	if (cView.localStorage.getItem("do_dark_theme") != null){
+	if (cView.localStorage.getItem("do_dark_theme") == "true"){
 		var elCSS = document.createElement("link");
 		elCSS.rel = "stylesheet";
 		elCSS.href = "https://gitcdn.xyz/repo/dym-sh/freefeed-dark.css/master/no-wrap.css";

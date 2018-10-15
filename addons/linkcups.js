@@ -38,9 +38,9 @@ function linkCups (nodePost){
 				,"g"
 			);
 			content.innerHTML = content.innerHTML.replace(re
-				,"$1<span class=\"cups_"
+				,"$1<a class=\"cups_"
 					+match.length
-					+"\">$2</span>"
+					+"\">$2</a>"
 			);
 		});
 		Object.keys(cups).forEach(function(cup){
@@ -55,7 +55,12 @@ function addHighlightEvts (host, target){
 	function off(){host.classList.remove("highlighted");target.classList.remove("highlighted");}
 	host.addEventListener("mouseover",on );
 	host.addEventListener("mouseout", off);
-	host.addEventListener("click",function(){on();setTimeout(off, 1000)});
+	host.addEventListener("click",function(){
+		on();
+		host.removeEventListener("mouseout", off);
+		setTimeout(function(){host.addEventListener("mouseout", off);off();} , 1000);
+		window.scroll(0,target.offsetTop);
+	});
 }
 var handlers = {
 	"evtNewNode":function(e){

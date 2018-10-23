@@ -88,7 +88,8 @@
 				]}
 				,{"c":"comment-body"
 				,"el":[
-					{"t":"a", "txt":"Add comment", "e":{"click":["Actions","addComment"]}}
+					{"c":"cmts-lock-msg","t":"span", "txt":"Comments disabled", "p":{"hidden":true}}
+					,{"c":"cmts-add", "t":"a", "txt":"Add comment", "e":{"click":["Actions","addComment"]}}
 					,{"c":"spacer","t":"span","txt":"&mdash;"}
 					,{"t":"a", "txt":"Fold comments", "e":{"click":["Actions","foldComments"]}}
 				]}
@@ -125,7 +126,7 @@
 	,{"c":"controls-self","t":"span"
 	,"el":[
 		{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":["Actions","addComment"]}}
+		,{"c":"post-control-comment", "cl":["cmts-add"],"t":"a","txt":"Comment","e":{"click":["Actions","addComment"]}}
 		,{"c":"spacer","t":"span","txt":"-"}
 		,{"c":"post-control-edit","t":"a","txt":"Edit","e":{"click":["Actions","editPost"]}}
 		,{"c":"spacer","t":"span","txt":"-"}
@@ -136,7 +137,7 @@
 	,{"c":"controls-others","t":"span"
 	,"el":[
 		{"c":"spacer","t":"span","txt":"&mdash;"}
-		,{"c":"post-control-comment","t":"a","txt":"Comment","e":{"click":["Actions","addComment"]}}
+		,{"c":"post-control-comment", "cl":["cmts-add"],"t":"a","txt":"Comment","e":{"click":["Actions","addComment"]}}
 		,{"c":"spacer","t":"span","txt":"-"}
 		,{"c":"post-control-like","t":"a","txt":"Like","e":{"click":["Actions","postLike"]}}
 		,{"c":"spacer","t":"span","txt":"-"}

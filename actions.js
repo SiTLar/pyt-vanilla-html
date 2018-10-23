@@ -894,6 +894,13 @@ _Actions.prototype = {
 			}
 			cView.Utils.setChild(nodePB,"comments", host);
 			nodePost.getNode(["c","post-body"],["c","many-cmts-ctrl"]).hidden = false;
+			if ((context.ids.indexOf(postUpd.posts.createdBy) == -1) && (postUpd.posts.commentsDisabled == "1")){
+				var nodeCmtControls = nodePost.getElementsByClassName("cmts-add");
+				for(var idx = 0; idx < nodeCmtControls.length; idx++){
+					nodeCmtControls[idx].style.display = "none";
+					nodeCmtControls[idx].nextSibling.style.display = "none";
+				}
+			}
 			cView.Drawer.applyReadMore( nodePB);
 
 			window.dispatchEvent(new CustomEvent("newNode", {"detail":arrCmts}));

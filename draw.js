@@ -853,9 +853,11 @@ _Drawer.prototype = {
 				postNBody.cNodes["post-info"].nodeLike = nodeControls.cNodes["post-control-like"];
 				nodeControls.cNodes["post-control-like"].action = true;
 				if(post.commentsDisabled == "1"){
-					var nodeCmtControl = nodeControls.getElementsByClassName("post-control-comment")[0];
-					nodeCmtControl.style.display = "none";
-					nodeCmtControl.nextSibling.style.display = "none";
+					var nodeCmtControls = nodeControls.getElementsByClassName("cmts-add");
+					for(var idx = 0; idx < nodeCmtControls.length; idx++){
+						nodeCmtControls[idx].style.display = "none";
+						nodeCmtControls[idx].nextSibling.style.display = "none";
+					}
 				}
 			}
 			nodeControls.className = "controls";

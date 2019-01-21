@@ -180,7 +180,7 @@
 	{"c": "created_user_id", "t":"a"}
 	,{"t":"span", "txt":"has revoked admin privileges from"}
 	,{"c": "affected_user_id", "t":"a"}
-	,{"t":"span", "txt":"in goup"}
+	,{"t":"span", "txt":"in group"}
 	,{"c": "group_id", "t":"a"}
 	,{"c":"date", "t":"span"}
 ]}
@@ -208,7 +208,7 @@
 	,{"c": "affected_user_id", "t":"a"}
 	,{"t":"span", "txt":"to a"}
 	,{"c": "post_id", "t":"a", "txt": "post"}
-	,{"t":"span", "txt":"in goup"}
+	,{"t":"span", "txt":"in group"}
 	,{"c": "group_id", "t":"a"}
 	,{"c":"date", "t":"span"}
 ]}
@@ -219,7 +219,7 @@
 	,{"c": "affected_user_id", "t":"a"}
 	,{"t":"span", "txt":"to a"}
 	,{"c": "post_id", "t":"a", "txt": "post"}
-	,{"t":"span", "txt":"in goup"}
+	,{"t":"span", "txt":"in group"}
 	,{"c": "group_id", "t":"a"}
 	,{"c":"date", "t":"span"}
 ]}
@@ -230,7 +230,7 @@
 	,{"c": "post_id", "t":"a", "txt": "post"}
 	,{"t":"span", "txt":"of"}
 	,{"c": "affected_user_id", "t":"a"}
-	,{"t":"span", "txt":"in goup"}
+	,{"t":"span", "txt":"in group"}
 	,{"c": "group_id", "t":"a"}
 	,{"c":"date", "t":"span"}
 ]}
@@ -240,7 +240,7 @@
 	,{"t":"span", "txt":"has deleted a post"}
 	,{"t":"span", "txt":"of"}
 	,{"c": "affected_user_id", "t":"a"}
-	,{"t":"span", "txt":"in goup"}
+	,{"t":"span", "txt":"in group"}
 	,{"c": "group_id", "t":"a"}
 	,{"c":"date", "t":"span"}
 ]}

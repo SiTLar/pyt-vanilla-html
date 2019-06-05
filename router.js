@@ -1,6 +1,6 @@
 "use strict";
 var gRoutes = require("json!./routes.json");
-function is(val){return typeof val !== "undefined";};
+function is(val){return (typeof val !== "undefined")&&(val != null);};
 var chk = {
 	"token":function(contexts){
 		Object.keys(contexts).forEach(function(domain){

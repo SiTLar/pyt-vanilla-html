@@ -126,6 +126,7 @@ var payload = [
 				,["discussions","My discussions"]
 				,["direct","Direct messages"]
 				,["notifications","Notifications"]
+				,["everything","Everything"]
 			].map(function(a){return genLinks(cView, a,linkHead);});
 			nodes.push(genLinks(cView,["summary/1", "Best of the day", gConfig.front]));
 

@@ -16,6 +16,9 @@ return function(config){
 				if (timeline == "filter/best_of") return get2( token 
 					,"bestof" + "?offset="+skip
 				);
+				if (timeline == "filter/everything") return get2( token 
+					,"everything" + "?offset="+skip
+				);
 				return get2( token 
 					,"timelines/"+ timeline + "?offset="+skip
 				);

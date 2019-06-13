@@ -1869,7 +1869,7 @@ _Actions.prototype = {
 	}
 	,"submitCuUm": function(e){
 		var cView = document.cView;
-		var customFunctions = require("json!./custom_functions.json");
+		var customFunctions = require("./custom_functions.json");
 		var item = cView.gNodes["custom-ui-item"].cloneAll(true);
 		var host = cView.doc.getElementById("custom-ui-um-display")
 		var slots = cView.Utils.getInputsByName(item);

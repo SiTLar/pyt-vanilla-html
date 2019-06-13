@@ -11,7 +11,7 @@ window.browserDoc = function(){
 	if (locationPath == "")locationPath = "home";
 	cView.fullPath = locationPath;
 	var arrLocationPath = locationPath.split("/");
-	var settingsNames = require("json!./settings.json");
+	var settingsNames = require("./settings.json");
 	settingsNames.forEach(function(name){
 		var setting =  cView.localStorage.getItem(name);
 		if (setting == "undefined")cView.localStorage.setItem(name, "false");

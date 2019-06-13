@@ -23,8 +23,8 @@ define(
 
 	}
 
-	var gTemplates = require("json!./templates.json");
-	var gDomains = require("json!./domains.json");
+	var gTemplates = require("./templates.json");
+	var gDomains = require("./domains.json");
 	function _gMe(){
 		var context = this;
 		var logins = context.logins;

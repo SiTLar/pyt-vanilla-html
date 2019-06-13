@@ -39,7 +39,7 @@ var template = [
 	,{"c":"update-status" }
 ]}
 ];
-var settingsNames = require("json!../settings.json");;
+var settingsNames = require("../settings.json");;
 function netError(res){
 	nodeMsg.className = "msg-error";
 	nodeMsg.innerHTML = "Got error: ";

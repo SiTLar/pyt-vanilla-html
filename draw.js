@@ -216,7 +216,7 @@ _Drawer.prototype = {
 			});
 		}
 		function drawCustomUI(){
-			var customFunctions = require("json!./custom_functions.json");
+			var customFunctions = require("./custom_functions.json");
 			nodeSettingsHead.cNodes["sh-custom-ui"].className = "sh-selected";
 			var nodeCtrl = cView.gNodes["custom-ui-settings-page"].cloneAll();
 			body.appendChild( nodeCtrl);
@@ -1499,7 +1499,7 @@ _Drawer.prototype = {
 	}
 	,"drawRaw": function (output){
 		var cView = this.cView;
-		var settingsNames = require("json!./settings.json");
+		var settingsNames = require("./settings.json");
 		cView.doc.location.search.substr(1).split("&").forEach(function(item){
 			item = decodeURIComponent(item).split("=");
 			if ((item.length != 2) || (settingsNames.indexOf(item[0]) == -1)) return;
@@ -1514,7 +1514,7 @@ _Drawer.prototype = {
 	}
 	,"genCustomUI": function(scheme){
 		var cView = this.cView;
-		var customFunctions = require("json!./custom_functions.json");
+		var customFunctions = require("./custom_functions.json");
 		var host = cView.doc.createElement("div");
 		scheme.forEach(function(item){
 			var funcId; 
@@ -1569,7 +1569,7 @@ _Drawer.prototype = {
 
 		cView.doc.getElementById("container").appendChild(nodeMore.cloneNode(true));
 		var ntfTemplates = new Object();
-		cView.Common.genNodes(require("json!./notifications.json")).forEach(function(node){
+		cView.Common.genNodes(require("./notifications.json")).forEach(function(node){
 			ntfTemplates[node.classList[0]] = node;
 		});
 		input.forEach(function(notifications){

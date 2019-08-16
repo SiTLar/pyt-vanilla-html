@@ -341,12 +341,15 @@ RtHandler.prototype = {
 		if(!nodePost) return;
 
 		var nodeCont = cView.doc.createElement("div");
+		nodePost.rawData.body = data.posts.body;
+		nodePost.rawData.postedTo = data.posts.postedTo;
+		nodePost.cNodes["post-body"].cNodes["title"].innerHTML = cView.Drawer.genTitle(nodePost);
+		nodePost.cNodes["post-body"].cNodes["title"].className = "title";
 		nodeCont.words = context.digestText(data.posts.body);
 		nodeCont.className = "post-cont long-text";
 		nodeCont.dir = "auto";
 		cView.Utils.setChild(nodePost.cNodes["post-body"], "post-cont", nodeCont);
 		delete nodeCont.isUnfolded;
-		nodePost.rawData.body = data.posts.body;
 		cView.Utils.unscroll(function(){
 			cView.Drawer.applyReadMore( nodeCont);
 			cView.Common.markMetaMenu(nodePost);

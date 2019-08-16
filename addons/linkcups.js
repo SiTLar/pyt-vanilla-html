@@ -99,7 +99,7 @@ return function(cV){
 		"run": function (){
 
 			var nodesPosts = document.getElementsByClassName("post");
-			for ( idx = 0; idx < nodesPosts.length; idx++)
+			for ( var idx = 0; idx < nodesPosts.length; idx++)
 				linkCups(nodesPosts[idx]);
 
 			window.addEventListener("newNode", handlers.evtNewNode);

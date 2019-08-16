@@ -221,7 +221,7 @@ function initLikes(){
 	for(var idx = 0; idx < nodesCmt.length; idx++){
 		if( nodesCmt[idx].classList.contains("comments-load") )
 			continue;
-		domain = nodesCmt[idx].domain;
+		var domain = nodesCmt[idx].domain;
 		if(!Array.isArray(cmts[domain]))cmts[domain] = new Array();
 		cmts[domain].push(nodesCmt[idx]);
 	}

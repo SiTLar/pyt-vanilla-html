@@ -236,10 +236,7 @@
 	,"el":[
 		{"c":"mu-login", "t":"span", "p":{"hidden":true}}
 		,{"t":"span", "txt":"Post to:"}
-		,{"c":"new-post-feeds","t":"ul"
-		,"el":[
-			{"c":"new-post-feed","txt":"My feed", "t":"li","e":{"click":["Actions","newDirectRemoveFeed"]} }
-		]}
+		,{"c":"new-post-feeds","t":"ul"}
 		,{"c":"new-feed-input" 
 		,"el":[
 			{"c":"input", "t": "input","p":{"hidden":"1"}

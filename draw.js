@@ -1154,7 +1154,8 @@ _Drawer.prototype = {
 		var context = cView.contexts[login.domain];
 		var nodePostTo = cView.gNodes["new-post-to"].cloneAll();
 		var idx = 1;
-		var dest = ( init ? init : login.users.username );
+		init = ( init ? init : login.users.username )
+		var arrDest = (Array.isArray(init)?init:[init]);
 		if( Object.keys(cView.contexts).reduce(
 			function(prev,domain){ return prev.concat(cView.contexts[domain].ids);}
 			,[]
@@ -1168,10 +1169,15 @@ _Drawer.prototype = {
 
 		victim.cNodes["post-to"].appendChild(nodePostTo);
 		nodePostTo.feeds = new Array();
-		nodePostTo.feeds.push(dest);
-		nodePostTo.cNodes["new-post-feeds"].firstChild.oValue = dest;
-		if(dest != login.users.username)
-			nodePostTo.cNodes["new-post-feeds"].firstChild.innerHTML = dest;
+		arrDest.forEach(function(dest){
+			nodePostTo.feeds.push(dest);
+			var destButton = cView.gNodes["new-post-feed"].cloneAll();
+			destButton.oValue = dest;
+			if(dest != login.users.username)
+				destButton.innerHTML = dest;
+			else destButton.innerHTML = "My feed";
+			nodePostTo.cNodes["new-post-feeds"].appendChild(destButton);
+		});
 		nodePostTo.destType = "posts";
 		nodePostTo.parentNode.isPrivate  = false;
 		nodePostTo.cNodes["new-feed-input"].addEventListener("focus", cView.Actions.newDirectInp, true);

@@ -249,10 +249,28 @@ _Actions.prototype = {
 	,"editPost": function(e) {
 		var cView = document.cView;
 		var victim = e.target.getNode(["p","post"]);
+		var domain = victim.rawData.domain;
+		victim.classList.add("new-post");
+		var nodeBody = victim.cNodes["post-body"];
 		var nodeEdit = cView.Drawer.genEditNode(cView.Actions.postEditedPost,cView.Actions.cancelEditPost);
-		var textArea = nodeEdit.cNodes["edit-txt-area"]
+		var textArea = nodeEdit.cNodes["edit-txt-area"];
+		victim.cNodes["add-sender"] = cView.doc.createElement("div");
+		var nodePostTo = cView.doc.createElement("div");
 		textArea.value = victim.rawData.body;
-		cView.Utils.setChild(victim.cNodes["post-body"], "post-cont", nodeEdit);
+		cView.Utils.setChild(nodeBody , "post-cont", nodeEdit);
+		cView.Utils.setChild(nodeBody , "title", nodePostTo);
+		victim.cNodes["post-to"]  = nodePostTo;
+		victim.cNodes["edit-buttons"]  = nodeEdit.cNodes["edit-buttons"];
+		nodeBody.feeds = victim.rawData.postedTo;
+		cView.Drawer.genPostTo(victim
+			,nodeBody.feeds.map(function(id){return cView.contexts[domain].gFeeds[id].user.username ;})
+			,cView.contexts[domain].logins[victim.rawData.createdBy].data
+		);
+		/*
+		nodeTo.domain = victim.rawData.domain ;
+		nodeTo.userid = victim.rawData.createdBy;
+		nodeBody.replaceChild(nodeTo , nodeBody.cNodes["title"]);
+		*/
 		if (textArea.scrollHeight > textArea.clientHeight)
 			textArea.style.height = textArea.scrollHeight + "px";
 	}
@@ -266,6 +284,8 @@ _Actions.prototype = {
 		postCNode.dir = "auto";
 		victim.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
 		victim.cNodes["post-body"].cNodes["post-cont"] = postCNode;
+		victim.cNodes["post-body"].cNodes["title"].innerHTML = cView.Drawer.genTitle(victim);
+		victim.cNodes["post-body"].cNodes["title"].className = "title";
 		cView.Drawer.applyReadMore(postCNode);
 		cView.cTxt = null;
 
@@ -285,6 +305,14 @@ _Actions.prototype = {
 		var textField = e.target.parentNode.parentNode.cNodes["edit-txt-area"];
 		textField.disabled = true;
 		e.target.parentNode.replaceChild(cView.gNodes["spinner"].cloneNode(true),e.target.parentNode.cNodes["edit-buttons-cancel"] );
+		var postTo =  nodePost.getElementsByClassName("new-post-to")[0];
+		var input = postTo.getNode(["c","new-feed-input"],["c", "input"]);
+		var feed = input.value;
+		if((feed != "") && (typeof input.dest[feed] !== "undefined") 
+		&& (postTo.feeds.indexOf(input.dest[feed]) == -1) ){
+			postTo.feeds.push(input.dest[feed]);
+		}
+		post.feeds = postTo.feeds ;
 		post.body = cView.Common.urlsToCanonical( textField.value);
 		context.api.editPost(
 			context.logins[nodePost.rawData.createdBy].token
@@ -293,6 +321,10 @@ _Actions.prototype = {
 		).then(function(res){
 			var post = res.posts;
 			var postCNode = cView.doc.createElement("div");
+			nodePost.rawData.body = post.body;
+			nodePost.rawData.postedTo = post.postedTo;
+			nodePost.cNodes["post-body"].cNodes["title"].innerHTML = cView.Drawer.genTitle(nodePost);
+			nodePost.cNodes["post-body"].cNodes["title"].className = "title";
 			/*
 			var cpost = matrix.decrypt(post.body);
 			if (typeof cpost.error === "undefined") {
@@ -301,12 +333,11 @@ _Actions.prototype = {
 				nodePost.sign = cpost.sign;
 			}
 			*/
+			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
+			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 			postCNode.innerHTML = context.digestText(post.body);
 			postCNode.className = "post-cont long-text";
 			postCNode.dir = "auto";
-			nodePost.rawData.body = post.body;
-			nodePost.cNodes["post-body"].replaceChild(postCNode,e.target.parentNode.parentNode );
-			nodePost.cNodes["post-body"].cNodes["post-cont"] = postCNode;
 		},function(err){
 			cView.Drawer.makeErrorMsg(err,textField.parentNode);
 		});

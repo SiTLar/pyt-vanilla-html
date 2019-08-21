@@ -343,6 +343,8 @@ _Drawer.prototype = {
 					if (( node.name == "display_name") &&(node.value == mode)
 					|| ( node.name == "display_theme") &&(node.value == theme))
 						node.checked = true;
+					else if(node.value == cView.localStorage.getItem(node.name))
+						node.checked = true;
 					break;
 				case "checkbox":
 					node.checked = JSON.parse (cView.localStorage.getItem(node.value));

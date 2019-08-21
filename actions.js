@@ -991,15 +991,15 @@ _Actions.prototype = {
 		}else e.target.tip =  e.target.parentNode.appendChild(nodeTip);
 		var myFeed = cView.contexts[nodeP.domain].logins[nodeP.userid].data.users.username;
 		if((nodeP.destType == "posts") && (nodeP.feeds.indexOf(myFeed) == -1 )){
-			li = document.createElement("li");
+			var li = document.createElement("li");
 			li.innerHTML = "My Feed";
 			li.className = "ft-i";
 			nodeTip.cNodes["ft-list"].appendChild(li);
 			li.addEventListener("click",function(e){
-				var li = cView.gNodes["new-post-feed"].cloneAll();
-				li.innerHTML = "My Feed";
-				li.oValue = myFeed;
-				nodeP.cNodes["new-post-feeds"].appendChild(li);
+				var liMyFeed = cView.gNodes["new-post-feed"].cloneAll();
+				liMyFeed.innerHTML = "My Feed";
+				liMyFeed.oValue = myFeed;
+				nodeP.cNodes["new-post-feeds"].appendChild(liMyFeed);
 				nodeP.feeds.push(myFeed);
 				nodeP.getNode(["p","new-post"], ["c","edit-buttons"],["c","edit-buttons-post"]).disabled = false;
 			});

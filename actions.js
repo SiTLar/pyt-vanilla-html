@@ -2048,6 +2048,12 @@ _Actions.prototype = {
 		if(txtDate != "")
 			window.location = gConfig.front+"memories/"+txtDate.replace(/-/g,"");
 	}
+	,"acceptCookies": function(){
+		var cView = document.cView;
+		cView.Common.setCookie("privacy","accepted");
+		var nodePriv = cView.doc.getElementById("privacy-popup");
+		nodePriv.parentNode.removeChild(nodePriv);
+	}
 
 };
 return _Actions;

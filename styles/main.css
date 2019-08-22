@@ -814,3 +814,45 @@ span.comment-controls::before {
 .notifications-container >div >span, .notifications-container >div >a {
 	margin-right: .3em;
 }
+.privacy-popup {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 100;
+	color: white;
+	background-color: rgba(16,16,16,0.8);
+	padding: 24px;
+	display: flex;
+	flex-flow: row;
+	flex-wrap: nowrap;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+}
+.privacy-text {
+	line-height: 1.42857;
+	font-size: 16px;
+	margin-bottom: 16px;
+	max-width: 600px;
+}
+.privacy-button:hover {
+    color: #FDB832;
+    border-color: #FDB832;
+}
+.privacy-button {
+    font-size: 16px;
+    font-weight: bold;
+    color: #F6C944;
+    border: solid 2px #F6C944;
+        border-top-color: rgb(246, 201, 68);
+        border-right-color: rgb(246, 201, 68);
+        border-bottom-color: rgb(246, 201, 68);
+        border-left-color: rgb(246, 201, 68);
+    border-radius: 8px;
+    padding: 12px 24px;
+    line-height: 1.42857;
+    cursor: pointer;
+    background-color: white;
+    max-height: 50px;
+}

@@ -238,6 +238,12 @@ define(
 		cView.Common.genNodes(gTemplates.nodes).forEach( function(node){ 
 			cView.gNodes[node.classList[0]] = node; 
 		});
+
+		if(cView.Common.getCookie("privacy")){
+			var nodePriv = cView.doc.getElementById("privacy-popup");
+			nodePriv.parentNode.removeChild(nodePriv);
+		
+		} 
 		cView.Common.setIcon("throbber-16.gif");
 		return cView;
 	}

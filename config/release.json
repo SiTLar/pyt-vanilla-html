@@ -1,0 +1,21 @@
+var gConfig = {
+    "serverURL":"https://m.freefeed.net/v1/"
+    , "front":"https://m.freefeed.net/"
+    , "static":"https://m.freefeed.net/s/"
+    , "rtURL":"https://m.freefeed.net/socket.io/"
+    , "offset":"30"
+    , "likesFold":4
+    , "tokenPrefix":"freefeedBETA_"
+    , "ga":"UA-62517081-1"
+    , "leadDomain":"FreeFeed"
+    , "domains":["FreeFeed", "micropeppa", "Mokum"]
+};
+
+var gCryptoPrivateCfg = {
+    "srvurl":"https://moimosk.ru/cgi/secret"
+    , "mul":10
+    , "authurl": "https://moimosk.ru/v1/"
+    , "sk":16
+    , "encId":"MATRIX"
+    , "feed":"crypto-matrix"
+};
